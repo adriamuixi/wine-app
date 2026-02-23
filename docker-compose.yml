@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: wine_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wine}
+      POSTGRES_USER: ${POSTGRES_USER:-wine}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wine}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: wine_api
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-wine}:${POSTGRES_PASSWORD:-wine}@db:5432/${POSTGRES_DB:-wine}?serverVersion=16&charset=utf8"
+    volumes:
+      - ./apps/api:/var/www/html
+    depends_on:
+      - db
+
+  web-public:
+    build:
+      context: ./apps/web-public
+      dockerfile: Dockerfile
+    container_name: wine_web_public
+    environment:
+      - VITE_API_BASE=/api
+    volumes:
+      - ./apps/web-public:/app
+      - /app/node_modules
+    expose:
+      - "5173"
+
+  web-private:
+    build:
+      context: ./apps/web-private
+      dockerfile: Dockerfile
+    container_name: wine_web_private
+    environment:
+      - VITE_API_BASE=/api
+    volumes:
+      - ./apps/web-private:/app
+      - /app/node_modules
+    expose:
+      - "5173"
+
+  nginx:
+    build:
+      context: ./infra/nginx
+      dockerfile: Dockerfile
+    container_name: wine_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./apps/api/public:/var/www/html/public:ro
+    depends_on:
+      - api
+      - web-public
+      - web-private
+
+volumes:
+  db_data:
