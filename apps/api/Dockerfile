@@ -1,5 +1,4 @@
-FROM php:8.3-fpm-alpine
-
+FROM php:8.4-fpm-alpine
 # System deps
 RUN apk add --no-cache \
     bash \
@@ -23,7 +22,7 @@ RUN docker-php-ext-install \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # PHP config
-COPY apps/api/php.ini /usr/local/etc/php/conf.d/app.ini
+COPY php.ini /usr/local/etc/php/conf.d/app.ini
 
 WORKDIR /var/www/html
 

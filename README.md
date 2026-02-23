@@ -57,3 +57,44 @@ Using `just`:
 
 ```bash
 just setup
+```
+
+## URLs
+
+Public: http://localhost:8080/
+
+Private: http://localhost:8080/admin/
+
+API: http://localhost:8080/api
+
+
+## INITAL symphony
+
+cd apps/api
+
+
+# Create Symfony skeleton (latest)
+``` bash
+docker run --rm -it \
+  -v "$PWD:/app" \
+  -w /app \
+  composer:2 \
+  composer create-project symfony/skeleton .
+```
+# Install core packages for your project
+``` bash
+docker run --rm -it \
+  -v "$PWD:/app" \
+  -w /app \
+  composer:2 \
+  composer require \
+    symfony/orm-pack \
+    symfony/security-bundle \
+    symfony/validator \
+    symfony/serializer \
+    symfony/property-access \
+    symfony/http-client \
+    doctrine/doctrine-migrations-bundle
+
+cd ../..
+```
