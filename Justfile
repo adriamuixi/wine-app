@@ -5,10 +5,10 @@ set export := true
 
 compose := "docker compose"
 
-# -------------------------
+# =========================
 # Docker lifecycle
+# =========================
 
-# -------------------------
 up:
     {{ compose }} up -d --build
 
@@ -28,15 +28,19 @@ logs *args:
 sh service="api":
     {{ compose }} exec {{ service }} sh
 
-# -------------------------
-# Backend (Symfony / API)
+# =========================
+# Composer (API container)
+# =========================
 
-# -------------------------
+composer *args:
+    {{ compose }} exec api composer {{ args }}
+
 backend-install:
     {{ compose }} exec api composer install
 
-backend-update:
-    {{ compose }} exec api composer update
+# =========================
+# Symfony Console (API)
+# =========================
 
 console *args:
     {{ compose }} exec api php bin/console {{ args }}
@@ -44,7 +48,10 @@ console *args:
 cache-clear:
     {{ compose }} exec api php bin/console cache:clear
 
-# Doctrine / DB
+# =========================
+# Doctrine
+# =========================
+
 db-create:
     {{ compose }} exec api php bin/console doctrine:database:create --if-not-exists
 
@@ -57,10 +64,10 @@ migrations-diff:
 schema-validate:
     {{ compose }} exec api php bin/console doctrine:schema:validate
 
-# -------------------------
+# =========================
 # Frontends
+# =========================
 
-# -------------------------
 public-install:
     {{ compose }} exec web-public npm ci
 
@@ -73,10 +80,9 @@ public-build:
 private-build:
     {{ compose }} exec web-private npm run build
 
-# -------------------------
-# One-shot setup
-
-# -------------------------
+# =========================
+# Bootstrap everything
+# =========================
 setup:
     just up
     just backend-install

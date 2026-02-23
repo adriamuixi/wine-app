@@ -1,0 +1,20 @@
+# Monorepo local env
+.env
+.env.local
+
+# OS/editor noise
+.DS_Store
+
+# Frontend generated files
+apps/web-public/node_modules/
+apps/web-public/dist/
+apps/web-private/node_modules/
+apps/web-private/dist/
+
+# Backend generated files (Symfony local cache/logs if root ignore is used by tools)
+apps/api/var/
+apps/api/vendor/
+
+# Misc local coverage/artifacts
+coverage/
+*.log

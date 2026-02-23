@@ -4,7 +4,7 @@ Personal wine catalog & review platform.
 
 Stack:
 
-- Backend: Symfony (PHP 8.3, API-first)
+- Backend: Symfony (PHP 8.4, API-first)
 - Frontend: React + Vite (public + private apps)
 - Database: PostgreSQL
 - Infrastructure: Docker + Docker Compose
@@ -18,16 +18,6 @@ This repository contains:
 - PostgreSQL database
 - Nginx reverse proxy
 
----
-
-## 🚀 Requirements
-
-- Docker + Docker Compose
-- Node.js 22+ (optional, only if running frontend locally)
-- `just` (recommended) or `make`
-
----
-
 ## 📦 Project structure
 
 If your Markdown renderer has trouble with tree blocks, this is the structure as a simple list:
@@ -40,6 +30,7 @@ If your Markdown renderer has trouble with tree blocks, this is the structure as
   - nginx/ (reverse proxy config)
 - docker-compose.yml (root)
 - AGENTS.md (AI guidance)
+- docs/ (repo-specific architecture and development playbooks)
 
 ---
 
@@ -57,6 +48,7 @@ Using `just`:
 
 ```bash
 just setup
+just health
 ```
 
 ## URLs
@@ -67,34 +59,12 @@ Private: http://localhost:8080/admin/
 
 API: http://localhost:8080/api
 
+## Development guidance
 
-## INITAL symphony
+Read these before adding features:
 
-cd apps/api
-
-
-# Create Symfony skeleton (latest)
-``` bash
-docker run --rm -it \
-  -v "$PWD:/app" \
-  -w /app \
-  composer:2 \
-  composer create-project symfony/skeleton .
-```
-# Install core packages for your project
-``` bash
-docker run --rm -it \
-  -v "$PWD:/app" \
-  -w /app \
-  composer:2 \
-  composer require \
-    symfony/orm-pack \
-    symfony/security-bundle \
-    symfony/validator \
-    symfony/serializer \
-    symfony/property-access \
-    symfony/http-client \
-    doctrine/doctrine-migrations-bundle
-
-cd ../..
-```
+- `AGENTS.md`
+- `docs/README.md`
+- `docs/ARCHITECTURE_PLAYBOOK.md`
+- `docs/BACKEND_FEATURE_WORKFLOW.md`
+- `docs/DOMAIN_RULES_CHECKLIST.md`

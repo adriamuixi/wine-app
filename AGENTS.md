@@ -79,7 +79,7 @@ No code without tests for domain logic.
 
 Backend:
 
-- PHP 8.3
+- PHP 8.4
 - Strict types
 - PSR-12
 - Typed properties
