@@ -5,6 +5,25 @@
 
 This file is for AI assistants, copilots and automated agents.
 
+## AI Startup Docs (Repository convention)
+
+After reading `AGENTS.md`, agents should read these files before making changes:
+
+1. `docs/AI_START_HERE.md`
+2. `docs/README.md`
+3. `docs/ARCHITECTURE_PLAYBOOK.md`
+4. `docs/BACKEND_FEATURE_WORKFLOW.md`
+5. `docs/DOMAIN_RULES_CHECKLIST.md`
+6. `docs/api/openapi.yaml` (if API endpoints are involved)
+
+## API Documentation & Test Update Rule
+
+If any API endpoint is added/changed/removed, agents must update:
+
+- OpenAPI docs (`docs/api/openapi.yaml`)
+- Controller tests (`apps/api/tests/Unit/Adapters/In/Http/`)
+- Use case tests (`apps/api/tests/Unit/Application/UseCases/`)
+
 ```markdown
 # 🤖 AGENTS.md
 
@@ -70,6 +89,8 @@ Required:
 - Domain must have unit tests
 - Application services must be covered
 - Infrastructure may use integration tests
+- HTTP controllers/endpoints must have tests (unit or integration)
+- Auth endpoints must include controller tests + use case tests + OpenAPI docs updates
 
 No code without tests for domain logic.
 

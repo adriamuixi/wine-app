@@ -1,0 +1,129 @@
+openapi: 3.1.0
+info:
+  title: Wine App API
+  version: 0.1.0
+  description: Current API endpoints for health and session-based authentication.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api:
+    get:
+      summary: Health check
+      operationId: getApiHealth
+      tags: [System]
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: wine-api
+  /api/auth/login:
+    post:
+      summary: Login with email and password (session cookie)
+      operationId: postAuthLogin
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/me:
+    get:
+      summary: Get current authenticated user
+      operationId: getAuthMe
+      tags: [Auth]
+      responses:
+        '200':
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserResponse'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/logout:
+    post:
+      summary: Logout current session
+      operationId: postAuthLogout
+      tags: [Auth]
+      responses:
+        '204':
+          description: Logged out (idempotent)
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: demo@example.com
+        password:
+          type: string
+          format: password
+          example: demo1234
+    AuthUser:
+      type: object
+      required: [id, email, name, lastname]
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        email:
+          type: string
+          format: email
+          example: demo@example.com
+        name:
+          type: string
+          example: Demo
+        lastname:
+          type: string
+          example: User
+    AuthUserResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthUser'
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: Invalid credentials.

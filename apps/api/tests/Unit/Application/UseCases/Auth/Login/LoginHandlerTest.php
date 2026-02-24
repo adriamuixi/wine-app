@@ -1,0 +1,117 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Application\UseCases\Auth\Login;
+
+use App\Application\Ports\AuthSessionManager;
+use App\Application\Ports\PasswordVerifier;
+use App\Application\Ports\UserRepository;
+use App\Application\UseCases\Auth\AuthUserCredentials;
+use App\Application\UseCases\Auth\AuthUserView;
+use App\Application\UseCases\Auth\Login\InvalidCredentials;
+use App\Application\UseCases\Auth\Login\LoginCommand;
+use App\Application\UseCases\Auth\Login\LoginHandler;
+use PHPUnit\Framework\TestCase;
+
+final class LoginHandlerTest extends TestCase
+{
+    public function testItLogsInWithValidCredentials(): void
+    {
+        $userRepo = new InMemoryUserRepository();
+        $passwordVerifier = new StubPasswordVerifier(true);
+        $session = new SpyAuthSessionManager();
+
+        $handler = new LoginHandler($userRepo, $passwordVerifier, $session);
+
+        $result = $handler->handle(new LoginCommand('Demo@Example.com', 'secret'));
+
+        self::assertSame(1, $result->id);
+        self::assertSame('demo@example.com', $result->email);
+        self::assertSame(1, $session->loggedInUserId);
+    }
+
+    public function testItRejectsUnknownUser(): void
+    {
+        $handler = new LoginHandler(
+            new InMemoryUserRepository(null),
+            new StubPasswordVerifier(true),
+            new SpyAuthSessionManager(),
+        );
+
+        $this->expectException(InvalidCredentials::class);
+        $handler->handle(new LoginCommand('missing@example.com', 'secret'));
+    }
+
+    public function testItRejectsInvalidPassword(): void
+    {
+        $handler = new LoginHandler(
+            new InMemoryUserRepository(),
+            new StubPasswordVerifier(false),
+            new SpyAuthSessionManager(),
+        );
+
+        $this->expectException(InvalidCredentials::class);
+        $handler->handle(new LoginCommand('demo@example.com', 'wrong'));
+    }
+}
+
+final class InMemoryUserRepository implements UserRepository
+{
+    public function __construct(
+        private readonly ?AuthUserCredentials $user = new AuthUserCredentials(1, 'demo@example.com', 'hashed', 'Demo', 'User'),
+    ) {
+    }
+
+    public function findAuthByEmail(string $email): ?AuthUserCredentials
+    {
+        if (null === $this->user) {
+            return null;
+        }
+
+        return strtolower($email) === $this->user->email ? $this->user : null;
+    }
+
+    public function findAuthUserById(int $id): ?AuthUserView
+    {
+        if (null === $this->user || $this->user->id !== $id) {
+            return null;
+        }
+
+        return $this->user->toUserView();
+    }
+}
+
+final class StubPasswordVerifier implements PasswordVerifier
+{
+    public function __construct(private readonly bool $result)
+    {
+    }
+
+    public function verify(string $plainPassword, string $passwordHash): bool
+    {
+        return $this->result;
+    }
+}
+
+final class SpyAuthSessionManager implements AuthSessionManager
+{
+    public ?int $loggedInUserId = null;
+    public bool $loggedOut = false;
+    public ?int $authenticatedUserId = null;
+
+    public function loginByUserId(int $userId): void
+    {
+        $this->loggedInUserId = $userId;
+    }
+
+    public function getAuthenticatedUserId(): ?int
+    {
+        return $this->authenticatedUserId;
+    }
+
+    public function logout(): void
+    {
+        $this->loggedOut = true;
+    }
+}

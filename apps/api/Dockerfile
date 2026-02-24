@@ -5,6 +5,7 @@ RUN apk add --no-cache \
     git \
     icu-dev \
     libzip-dev \
+    linux-headers \
     postgresql-dev \
     oniguruma-dev \
     unzip \
@@ -18,11 +19,17 @@ RUN docker-php-ext-install \
     pdo_pgsql \
     zip
 
+# Xdebug (installed for local development, disabled by default via XDEBUG_MODE=off)
+RUN pecl channel-update pecl.php.net \
+    && pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # PHP config
 COPY php.ini /usr/local/etc/php/conf.d/app.ini
+COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 WORKDIR /var/www/html
 

@@ -1,6 +1,8 @@
 doctrine:
     dbal:
         url: "%env(resolve:DATABASE_URL)%"
+        types:
+            app_timestamptz_immutable: App\Adapters\Out\Persistence\Doctrine\Type\PostgresTimestamptzMicrosecondsImmutableType
 
         profiling_collect_backtrace: "%kernel.debug%"
     orm:

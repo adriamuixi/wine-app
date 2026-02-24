@@ -15,10 +15,15 @@ services:
         resource: "../Adapters/In/Http/"
         tags: ["controller.service_arguments"]
 
+    App\Application\Ports\UserRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineUserRepository'
+    App\Application\Ports\PasswordVerifier: '@App\Adapters\Out\Security\NativePasswordVerifier'
+    App\Application\Ports\AuthSessionManager: '@App\Adapters\Out\Security\SymfonyAuthSessionManager'
+
     # Domain objects are pure PHP and should not be container services by default.
     App\Domain\:
         resource: "../Domain/"
         exclude:
+            - "../Domain/Enum/"
             - "../Domain/**/Model/"
             - "../Domain/**/ValueObject/"
             - "../Domain/**/Event/"
