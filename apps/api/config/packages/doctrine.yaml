@@ -13,8 +13,8 @@ doctrine:
             InfrastructureDoctrine:
                 type: attribute
                 is_bundle: false
-                dir: "%kernel.project_dir%/src/Infrastructure/Persistence/Doctrine/Entity"
-                prefix: 'App\Infrastructure\Persistence\Doctrine\Entity'
+                dir: "%kernel.project_dir%/src/Adapters/Out/Persistence/Doctrine/Entity"
+                prefix: 'App\Adapters\Out\Persistence\Doctrine\Entity'
                 alias: InfrastructureDoctrine
         controller_resolver:
             auto_mapping: false

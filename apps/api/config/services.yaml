@@ -2,35 +2,5 @@
 
 parameters:
 
-services:
-    _defaults:
-        autowire: true
-        autoconfigure: true
-
-    App\Application\:
-        resource: "../src/Application/"
-
-    App\Infrastructure\:
-        resource: "../src/Infrastructure/"
-
-    App\UI\:
-        resource: "../src/UI/"
-        exclude:
-            - "../src/UI/Http/Api/Controller/"
-
-    App\UI\Http\Api\Controller\:
-        resource: "../src/UI/Http/Api/Controller/"
-        tags: ["controller.service_arguments"]
-
-    # Temporary support while legacy Symfony scaffold controllers still exist.
-    App\Controller\:
-        resource: "../src/Controller/"
-        tags: ["controller.service_arguments"]
-
-    # Domain objects are pure PHP and should not be container services by default.
-    App\Domain\:
-        resource: "../src/Domain/"
-        exclude:
-            - "../src/Domain/**/Model/"
-            - "../src/Domain/**/ValueObject/"
-            - "../src/Domain/**/Event/"
+imports:
+    - { resource: ../src/Bootstrap/services.yaml }

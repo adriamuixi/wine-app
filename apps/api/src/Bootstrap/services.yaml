@@ -1,0 +1,24 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\Application\:
+        resource: "../Application/"
+
+    App\Adapters\:
+        resource: "../Adapters/"
+        exclude:
+            - "../Adapters/In/Http/"
+
+    App\Adapters\In\Http\:
+        resource: "../Adapters/In/Http/"
+        tags: ["controller.service_arguments"]
+
+    # Domain objects are pure PHP and should not be container services by default.
+    App\Domain\:
+        resource: "../Domain/"
+        exclude:
+            - "../Domain/**/Model/"
+            - "../Domain/**/ValueObject/"
+            - "../Domain/**/Event/"
