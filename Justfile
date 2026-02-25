@@ -80,6 +80,13 @@ public-build:
 private-build:
     {{ compose }} exec web-private npm run build
 
+# Local Vite (hosted on LAN)
+public-dev-host port="4173":
+    npm --prefix apps/web-public run dev -- --host 0.0.0.0 --port {{ port }}
+
+private-dev-host port="4174":
+    npm --prefix apps/web-private run dev -- --host 0.0.0.0 --port {{ port }}
+
 # =========================
 # Bootstrap everything
 # =========================
