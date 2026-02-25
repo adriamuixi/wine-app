@@ -63,16 +63,81 @@ const mockUser: MockUser = {
   email: 'adria@example.com',
 }
 
-const mockWines: WineItem[] = [
-  { id: 1, name: 'Laderas del Norte', winery: 'Bodega Vértice', type: 'red', country: 'Spain', region: 'Rioja', vintageYear: 2019, pricePaid: 18.5, averageScore: 89 },
-  { id: 2, name: 'Mar de Pizarra', winery: 'Costa Alta', type: 'white', country: 'Spain', region: 'Rías Baixas', vintageYear: 2023, pricePaid: 14.2, averageScore: 86 },
-  { id: 3, name: 'Clos du Vent', winery: 'Maison Aubert', type: 'red', country: 'France', region: 'Rhône', vintageYear: 2020, pricePaid: 29.0, averageScore: 92 },
-  { id: 4, name: 'Alta Bruma', winery: 'Finca Salina', type: 'white', country: 'Portugal', region: 'Douro', vintageYear: 2022, pricePaid: 16.9, averageScore: 84 },
-  { id: 5, name: 'Rosa de Tarde', winery: 'Viñas del Lago', type: 'rose', country: 'Spain', region: 'Navarra', vintageYear: 2024, pricePaid: 11.5, averageScore: 80 },
-  { id: 6, name: 'Gran Reserva 12', winery: 'Casa Roble', type: 'red', country: 'Spain', region: 'Ribera del Duero', vintageYear: 2016, pricePaid: 42.0, averageScore: 94 },
-  { id: 7, name: 'Blanc de Serra', winery: 'Mont Clar', type: 'white', country: 'France', region: 'Languedoc', vintageYear: 2021, pricePaid: 21.0, averageScore: 88 },
-  { id: 8, name: 'Noches de Burbuja', winery: 'Bodegas Aurora', type: 'sparkling', country: 'Spain', region: 'Penedès', vintageYear: 2022, pricePaid: 19.8, averageScore: 87 },
+type JournalWineRow = {
+  wine: string
+  typeCa: string
+  region: string
+  vintage: number | null
+  maria: string
+  adria: string
+  place: string
+}
+
+const journalWineRows: JournalWineRow[] = [
+  { wine: 'Lo cometa', typeCa: 'Blanc', region: 'Terra Alta', vintage: 2019, maria: '7', adria: '7,5', place: 'Celler del nou priorat' },
+  { wine: 'Compte ovelles', typeCa: 'Negre', region: 'Penedès', vintage: 2020, maria: '5', adria: '5,75', place: 'Casa Rosset' },
+  { wine: 'Seré 2018', typeCa: 'Negre', region: 'Montsant', vintage: 2018, maria: '6,5', adria: '6,25', place: 'Taberna La Parra' },
+  { wine: 'Vega de Nava', typeCa: 'Negre', region: 'Ribera del Duero', vintage: 2018, maria: '8', adria: '8', place: 'Casa Tat' },
+  { wine: 'Chateldon', typeCa: 'Negre', region: 'Penedès', vintage: 2019, maria: '8', adria: '', place: 'Casa Rosset' },
+  { wine: 'Matsu - el pícaro', typeCa: 'Negre', region: 'Toro', vintage: 2020, maria: '7,5', adria: '8', place: 'Casa Tat' },
+  { wine: 'Titella', typeCa: 'Negre', region: 'Montsant', vintage: 2017, maria: '8', adria: '8,1', place: 'Casa Rosset' },
+  { wine: 'Ulldemolins', typeCa: 'Negre', region: 'Montsant', vintage: 2016, maria: '6,5', adria: '6,75', place: 'Casa Tat' },
+  { wine: 'Clot d’encís blanc de negres', typeCa: 'Blanc', region: 'Terra Alta', vintage: 2019, maria: '7,5', adria: '7,15', place: 'Casa Tat' },
+  { wine: 'Ninín', typeCa: 'Negre', region: 'Ribera del Duero', vintage: 2018, maria: '6,75', adria: '6,9', place: 'Casa Rosset' },
+  { wine: 'Roca Blanca', typeCa: 'Negre', region: 'Montsant', vintage: 2016, maria: '6', adria: '4,25', place: 'Casa Tat' },
+  { wine: 'Enate', typeCa: 'Negre', region: 'Somontano', vintage: 2017, maria: '7', adria: '8', place: 'Casa Rosset' },
+  { wine: 'Fulget', typeCa: 'Blanc', region: 'Rías Baixas', vintage: 2019, maria: '6,5', adria: '5,5', place: "A'rogueira" },
+  { wine: 'Roca blanca', typeCa: 'Negre', region: 'Montsant', vintage: 2016, maria: '5,5', adria: '4,67', place: 'Casa Tat' },
+  { wine: 'Castillo de Albai', typeCa: 'Negre', region: 'Rioja', vintage: 2016, maria: '7', adria: '7,1', place: 'Casa Rosset' },
+  { wine: 'Acústic', typeCa: 'Negre', region: 'Montsant', vintage: 2018, maria: '9,2', adria: '8,1', place: 'Casa Rosset' },
+  { wine: 'Matsu - el recio', typeCa: 'Negre', region: 'Toro', vintage: null, maria: '9', adria: '7,8', place: 'Casa Rosset' },
+  { wine: 'Roureda', typeCa: 'Negre', region: 'Tarragona', vintage: 2016, maria: '', adria: '', place: 'Casa Tat' },
+  { wine: 'Almodí', typeCa: 'Negre', region: 'Terra Alta', vintage: 2019, maria: '7,5', adria: '7,5', place: 'Casa Rosset' },
+  { wine: 'Muga', typeCa: 'Negre', region: 'Rioja', vintage: 2017, maria: '8', adria: '7', place: 'Casa Tat' },
+  { wine: "L'isard", typeCa: 'Negre', region: 'Penedès', vintage: 2019, maria: '7,7', adria: '7,1', place: 'Casa Rosset' },
+  { wine: 'Sumarroca classic', typeCa: 'Negre', region: 'Penedès', vintage: 2019, maria: '7', adria: '8', place: 'Casa Rosset' },
+  { wine: 'Condado de Teón', typeCa: 'Negre', region: 'Ribera del Duero', vintage: 2018, maria: '6,5', adria: '6,1', place: 'Casa Tat' },
+  { wine: 'Rosum', typeCa: 'Negre', region: 'Toro', vintage: 2017, maria: '8,5', adria: '7,1', place: 'Casa Tat' },
 ]
+
+function parseJournalScore(value: string): number | null {
+  const normalized = value.trim().replace(',', '.')
+  if (!normalized) {
+    return null
+  }
+
+  const numeric = Number(normalized)
+  return Number.isFinite(numeric) ? numeric : null
+}
+
+function mapTypeFromCa(value: string, wineName: string): WineType {
+  const text = value.trim().toLowerCase()
+  if (text.includes('blanc')) return 'white'
+  if (text.includes('rosat')) return 'rose'
+  if (text.includes('escum')) return 'sparkling'
+  if (wineName.toLowerCase().includes('classic') || wineName.toLowerCase().includes('cava')) return 'sparkling'
+  return 'red'
+}
+
+const mockWines: WineItem[] = journalWineRows.map((row, index) => {
+  const maria = parseJournalScore(row.maria)
+  const adria = parseJournalScore(row.adria)
+  const avgTen = maria != null && adria != null ? (maria + adria) / 2 : (maria ?? adria ?? 6.8)
+  const averageScore = Math.round(avgTen * 100) / 10
+  const pricePaid = Number((9 + (avgTen * 1.9) + ((index % 5) * 1.75)).toFixed(2))
+
+  return {
+    id: index + 1,
+    name: row.wine,
+    winery: row.place,
+    type: mapTypeFromCa(row.typeCa, row.wine),
+    country: 'Spain',
+    region: row.region,
+    vintageYear: row.vintage,
+    pricePaid,
+    averageScore,
+  }
+})
 
 const mockReviews: ReviewItem[] = [
   { id: 11, wineId: 1, wineName: 'Laderas del Norte', score: 88, createdAt: '2026-02-20', notes: 'Ripe cherry, medium body, easy finish.' },
