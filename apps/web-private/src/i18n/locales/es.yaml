@@ -1,0 +1,259 @@
+common:
+  appName: Wine App
+  mockMode: Modo mock. Esta pantalla no llama a la API.
+  menu: Menú
+  logout: Cerrar sesión
+  expandSidebar: Expandir barra lateral
+  collapseSidebar: Colapsar barra lateral
+  themeLight: Claro
+  themeDark: Oscuro
+  themeSwitchToLight: Cambiar a modo claro
+  themeSwitchToDark: Cambiar a modo oscuro
+  allCountries: Todos los países
+  allTypes: Todos los tipos
+  anyScore: Cualquier puntuación
+  searchPlaceholder: Nombre, bodega, región...
+login:
+  eyebrow: Bodega Privada
+  title: Backoffice de Vinos
+  promo: Gestiona etiquetas, notas de cata y tus reseñas personales desde un único
+    lugar. Preparado para móvil y escritorio.
+  bullets:
+    - Cataloga vinos por región y estilo
+    - Sigue tu historial de catas y reseñas
+    - Prepara un flujo de administración limpio
+  panelTitle: Entrar en /admin
+  email: Email
+  password: Contraseña
+  submit: Entrar al Backoffice
+  requiredError: Email y contraseña son obligatorios.
+  demoTitle: Demo
+  demoDescription: Usa cualquier email/contraseña para entrar al dashboard mock.
+menu:
+  dashboard: Dashboard
+  wines: Vinos
+  reviews: Reseñas
+  admin: Herramientas Admin
+dashboard:
+  title: Resumen
+  metrics:
+    totalWines: Vinos totales
+    totalReviews: Reseñas totales
+    myReviews: Mis reseñas
+    avgRed: Media vinos tintos
+    avgWhite: Media vinos blancos
+    catalogHint: Entradas en catálogo (mock)
+    globalReviewsHint: Reseñas globales de la plataforma (mock)
+    myReviewsHint: Reseñas escritas por mí
+    avgRedHint: Puntuación media en vinos tintos
+    avgWhiteHint: Puntuación media en vinos blancos
+  search:
+    eyebrow: Buscar vinos
+    title: Buscador con filtros (datos mock)
+    results: resultados
+    search: Buscar
+    country: País
+    type: Tipo
+    minScore: Puntuación mínima
+  table:
+    wine: Vino
+    type: Tipo
+    region: Región
+    price: Precio
+    avg: Media
+wines:
+  title: Herramientas de catálogo
+  add:
+    eyebrow: Vinos
+    title: Añadir vino al catálogo
+    badge: Formulario mock
+    name: Nombre del vino
+    winery: Bodega
+    type: Tipo de vino
+    vintage: Añada
+    country: País
+    region: Región / DO
+    place: Lugar de compra
+    price: Precio pagado
+    submit: Guardar vino (Mock)
+  edit:
+    eyebrow: Vinos
+    title: Editar vino existente
+    countSuffix: vinos mock
+    action: Editar
+reviews:
+  title: Mis reseñas
+  create:
+    eyebrow: Reseñas
+    title: Crear mi reseña
+    badge: Solo mías
+    wine: Vino
+    selectWine: Selecciona un vino
+    score: Puntuación
+    body: Cuerpo
+    acidity: Acidez
+    notes: Notas
+    notesPlaceholder: Describe aromas, estructura y final...
+    submit: Crear reseña (Mock)
+  edit:
+    eyebrow: Reseñas
+    title: Editar mis reseñas
+    countSuffix: elementos
+    editAction: Editar reseña
+    viewWineAction: Ver vino
+admin:
+  title: Herramientas Admin
+  shortcuts:
+    eyebrow: Admin Tools
+    title: Accesos operativos
+    items:
+      - title: Cola de moderación de reseñas
+        description: 12 elementos pendientes (mock)
+        action: Abrir
+      - title: Importar vinos CSV
+        description: "Última importación: hace 2 días (mock)"
+        action: Iniciar
+      - title: Auditoría de etiquetas
+        description: Detectar etiquetas inconsistentes (mock)
+        action: Ejecutar
+  account:
+    eyebrow: Usuario
+    title: Resumen de mi cuenta
+    labels:
+      name: Nombre
+      email: Email
+      role: Rol
+      myReviews: Mis reseñas
+      favoriteStyle: Estilo favorito
+      lastLogin: Último acceso
+    values:
+      favoriteStyle: Vinos tintos (mock)
+      lastLogin: Hoy · 21:45 (mock)
+topbar:
+  mockDashboard: Dashboard mock
+  overview: Resumen
+  wines: Herramientas de vinos
+  reviews: Mis reseñas
+  admin: Herramientas Admin
+  welcome: Bienvenido
+  signedInAs: Sesión iniciada como
+  shellReady: Este shell está listo para módulos de dashboard.
+  authCardTitle: Autenticación
+  authCardDesc: Bootstrap de sesión con /api/auth/me (en la versión real).
+  nextStepTitle: Siguiente paso
+  nextStepDesc: Añadir rutas y módulos de vinos, reseñas y administración.
+  mobileReadyTitle: Preparado para móvil
+  mobileReadyDesc: El layout es responsive para móvil y tablet.
+user:
+  backoffice: Backoffice
+  role: Administrador de Bodega
+wineProfile:
+  pageTitle: Perfil del vino
+  backToDashboard: Volver al Dashboard
+  editWineMock: Editar vino (Mock)
+  photosEyebrow: Fotos
+  photoRecordPreview: Vista previa PhotoRecord
+  filesSuffix: archivos
+  summaryEyebrow: Resumen
+  operationalProfile: Perfil operativo
+  filtersAria: Abrir dashboard con filtros
+  filterWine: Vino
+  filterType: Tipo
+  filterCountry: País
+  filterRegion: Región
+  statAvgScore: Punt. media
+  statPricePaid: Precio pagado
+  statVintage: Añada
+  pairingEyebrow: Maridaje
+  galleryEyebrow: Fotos del vino
+  closeGallery: Cerrar
+  closeGalleryAria: Cerrar visor de imágenes
+  imageViewsAria: Vistas de imágenes del vino
+  imageExampleCaption: Imagen de ejemplo. En el futuro, las fotos estarán
+    asociadas a cada vino (p. ej. `example_wine-hash.png`).
+  imageLabels:
+    bottle: Botella
+    front: Etiqueta frontal
+    back: Etiqueta trasera
+  mock:
+    sectionTitles:
+      wineRecord: WineRecord · Identificación
+      regionDo: RegionDoRecord · Origen
+      grapes: WineGrapeRecord + GrapeRecord
+      placePurchase: PlaceRecord + compra
+      mediaAwardsReview: PhotoRecord + AwardRecord + resumen de reseña
+    fieldLabels:
+      id: ID
+      name: Nombre del vino
+      winery: Bodega
+      wineTypeEnum: Tipo de vino
+      agingTypeEnum: Crianza
+      vintageYear: Añada
+      alcoholPercentage: Alcohol (%)
+      pricePaid: Precio pagado
+      createdAt: Creado el
+      updatedAt: Actualizado el
+      countryEnum: País
+      regionDoName: Región / D.O.
+      regionDoCountry: País de la región
+      regionDoId: ID región / D.O.
+      grapeRows: Composición de uvas
+      purchasePlaceId: ID lugar de compra
+      placeTypeEnum: Tipo de lugar
+      placeName: Nombre del lugar
+      placeAddress: Dirección
+      placeCity: Ciudad
+      photoRecordsEnum: Tipos de foto
+      photoUrls: Archivos de fotos
+      awardNameEnum: Premio / fuente
+      awardScore: Puntuación del premio
+      awardYear: Año del premio
+      reviewBulletsEnum: Etiquetas de reseña
+    labels:
+      mockFk: FK mock
+      mockExtraHarvest: Vendimia (extra mock)
+      reviewSummaryMock: Resumen de reseña (mock)
+    templates:
+      mockFkValue: "{{id}} ({{mockFk}})"
+      recordsCount: "{{count}} registros"
+      grapeRowLabel: "uva_{{index}}"
+      grapeRowValue: "{{name}} · color: {{color}} · porcentaje: {{percentage}}"
+      harvestRange: "{{year}}-09-18 → {{year}}-10-02"
+      priceEur: "{{price}} EUR"
+      reviewSummary: "avg_score={{score}} · intensity_aroma=4 · acidity=3 · body=4 · persistence=4"
+    values:
+      photoUrlsMock: Botella / etiqueta frontal / etiqueta trasera (archivos mock en public/photos/wines)
+      placeAddressMock: Calle Provença 123 (mock)
+      placeCityMock: Barcelona (mock)
+      placeNameRestaurant: Restaurant Cellar Table
+      placeNameSupermarket: Mercat Gourmet Center
+      agingYoung: joven
+      agingReserve: reserva
+      reviewBullets: elegante, mineral, gastronómico
+      countrySpain: españa
+      countryFrance: francia
+      countryPortugal: portugal
+      placeTypeRestaurant: restaurante
+      placeTypeSupermarket: supermercado
+      colorRed: tinto
+      colorWhite: blanco
+      photoTypeBottle: botella
+      photoTypeFrontLabel: etiqueta frontal
+      photoTypeBackLabel: etiqueta trasera
+    profile:
+      summaryRed: Vino estructurado, tanino pulido y final largo. Perfil gastronómico.
+      summaryOther: Perfil fresco, aromático y buena acidez. Muy versátil en mesa.
+      tags:
+        - Elegante
+        - Gastronómico
+        - Mineral
+      pairing:
+        - Arroces
+        - Carne blanca
+        - Quesos curados
+      servingNotes: Decantar 20 minutos si es joven. Servir en copa de tamaño medio.
+wineType:
+  red: Tinto
+  white: Blanco
+  rose: Rosado
+  sparkling: Espumoso

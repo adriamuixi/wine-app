@@ -1,0 +1,259 @@
+common:
+  appName: Wine App
+  mockMode: Mode mock. Aquesta pantalla no crida l’API.
+  menu: Menú
+  logout: Tanca sessió
+  expandSidebar: Expandeix la barra lateral
+  collapseSidebar: Col·lapsa la barra lateral
+  themeLight: Clar
+  themeDark: Fosc
+  themeSwitchToLight: Canvia a mode clar
+  themeSwitchToDark: Canvia a mode fosc
+  allCountries: Tots els països
+  allTypes: Tots els tipus
+  anyScore: Qualsevol puntuació
+  searchPlaceholder: Nom, celler, regió...
+login:
+  eyebrow: Celler Privat
+  title: Backoffice de Vins
+  promo: Gestiona etiquetes, notes de tast i les teves ressenyes personals des
+    d’un únic lloc. Preparat per a mòbil i escriptori.
+  bullets:
+    - Cataloga vins per regió i estil
+    - Segueix l’historial de tastos i ressenyes
+    - Prepara un flux d’administració net
+  panelTitle: Entrar a /admin
+  email: Correu
+  password: Contrasenya
+  submit: Entrar al Backoffice
+  requiredError: Correu i contrasenya són obligatoris.
+  demoTitle: Demo
+  demoDescription: Fes servir qualsevol correu/contrasenya per entrar al dashboard mock.
+menu:
+  dashboard: Tauler
+  wines: Vins
+  reviews: Ressenyes
+  admin: Eines Admin
+dashboard:
+  title: Visió general
+  metrics:
+    totalWines: Vins totals
+    totalReviews: Ressenyes totals
+    myReviews: Les meves ressenyes
+    avgRed: Mitjana vins negres
+    avgWhite: Mitjana vins blancs
+    catalogHint: Entrades al catàleg (mock)
+    globalReviewsHint: Ressenyes globals de la plataforma (mock)
+    myReviewsHint: Ressenyes escrites per mi
+    avgRedHint: Puntuació mitjana en vins negres
+    avgWhiteHint: Puntuació mitjana en vins blancs
+  search:
+    eyebrow: Cerca vins
+    title: Cercador amb filtres (dades mock)
+    results: resultats
+    search: Cercar
+    country: País
+    type: Tipus
+    minScore: Puntuació mínima
+  table:
+    wine: Vi
+    type: Tipus
+    region: Regió
+    price: Preu
+    avg: Mitjana
+wines:
+  title: Eines de catàleg
+  add:
+    eyebrow: Vins
+    title: Afegir vi al catàleg
+    badge: Formulari mock
+    name: Nom del vi
+    winery: Celler
+    type: Tipus de vi
+    vintage: Anyada
+    country: País
+    region: Regió / DO
+    place: Lloc de compra
+    price: Preu pagat
+    submit: Desar vi (Mock)
+  edit:
+    eyebrow: Vins
+    title: Editar vi existent
+    countSuffix: vins mock
+    action: Editar
+reviews:
+  title: Les meves ressenyes
+  create:
+    eyebrow: Ressenyes
+    title: Crear la meva ressenya
+    badge: Només meves
+    wine: Vi
+    selectWine: Selecciona un vi
+    score: Puntuació
+    body: Cos
+    acidity: Acidesa
+    notes: Notes
+    notesPlaceholder: Descriu aromes, estructura i final...
+    submit: Crear ressenya (Mock)
+  edit:
+    eyebrow: Ressenyes
+    title: Editar les meves ressenyes
+    countSuffix: elements
+    editAction: Editar ressenya
+    viewWineAction: Veure vi
+admin:
+  title: Eines Admin
+  shortcuts:
+    eyebrow: Admin Tools
+    title: Accessos operatius
+    items:
+      - title: Cua de moderació de ressenyes
+        description: 12 elements pendents (mock)
+        action: Obrir
+      - title: Importar vins CSV
+        description: "Darrera importació: fa 2 dies (mock)"
+        action: Iniciar
+      - title: Auditoria d’etiquetes
+        description: Detectar etiquetes inconsistents (mock)
+        action: Executar
+  account:
+    eyebrow: Usuari
+    title: Resum del meu compte
+    labels:
+      name: Nom
+      email: Correu
+      role: Rol
+      myReviews: Les meves ressenyes
+      favoriteStyle: Estil preferit
+      lastLogin: Darrer accés
+    values:
+      favoriteStyle: Vins negres (mock)
+      lastLogin: Avui · 21:45 (mock)
+topbar:
+  mockDashboard: Tauler mock
+  overview: Visió general
+  wines: Eines de vins
+  reviews: Les meves ressenyes
+  admin: Eines Admin
+  welcome: Benvingut
+  signedInAs: Sessió iniciada com a
+  shellReady: Aquest shell està llest per a mòduls del dashboard.
+  authCardTitle: Autenticació
+  authCardDesc: Bootstrap de sessió amb /api/auth/me (a la versió real).
+  nextStepTitle: Següent pas
+  nextStepDesc: Afegir rutes i mòduls de vins, ressenyes i administració.
+  mobileReadyTitle: Preparat per a mòbil
+  mobileReadyDesc: El layout és responsive per a mòbil i tauleta.
+user:
+  backoffice: Backoffice
+  role: Administrador de Celler
+wineProfile:
+  pageTitle: Perfil del vi
+  backToDashboard: Torna al Dashboard
+  editWineMock: Edita vi (Mock)
+  photosEyebrow: Fotos
+  photoRecordPreview: Vista prèvia PhotoRecord
+  filesSuffix: fitxers
+  summaryEyebrow: Resum
+  operationalProfile: Perfil operatiu
+  filtersAria: Obre dashboard amb filtres
+  filterWine: Vi
+  filterType: Tipus
+  filterCountry: País
+  filterRegion: Regió
+  statAvgScore: Punt. mitjana
+  statPricePaid: Preu pagat
+  statVintage: Anyada
+  pairingEyebrow: Maridatge
+  galleryEyebrow: Fotos del vi
+  closeGallery: Tanca
+  closeGalleryAria: Tanca visor d’imatges
+  imageViewsAria: Vistes d’imatges del vi
+  imageExampleCaption: Imatge d’exemple. En el futur, les fotos estaran associades
+    a cada vi (p. ex. `example_wine-hash.png`).
+  imageLabels:
+    bottle: Ampolla
+    front: Etiqueta frontal
+    back: Etiqueta posterior
+  mock:
+    sectionTitles:
+      wineRecord: WineRecord · Identificació
+      regionDo: RegionDoRecord · Origen
+      grapes: WineGrapeRecord + GrapeRecord
+      placePurchase: PlaceRecord + compra
+      mediaAwardsReview: PhotoRecord + AwardRecord + resum de ressenya
+    fieldLabels:
+      id: ID
+      name: Nom del vi
+      winery: Celler
+      wineTypeEnum: Tipus de vi
+      agingTypeEnum: Criança
+      vintageYear: Anyada
+      alcoholPercentage: Alcohol (%)
+      pricePaid: Preu pagat
+      createdAt: Creat el
+      updatedAt: Actualitzat el
+      countryEnum: País
+      regionDoName: Regió / D.O.
+      regionDoCountry: País de la regió
+      regionDoId: ID regió / D.O.
+      grapeRows: Composició de raïm
+      purchasePlaceId: ID lloc de compra
+      placeTypeEnum: Tipus de lloc
+      placeName: Nom del lloc
+      placeAddress: Adreça
+      placeCity: Ciutat
+      photoRecordsEnum: Tipus de foto
+      photoUrls: Fitxers de fotos
+      awardNameEnum: Premi / font
+      awardScore: Puntuació del premi
+      awardYear: Any del premi
+      reviewBulletsEnum: Etiquetes de ressenya
+    labels:
+      mockFk: FK mock
+      mockExtraHarvest: Verema (extra mock)
+      reviewSummaryMock: Resum de ressenya (mock)
+    templates:
+      mockFkValue: "{{id}} ({{mockFk}})"
+      recordsCount: "{{count}} registres"
+      grapeRowLabel: "raïm_{{index}}"
+      grapeRowValue: "{{name}} · color: {{color}} · percentatge: {{percentage}}"
+      harvestRange: "{{year}}-09-18 → {{year}}-10-02"
+      priceEur: "{{price}} EUR"
+      reviewSummary: "avg_score={{score}} · intensity_aroma=4 · acidity=3 · body=4 · persistence=4"
+    values:
+      photoUrlsMock: Ampolla / etiqueta frontal / etiqueta posterior (fitxers mock a public/photos/wines)
+      placeAddressMock: Carrer de Provença 123 (mock)
+      placeCityMock: Barcelona (mock)
+      placeNameRestaurant: Restaurant Cellar Table
+      placeNameSupermarket: Mercat Gourmet Center
+      agingYoung: jove
+      agingReserve: reserva
+      reviewBullets: elegant, mineral, gastronòmic
+      countrySpain: espanya
+      countryFrance: frança
+      countryPortugal: portugal
+      placeTypeRestaurant: restaurant
+      placeTypeSupermarket: supermercat
+      colorRed: negre
+      colorWhite: blanc
+      photoTypeBottle: ampolla
+      photoTypeFrontLabel: etiqueta frontal
+      photoTypeBackLabel: etiqueta posterior
+    profile:
+      summaryRed: Vi estructurat, taní polit i final llarg. Perfil gastronòmic.
+      summaryOther: Perfil fresc, aromàtic i bona acidesa. Molt versàtil a taula.
+      tags:
+        - Elegant
+        - Gastronòmic
+        - Mineral
+      pairing:
+        - Arrossos
+        - Carn blanca
+        - Formatges curats
+      servingNotes: Decantar 20 minuts si és jove. Servir en copa de mida mitjana.
+wineType:
+  red: Negre
+  white: Blanc
+  rose: Rosat
+  sparkling: Escumós

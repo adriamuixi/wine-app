@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Vins Tat &amp; Rosset logo dark</title>
+  <desc id="desc">Tat and Rosset wine brand logo for light backgrounds.</desc>
+  <defs>
+    <style>
+      .script { font: italic 700 108px "Brush Script MT", "Segoe Script", cursive; }
+      .serif { font: 700 104px "Bodoni MT", "Didot", "Times New Roman", serif; letter-spacing: 1px; }
+      .main { fill: #111111; }
+      .accent { fill: #8a1237; }
+      .line { stroke: #7b233d; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <text x="118" y="132" class="script accent">Vins</text>
+
+  <g transform="translate(470 36)" class="line">
+    <ellipse cx="50" cy="12" rx="34" ry="8" stroke-width="3"/>
+    <path d="M18 14c-2 16-6 34-6 54 0 32 16 47 38 52 22-5 38-20 38-52 0-20-4-38-6-54" stroke-width="4"/>
+    <path d="M22 42h56v18c0 14-10 24-28 27-18-3-28-13-28-27z" fill="#8a1237" opacity=".92" stroke-width="0"/>
+    <path d="M50 118v46" stroke-width="4"/>
+    <path d="M44 164c-1 10-4 16-7 19" stroke-width="4"/>
+    <path d="M50 164c1 10 4 16 7 19" stroke-width="4"/>
+    <path d="M23 186c13-4 54-4 67 0 3 1 5 3 5 5 0 4-8 7-43 7s-43-3-43-7c0-2 2-4 5-5z" stroke-width="4"/>
+    <path d="M18 34c2-8 4-13 5-17" stroke-width="3"/>
+  </g>
+
+  <path class="line" stroke-width="3" d="M660 126c72-4 146-5 238-5 55 0 115 1 180 4" opacity=".8"/>
+
+  <text x="90" y="292" class="serif main">TAT</text>
+  <text x="396" y="292" class="serif accent">&amp;</text>
+  <text x="548" y="292" class="serif main">ROSSET</text>
+</svg>

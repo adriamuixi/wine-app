@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Tat and Rosset app icon</title>
+  <defs>
+    <linearGradient id="bg" x1="16" y1="16" x2="240" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#181214"/>
+      <stop offset="1" stop-color="#070607"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="40" y1="24" x2="224" y2="236" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c43a61"/>
+      <stop offset="1" stop-color="#7f1635"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="16" y="16" width="224" height="224" rx="52" fill="url(#bg)" />
+  <rect x="16" y="16" width="224" height="224" rx="52" fill="none" stroke="url(#ring)" stroke-width="5" />
+
+  <g transform="translate(58 36)" fill="none" stroke="#f5f1ee" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="70" cy="24" rx="38" ry="9" stroke-width="4"/>
+    <path d="M33 27c-3 21-9 44-9 70 0 43 20 62 46 68 26-6 46-25 46-68 0-26-6-49-9-70" stroke-width="6"/>
+    <path d="M39 61h62v25c0 19-11 33-31 37-20-4-31-18-31-37z" fill="#b11f4a" stroke="none"/>
+    <path d="M70 132v44" stroke-width="6"/>
+    <path d="M60 177c-2 11-6 18-11 22" stroke-width="6"/>
+    <path d="M70 177c2 11 6 18 11 22" stroke-width="6"/>
+    <path d="M34 205c14-4 58-4 72 0 4 1 6 4 6 7 0 5-10 9-42 9s-42-4-42-9c0-3 2-6 6-7z" stroke-width="6"/>
+    <path d="M39 47c2-10 5-17 7-23" stroke="#c43a61" stroke-width="4"/>
+  </g>
+
+  <path d="M57 203c18-6 47-11 73-11 25 0 52 4 70 10" fill="none" stroke="#b11f4a" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+</svg>

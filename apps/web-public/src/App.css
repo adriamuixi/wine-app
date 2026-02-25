@@ -1,42 +1,915 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+.public-shell {
+  position: relative;
+  min-height: 100vh;
+  padding: 1.25rem;
+  color: var(--text);
+}
+
+.public-background {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(177, 27, 82, 0.2), transparent 40%),
+    radial-gradient(circle at 88% 14%, rgba(193, 110, 37, 0.14), transparent 42%),
+    radial-gradient(circle at 50% 120%, rgba(110, 18, 50, 0.26), transparent 55%),
+    linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+}
+
+.public-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.02) 0,
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px,
+      transparent 10px
+    );
+  opacity: 0.5;
+}
+
+.public-topbar,
+.hero-panel,
+.filters-panel,
+.cards-panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.public-topbar {
+  border-radius: 1.25rem;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.brand-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+
+.brand-copy {
+  min-width: 0;
+}
+
+.brand-wordmark {
+  display: block;
+  height: 46px;
+  width: auto;
+  max-width: min(42vw, 360px);
+  object-fit: contain;
+}
+
+.brand-copy p {
+  margin: -0.05rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.theme-toggle,
+.select-wrap select,
+.clear-filters {
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+}
+
+.select-wrap select {
+  padding: 0.65rem 0.85rem;
+  min-width: 7.4rem;
+}
+
+.hero-panel {
+  border-radius: 1.25rem;
+  padding: 1.15rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero-panel h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+  line-height: 1.05;
+}
+
+.hero-subtitle {
+  margin: 0.6rem 0 0;
+  color: var(--muted-strong);
+  max-width: 64ch;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(90px, 1fr));
+  gap: 0.6rem;
+  min-width: min(100%, 420px);
+}
+
+.hero-metrics article {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface-soft);
+  padding: 0.8rem;
+}
+
+.hero-metrics span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.hero-metrics strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 1.3rem;
+}
+
+.catalog-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.filters-panel {
+  border-radius: 1.15rem;
+  padding: 1rem;
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.filters-header {
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.filters-panel label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.filters-panel label span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.filters-panel input,
+.filters-panel select {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.filters-panel input::placeholder {
+  color: var(--muted);
+}
+
+.filters-panel input:focus,
+.filters-panel select:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.clear-filters {
+  margin-top: 0.2rem;
+  padding: 0.7rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clear-filters:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cards-panel {
+  border-radius: 1.15rem;
+  padding: 0.95rem;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 0.95rem;
+}
+
+.wine-card {
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface-soft), var(--surface));
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 180px auto;
+  box-shadow: 0 18px 28px -24px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.wine-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--line));
+}
+
+.wine-card:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.wine-card.featured {
+  border-color: rgba(205, 160, 70, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(227, 181, 89, 0.18),
+    0 18px 28px -24px rgba(0, 0, 0, 0.55);
+}
+
+.wine-card.featured .wine-card-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-top: 2px solid rgba(227, 181, 89, 0.65);
+}
+
+.wine-card-media {
+  position: relative;
+  background: #1a1216;
+}
+
+.wine-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wine-card-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.5)),
+    linear-gradient(135deg, rgba(138, 10, 58, 0.18), transparent 55%);
+}
+
+.wine-card-badges {
+  position: absolute;
+  inset: 0.65rem 0.65rem auto 0.65rem;
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.type-chip,
+.gold-chip {
+  border-radius: 999px;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(5px);
+}
+
+.type-chip {
+  background: rgba(18, 12, 16, 0.68);
+  color: #f7eef3;
+}
+
+.gold-chip {
+  background: rgba(124, 91, 22, 0.8);
+  border-color: rgba(236, 196, 106, 0.55);
+  color: #fff4cd;
+}
+
+.wine-card-body {
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.wine-card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.wine-card-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+
+.wine-card-head p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.score-badge {
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: var(--surface-soft);
+  min-width: 70px;
+  padding: 0.45rem 0.5rem;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.score-badge strong {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.score-badge span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
+  margin-top: 0.18rem;
+}
+
+.wine-card-meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem 0.7rem;
+}
+
+.wine-card-meta div {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 0.8rem;
+  background: var(--surface-soft-2);
+}
+
+.wine-card-meta dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.wine-card-meta dd {
+  margin: 0.12rem 0 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.wine-card-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.wine-card-mini-box {
+  border-radius: 0.85rem;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-soft-2);
+  padding: 0.5rem 0.55rem;
+  display: grid;
+  gap: 0.12rem;
+}
+
+.wine-card-mini-box .mini-label {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.1;
+}
+
+.wine-card-mini-box strong {
+  font-size: 0.92rem;
+  line-height: 1.15;
+}
+
+.wine-card-mini-box small {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.wine-card-mini-maria {
+  border-color: rgba(201, 108, 150, 0.22);
+  background: linear-gradient(180deg, rgba(226, 166, 192, 0.1), var(--surface-soft-2));
+}
+
+.wine-card-mini-adria {
+  border-color: rgba(140, 132, 201, 0.2);
+  background: linear-gradient(180deg, rgba(165, 176, 231, 0.08), var(--surface-soft-2));
+}
+
+.wine-card-mini-date {
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--line-soft));
+}
+
+.wine-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.grape-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, var(--surface-soft)), var(--surface));
+  color: var(--text);
+  padding: 0.34rem 0.62rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.grape-filter-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.grape-filter-chip-primary {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.grape-filter-chip:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.wine-card-grape-mini-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex: 1 1 180px;
+}
+
+.wine-card-grape-mini-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, var(--surface-soft)), var(--surface));
+  color: var(--text);
+  padding: 0.34rem 0.62rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.card-link {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.public-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(8, 5, 7, 0.62);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.public-wine-modal {
+  width: min(1100px, 100%);
+  max-height: min(92vh, 860px);
+  overflow: auto;
+  border-radius: 1.2rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 34px 70px -42px rgba(0, 0, 0, 0.72);
+}
+
+.public-wine-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.public-wine-modal-header h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.1;
+}
+
+.muted-line {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.ghost-close {
+  border-radius: 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.ghost-close:hover {
+  border-color: var(--accent);
+}
+
+.public-wine-modal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1rem;
+  padding: 1rem;
+  align-items: start;
+}
+
+.public-wine-gallery {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.public-wine-main-image {
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+
+.public-wine-main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.public-wine-thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.public-wine-thumb {
+  border-radius: 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 0.2rem;
+  cursor: pointer;
+}
+
+.public-wine-thumb.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+.public-wine-thumb img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 0.65rem;
+}
+
+.public-wine-details {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.detail-card {
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface-soft), var(--surface));
+  padding: 0.9rem;
+}
+
+.detail-card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+}
+
+.detail-card p {
+  margin: 0;
+  color: var(--muted-strong);
+}
+
+.detail-card dl {
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.detail-card dl div {
+  border: 1px solid var(--line-soft);
+  border-radius: 0.75rem;
+  background: var(--surface-soft-2);
+  padding: 0.5rem 0.6rem;
+}
+
+.detail-card dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.detail-card dd {
+  margin: 0.15rem 0 0;
+  font-weight: 700;
+}
+
+.detail-grapes-row dd {
+  margin-top: 0.35rem;
+}
+
+.grape-variety-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.grape-variety-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 10%, var(--surface-soft)),
+    var(--surface)
+  );
+  padding: 0.28rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.score-detail-card {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 4%, var(--surface-soft)), var(--surface));
+}
+
+.score-detail-date {
+  margin: -0.2rem 0 0.65rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.reviewer-score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.reviewer-score {
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  padding: 0.7rem;
+  background: var(--surface-soft);
+}
+
+.reviewer-score header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.reviewer-score header strong {
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.reviewer-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
+}
+
+.reviewer-score p {
+  margin: 0.4rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.reviewer-score-maria {
+  border-color: rgba(201, 108, 150, 0.28);
+  background: linear-gradient(180deg, rgba(226, 166, 192, 0.14), var(--surface-soft));
+}
+
+.reviewer-score-maria .reviewer-avatar {
+  background: rgba(226, 166, 192, 0.32);
+}
+
+.reviewer-score-adria {
+  border-color: rgba(140, 132, 201, 0.22);
+  background: linear-gradient(180deg, rgba(165, 176, 231, 0.12), var(--surface-soft));
+}
+
+.reviewer-score-adria .reviewer-avatar {
+  background: rgba(165, 176, 231, 0.28);
+}
+
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.detail-tags span {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  padding: 0.28rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 980px) {
+  .hero-panel {
+    grid-template-columns: 1fr;
   }
-  to {
-    transform: rotate(360deg);
+
+  .hero-metrics {
+    min-width: 0;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-panel {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .filters-header,
+  .filters-panel label:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .clear-filters {
+    grid-column: 1 / -1;
+  }
+
+  .public-wine-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewer-score-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@media (max-width: 640px) {
+  .public-shell {
+    padding: 0.8rem;
   }
-}
 
-.card {
-  padding: 2em;
-}
+  .public-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-.read-the-docs {
-  color: #888;
+  .topbar-actions {
+    justify-content: space-between;
+  }
+
+  .brand-wordmark {
+    max-width: 100%;
+    height: 40px;
+  }
+
+  .hero-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wine-card-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .wine-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wine-card-quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-modal-backdrop {
+    padding: 0.4rem;
+  }
+
+  .public-wine-modal {
+    max-height: 95vh;
+    border-radius: 1rem;
+  }
+
+  .public-wine-modal-header {
+    padding: 0.8rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .public-wine-modal-grid {
+    padding: 0.8rem;
+  }
+
+  .public-wine-thumbs {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
