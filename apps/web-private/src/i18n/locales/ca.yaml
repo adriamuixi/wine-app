@@ -25,7 +25,7 @@ login:
   panelTitle: Entrar a /admin
   email: Correu
   password: Contrasenya
-  submit: Entrar al Backoffice
+  submit: Accedir
   requiredError: Correu i contrasenya són obligatoris.
   demoTitle: Demo
   demoDescription: Fes servir qualsevol correu/contrasenya per entrar al dashboard mock.

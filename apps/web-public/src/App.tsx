@@ -606,6 +606,13 @@ export default function App() {
   const t = DICT[locale]
   const isDark = theme === 'dark'
   const logoSrc = isDark ? 'brand/logo-wordmark-dark.png' : 'brand/logo-wordmark-light.png'
+  const adminHref = useMemo(() => {
+    const host = window.location.hostname
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:8080/admin/'
+    }
+    return '/admin/'
+  }, [])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -972,7 +979,15 @@ export default function App() {
           </div>
           <a href="#catalog" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
           <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
-          <a href="/backoffice" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.backoffice}</a>
+          <a
+            href={adminHref}
+            onClick={() => {
+              window.localStorage.setItem('wine-app-theme-mode', theme)
+              setIsMobileMenuOpen(false)
+            }}
+          >
+            {t.topbar.backoffice}
+          </a>
         </nav>
       </header>
 

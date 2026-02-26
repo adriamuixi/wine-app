@@ -7,7 +7,7 @@ export default defineConfig({
     host: true,
     allowedHosts: true,
     strictPort: true,
-    port: 5173,
+    port: 5174,
   },
   base: "/admin/",
 });

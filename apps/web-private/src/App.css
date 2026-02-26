@@ -110,11 +110,31 @@ code {
   border: 1px dashed #d7c5b2;
 }
 
+.return-web-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.return-web-top-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 120;
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--theme-surface, #fff) 86%, transparent);
+}
+
 .login-shell {
-  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
   display: grid;
   place-items: center;
   padding: 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
   background:
     radial-gradient(circle at 12% 10%, rgba(142, 38, 70, 0.18), transparent 45%),
     radial-gradient(circle at 85% 20%, rgba(221, 166, 88, 0.17), transparent 45%),
@@ -127,9 +147,23 @@ code {
   grid-template-columns: 1.2fr 0.9fr;
   border-radius: 24px;
   overflow: hidden;
+  position: relative;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(80, 44, 29, 0.12);
   box-shadow: 0 18px 44px rgba(67, 39, 24, 0.16);
+}
+
+.login-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(115deg, rgba(22, 15, 18, 0.78) 0%, rgba(42, 21, 30, 0.64) 34%, rgba(255, 255, 255, 0) 72%),
+    radial-gradient(circle at 16% 16%, rgba(255, 232, 206, 0.14), transparent 40%),
+    url('/photos/wines_photo.png') center / cover no-repeat;
+  filter: saturate(0.95) contrast(1.02);
+  transform: scale(1.02);
 }
 
 .wine-promo {
@@ -228,6 +262,11 @@ code {
   display: grid;
   align-content: center;
   gap: 1rem;
+  position: relative;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 251, 246, 0.94));
+  backdrop-filter: blur(8px);
 }
 
 .login-header h2 {
@@ -245,6 +284,14 @@ code {
 
 .login-header .muted {
   margin: 0.5rem 0 0;
+}
+
+.login-app-title {
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.15rem, 2.4vw, 1.48rem);
+  line-height: 1.05;
+  letter-spacing: 0.14em;
+  font-weight: 900;
 }
 
 .login-form {
@@ -527,6 +574,14 @@ code {
   background: #f3e6d6;
   color: #3f2c21;
   border: 1px solid #ddcab7;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.mobile-bottom-nav {
+  display: none;
 }
 
 .topbar-language {
@@ -1648,8 +1703,28 @@ code {
 }
 
 @media (max-width: 900px) {
+  .return-web-top-link {
+    top: 0.6rem;
+    left: 0.6rem;
+  }
+
+  .login-shell {
+    padding: 0.75rem;
+    overflow: hidden;
+  }
+
   .login-stage {
     grid-template-columns: 1fr;
+    width: min(560px, 100%);
+    max-height: calc(100dvh - 1.5rem);
+  }
+
+  .login-stage::before {
+    background:
+      linear-gradient(180deg, rgba(20, 14, 17, 0.3) 0%, rgba(20, 14, 17, 0.12) 22%, rgba(255, 255, 255, 0) 44%),
+      radial-gradient(circle at 16% 14%, rgba(255, 232, 206, 0.12), transparent 42%),
+      url('/photos/wines_photo.png') center 24% / cover no-repeat;
+    transform: none;
   }
 
   .wine-promo {
@@ -1691,6 +1766,20 @@ code {
 
   .sidebar.open {
     transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background:
+      radial-gradient(circle at 12% 10%, rgba(143, 56, 81, 0.12), transparent 38%),
+      rgba(10, 8, 9, 0.52);
+    backdrop-filter: blur(5px);
   }
 
   .sidebar.collapsed {
@@ -1795,11 +1884,222 @@ code {
   }
 
   .dashboard-content {
-    padding-top: 0.8rem;
+    padding-top: 3.2rem;
+  }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    z-index: 14;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.38rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(82, 46, 28, 0.12);
+    background: color-mix(in srgb, var(--theme-surface, #fff) 92%, transparent);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.14);
+    backdrop-filter: blur(10px);
+  }
+
+  .mobile-bottom-nav-item {
+    border: 0;
+    background: transparent;
+    color: var(--theme-muted);
+    font: inherit;
+    border-radius: 0.8rem;
+    min-height: 56px;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 0.12rem;
+    padding: 0.25rem 0.15rem;
+    cursor: pointer;
+  }
+
+  .mobile-bottom-nav-item.active {
+    color: var(--theme-accent);
+    background: color-mix(in srgb, var(--theme-accent) 10%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-accent) 18%, transparent);
+  }
+
+  .mobile-bottom-nav-icon {
+    font-size: 1.08rem;
+    line-height: 1;
+  }
+
+  .mobile-bottom-nav-label {
+    font-size: 0.62rem;
+    line-height: 1;
+    font-weight: 700;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar.open ~ .mobile-bottom-nav {
+    opacity: 0;
+    pointer-events: none;
   }
 }
 
 @media (max-width: 640px) {
+  .dashboard-content {
+    gap: 0.75rem;
+    padding: 3rem 0.75rem 5.7rem;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .topbar-copy {
+    min-width: 0;
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  .topbar h2 {
+    font-size: 1.2rem;
+    line-height: 1.08;
+  }
+
+  .topbar-controls {
+    margin-left: 0;
+    width: auto;
+    order: 3;
+    gap: 0.4rem;
+  }
+
+  .topbar-controls .theme-toggle.compact {
+    min-height: 40px;
+    padding: 0.45rem 0.6rem;
+  }
+
+  .mobile-menu-button {
+    display: none;
+  }
+
+  .panel-header {
+    gap: 0.45rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .stat-grid {
+    display: flex;
+    gap: 0.55rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.15rem;
+    margin-inline: -0.05rem;
+  }
+
+  .stat-grid .stat-card {
+    min-width: 160px;
+    flex: 0 0 auto;
+    padding: 0.7rem 0.75rem;
+    border-radius: 14px;
+  }
+
+  .stat-grid .stat-card p {
+    font-size: 0.78rem;
+  }
+
+  .stat-grid .stat-card strong {
+    margin-top: 0.28rem;
+    font-size: 1.3rem;
+  }
+
+  .stat-grid .stat-card span {
+    display: none;
+  }
+
+  .table-wrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .wine-table {
+    min-width: 0;
+    display: block;
+  }
+
+  .wine-table thead {
+    display: none;
+  }
+
+  .wine-table tbody {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .wine-table tr {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 0.55rem 0.7rem;
+    align-items: start;
+    border: 1px solid rgba(82, 46, 28, 0.08);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--theme-surface, #fff) 88%, transparent);
+    padding: 0.65rem;
+  }
+
+  .wine-table td {
+    padding: 0;
+    border-bottom: 0;
+    min-width: 0;
+  }
+
+  .wine-thumb-cell {
+    width: auto;
+    min-width: 0;
+    grid-row: 1 / span 3;
+  }
+
+  .wine-thumb {
+    width: 52px;
+    height: 72px;
+    border-radius: 10px;
+  }
+
+  .wine-col-main {
+    grid-column: 2;
+  }
+
+  .wine-col-type,
+  .wine-col-region,
+  .wine-col-price,
+  .wine-col-score {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: 5.6rem minmax(0, 1fr);
+    gap: 0.35rem;
+    align-items: baseline;
+    font-size: 0.85rem;
+  }
+
+  .wine-col-type::before,
+  .wine-col-region::before,
+  .wine-col-price::before,
+  .wine-col-score::before {
+    content: attr(data-label);
+    color: var(--theme-muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .wine-col-score {
+    font-weight: 800;
+  }
+
   .stat-grid,
   .filter-grid,
   .inline-grid,
@@ -1924,6 +2224,56 @@ code {
     justify-content: center;
   }
 
+  .login-panel .login-header-top {
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0.65rem;
+  }
+
+  .login-panel .login-header-top > div:first-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .login-panel .header-controls {
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+  }
+
+  .login-panel .header-controls .theme-toggle {
+    justify-content: center;
+    min-height: 40px;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .login-panel .header-controls .theme-toggle span:last-child {
+    display: none;
+  }
+
+  .login-panel .login-header-top .language-selector,
+  .login-panel .login-header-top .language-selector select {
+    width: auto;
+  }
+
+  .login-panel .login-header-top .language-selector.compact select {
+    min-width: 4.7rem;
+    min-height: 40px;
+    padding: 0.45rem 0.5rem;
+  }
+
+  .login-panel {
+    overflow: auto;
+  }
+
+  .login-app-title {
+    font-size: 1.18rem;
+    letter-spacing: 0.12em;
+  }
+
   .promo-logo-card {
     padding: 0.4rem 0.5rem;
     border-radius: 12px;
@@ -1995,16 +2345,16 @@ code {
     radial-gradient(circle at 85% 8%, rgba(189, 137, 62, 0.12), transparent 38%),
     linear-gradient(180deg, #131013 0%, #1a1518 55%, #221a1d 100%);
   --theme-login-bg:
-    radial-gradient(circle at 12% 10%, rgba(168, 54, 91, 0.16), transparent 45%),
-    radial-gradient(circle at 85% 20%, rgba(178, 126, 58, 0.1), transparent 45%),
-    linear-gradient(180deg, #100d0f 0%, #1a1418 100%);
-  --theme-surface: rgba(28, 23, 25, 0.88);
-  --theme-surface-strong: rgba(34, 27, 30, 0.92);
-  --theme-surface-alt: rgba(36, 29, 33, 0.96);
+    radial-gradient(circle at 12% 10%, rgba(168, 54, 91, 0.11), transparent 42%),
+    radial-gradient(circle at 85% 20%, rgba(178, 126, 58, 0.07), transparent 42%),
+    linear-gradient(180deg, #09080a 0%, #100d10 52%, #161116 100%);
+  --theme-surface: rgba(18, 15, 17, 0.93);
+  --theme-surface-strong: rgba(22, 18, 21, 0.95);
+  --theme-surface-alt: rgba(24, 20, 23, 0.97);
   --theme-border: rgba(221, 194, 173, 0.12);
   --theme-shadow: rgba(0, 0, 0, 0.35);
-  --theme-input-bg: rgba(21, 18, 20, 0.94);
-  --theme-input-border: rgba(212, 187, 167, 0.16);
+  --theme-input-bg: rgba(12, 10, 12, 0.96);
+  --theme-input-border: rgba(212, 187, 167, 0.12);
   --theme-input-text: #f3e9df;
   --theme-pill-bg: rgba(255, 255, 255, 0.04);
   --theme-pill-text: #d1c2b6;
@@ -2227,6 +2577,45 @@ body {
 :root[data-theme='dark'] .login-panel,
 :root[data-theme='dark'] .panel {
   backdrop-filter: blur(8px);
+}
+
+:root[data-theme='dark'] .login-stage::before {
+  background:
+    linear-gradient(115deg, rgba(4, 3, 4, 0.86) 0%, rgba(10, 7, 10, 0.76) 34%, rgba(255, 255, 255, 0) 74%),
+    radial-gradient(circle at 16% 16%, rgba(255, 220, 186, 0.08), transparent 42%),
+    url('/photos/wines_photo.png') center / cover no-repeat;
+  filter: saturate(0.82) brightness(0.82) contrast(1.06);
+}
+
+:root[data-theme='dark'] .login-panel {
+  background:
+    linear-gradient(180deg, rgba(16, 13, 15, 0.93), rgba(14, 12, 14, 0.96));
+  border-left: 1px solid rgba(223, 198, 178, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+:root[data-theme='dark'] .return-web-top-link {
+  background: rgba(14, 12, 14, 0.86);
+  border-color: rgba(223, 198, 178, 0.14);
+  color: #d8cabf;
+}
+
+:root[data-theme='dark'] .theme-toggle,
+:root[data-theme='dark'] .language-selector select {
+  background: rgba(18, 15, 17, 0.92);
+  border-color: rgba(223, 198, 178, 0.14);
+}
+
+:root[data-theme='dark'] .sidebar-backdrop {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(210, 104, 133, 0.1), transparent 40%),
+    rgba(3, 3, 4, 0.64);
+}
+
+:root[data-theme='dark'] .mobile-bottom-nav {
+  border-color: rgba(223, 198, 178, 0.12);
+  background: rgba(14, 12, 14, 0.9);
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
 }
 
 :root[data-theme='dark'] .promo-overlay {

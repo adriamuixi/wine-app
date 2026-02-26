@@ -503,6 +503,22 @@ function App() {
   }, [isSidebarCollapsed])
 
   useEffect(() => {
+    if (!showMobileMenu) {
+      return
+    }
+
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.body.style.overflow = previousBodyOverflow
+    }
+  }, [showMobileMenu])
+
+  useEffect(() => {
     if (!selectedWineGallery) {
       return
     }
@@ -615,35 +631,10 @@ function App() {
   if (!loggedIn) {
     return (
       <main className="login-shell">
+        <a href="/" className="ghost-button small return-web-link return-web-top-link">
+          Torna al web
+        </a>
         <section className="login-stage">
-          <aside className="wine-promo" aria-hidden="true">
-            <img
-                src="photos/wines_photo.png"
-              className="promo-photo"
-              alt=""
-              aria-hidden="true"
-            />
-            <div className="promo-overlay" />
-            <div className="promo-content">
-              <div className="promo-logo-card">
-              <img
-                src="brand/logo-wordmark-light.png"
-                className="brand-logo brand-logo-promo"
-                alt=""
-                aria-hidden="true"
-              />
-              </div>
-              <p className="eyebrow">{labels.login.eyebrow}</p>
-              <h1>{labels.login.title}</h1>
-              <p>{labels.login.promo}</p>
-              <ul className="promo-list">
-                {labels.login.bullets.map((bullet: string) => (
-                  <li key={bullet}>{bullet}</li>
-                ))}
-              </ul>
-            </div>
-          </aside>
-
           <section className="login-panel" aria-labelledby="login-title">
             <div className="login-header">
               <div className="login-header-top">
@@ -653,8 +644,7 @@ function App() {
                     className="brand-logo brand-logo-login"
                     alt="Vins Tat & Rosset"
                   />
-                  <p className="eyebrow">{labels.common.appName}</p>
-                  <h2 id="login-title">{labels.login.panelTitle}</h2>
+                  <p className="eyebrow login-app-title" id="login-title">{labels.common.appName}</p>
                 </div>
                 <div className="header-controls">
                   <button
@@ -668,10 +658,9 @@ function App() {
                     <span aria-hidden="true">{isDarkMode ? '☾' : '☀'}</span>
                     <span>{isDarkMode ? labels.common.themeDark : labels.common.themeLight}</span>
                   </button>
-                  <LanguageSelector />
+                  <LanguageSelector compact />
                 </div>
               </div>
-              <p className="muted">{labels.common.mockMode}</p>
             </div>
 
             <form className="login-form" onSubmit={handleLogin}>
@@ -707,11 +696,6 @@ function App() {
                 {labels.login.submit}
               </button>
             </form>
-
-            <div className="demo-note">
-              <p className="demo-note-title">{labels.login.demoTitle}</p>
-              <p>{labels.login.demoDescription}</p>
-            </div>
           </section>
         </section>
       </main>
@@ -720,6 +704,9 @@ function App() {
 
   return (
     <main className={`dashboard-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <a href="/" className="ghost-button small return-web-link return-web-top-link">
+        Torna al web
+      </a>
       <aside
         id="sidebar"
         className={`sidebar ${showMobileMenu ? 'open' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`}
@@ -791,6 +778,15 @@ function App() {
           </button>
         </section>
       </aside>
+
+      {showMobileMenu ? (
+        <button
+          type="button"
+          className="sidebar-backdrop"
+          aria-label="Close menu"
+          onClick={() => setShowMobileMenu(false)}
+        />
+      ) : null}
 
       <section className="dashboard-content">
         <header className="topbar">
@@ -964,14 +960,14 @@ function App() {
                             }}
                           />
                         </td>
-                        <td>
+                        <td className="wine-col-main" data-label={labels.dashboard.table.wine}>
                           <strong>{wine.name}</strong>
                           <span>{wine.winery}</span>
                         </td>
-                        <td>{wineTypeLabel(wine.type)}</td>
-                        <td>{wine.country} · {wine.region}</td>
-                        <td>{priceFormatter.format(wine.pricePaid)}</td>
-                        <td>{wine.averageScore ?? '-'}</td>
+                        <td className="wine-col-type" data-label={labels.dashboard.table.type}>{wineTypeLabel(wine.type)}</td>
+                        <td className="wine-col-region" data-label={labels.dashboard.table.region}>{wine.country} · {wine.region}</td>
+                        <td className="wine-col-price" data-label={labels.dashboard.table.price}>{priceFormatter.format(wine.pricePaid)}</td>
+                        <td className="wine-col-score" data-label={labels.dashboard.table.avg}>{wine.averageScore ?? '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1392,6 +1388,36 @@ function App() {
           </section>
         ) : null}
       </section>
+
+      <nav className="mobile-bottom-nav" aria-label="App navigation">
+        {menuItems.map((item) => (
+          <button
+            key={`mobile-nav-${item.key}`}
+            type="button"
+            className={`mobile-bottom-nav-item${menu === item.key ? ' active' : ''}`}
+            onClick={() => {
+              setMenu(item.key)
+              setShowMobileMenu(false)
+            }}
+            aria-pressed={menu === item.key}
+            title={item.label}
+          >
+            <span className="mobile-bottom-nav-icon" aria-hidden="true">{item.icon}</span>
+            <span className="mobile-bottom-nav-label">{item.label}</span>
+          </button>
+        ))}
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item mobile-bottom-nav-item-menu${showMobileMenu ? ' active' : ''}`}
+          onClick={() => setShowMobileMenu((current) => !current)}
+          aria-expanded={showMobileMenu}
+          aria-controls="sidebar"
+          title={labels.common.menu}
+        >
+          <span className="mobile-bottom-nav-icon" aria-hidden="true">☰</span>
+          <span className="mobile-bottom-nav-label">{labels.common.menu}</span>
+        </button>
+      </nav>
 
       {selectedWineGallery ? (
         <div className="modal-backdrop" role="presentation" onClick={closeWineGallery}>
