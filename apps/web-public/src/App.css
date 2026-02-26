@@ -1572,6 +1572,32 @@
 }
 
 @media (max-width: 980px) {
+  body {
+    background: var(--bg-top);
+  }
+
+  .public-background {
+    display: none;
+  }
+
+  .public-topbar,
+  .hero-panel,
+  .filters-panel,
+  .cards-panel,
+  .public-wine-modal,
+  .public-modal-backdrop,
+  .public-wine-modal-header,
+  .mobile-nav-menu,
+  .mobile-nav-backdrop,
+  .mobile-sort-backdrop,
+  .mobile-sort-panel,
+  .mobile-filter-panel,
+  .mobile-filters-backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
   .hero-panel {
     grid-template-columns: 1fr;
   }
