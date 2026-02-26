@@ -986,12 +986,12 @@ code {
 }
 
 .wine-profile-header-panel {
-  padding: 1rem;
+  padding: 0.85rem;
 }
 
 .wine-profile-header-main {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: flex-start;
   gap: 0.9rem;
 }
@@ -1006,11 +1006,174 @@ code {
   margin: 0.35rem 0 0;
 }
 
+.wine-profile-origin-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.wine-profile-do-logo {
+  width: 1.7rem;
+  height: 1.7rem;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(82, 46, 28, 0.08);
+  background: rgba(255, 255, 255, 0.76);
+  padding: 0.06rem;
+  flex: 0 0 auto;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.wine-profile-do-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.wine-profile-do-logo:hover {
+  transform: scale(1.14);
+  box-shadow: 0 6px 16px -10px rgba(0, 0, 0, 0.35);
+}
+
+.wine-profile-do-tooltip-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  min-width: 8.2rem;
+  padding: 0.42rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(82, 46, 28, 0.08);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 28px -18px rgba(0, 0, 0, 0.45);
+  display: grid;
+  gap: 0.28rem;
+  justify-items: center;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.wine-profile-do-tooltip-panel img {
+  width: 8.5rem;
+  height: 8.5rem;
+  object-fit: contain;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(82, 46, 28, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.2rem;
+}
+
+.wine-profile-do-tooltip-panel span {
+  color: #251b15;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.wine-profile-do-tooltip:hover .wine-profile-do-tooltip-panel {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.wine-profile-flag-badge {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(82, 46, 28, 0.08);
+  background: rgba(255, 255, 255, 0.76);
+  font-size: 0.9rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.wine-profile-do-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(82, 46, 28, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.18rem 0.45rem 0.18rem 0.22rem;
+  color: #251b15;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
 .wine-profile-header-actions {
   display: flex;
   gap: 0.55rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.wine-profile-award-box {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 14px;
+  border: 1px solid rgba(82, 46, 28, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.55rem 0.7rem;
+  min-width: 132px;
+}
+
+.wine-profile-award-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.wine-profile-award-content {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.wine-profile-award-content strong {
+  color: #251b15;
+  font-size: 0.92rem;
+  line-height: 1.1;
+  text-transform: capitalize;
+}
+
+.wine-profile-award-content span {
+  color: #7b6a60;
+  font-size: 0.75rem;
+}
+
+.wine-profile-medal-score {
+  display: grid;
+  align-content: center;
+  justify-items: end;
+  gap: 0.08rem;
+  padding: 0.15rem 0;
+  min-width: 68px;
+}
+
+.wine-profile-medal-score-label {
+  color: #7b6a60;
+  font-size: 0.72rem;
+}
+
+.wine-profile-medal-score strong {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #7b6a60;
+}
+
+.wine-profile-medal-score.gold strong {
+  color: #b8860b;
+}
+
+.wine-profile-medal-score.silver strong {
+  color: #7c8799;
+}
+
+.wine-profile-medal-score.bronze strong {
+  color: #a25e2b;
 }
 
 .wine-profile-main-grid {
@@ -1055,6 +1218,41 @@ code {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+}
+
+.wine-profile-origin-strip {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.wine-profile-origin-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.wine-profile-country-flag {
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 999px;
+  padding: 0.18rem 0.28rem;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(82, 46, 28, 0.08);
+}
+
+.wine-profile-spain-communities {
+  gap: 0.4rem;
+}
+
+.wine-profile-community-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(143, 56, 81, 0.16);
+  background: rgba(143, 56, 81, 0.05);
+  color: #7f2840;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
 .filter-link-button {
@@ -1625,7 +1823,7 @@ code {
   }
 
   .wine-profile-header-main {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     align-items: stretch;
   }
 
@@ -1636,6 +1834,10 @@ code {
   .wine-profile-header-actions .ghost-button,
   .wine-profile-header-actions .secondary-button {
     width: 100%;
+  }
+
+  .wine-profile-medal-score {
+    justify-items: start;
   }
 
   .wine-profile-photos-panel .wine-sheet-thumbnail-row {
@@ -2217,6 +2419,61 @@ body {
 
 :root[data-theme='dark'] .wine-profile-stat-strip strong {
   color: #efe5db;
+}
+
+:root[data-theme='dark'] .wine-profile-award-box {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(223, 198, 178, 0.1);
+}
+
+:root[data-theme='dark'] .wine-profile-award-content strong {
+  color: #efe5db;
+}
+
+:root[data-theme='dark'] .wine-profile-award-content span,
+:root[data-theme='dark'] .wine-profile-medal-score-label {
+  color: #bcaea2;
+}
+
+:root[data-theme='dark'] .wine-profile-do-logo {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(223, 198, 178, 0.1);
+}
+
+:root[data-theme='dark'] .wine-profile-do-tooltip-panel {
+  background: rgba(29, 25, 23, 0.95);
+  border-color: rgba(223, 198, 178, 0.1);
+}
+
+:root[data-theme='dark'] .wine-profile-do-tooltip-panel img {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(223, 198, 178, 0.1);
+}
+
+:root[data-theme='dark'] .wine-profile-do-tooltip-panel span {
+  color: #efe5db;
+}
+
+:root[data-theme='dark'] .wine-profile-flag-badge {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(223, 198, 178, 0.1);
+}
+
+:root[data-theme='dark'] .wine-profile-do-chip {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(223, 198, 178, 0.1);
+  color: #efe5db;
+}
+
+:root[data-theme='dark'] .wine-profile-country-flag {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(223, 198, 178, 0.1);
+}
+
+:root[data-theme='dark'] .wine-profile-community-pill {
+  background: rgba(210, 104, 133, 0.08);
+  border-color: rgba(210, 104, 133, 0.16);
+  color: #eacfd8;
 }
 
 :root[data-theme='dark'] .filter-link-button {

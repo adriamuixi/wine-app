@@ -5,13 +5,14 @@ type Locale = 'ca' | 'es'
 type ThemeMode = 'light' | 'dark'
 type WineType = 'red' | 'white' | 'rose' | 'sparkling'
 type SortKey = 'score_desc' | 'price_asc' | 'price_desc' | 'latest'
+type ScoreFilterBucket = 'all' | 'lt70' | '70_80' | '80_90' | 'gte90'
 type UrlCatalogState = {
   q: string
   type: 'all' | WineType
   country: string
   region: string
   grape: string
-  minScore: 'all' | number
+  minScore: ScoreFilterBucket
   sort: SortKey
   wineId: number | null
 }
@@ -40,6 +41,8 @@ type WineCard = {
     name: string
     score?: number
   }
+  rewardBadgeImage?: string
+  doLogoImage?: string
   notes: string
   tags: string[]
   image: string
@@ -83,14 +86,14 @@ type Dictionary = {
     featured90: string
     viewDetails: string
   }
-    icons: {
-      filters: string
-      search: string
-      type: string
-      country: string
-      region: string
-      grape: string
-      minScore: string
+  icons: {
+    filters: string
+    search: string
+    type: string
+    country: string
+    region: string
+    grape: string
+    minScore: string
     sort: string
     results: string
     avgScore: string
@@ -345,7 +348,7 @@ const CATALAN_JOURNAL_ROWS: JournalWineRow[] = [
   { date: '27/9/2020', month: 'Setembre', wine: 'Compte ovelles', typeCa: 'Negre', grapes: 'Syrah / Cabernet sauvignon / Merlot', aging: 'jove', region: 'Penedès', vintage: 2020, alcohol: '13 %', techSheet: true, maria: '5', adria: '5,75', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
   { date: '9/10/2020', month: 'Octubre', wine: 'Seré 2018', typeCa: 'Negre', grapes: 'Garnatxa / Carinyena', aging: 'criança', region: 'Montsant', vintage: 2018, alcohol: '14,5 %', techSheet: true, maria: '6,5', adria: '6,25', place: 'Taberna La Parra', city: 'Barcelona (Hostafrancs)' },
   { date: '9/10/2020', month: 'Octubre', wine: 'Vega de Nava', typeCa: 'Negre', grapes: 'Tempranillo', aging: 'reserva', region: 'Ribera del Duero', vintage: 2018, alcohol: '14 %', techSheet: true, maria: '8', adria: '8', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '23/10/2020', month: 'Octubre', wine: 'Chateldon', typeCa: 'Negre', grapes: 'Cabernet sauvignon', aging: 'reserva', region: 'Penedès', vintage: 2019, alcohol: '13,5 %', techSheet: true, maria: '8', adria: '', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
+  { date: '23/10/2020', month: 'Octubre', wine: 'Chateldon', typeCa: 'Negre', grapes: 'Cabernet sauvignon', aging: 'reserva', region: 'Penedès', vintage: 2019, alcohol: '13,5 %', techSheet: true, maria: '8.6', adria: '9.5', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
   { date: '24/10/2020', month: 'Octubre', wine: 'Matsu - el pícaro', typeCa: 'Negre', grapes: 'Tinta de toro', aging: 'jove', region: 'Toro', vintage: 2020, alcohol: '14,5 %', techSheet: true, maria: '7,5', adria: '8', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
   { date: '6/11/2020', month: 'Novembre', wine: 'Titella', typeCa: 'Negre', grapes: 'Garnatxa, carinyena, merlot, tempranillo', aging: 'jove', region: 'Montsant', vintage: 2017, alcohol: '13,5 %', techSheet: true, maria: '8', adria: '8,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
   { date: '8/11/2020', month: 'Novembre', wine: 'Ulldemolins', typeCa: 'Negre', grapes: 'Garnatxa', aging: 'criança', region: 'Montsant', vintage: 2016, alcohol: '14,5%', techSheet: true, maria: '6,5', adria: '6,75', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
@@ -397,6 +400,48 @@ function splitGrapeVarieties(grapes: string): string[] {
     .filter(Boolean)
 }
 
+function doLogoPathForRegion(region: string): string | undefined {
+  const map: Record<string, string> = {
+    'Penedès': '/icons/DO/penedes_DO.png',
+    Montsant: '/icons/DO/montanst_DO.png',
+    'Ribera del Duero': '/icons/DO/ribera_del_duero_DO.png',
+    Somontano: '/icons/DO/somontano_DO.jpg',
+    Toro: '/icons/DO/toro_DO.jpg',
+    Rioja: '/icons/DO/rioja_DO.png',
+    Tarragona: '/icons/DO/tarragona_DO.png',
+    'Terra Alta': '/icons/DO/terra_alta_DO.png',
+    Priorat: '/icons/DO/priorat_DO.png',
+    'Conca de Barberà': '/icons/DO/conca_de_barbera_DO.jpg',
+    'Pla de Bages': '/icons/DO/pla_de_bages_DO.png',
+    Alella: '/icons/DO/alella_DO.png',
+    Empordà: '/icons/DO/emporda_DO.png',
+    Navarra: '/icons/DO/navarra_DO.jpg',
+    Cariñena: '/icons/DO/cariñena_DO.png',
+    Calatayud: '/icons/DO/calatayud_DO.jpg',
+    Cigales: '/icons/DO/cigales_DO.png',
+    Arlanza: '/icons/DO/arlanza_DO.jpg',
+    'Costers del Segre': '/icons/DO/costers_del_segre_DO.png',
+  }
+
+  return map[region]
+}
+
+function countryFlagEmoji(country: string): string {
+  const map: Record<string, string> = {
+    Spain: '🇪🇸',
+    France: '🇫🇷',
+    Portugal: '🇵🇹',
+    Italy: '🇮🇹',
+    Germany: '🇩🇪',
+    Argentina: '🇦🇷',
+    Chile: '🇨🇱',
+    USA: '🇺🇸',
+    'United States': '🇺🇸',
+  }
+
+  return map[country] ?? '🏳️'
+}
+
 const imageCycle = [
   'photos/wines/exmaple_wine-hash.png',
   'photos/wines/front_wine-hash.png',
@@ -441,6 +486,13 @@ const MOCK_WINES: WineCard[] = CATALAN_JOURNAL_ROWS.map((row, index) => {
     city: row.city || 'n/d',
     techSheet: row.techSheet,
     reward: buildMockReward(avgScore, row.region),
+    doLogoImage: doLogoPathForRegion(row.region),
+    rewardBadgeImage:
+      index === 0 ? '/icons/awards/penin/thumbs-80/penin-91.png'
+        : index === 1 ? '/icons/awards/penin/thumbs-80/penin-93.png'
+          : index === 2 ? '/icons/awards/penin/thumbs-80/penin-86.png'
+            : index === 3 ? '/icons/awards/penin/thumbs-80/penin-95.png'
+              : undefined,
     notes: `${row.month} · ${row.region}. ${technicalLabel}. ${scoreLabel}.`,
     tags,
     image,
@@ -469,7 +521,7 @@ function parseUrlState(): UrlCatalogState {
       country: 'all',
       region: 'all',
       grape: 'all',
-      minScore: 'all' as 'all' | number,
+      minScore: 'all' as ScoreFilterBucket,
       sort: DEFAULT_SORT as SortKey,
       wineId: null,
     }
@@ -483,7 +535,14 @@ function parseUrlState(): UrlCatalogState {
 
   const validType: 'all' | WineType =
     typeParam === 'red' || typeParam === 'white' || typeParam === 'rose' || typeParam === 'sparkling' ? typeParam : 'all'
-  const minScore: 'all' | number = minScoreParam && !Number.isNaN(Number(minScoreParam)) ? Number(minScoreParam) : 'all'
+  const minScore: ScoreFilterBucket =
+    minScoreParam === 'lt70' || minScoreParam === '70_80' || minScoreParam === '80_90' || minScoreParam === 'gte90'
+      ? minScoreParam
+      : minScoreParam === '90'
+        ? 'gte90'
+        : minScoreParam === '80' || minScoreParam === '85'
+          ? '80_90'
+          : 'all'
   const validSort: SortKey =
     sortParam === 'price_asc' || sortParam === 'price_desc' || sortParam === 'latest' || sortParam === 'score_desc'
       ? sortParam
@@ -511,7 +570,7 @@ export default function App() {
   const [countryFilter, setCountryFilter] = useState<'all' | string>(initialUrl.country)
   const [regionFilter, setRegionFilter] = useState<'all' | string>(initialUrl.region)
   const [grapeFilter, setGrapeFilter] = useState<'all' | string>(initialUrl.grape)
-  const [minScoreFilter, setMinScoreFilter] = useState<'all' | number>(initialUrl.minScore)
+  const [minScoreFilter, setMinScoreFilter] = useState<ScoreFilterBucket>(initialUrl.minScore)
   const [sortKey, setSortKey] = useState<SortKey>(initialUrl.sort)
   const [selectedWineId, setSelectedWineId] = useState<number | null>(initialUrl.wineId)
   const [activeModalImageIndex, setActiveModalImageIndex] = useState(0)
@@ -579,7 +638,12 @@ export default function App() {
       const matchesCountry = countryFilter === 'all' || wine.country === countryFilter
       const matchesRegion = regionFilter === 'all' || wine.region === regionFilter
       const matchesGrape = grapeFilter === 'all' || wine.grapes.toLowerCase().includes(grapeFilter.toLowerCase())
-      const matchesScore = minScoreFilter === 'all' || wine.avgScore >= minScoreFilter
+      const matchesScore =
+        minScoreFilter === 'all' ? true
+          : minScoreFilter === 'lt70' ? wine.avgScore < 70
+            : minScoreFilter === '70_80' ? wine.avgScore >= 70 && wine.avgScore < 80
+              : minScoreFilter === '80_90' ? wine.avgScore >= 80 && wine.avgScore < 90
+                : wine.avgScore >= 90
 
       return matchesSearch && matchesType && matchesCountry && matchesRegion && matchesGrape && matchesScore
     })
@@ -610,7 +674,7 @@ export default function App() {
     if (countryFilter !== 'all') params.set('country', countryFilter)
     if (regionFilter !== 'all') params.set('region', regionFilter)
     if (grapeFilter !== 'all') params.set('grape', grapeFilter)
-    if (minScoreFilter !== 'all') params.set('minScore', String(minScoreFilter))
+    if (minScoreFilter !== 'all') params.set('minScore', minScoreFilter)
     if (sortKey !== DEFAULT_SORT) params.set('sort', sortKey)
     if (selectedWineId != null) params.set('wine', String(selectedWineId))
 
@@ -733,18 +797,28 @@ export default function App() {
             </select>
           </label>
 
-          <label>
+          <div className="filter-score-group" role="group" aria-label={`${t.icons.minScore} ${t.filters.minScore}`}>
             <span>{t.icons.minScore} {t.filters.minScore}</span>
-            <select
-              value={minScoreFilter === 'all' ? 'all' : String(minScoreFilter)}
-              onChange={(event) => setMinScoreFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))}
-            >
-              <option value="all">{t.filters.anyScore}</option>
-              <option value="80">80+</option>
-              <option value="85">85+</option>
-              <option value="90">90+</option>
-            </select>
-          </label>
+            <div className="filter-score-medals">
+              {[
+                { key: 'all', label: t.filters.anyScore, tone: 'all' },
+                { key: 'lt70', label: '<70', tone: 'base' },
+                { key: '70_80', label: '70-80', tone: 'bronze' },
+                { key: '80_90', label: '80-90', tone: 'silver' },
+                { key: 'gte90', label: '90+', tone: 'gold' },
+              ].map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={`score-filter-medal ${option.tone}${minScoreFilter === option.key ? ' active' : ''}`}
+                  onClick={() => setMinScoreFilter(option.key as ScoreFilterBucket)}
+                  aria-pressed={minScoreFilter === option.key}
+                >
+                  <span>{option.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           <label>
             <span>{t.icons.sort} {t.filters.sort}</span>
@@ -777,11 +851,12 @@ export default function App() {
           <div className="cards-grid">
             {filteredWines.map((wine) => {
               const isFeatured = wine.avgScore >= 90
+              const scoreTier = wine.avgScore >= 90 ? 'gold' : wine.avgScore >= 80 ? 'silver' : wine.avgScore >= 70 ? 'bronze' : 'base'
 
               return (
                 <article
                   key={wine.id}
-                  className={`wine-card ${isFeatured ? 'featured' : ''}`}
+                  className={`wine-card ${isFeatured ? 'featured' : ''} score-tier-${scoreTier}`}
                   role="button"
                   tabIndex={0}
                   onClick={() => {
@@ -800,8 +875,12 @@ export default function App() {
                     <img src={wine.image} alt={wine.name} loading="lazy" />
                     <div className="wine-card-overlay" />
                     <div className="wine-card-badges">
-                      <span className="type-chip">{t.wineType[wine.type]}</span>
                       {isFeatured ? <span className="gold-chip">{t.card.featured90}</span> : null}
+                      {wine.rewardBadgeImage ? (
+                        <span className="wine-card-award-corner-tag" aria-label={`${wine.reward?.name ?? 'Award'} ${wine.reward?.score ?? ''}`.trim()}>
+                          <img src={wine.rewardBadgeImage} alt="" loading="lazy" />
+                        </span>
+                      ) : null}
                     </div>
                   </div>
 
@@ -809,63 +888,86 @@ export default function App() {
                     <div className="wine-card-head">
                       <div>
                         <h3>{wine.name}</h3>
-                        <p>{wine.winery}</p>
+                        <span className={`wine-type-pill wine-type-pill-${wine.type}`}>
+                          <span className={`wine-type-pill-dot wine-type-pill-dot-${wine.type}`} aria-hidden="true">🍇</span>
+                          <span>{t.wineType[wine.type]}</span>
+                        </span>
                       </div>
-                      <div className="score-badge" aria-label={`${t.card.avgScore} ${wine.avgScore.toFixed(1)}`}>
-                        <strong>{wine.avgScore.toFixed(1)}</strong>
-                        <span>{t.card.points}</span>
+                      <div className="score-award-stack">
+                        <div className={`score-badge score-badge-${scoreTier}`} aria-label={`${t.card.avgScore} ${wine.avgScore.toFixed(1)}`}>
+                          <strong>{wine.avgScore.toFixed(1)}</strong>
+                          <span>{t.card.points}</span>
+                        </div>
                       </div>
                     </div>
 
-                    <dl className="wine-card-meta">
-                      <div><dt>{t.icons.region} {t.card.region}</dt><dd>{wine.country} · {wine.region}</dd></div>
-                      <div><dt>{t.icons.vintage} {t.card.vintage}</dt><dd>{wine.vintage}</dd></div>
-                      <div><dt>{t.icons.price} {t.card.priceFrom}</dt><dd>{euro.format(wine.priceFrom)}</dd></div>
-                      <div>
-                        <dt>{t.icons.reward} {t.card.reward}</dt>
-                        <dd>{wine.reward ? `${wine.reward.name}${wine.reward.score ? ` · ${wine.reward.score}` : ''}` : t.card.noReward}</dd>
+                    <section className="wine-card-info-section" aria-label="Informacio del vi">
+                      <p className="wine-card-info-title">INFORMACIO DEL VI</p>
+                      <dl className="wine-card-meta">
+                      <div className="wine-card-meta-box-do">
+                        <dt>{t.icons.region} DO</dt>
+                        <dd className="origin-with-do">
+                          <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>{countryFlagEmoji(wine.country)}</span>
+                          {wine.doLogoImage ? (
+                            <span className="do-logo-tooltip">
+                              <img className="do-logo-badge" src={wine.doLogoImage} alt={`${wine.region} DO`} loading="lazy" />
+                              <span className="do-logo-tooltip-panel" role="tooltip" aria-hidden="true">
+                                <img src={wine.doLogoImage} alt="" loading="lazy" />
+                                <span>{wine.region}</span>
+                              </span>
+                            </span>
+                          ) : null}
+                          <span>{wine.region}</span>
+                        </dd>
                       </div>
-                    </dl>
+                      <div className="wine-card-meta-box-aging">
+                        <dt>🍷 Crianza</dt>
+                        <dd>{wine.aging}</dd>
+                      </div>
+                      <div className="wine-card-meta-box-vintage"><dt>{t.icons.vintage} {t.card.vintage}</dt><dd>{wine.vintage}</dd></div>
+                      <div className="wine-card-meta-box-grapes">
+                        <dt>{t.icons.grape} {t.filters.grape}</dt>
+                        <dd className="wine-card-meta-grapes">
+                          {splitGrapeVarieties(wine.grapes).map((grape) => (
+                            <button
+                              key={`${wine.id}-meta-grape-${grape}`}
+                              type="button"
+                              className="grape-filter-chip grape-filter-chip-secondary grape-filter-chip-compact"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setGrapeFilter(grape)
+                              }}
+                              aria-label={`${t.filters.grape}: ${grape}`}
+                              title={grape}
+                            >
+                              <span aria-hidden="true">{t.icons.grape}</span>
+                              <span>{grape}</span>
+                            </button>
+                          ))}
+                        </dd>
+                      </div>
+                      </dl>
+                    </section>
 
-                    <div className="wine-card-quick-grid">
-                      <article className="wine-card-mini-box wine-card-mini-maria">
-                        <span className="mini-label">👩 {t.modal.mariaScore}</span>
-                        <strong>{wine.mariaScore != null ? wine.mariaScore.toFixed(2) : 'n/d'}</strong>
-                      </article>
-                      <article className="wine-card-mini-box wine-card-mini-adria">
-                        <span className="mini-label">🧑 {t.modal.adriaScore}</span>
-                        <strong>{wine.adriaScore != null ? wine.adriaScore.toFixed(2) : 'n/d'}</strong>
-                      </article>
-                      <article className="wine-card-mini-box wine-card-mini-date">
-                        <span className="mini-label">📅 {t.modal.tastedAt}</span>
-                        <strong>{wine.tastedAt}</strong>
-                        <small>{wine.month}</small>
-                      </article>
-                    </div>
+                    <section className="wine-card-review-section" aria-label="review summary">
+                      <p className="wine-card-review-title">Valoració</p>
+                      <div className="wine-card-review-block">
+                        <article className="wine-card-mini-box wine-card-mini-maria">
+                          <span className="mini-label">👩 {t.modal.mariaScore}</span>
+                          <strong>{wine.mariaScore != null ? wine.mariaScore.toFixed(2) : 'n/d'}</strong>
+                        </article>
+                        <article className="wine-card-mini-box wine-card-mini-adria">
+                          <span className="mini-label">🧑 {t.modal.adriaScore}</span>
+                          <strong>{wine.adriaScore != null ? wine.adriaScore.toFixed(2) : 'n/d'}</strong>
+                        </article>
+                        <article className="wine-card-mini-box wine-card-mini-date">
+                          <span className="mini-label">📅 {t.modal.tastedAt}</span>
+                          <strong>{wine.tastedAt}</strong>
+                        </article>
+                      </div>
+                    </section>
 
                     <div className="wine-card-footer">
-                      <button
-                        type="button"
-                        className="grape-filter-chip grape-filter-chip-primary"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          const primaryGrape = wine.grapes.split(/[,/]/)[0]?.trim()
-                          if (primaryGrape) setGrapeFilter(primaryGrape)
-                        }}
-                        aria-label={`${t.filters.grape}: ${wine.grapes}`}
-                        title={wine.grapes}
-                      >
-                        <span aria-hidden="true">{t.icons.grape}</span>
-                        <span>{wine.grapes.split(/[,/]/)[0]?.trim() || wine.grapes}</span>
-                      </button>
-                      <div className="wine-card-grape-mini-list" aria-hidden="true">
-                        {splitGrapeVarieties(wine.grapes).slice(1).map((grape) => (
-                          <span key={`${wine.id}-card-grape-${grape}`} className="wine-card-grape-mini-pill">
-                            <span>{t.icons.grape}</span>
-                            <span>{grape}</span>
-                          </span>
-                        ))}
-                      </div>
                       <span className="card-link">{t.card.viewDetails}</span>
                     </div>
                   </div>
@@ -920,7 +1022,22 @@ export default function App() {
                   <h3>{t.icons.details} {t.modal.details}</h3>
                   <dl>
                     <div><dt>{t.icons.winery} {t.modal.winery}</dt><dd>{selectedWine.winery}</dd></div>
-                    <div><dt>{t.icons.origin} {t.modal.origin}</dt><dd>{selectedWine.country} · {selectedWine.region}</dd></div>
+                    <div>
+                      <dt>{t.icons.origin} DO</dt>
+                      <dd className="origin-with-do">
+                        <span className="country-flag-badge" aria-label={selectedWine.country} title={selectedWine.country}>{countryFlagEmoji(selectedWine.country)}</span>
+                        {selectedWine.doLogoImage ? (
+                          <span className="do-logo-tooltip">
+                            <img className="do-logo-badge" src={selectedWine.doLogoImage} alt={`${selectedWine.region} DO`} loading="lazy" />
+                            <span className="do-logo-tooltip-panel" role="tooltip" aria-hidden="true">
+                              <img src={selectedWine.doLogoImage} alt="" loading="lazy" />
+                              <span>{selectedWine.region}</span>
+                            </span>
+                          </span>
+                        ) : null}
+                        <span>{selectedWine.region}</span>
+                      </dd>
+                    </div>
                     <div><dt>{t.icons.type} {t.modal.style}</dt><dd>{t.wineType[selectedWine.type]} · {selectedWine.vintage}</dd></div>
                     <div className="detail-grapes-row">
                       <dt>{t.icons.grape} {t.modal.grapes}</dt>

@@ -38,6 +38,8 @@ type WineProfileSection = {
   fields: WineProfileField[]
 }
 
+type WineProfileMedalTone = 'gold' | 'silver' | 'bronze'
+
 type MenuKey = 'dashboard' | 'wines' | 'reviews' | 'admin' | 'wineProfile'
 type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
@@ -179,6 +181,74 @@ function averageScore(wines: WineItem[], type: WineType): number {
   return values.reduce((sum, current) => sum + current, 0) / values.length
 }
 
+function countryFlagEmoji(country: string): string {
+  const map: Record<string, string> = {
+    Spain: '🇪🇸',
+    France: '🇫🇷',
+    Portugal: '🇵🇹',
+    Italy: '🇮🇹',
+    Germany: '🇩🇪',
+    Argentina: '🇦🇷',
+    Chile: '🇨🇱',
+    USA: '🇺🇸',
+    'United States': '🇺🇸',
+  }
+
+  return map[country] ?? '🏳️'
+}
+
+function doLogoPathForRegion(region: string): string | null {
+  const map: Record<string, string> = {
+    'Penedès': '/icons/DO/penedes_DO.png',
+    Montsant: '/icons/DO/montanst_DO.png',
+    'Ribera del Duero': '/icons/DO/ribera_del_duero_DO.png',
+    Somontano: '/icons/DO/somontano_DO.jpg',
+    Toro: '/icons/DO/toro_DO.jpg',
+    Rioja: '/icons/DO/rioja_DO.png',
+    Tarragona: '/icons/DO/tarragona_DO.png',
+    'Terra Alta': '/icons/DO/terra_alta_DO.png',
+    Priorat: '/icons/DO/priorat_DO.png',
+    'Conca de Barberà': '/icons/DO/conca_de_barbera_DO.jpg',
+    'Pla de Bages': '/icons/DO/pla_de_bages_DO.png',
+    Alella: '/icons/DO/alella_DO.png',
+    Empordà: '/icons/DO/emporda_DO.png',
+    Navarra: '/icons/DO/navarra_DO.jpg',
+    Cariñena: '/icons/DO/cariñena_DO.png',
+    Calatayud: '/icons/DO/calatayud_DO.jpg',
+    Cigales: '/icons/DO/cigales_DO.png',
+    Arlanza: '/icons/DO/arlanza_DO.jpg',
+    'Costers del Segre': '/icons/DO/costers_del_segre_DO.png',
+  }
+
+  return map[region] ?? null
+}
+
+function spanishAutonomousCommunity(region: string): string | null {
+  const regionToCommunity: Record<string, string> = {
+    'Terra Alta': 'Catalonia',
+    'Penedès': 'Catalonia',
+    'Montsant': 'Catalonia',
+    Tarragona: 'Catalonia',
+    Rioja: 'La Rioja',
+    'Ribera del Duero': 'Castile and Leon',
+    Toro: 'Castile and Leon',
+    Somontano: 'Aragon',
+    'Rías Baixas': 'Galicia',
+  }
+
+  return regionToCommunity[region] ?? null
+}
+
+function medalToneFromScore(score: number | null): WineProfileMedalTone | null {
+  if (score == null) {
+    return null
+  }
+
+  if (score >= 90) return 'gold'
+  if (score >= 85) return 'silver'
+  return 'bronze'
+}
+
 function buildMockWineProfile(
   wine: WineItem,
   wineProfileLabels: any,
@@ -214,6 +284,7 @@ function buildMockWineProfile(
   const awardName = wine.id % 2 === 0 ? 'decanter' : 'penin'
   const awardScore = (88 + (wine.id % 6)).toFixed(1)
   const awardYear = wine.vintageYear ? wine.vintageYear + 2 : 2026
+  const awardPresent = wine.id % 5 !== 0
   const grapeRows = wine.type === 'white'
     ? [
         { name: 'Albariño', color: 'white', percentage: '70.00' },
@@ -329,6 +400,14 @@ function buildMockWineProfile(
       back: wp.imageLabels.back,
       photosTitle: wp.galleryEyebrow,
     },
+    heroAward: awardPresent
+      ? {
+          icon: '🏅',
+          label: awardName,
+          year: String(awardYear),
+        }
+      : null,
+    heroAwardScore: awardPresent ? Number(awardScore) : null,
     sections,
   }
 }
@@ -494,6 +573,23 @@ function App() {
   const selectedWineProfile = selectedWineSheet
     ? buildMockWineProfile(selectedWineSheet, labels.wineProfile, labels.wineType)
     : null
+  const selectedWineDoLogo = selectedWineSheet ? doLogoPathForRegion(selectedWineSheet.region) : null
+  const dbCountryFlags = useMemo(
+    () => Array.from(new Set(mockWines.map((wine) => wine.country))).map((country) => ({
+      country,
+      flag: countryFlagEmoji(country),
+    })),
+    [],
+  )
+  const spainAutonomousCommunities = useMemo(
+    () => Array.from(new Set(
+      mockWines
+        .filter((wine) => wine.country === 'Spain')
+        .map((wine) => spanishAutonomousCommunity(wine.region))
+        .filter((value): value is string => Boolean(value)),
+    )).sort((a, b) => a.localeCompare(b)),
+    [],
+  )
 
   const openDashboardWithWineFilter = (wine: WineItem, target: 'name' | 'type' | 'country' | 'region') => {
     if (target === 'name') {
@@ -1102,16 +1198,47 @@ function App() {
                 <div className="wine-profile-title-wrap">
                   <p className="eyebrow">{selectedWineProfile.headline}</p>
                   <h3>{selectedWineSheet.name}</h3>
-                  <p className="muted">{selectedWineSheet.winery} · {selectedWineSheet.country} · {selectedWineSheet.region}</p>
+                  <p className="muted wine-profile-origin-line">
+                    <span className="wine-profile-flag-badge" aria-label={selectedWineSheet.country} title={selectedWineSheet.country}>
+                      {countryFlagEmoji(selectedWineSheet.country)}
+                    </span>
+                    {selectedWineDoLogo ? (
+                      <span className="wine-profile-do-tooltip">
+                        <img className="wine-profile-do-logo" src={selectedWineDoLogo} alt={`${selectedWineSheet.region} DO`} loading="lazy" />
+                        <span className="wine-profile-do-tooltip-panel" role="tooltip" aria-hidden="true">
+                          <img src={selectedWineDoLogo} alt="" loading="lazy" />
+                          <span>{selectedWineSheet.region}</span>
+                        </span>
+                      </span>
+                    ) : null}
+                    <span>{selectedWineSheet.winery} · {selectedWineSheet.region}</span>
+                  </p>
                 </div>
-                <div className="wine-profile-header-actions">
-                  <button type="button" className="ghost-button" onClick={closeWineSheet}>
-                    {t('wineProfile.backToDashboard')}
-                  </button>
-                  <button type="button" className="secondary-button">
-                    {t('wineProfile.editWineMock')}
-                  </button>
+                <div className="wine-profile-award-box" aria-label="Award">
+                  <span className="wine-profile-award-icon" aria-hidden="true">🏆</span>
+                  {selectedWineProfile.heroAward ? (
+                    <div className="wine-profile-award-content">
+                      <strong>{selectedWineProfile.heroAward.label}</strong>
+                      <span>{selectedWineProfile.heroAward.year}</span>
+                    </div>
+                  ) : (
+                    <div className="wine-profile-award-content">
+                      <strong>-</strong>
+                    </div>
+                  )}
                 </div>
+                <div className={`wine-profile-medal-score${medalToneFromScore(selectedWineProfile.heroAwardScore) ? ` ${medalToneFromScore(selectedWineProfile.heroAwardScore)}` : ''}`}>
+                  <span className="wine-profile-medal-score-label">{t('wineProfile.statAvgScore')}</span>
+                  <strong>{selectedWineProfile.heroAwardScore?.toFixed(1) ?? '-'}</strong>
+                </div>
+              </div>
+              <div className="wine-profile-header-actions">
+                <button type="button" className="ghost-button" onClick={closeWineSheet}>
+                  {t('wineProfile.backToDashboard')}
+                </button>
+                <button type="button" className="secondary-button">
+                  {t('wineProfile.editWineMock')}
+                </button>
               </div>
             </header>
 
@@ -1185,6 +1312,40 @@ function App() {
                   >
                     {t('wineProfile.filterRegion')}: {selectedWineSheet.region}
                   </button>
+                </div>
+
+                <div className="wine-profile-origin-strip" aria-label="Countries and Spain autonomous communities">
+                  {selectedWineDoLogo ? (
+                    <div className="wine-profile-origin-row">
+                      <span className="wine-profile-do-chip">
+                        <span className="wine-profile-flag-badge" aria-label={selectedWineSheet.country} title={selectedWineSheet.country}>
+                          {countryFlagEmoji(selectedWineSheet.country)}
+                        </span>
+                        <span className="wine-profile-do-tooltip">
+                          <img className="wine-profile-do-logo" src={selectedWineDoLogo} alt={`${selectedWineSheet.region} DO`} loading="lazy" />
+                          <span className="wine-profile-do-tooltip-panel" role="tooltip" aria-hidden="true">
+                            <img src={selectedWineDoLogo} alt="" loading="lazy" />
+                            <span>{selectedWineSheet.region}</span>
+                          </span>
+                        </span>
+                        <span>{selectedWineSheet.region}</span>
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="wine-profile-origin-row">
+                    {dbCountryFlags.map(({ country, flag }) => (
+                      <span key={country} className="wine-profile-country-flag" title={country} aria-label={country}>
+                        {flag}
+                      </span>
+                    ))}
+                  </div>
+                  {dbCountryFlags.some((entry) => entry.country === 'Spain') ? (
+                    <div className="wine-profile-origin-row wine-profile-spain-communities">
+                      {spainAutonomousCommunities.map((community) => (
+                        <span key={community} className="wine-profile-community-pill">{community}</span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="wine-profile-stat-strip">
