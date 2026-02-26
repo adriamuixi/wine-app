@@ -74,6 +74,13 @@ type Dictionary = {
     dark: string
     light: string
     language: string
+    menu: string
+    navigation: string
+    winesCatalog: string
+    whoWeAre: string
+    backoffice: string
+    openFilters: string
+    closeFilters: string
   }
   card: {
     avgScore: string
@@ -161,6 +168,13 @@ const DICT: Record<Locale, Dictionary> = {
       dark: 'Fosc',
       light: 'Clar',
       language: 'Idioma',
+      menu: 'Menú',
+      navigation: 'Navegació',
+      winesCatalog: 'Catàleg de vins',
+      whoWeAre: 'Qui som',
+      backoffice: 'Backoffice',
+      openFilters: 'Obre filtres',
+      closeFilters: 'Tanca filtres',
     },
     card: {
       avgScore: 'Punt. mitjana',
@@ -252,6 +266,13 @@ const DICT: Record<Locale, Dictionary> = {
       dark: 'Oscuro',
       light: 'Claro',
       language: 'Idioma',
+      menu: 'Menú',
+      navigation: 'Navegación',
+      winesCatalog: 'Catálogo de vinos',
+      whoWeAre: 'Quiénes somos',
+      backoffice: 'Backoffice',
+      openFilters: 'Abrir filtros',
+      closeFilters: 'Cerrar filtros',
     },
     card: {
       avgScore: 'Punt. media',
@@ -574,6 +595,8 @@ export default function App() {
   const [sortKey, setSortKey] = useState<SortKey>(initialUrl.sort)
   const [selectedWineId, setSelectedWineId] = useState<number | null>(initialUrl.wineId)
   const [activeModalImageIndex, setActiveModalImageIndex] = useState(0)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
   const t = DICT[locale]
   const isDark = theme === 'dark'
@@ -695,6 +718,110 @@ export default function App() {
     [locale],
   )
 
+  const resetFilters = () => {
+    setSearch('')
+    setTypeFilter('all')
+    setCountryFilter('all')
+    setRegionFilter('all')
+    setGrapeFilter('all')
+    setMinScoreFilter('all')
+    setSortKey(DEFAULT_SORT)
+  }
+
+  const filterControls = (
+    <>
+      <div className="filters-header">
+        <p className="eyebrow">{t.icons.filters} {t.filters.title}</p>
+      </div>
+
+      <label>
+        <span>{t.icons.search} {t.filters.search}</span>
+        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t.searchPlaceholder} />
+      </label>
+
+      <label>
+        <span>{t.icons.type} {t.filters.type}</span>
+        <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as 'all' | WineType)}>
+          <option value="all">{t.filters.allTypes}</option>
+          <option value="red">{t.wineType.red}</option>
+          <option value="white">{t.wineType.white}</option>
+          <option value="rose">{t.wineType.rose}</option>
+          <option value="sparkling">{t.wineType.sparkling}</option>
+        </select>
+      </label>
+
+      <label>
+        <span>{t.icons.country} {t.filters.country}</span>
+        <select value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)}>
+          {countries.map((country) => (
+            <option key={country} value={country}>
+              {country === 'all' ? t.filters.allCountries : country}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label>
+        <span>{t.icons.region} {t.filters.region}</span>
+        <select value={regionFilter} onChange={(event) => setRegionFilter(event.target.value)}>
+          {regions.map((region) => (
+            <option key={region} value={region}>
+              {region === 'all' ? t.filters.allRegions : region}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label>
+        <span>{t.icons.grape} {t.filters.grape}</span>
+        <select value={grapeFilter} onChange={(event) => setGrapeFilter(event.target.value)}>
+          {grapeOptions.map((grape) => (
+            <option key={grape} value={grape}>
+              {grape === 'all' ? (locale === 'ca' ? 'Totes les varietats' : 'Todas las variedades') : grape}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <div className="filter-score-group" role="group" aria-label={`${t.icons.minScore} ${t.filters.minScore}`}>
+        <span>{t.icons.minScore} {t.filters.minScore}</span>
+        <div className="filter-score-medals">
+          {[
+            { key: 'all', label: t.filters.anyScore, tone: 'all' },
+            { key: 'lt70', label: '<70', tone: 'base' },
+            { key: '70_80', label: '70-80', tone: 'bronze' },
+            { key: '80_90', label: '80-90', tone: 'silver' },
+            { key: 'gte90', label: '90+', tone: 'gold' },
+          ].map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              className={`score-filter-medal ${option.tone}${minScoreFilter === option.key ? ' active' : ''}`}
+              onClick={() => setMinScoreFilter(option.key as ScoreFilterBucket)}
+              aria-pressed={minScoreFilter === option.key}
+            >
+              <span>{option.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <label>
+        <span>{t.icons.sort} {t.filters.sort}</span>
+        <select value={sortKey} onChange={(event) => setSortKey(event.target.value as SortKey)}>
+          <option value="score_desc">{t.sort.score_desc}</option>
+          <option value="price_asc">{t.sort.price_asc}</option>
+          <option value="price_desc">{t.sort.price_desc}</option>
+          <option value="latest">{t.sort.latest}</option>
+        </select>
+      </label>
+
+      <button type="button" className="clear-filters" onClick={resetFilters}>
+        {t.filters.clear}
+      </button>
+    </>
+  )
+
   return (
     <main className="public-shell">
       <div className="public-background" aria-hidden="true" />
@@ -726,10 +853,53 @@ export default function App() {
               <option value="es">Español</option>
             </select>
           </label>
+
+          <button
+            type="button"
+            className={`mobile-header-icon-button${isMobileMenuOpen ? ' active' : ''}`}
+            aria-label={t.topbar.menu}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-nav-menu"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+          >
+            <span aria-hidden="true">☰</span>
+          </button>
         </div>
+
+        <nav id="mobile-nav-menu" className={`mobile-nav-menu${isMobileMenuOpen ? ' open' : ''}`} aria-label={t.topbar.navigation}>
+          <a href="#catalog" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
+          <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
+          <a href="/backoffice" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.backoffice}</a>
+        </nav>
       </header>
 
-      <section className="hero-panel">
+      <section className="mobile-filter-dropdown" aria-label={t.filters.title}>
+        <button
+          type="button"
+          className={`mobile-filter-trigger${isMobileFiltersOpen ? ' active' : ''}`}
+          onClick={() => setIsMobileFiltersOpen((open) => !open)}
+          aria-expanded={isMobileFiltersOpen}
+          aria-controls="mobile-filters-panel"
+        >
+          <span>{t.icons.filters} {t.filters.title}</span>
+          <span className="mobile-filter-trigger-meta">
+            {filteredWines.length} {t.topbar.resultCount}
+          </span>
+        </button>
+
+        <div id="mobile-filters-panel" className={`mobile-filter-panel${isMobileFiltersOpen ? ' open' : ''}`}>
+          {filterControls}
+          <button
+            type="button"
+            className="mobile-filter-apply"
+            onClick={() => setIsMobileFiltersOpen(false)}
+          >
+            {isMobileFiltersOpen ? t.topbar.closeFilters : t.topbar.openFilters}
+          </button>
+        </div>
+      </section>
+
+      <section className="hero-panel" id="catalog">
         <div>
           <p className="eyebrow">VINS · PUBLIC CATALOG</p>
           <h1>{t.title}</h1>
@@ -744,107 +914,7 @@ export default function App() {
 
       <section className="catalog-layout">
         <aside className="filters-panel">
-          <div className="filters-header">
-            <p className="eyebrow">{t.icons.filters} {t.filters.title}</p>
-          </div>
-
-          <label>
-            <span>{t.icons.search} {t.filters.search}</span>
-            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t.searchPlaceholder} />
-          </label>
-
-          <label>
-            <span>{t.icons.type} {t.filters.type}</span>
-            <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as 'all' | WineType)}>
-              <option value="all">{t.filters.allTypes}</option>
-              <option value="red">{t.wineType.red}</option>
-              <option value="white">{t.wineType.white}</option>
-              <option value="rose">{t.wineType.rose}</option>
-              <option value="sparkling">{t.wineType.sparkling}</option>
-            </select>
-          </label>
-
-          <label>
-            <span>{t.icons.country} {t.filters.country}</span>
-            <select value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)}>
-              {countries.map((country) => (
-                <option key={country} value={country}>
-                  {country === 'all' ? t.filters.allCountries : country}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            <span>{t.icons.region} {t.filters.region}</span>
-            <select value={regionFilter} onChange={(event) => setRegionFilter(event.target.value)}>
-              {regions.map((region) => (
-                <option key={region} value={region}>
-                  {region === 'all' ? t.filters.allRegions : region}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            <span>{t.icons.grape} {t.filters.grape}</span>
-            <select value={grapeFilter} onChange={(event) => setGrapeFilter(event.target.value)}>
-              {grapeOptions.map((grape) => (
-                <option key={grape} value={grape}>
-                  {grape === 'all' ? (locale === 'ca' ? 'Totes les varietats' : 'Todas las variedades') : grape}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div className="filter-score-group" role="group" aria-label={`${t.icons.minScore} ${t.filters.minScore}`}>
-            <span>{t.icons.minScore} {t.filters.minScore}</span>
-            <div className="filter-score-medals">
-              {[
-                { key: 'all', label: t.filters.anyScore, tone: 'all' },
-                { key: 'lt70', label: '<70', tone: 'base' },
-                { key: '70_80', label: '70-80', tone: 'bronze' },
-                { key: '80_90', label: '80-90', tone: 'silver' },
-                { key: 'gte90', label: '90+', tone: 'gold' },
-              ].map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  className={`score-filter-medal ${option.tone}${minScoreFilter === option.key ? ' active' : ''}`}
-                  onClick={() => setMinScoreFilter(option.key as ScoreFilterBucket)}
-                  aria-pressed={minScoreFilter === option.key}
-                >
-                  <span>{option.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <label>
-            <span>{t.icons.sort} {t.filters.sort}</span>
-            <select value={sortKey} onChange={(event) => setSortKey(event.target.value as SortKey)}>
-              <option value="score_desc">{t.sort.score_desc}</option>
-              <option value="price_asc">{t.sort.price_asc}</option>
-              <option value="price_desc">{t.sort.price_desc}</option>
-              <option value="latest">{t.sort.latest}</option>
-            </select>
-          </label>
-
-          <button
-            type="button"
-            className="clear-filters"
-            onClick={() => {
-              setSearch('')
-              setTypeFilter('all')
-              setCountryFilter('all')
-              setRegionFilter('all')
-              setGrapeFilter('all')
-              setMinScoreFilter('all')
-              setSortKey(DEFAULT_SORT)
-            }}
-          >
-            {t.filters.clear}
-          </button>
+          {filterControls}
         </aside>
 
         <section className="cards-panel">
@@ -949,6 +1019,13 @@ export default function App() {
                       </dl>
                     </section>
 
+                    <div className="wine-card-mobile-summary" aria-label="mobile summary">
+                      <div>{wine.region}</div>
+                      <div>{wine.vintage}</div>
+                      <div>{wine.mariaScore != null ? `M ${wine.mariaScore.toFixed(1)}` : 'M n/d'}</div>
+                      <div>{wine.adriaScore != null ? `A ${wine.adriaScore.toFixed(1)}` : 'A n/d'}</div>
+                    </div>
+
                     <section className="wine-card-review-section" aria-label="review summary">
                       <p className="wine-card-review-title">Valoració</p>
                       <div className="wine-card-review-block">
@@ -977,6 +1054,8 @@ export default function App() {
           </div>
         </section>
       </section>
+
+      <section className="mobile-about-anchor" id="about" aria-hidden="true" />
 
       {selectedWine ? (
         <div className="public-modal-backdrop" role="presentation" onClick={() => setSelectedWineId(null)}>
