@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { LanguageSelector } from './components/LanguageSelector'
 import './App.css'
 import { useI18n } from './i18n/I18nProvider'
@@ -40,7 +41,7 @@ type WineProfileSection = {
 
 type WineProfileMedalTone = 'gold' | 'silver' | 'bronze'
 
-type MenuKey = 'dashboard' | 'wines' | 'reviews' | 'admin' | 'wineProfile'
+type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'reviews' | 'admin' | 'settings' | 'wineProfile'
 type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
 
@@ -413,7 +414,7 @@ function buildMockWineProfile(
 }
 
 function App() {
-  const { labels, locale, t } = useI18n()
+  const { labels, locale, setLocale, t } = useI18n()
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(getInitialSidebarCollapsed)
   const [loggedIn, setLoggedIn] = useState(false)
@@ -426,6 +427,10 @@ function App() {
   const [selectedWineGallery, setSelectedWineGallery] = useState<WineItem | null>(null)
   const [galleryModalVariant, setGalleryModalVariant] = useState<GalleryModalVariant>('full')
   const [activeGalleryImageKey, setActiveGalleryImageKey] = useState<(typeof SAMPLE_WINE_GALLERY)[number]['key']>('bottle')
+  const [defaultSortPreference, setDefaultSortPreference] = useState<'score_desc' | 'recent' | 'price_asc'>('score_desc')
+  const [defaultLandingPage, setDefaultLandingPage] = useState<'dashboard' | 'wines' | 'reviews'>('dashboard')
+  const [showOnlySpainByDefault, setShowOnlySpainByDefault] = useState(true)
+  const [compactCardsPreference, setCompactCardsPreference] = useState(false)
 
   const [searchText, setSearchText] = useState('')
   const [countryFilter, setCountryFilter] = useState<'all' | string>('all')
@@ -473,6 +478,86 @@ function App() {
     [],
   )
 
+  const dashboardAnalytics = useMemo(() => {
+    const scoredWines = mockWines.filter((wine) => wine.averageScore != null)
+    const sortedByScore = [...scoredWines].sort((a, b) => (b.averageScore ?? 0) - (a.averageScore ?? 0))
+    const topWines = sortedByScore.slice(0, 3)
+    const lowWines = [...sortedByScore].slice(-3).reverse()
+    const highScoreCount = scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 80).length
+    const lowScoreCount = scoredWines.filter((wine) => (wine.averageScore ?? 0) < 65).length
+    const scoreSpread = scoredWines.length > 0
+      ? Math.max(...scoredWines.map((wine) => wine.averageScore ?? 0)) - Math.min(...scoredWines.map((wine) => wine.averageScore ?? 0))
+      : 0
+    const averagePrice = mockWines.reduce((sum, wine) => sum + wine.pricePaid, 0) / mockWines.length
+    const qualityIndex = averagePrice > 0 ? ((metrics.averageRed + metrics.averageWhite) / 2) / averagePrice : 0
+
+    const timelineLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
+    const monthFormatter = new Intl.DateTimeFormat(timelineLocale, { month: 'short', year: '2-digit' })
+    const now = new Date()
+    const reviewTimeline = Array.from({ length: 60 }, (_, index) => {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - (59 - index), 1)
+      const seed = index + 11
+      const reviews = (seed * 7 + 3) % 6 // 0..5 (mock estable)
+      const median = 76 + ((seed * 13) % 17) + (((seed * 5) % 10) / 10) // ~76.0..92.9
+      return {
+        label: monthFormatter.format(monthDate).replace('.', ''),
+        reviews,
+        median: Math.round(median * 10) / 10,
+      }
+    })
+
+    const webVsMyTimeline = [
+      { label: locale === 'ca' ? 'Gen' : 'Ene', web: 18, mine: 3 },
+      { label: locale === 'ca' ? 'Feb' : 'Feb', web: 22, mine: 4 },
+      { label: locale === 'ca' ? 'Mar' : 'Mar', web: 16, mine: 2 },
+      { label: locale === 'ca' ? 'Abr' : 'Abr', web: 28, mine: 5 },
+      { label: locale === 'ca' ? 'Mai' : 'May', web: 24, mine: 4 },
+      { label: locale === 'ca' ? 'Jun' : 'Jun', web: 31, mine: 6 },
+    ]
+
+    const scoreBuckets = [
+      { label: '<60', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) < 60).length },
+      { label: '60-69', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 60 && (wine.averageScore ?? 0) < 70).length },
+      { label: '70-79', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 70 && (wine.averageScore ?? 0) < 80).length },
+      { label: '80-89', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 80 && (wine.averageScore ?? 0) < 90).length },
+      { label: '90+', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 90).length },
+    ]
+
+    const byType = (['red', 'white', 'rose', 'sparkling'] as WineType[]).map((type) => {
+      const wines = scoredWines.filter((wine) => wine.type === type)
+      const avg = wines.length ? wines.reduce((sum, wine) => sum + (wine.averageScore ?? 0), 0) / wines.length : 0
+      return { type, count: wines.length, avg }
+    })
+
+    const awards = mockWines.map((wine) => ({
+      hasAward: wine.id % 5 !== 0,
+      awardName: wine.id % 2 === 0 ? 'decanter' : 'penin',
+    }))
+    const awardsWith = awards.filter((entry) => entry.hasAward).length
+    const awardsWithout = awards.length - awardsWith
+    const awardTypes = [
+      { label: 'Decanter', count: awards.filter((entry) => entry.hasAward && entry.awardName === 'decanter').length },
+      { label: 'Peñín', count: awards.filter((entry) => entry.hasAward && entry.awardName === 'penin').length },
+    ]
+
+    return {
+      topWines,
+      lowWines,
+      highScoreCount,
+      lowScoreCount,
+      scoreSpread,
+      averagePrice,
+      qualityIndex,
+      reviewTimeline,
+      webVsMyTimeline,
+      scoreBuckets,
+      byType,
+      awardsWith,
+      awardsWithout,
+      awardTypes,
+    }
+  }, [locale, metrics.averageRed, metrics.averageWhite])
+
   const priceFormatter = useMemo(
     () => new Intl.NumberFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', { style: 'currency', currency: 'EUR' }),
     [locale],
@@ -481,8 +566,10 @@ function App() {
   const menuTitle = {
     dashboard: labels.topbar.overview,
     wines: labels.topbar.wines,
+    wineCreate: locale === 'ca' ? 'Crear vi' : 'Crear vino',
     reviews: labels.topbar.reviews,
     admin: labels.topbar.admin,
+    settings: locale === 'ca' ? 'Configuració' : 'Configuración',
     wineProfile: selectedWineSheet ? `${t('wineProfile.pageTitle')} · ${selectedWineSheet.name}` : t('wineProfile.pageTitle'),
   }[menu]
 
@@ -558,6 +645,10 @@ function App() {
     setThemeMode((current) => (current === 'light' ? 'dark' : 'light'))
   }
 
+  const toggleLocale = () => {
+    setLocale(locale === 'ca' ? 'es' : 'ca')
+  }
+
   const toggleSidebarCollapsed = () => {
     setIsSidebarCollapsed((current) => !current)
   }
@@ -631,9 +722,6 @@ function App() {
   if (!loggedIn) {
     return (
       <main className="login-shell">
-        <a href="/" className="ghost-button small return-web-link return-web-top-link">
-          Torna al web
-        </a>
         <section className="login-stage">
           <section className="login-panel" aria-labelledby="login-title">
             <div className="login-header">
@@ -704,9 +792,6 @@ function App() {
 
   return (
     <main className={`dashboard-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <a href="/" className="ghost-button small return-web-link return-web-top-link">
-        Torna al web
-      </a>
       <aside
         id="sidebar"
         className={`sidebar ${showMobileMenu ? 'open' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`}
@@ -790,6 +875,77 @@ function App() {
 
       <section className="dashboard-content">
         <header className="topbar">
+          <div className="topbar-mobile-head" aria-label="Backoffice header">
+            <div className="topbar-mobile-brand">
+              <img src={brandWordmarkSrc} className="topbar-mobile-wordmark" alt="Vins Tat & Rosset" />
+            </div>
+
+            <div className="topbar-mobile-actions">
+              <button
+                type="button"
+                className="topbar-mobile-bullet topbar-mobile-bullet-language"
+                onClick={toggleLocale}
+                aria-label={`Idioma: ${locale.toUpperCase()}`}
+                title={`Idioma: ${locale.toUpperCase()}`}
+              >
+                <span>{locale.toUpperCase()}</span>
+              </button>
+
+              <button
+                type="button"
+                className="topbar-mobile-bullet"
+                onClick={() => {
+                  setMenu('admin')
+                  setShowMobileMenu(false)
+                }}
+                aria-label={labels.menu.admin}
+                title={labels.menu.admin}
+              >
+                <span className="topbar-mobile-icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                    <path
+                      d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M4.5 16.5a5.5 5.5 0 0 1 11 0"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="topbar-mobile-bullet"
+                onClick={() => {
+                  setMenu('settings')
+                  setShowMobileMenu(false)
+                }}
+                aria-label={locale === 'ca' ? 'Configuració' : 'Configuración'}
+                title={locale === 'ca' ? 'Configuració' : 'Configuración'}
+              >
+                <span className="topbar-mobile-icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                    <path
+                      d="M8.8 2.9h2.4l.38 1.62c.33.11.65.24.95.4l1.5-.7 1.7 1.7-.7 1.5c.16.3.29.62.4.95l1.62.38v2.4l-1.62.38c-.11.33-.24.65-.4.95l.7 1.5-1.7 1.7-1.5-.7c-.3.16-.62.29-.95.4l-.38 1.62H8.8l-.38-1.62a6.03 6.03 0 0 1-.95-.4l-1.5.7-1.7-1.7.7-1.5a6.03 6.03 0 0 1-.4-.95l-1.62-.38v-2.4l1.62-.38c.11-.33.24-.65.4-.95l-.7-1.5 1.7-1.7 1.5.7c.3-.16.62-.29.95-.4L8.8 2.9Z"
+                      stroke="currentColor"
+                      strokeWidth="1.1"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="10" cy="10" r="2.6" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </div>
+
           <button
             type="button"
             className="mobile-menu-button"
@@ -853,15 +1009,204 @@ function App() {
               </article>
             </div>
 
-            <section className="panel search-panel">
+            <section className="dashboard-rich-grid">
+              <section className="panel dashboard-hero-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'ACTIVITAT' : 'ACTIVIDAD'}</p>
+                    <h3>{locale === 'ca' ? 'Ritme de ressenyes i qualitat' : 'Ritmo de reseñas y calidad'}</h3>
+                  </div>
+                  <button type="button" className="secondary-button small" onClick={() => setMenu('reviews')}>
+                    {locale === 'ca' ? 'Anar a ressenyes' : 'Ir a reseñas'}
+                  </button>
+                </div>
+                <div className="chart-shell chart-shell-tall" aria-label={locale === 'ca' ? 'Gràfica de ritme de ressenyes i puntuació' : 'Gráfica de ritmo de reseñas y puntuación'}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={dashboardAnalytics.reviewTimeline} margin={{ top: 8, right: 10, left: -20, bottom: 2 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.18)" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} minTickGap={18} />
+                      <YAxis yAxisId="reviews" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} width={28} domain={[0, 5]} allowDecimals={false} />
+                      <YAxis yAxisId="avg" orientation="right" hide domain={[70, 95]} />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }}
+                        contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
+                      />
+                      <Bar yAxisId="reviews" dataKey="reviews" name={locale === 'ca' ? 'Ressenyes' : 'Reseñas'} fill="#c39a7f" radius={[6, 6, 0, 0]} />
+                      <Line yAxisId="avg" type="monotone" dataKey="median" name={locale === 'ca' ? 'Mediana score' : 'Mediana score'} stroke="#8f3851" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="dashboard-hero-footnote">
+                  <span>{locale === 'ca' ? 'Barra clara: ressenyes' : 'Barra clara: reseñas'}</span>
+                  <span>{locale === 'ca' ? 'Línia vi: mediana de score' : 'Línea vino: mediana de score'}</span>
+                </div>
+              </section>
+
+              <section className="panel dashboard-distribution-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'DISTRIBUCIÓ' : 'DISTRIBUCIÓN'}</p>
+                    <h3>{locale === 'ca' ? 'Qualitat del celler' : 'Calidad del catálogo'}</h3>
+                  </div>
+                </div>
+                <div className="bucket-stack">
+                  {dashboardAnalytics.scoreBuckets.map((bucket) => {
+                    const maxBucket = Math.max(...dashboardAnalytics.scoreBuckets.map((entry) => entry.count), 1)
+                    const width = `${(bucket.count / maxBucket) * 100}%`
+                    return (
+                      <div key={bucket.label} className="bucket-row">
+                        <span>{bucket.label}</span>
+                        <div className="bucket-track" aria-hidden="true">
+                          <div className="bucket-fill" style={{ width }} />
+                        </div>
+                        <strong>{bucket.count}</strong>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+
+              <section className="panel dashboard-frequency-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'FREQÜÈNCIA' : 'FRECUENCIA'}</p>
+                    <h3>{locale === 'ca' ? 'Ressenyes web vs meves' : 'Reseñas web vs mías'}</h3>
+                  </div>
+                </div>
+                <div className="chart-shell" aria-label={locale === 'ca' ? 'Comparativa de ressenyes web versus meves' : 'Comparativa de reseñas web versus mías'}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dashboardAnalytics.webVsMyTimeline} margin={{ top: 8, right: 8, left: -20, bottom: 2 }} barGap={4}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} width={28} />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }}
+                        contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
+                      />
+                      <Bar dataKey="web" name={locale === 'ca' ? 'Web' : 'Web'} fill="#c39a7f" radius={[5, 5, 0, 0]} />
+                      <Bar dataKey="mine" name={locale === 'ca' ? 'Meves' : 'Mías'} fill="#8f3851" radius={[5, 5, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="dashboard-hero-footnote">
+                  <span>{locale === 'ca' ? 'Web (global)' : 'Web (global)'}</span>
+                  <span>{locale === 'ca' ? 'Les meves' : 'Las mías'}</span>
+                </div>
+              </section>
+
+              <section className="panel dashboard-kpi-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'INDICADORS' : 'INDICADORES'}</p>
+                    <h3>{locale === 'ca' ? 'Lectura ràpida' : 'Lectura rápida'}</h3>
+                  </div>
+                </div>
+                <div className="dashboard-kpi-list">
+                  <article>
+                    <span>{locale === 'ca' ? 'Vins >= 80' : 'Vinos >= 80'}</span>
+                    <strong>{dashboardAnalytics.highScoreCount}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Vins < 65' : 'Vinos < 65'}</span>
+                    <strong>{dashboardAnalytics.lowScoreCount}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Dispersió score' : 'Dispersión score'}</span>
+                    <strong>{dashboardAnalytics.scoreSpread.toFixed(1)}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Preu mitjà' : 'Precio medio'}</span>
+                    <strong>{priceFormatter.format(dashboardAnalytics.averagePrice)}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Índex qualitat/preu' : 'Índice calidad/precio'}</span>
+                    <strong>{dashboardAnalytics.qualityIndex.toFixed(2)}</strong>
+                  </article>
+                </div>
+              </section>
+
+              <section className="panel dashboard-type-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'PER TIPUS' : 'POR TIPO'}</p>
+                    <h3>{locale === 'ca' ? 'Notes mitjanes per tipus de vi' : 'Notas medias por tipo de vino'}</h3>
+                  </div>
+                </div>
+                <div className="type-performance-grid">
+                  {dashboardAnalytics.byType.map((row) => (
+                    <article key={row.type}>
+                      <header>
+                        <span>{wineTypeLabel(row.type)}</span>
+                        <strong>{row.avg ? row.avg.toFixed(1) : '-'}</strong>
+                      </header>
+                      <div className="type-performance-track" aria-hidden="true">
+                        <div className="type-performance-fill" style={{ width: `${Math.max(6, (row.avg / 100) * 100)}%` }} />
+                      </div>
+                      <small>{row.count} {locale === 'ca' ? 'vins' : 'vinos'}</small>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="panel dashboard-awards-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">AWARDS</p>
+                    <h3>{locale === 'ca' ? 'Amb premi vs sense premi' : 'Con premio vs sin premio'}</h3>
+                  </div>
+                </div>
+                <div className="awards-split">
+                  <div className="awards-donut" aria-hidden="true">
+                    <div
+                      className="awards-donut-ring"
+                      style={{
+                        background: `conic-gradient(#8f3851 0 ${(dashboardAnalytics.awardsWith / Math.max(1, mockWines.length)) * 360}deg, rgba(82,46,28,0.12) 0 360deg)`,
+                      }}
+                    />
+                    <div className="awards-donut-center">
+                      <strong>{dashboardAnalytics.awardsWith}</strong>
+                      <span>{locale === 'ca' ? 'amb premi' : 'con premio'}</span>
+                    </div>
+                  </div>
+                  <div className="awards-breakdown">
+                    <div className="awards-breakdown-row">
+                      <span>{locale === 'ca' ? 'Amb award' : 'Con award'}</span>
+                      <strong>{dashboardAnalytics.awardsWith}</strong>
+                    </div>
+                    <div className="awards-breakdown-row">
+                      <span>{locale === 'ca' ? 'Sense award' : 'Sin award'}</span>
+                      <strong>{dashboardAnalytics.awardsWithout}</strong>
+                    </div>
+                    {dashboardAnalytics.awardTypes.map((award) => (
+                      <div key={award.label} className="awards-breakdown-row compact">
+                        <span>{award.label}</span>
+                        <strong>{award.count}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+            </section>
+          </section>
+        ) : null}
+
+        {menu === 'wines' ? (
+          <section className="screen-grid">
+            <section className="panel">
               <div className="panel-header">
                 <div>
                   <p className="eyebrow">{labels.dashboard.search.eyebrow}</p>
                   <h3>{labels.dashboard.search.title}</h3>
                 </div>
-                <span className="pill">
-                  {filteredWines.length} {labels.dashboard.search.results}
-                </span>
+                <div className="panel-header-actions">
+                  <span className="pill">
+                    {filteredWines.length} {labels.dashboard.search.results}
+                  </span>
+                  <button type="button" className="primary-button" onClick={() => setMenu('wineCreate')}>
+                    {locale === 'ca' ? 'Crear nou vi' : 'Crear nuevo vino'}
+                  </button>
+                </div>
               </div>
 
               <div className="filter-grid">
@@ -901,9 +1246,7 @@ function App() {
                   {labels.dashboard.search.minScore}
                   <select
                     value={minScoreFilter === 'all' ? 'all' : String(minScoreFilter)}
-                    onChange={(event) =>
-                      setMinScoreFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))
-                    }
+                    onChange={(event) => setMinScoreFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))}
                   >
                     <option value="all">{labels.common.anyScore}</option>
                     <option value="80">80+</option>
@@ -977,7 +1320,7 @@ function App() {
           </section>
         ) : null}
 
-        {menu === 'wines' ? (
+        {menu === 'wineCreate' ? (
           <section className="screen-grid two-columns">
             <section className="panel">
               <div className="panel-header">
@@ -1039,19 +1382,28 @@ function App() {
             <section className="panel">
               <div className="panel-header">
                 <div>
-                  <p className="eyebrow">{labels.wines.edit.eyebrow}</p>
-                  <h3>{labels.wines.edit.title}</h3>
+                  <p className="eyebrow">{locale === 'ca' ? 'CAMPOS (MOCK)' : 'CAMPOS (MOCK)'}</p>
+                  <h3>{locale === 'ca' ? 'Checklist de creació de vi' : 'Checklist de creación de vino'}</h3>
                 </div>
-                <span className="pill">{mockWines.length} {labels.wines.edit.countSuffix}</span>
+                <button type="button" className="ghost-button small" onClick={() => setMenu('wines')}>
+                  {locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}
+                </button>
               </div>
               <div className="list-stack">
-                {mockWines.slice(0, 6).map((wine) => (
-                  <article key={wine.id} className="list-card">
+                {[
+                  locale === 'ca' ? 'Dades bàsiques: nom, celler, tipus, anyada' : 'Datos básicos: nombre, bodega, tipo, añada',
+                  locale === 'ca' ? 'Origen: país, regió, DO (si aplica)' : 'Origen: país, región, DO (si aplica)',
+                  locale === 'ca' ? 'Compra: lloc i preu (obligatoris)' : 'Compra: lugar y precio (obligatorios)',
+                  locale === 'ca' ? 'Multimèdia: fotos ampolla davant/darrere' : 'Multimedia: fotos botella frente/detrás',
+                  locale === 'ca' ? 'Metadades: tags interns, notes de catàleg' : 'Metadatos: tags internos, notas de catálogo',
+                  locale === 'ca' ? 'Validació abans de desar (mock)' : 'Validación antes de guardar (mock)',
+                ].map((item) => (
+                  <article key={item} className="list-card">
                     <div>
-                      <h4>{wine.name}</h4>
-                      <p>{wine.winery} · {wine.country} · {wine.region}</p>
+                      <h4>{item}</h4>
+                      <p>{locale === 'ca' ? 'Es refinarà en una iteració següent.' : 'Se refinará en una siguiente iteración.'}</p>
                     </div>
-                    <button type="button" className="secondary-button small">{labels.wines.edit.action}</button>
+                    <button type="button" className="secondary-button small" disabled>{locale === 'ca' ? 'Mock' : 'Mock'}</button>
                   </article>
                 ))}
               </div>
@@ -1183,6 +1535,142 @@ function App() {
                   <dd>{labels.admin.account.values.lastLogin}</dd>
                 </div>
               </dl>
+            </section>
+          </section>
+        ) : null}
+
+        {menu === 'settings' ? (
+          <section className="screen-grid two-columns">
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <p className="eyebrow">{locale === 'ca' ? 'PREFERÈNCIES' : 'PREFERENCIAS'}</p>
+                  <h3>{locale === 'ca' ? 'Configuració del backoffice (mock)' : 'Configuración del backoffice (mock)'}</h3>
+                </div>
+                <span className="pill muted">{locale === 'ca' ? 'Mock' : 'Mock'}</span>
+              </div>
+
+              <form className="stack-form settings-form" onSubmit={(event) => event.preventDefault()}>
+                <label>
+                  {locale === 'ca' ? 'Llengua' : 'Idioma'}
+                  <div className="settings-segmented" role="group" aria-label={locale === 'ca' ? 'Llengua' : 'Idioma'}>
+                    <button
+                      type="button"
+                      className={`settings-chip${locale === 'ca' ? ' active' : ''}`}
+                      onClick={() => setLocale('ca')}
+                    >
+                      CA
+                    </button>
+                    <button
+                      type="button"
+                      className={`settings-chip${locale === 'es' ? ' active' : ''}`}
+                      onClick={() => setLocale('es')}
+                    >
+                      ES
+                    </button>
+                  </div>
+                </label>
+
+                <label>
+                  {locale === 'ca' ? 'Tema' : 'Tema'}
+                  <div className="settings-segmented" role="group" aria-label={locale === 'ca' ? 'Tema' : 'Tema'}>
+                    <button
+                      type="button"
+                      className={`settings-chip${themeMode === 'light' ? ' active' : ''}`}
+                      onClick={() => setThemeMode('light')}
+                    >
+                      {locale === 'ca' ? 'Clar' : 'Claro'}
+                    </button>
+                    <button
+                      type="button"
+                      className={`settings-chip${themeMode === 'dark' ? ' active' : ''}`}
+                      onClick={() => setThemeMode('dark')}
+                    >
+                      {locale === 'ca' ? 'Fosc' : 'Oscuro'}
+                    </button>
+                  </div>
+                </label>
+
+                <label>
+                  {locale === 'ca' ? 'Ordenació per defecte (llistat de vins)' : 'Ordenación por defecto (listado de vinos)'}
+                  <select
+                    value={defaultSortPreference}
+                    onChange={(event) => setDefaultSortPreference(event.target.value as 'score_desc' | 'recent' | 'price_asc')}
+                  >
+                    <option value="score_desc">{locale === 'ca' ? 'Puntuació (més alta primer)' : 'Puntuación (más alta primero)'}</option>
+                    <option value="recent">{locale === 'ca' ? 'Afegits recentment' : 'Añadidos recientemente'}</option>
+                    <option value="price_asc">{locale === 'ca' ? 'Preu (més baix primer)' : 'Precio (más bajo primero)'}</option>
+                  </select>
+                </label>
+
+                <label>
+                  {locale === 'ca' ? 'Pantalla inicial per defecte' : 'Pantalla inicial por defecto'}
+                  <select
+                    value={defaultLandingPage}
+                    onChange={(event) => setDefaultLandingPage(event.target.value as 'dashboard' | 'wines' | 'reviews')}
+                  >
+                    <option value="dashboard">{labels.menu.dashboard}</option>
+                    <option value="wines">{labels.menu.wines}</option>
+                    <option value="reviews">{labels.menu.reviews}</option>
+                  </select>
+                </label>
+              </form>
+            </section>
+
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <p className="eyebrow">{locale === 'ca' ? 'EXPERIÈNCIA' : 'EXPERIENCIA'}</p>
+                  <h3>{locale === 'ca' ? 'Preferències extra (mock)' : 'Preferencias extra (mock)'}</h3>
+                </div>
+              </div>
+
+              <div className="list-stack">
+                <article className="list-card settings-toggle-row">
+                  <div>
+                    <h4>{locale === 'ca' ? 'Filtrar Espanya per defecte' : 'Filtrar España por defecto'}</h4>
+                    <p>{locale === 'ca' ? 'Aplica el filtre de país “Espanya” quan obres el cercador.' : 'Aplica el filtro de país “España” al abrir el buscador.'}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={`settings-chip compact${showOnlySpainByDefault ? ' active' : ''}`}
+                    onClick={() => setShowOnlySpainByDefault((current) => !current)}
+                    aria-pressed={showOnlySpainByDefault}
+                  >
+                    {showOnlySpainByDefault ? (locale === 'ca' ? 'Activat' : 'Activo') : (locale === 'ca' ? 'Desactivat' : 'Inactivo')}
+                  </button>
+                </article>
+
+                <article className="list-card settings-toggle-row">
+                  <div>
+                    <h4>{locale === 'ca' ? 'Targetes compactes' : 'Tarjetas compactas'}</h4>
+                    <p>{locale === 'ca' ? 'Mock d’un mode amb menys espai vertical per les llistes.' : 'Mock de un modo con menos espacio vertical para listas.'}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={`settings-chip compact${compactCardsPreference ? ' active' : ''}`}
+                    onClick={() => setCompactCardsPreference((current) => !current)}
+                    aria-pressed={compactCardsPreference}
+                  >
+                    {compactCardsPreference ? (locale === 'ca' ? 'Sí' : 'Sí') : 'No'}
+                  </button>
+                </article>
+
+                <article className="list-card">
+                  <div>
+                    <h4>{locale === 'ca' ? 'Properes idees (mock)' : 'Próximas ideas (mock)'}</h4>
+                    <p>
+                      {locale === 'ca'
+                        ? 'Notificacions de noves ressenyes, exportació CSV i preferència de decimals a la puntuació.'
+                        : 'Notificaciones de nuevas reseñas, exportación CSV y preferencia de decimales en la puntuación.'}
+                    </p>
+                  </div>
+                  <button type="button" className="ghost-button small" disabled>
+                    {locale === 'ca' ? 'Aviat' : 'Pronto'}
+                  </button>
+                </article>
+              </div>
+
             </section>
           </section>
         ) : null}
@@ -1406,17 +1894,6 @@ function App() {
             <span className="mobile-bottom-nav-label">{item.label}</span>
           </button>
         ))}
-        <button
-          type="button"
-          className={`mobile-bottom-nav-item mobile-bottom-nav-item-menu${showMobileMenu ? ' active' : ''}`}
-          onClick={() => setShowMobileMenu((current) => !current)}
-          aria-expanded={showMobileMenu}
-          aria-controls="sidebar"
-          title={labels.common.menu}
-        >
-          <span className="mobile-bottom-nav-icon" aria-hidden="true">☰</span>
-          <span className="mobile-bottom-nav-label">{labels.common.menu}</span>
-        </button>
       </nav>
 
       {selectedWineGallery ? (
