@@ -92,6 +92,7 @@ type Dictionary = {
     points: string
     featured90: string
     viewDetails: string
+    viewProfile: string
   }
   icons: {
     filters: string
@@ -186,6 +187,7 @@ const DICT: Record<Locale, Dictionary> = {
       points: 'punts',
       featured90: '+90 destacat',
       viewDetails: 'Veure detall',
+      viewProfile: 'Veure perfil',
     },
     icons: {
       filters: '⚗',
@@ -284,6 +286,7 @@ const DICT: Record<Locale, Dictionary> = {
       points: 'puntos',
       featured90: '+90 destacado',
       viewDetails: 'Ver detalle',
+      viewProfile: 'Ver perfil',
     },
     icons: {
       filters: '⚗',
@@ -597,6 +600,8 @@ export default function App() {
   const [activeModalImageIndex, setActiveModalImageIndex] = useState(0)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
+  const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
+  const [doLogoPreview, setDoLogoPreview] = useState<{ src: string; label: string } | null>(null)
 
   const t = DICT[locale]
   const isDark = theme === 'dark'
@@ -614,14 +619,42 @@ export default function App() {
   }, [locale])
 
   useEffect(() => {
+    const shouldLockScroll = isMobileMenuOpen || isMobileFiltersOpen || isMobileSortOpen
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+
+    if (shouldLockScroll) {
+      document.documentElement.style.overflow = 'hidden'
+      document.body.style.overflow = 'hidden'
+    }
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.body.style.overflow = previousBodyOverflow
+    }
+  }, [isMobileMenuOpen, isMobileFiltersOpen, isMobileSortOpen])
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        if (doLogoPreview) {
+          setDoLogoPreview(null)
+          return
+        }
+        if (isMobileFiltersOpen) {
+          setIsMobileFiltersOpen(false)
+          return
+        }
+        if (isMobileSortOpen) {
+          setIsMobileSortOpen(false)
+          return
+        }
         setSelectedWineId(null)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [doLogoPreview, isMobileFiltersOpen, isMobileSortOpen])
 
   useEffect(() => {
     const onPopState = () => {
@@ -691,6 +724,12 @@ export default function App() {
   }, [selectedWine, activeModalImageIndex])
 
   useEffect(() => {
+    if (!selectedWine) {
+      setDoLogoPreview(null)
+    }
+  }, [selectedWine])
+
+  useEffect(() => {
     const params = new URLSearchParams()
     if (search.trim()) params.set('q', search.trim())
     if (typeFilter !== 'all') params.set('type', typeFilter)
@@ -708,11 +747,6 @@ export default function App() {
     }
   }, [search, typeFilter, countryFilter, regionFilter, grapeFilter, minScoreFilter, sortKey, selectedWineId])
 
-  const avgCatalogScore = useMemo(
-    () => filteredWines.reduce((sum, wine) => sum + wine.avgScore, 0) / (filteredWines.length || 1),
-    [filteredWines],
-  )
-  const awardCount = useMemo(() => filteredWines.filter((wine) => wine.reward).length, [filteredWines])
   const euro = useMemo(
     () => new Intl.NumberFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', { style: 'currency', currency: 'EUR' }),
     [locale],
@@ -728,7 +762,73 @@ export default function App() {
     setSortKey(DEFAULT_SORT)
   }
 
-  const filterControls = (
+  const sortControl = (
+    <label>
+      <span>{t.icons.sort} {t.filters.sort}</span>
+      <select value={sortKey} onChange={(event) => setSortKey(event.target.value as SortKey)}>
+        <option value="score_desc">{t.sort.score_desc}</option>
+        <option value="price_asc">{t.sort.price_asc}</option>
+        <option value="price_desc">{t.sort.price_desc}</option>
+        <option value="latest">{t.sort.latest}</option>
+      </select>
+    </label>
+  )
+
+  const activeMobileFilters = useMemo(() => {
+    const items: Array<{ key: string; label: string; onRemove: () => void }> = []
+    const searchValue = search.trim()
+
+    if (searchValue) {
+      items.push({
+        key: 'search',
+        label: `${t.icons.search} ${searchValue}`,
+        onRemove: () => setSearch(''),
+      })
+    }
+    if (typeFilter !== 'all') {
+      items.push({
+        key: 'type',
+        label: `${t.icons.type} ${t.wineType[typeFilter]}`,
+        onRemove: () => setTypeFilter('all'),
+      })
+    }
+    if (countryFilter !== 'all') {
+      items.push({
+        key: 'country',
+        label: `${t.icons.country} ${countryFilter}`,
+        onRemove: () => setCountryFilter('all'),
+      })
+    }
+    if (regionFilter !== 'all') {
+      items.push({
+        key: 'region',
+        label: `${t.icons.region} ${regionFilter}`,
+        onRemove: () => setRegionFilter('all'),
+      })
+    }
+    if (grapeFilter !== 'all') {
+      items.push({
+        key: 'grape',
+        label: `${t.icons.grape} ${grapeFilter}`,
+        onRemove: () => setGrapeFilter('all'),
+      })
+    }
+    if (minScoreFilter !== 'all') {
+      const scoreLabel =
+        minScoreFilter === 'lt70' ? '<70'
+          : minScoreFilter === '70_80' ? '70-80'
+            : minScoreFilter === '80_90' ? '80-90'
+              : '90+'
+      items.push({
+        key: 'score',
+        label: `${t.icons.minScore} ${scoreLabel}`,
+        onRemove: () => setMinScoreFilter('all'),
+      })
+    }
+    return items
+  }, [search, typeFilter, countryFilter, regionFilter, grapeFilter, minScoreFilter, t])
+
+  const filterControlsCore = (
     <>
       <div className="filters-header">
         <p className="eyebrow">{t.icons.filters} {t.filters.title}</p>
@@ -806,16 +906,13 @@ export default function App() {
         </div>
       </div>
 
-      <label>
-        <span>{t.icons.sort} {t.filters.sort}</span>
-        <select value={sortKey} onChange={(event) => setSortKey(event.target.value as SortKey)}>
-          <option value="score_desc">{t.sort.score_desc}</option>
-          <option value="price_asc">{t.sort.price_asc}</option>
-          <option value="price_desc">{t.sort.price_desc}</option>
-          <option value="latest">{t.sort.latest}</option>
-        </select>
-      </label>
+    </>
+  )
 
+  const filterControls = (
+    <>
+      {filterControlsCore}
+      {sortControl}
       <button type="button" className="clear-filters" onClick={resetFilters}>
         {t.filters.clear}
       </button>
@@ -826,7 +923,7 @@ export default function App() {
     <main className="public-shell">
       <div className="public-background" aria-hidden="true" />
 
-      <header className="public-topbar">
+      <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
         <div className="brand-block">
           <img src="brand/icon-square-64.png" className="brand-icon" alt="" aria-hidden="true" />
           <div className="brand-copy">
@@ -867,48 +964,168 @@ export default function App() {
         </div>
 
         <nav id="mobile-nav-menu" className={`mobile-nav-menu${isMobileMenuOpen ? ' open' : ''}`} aria-label={t.topbar.navigation}>
+          <div className="mobile-nav-menu-head">
+            <span>{t.topbar.navigation}</span>
+            <button type="button" className="mobile-nav-menu-close" onClick={() => setIsMobileMenuOpen(false)} aria-label={t.modal.close}>
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
           <a href="#catalog" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
           <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
           <a href="/backoffice" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.backoffice}</a>
         </nav>
       </header>
 
-      <section className="mobile-filter-dropdown" aria-label={t.filters.title}>
+      {isMobileMenuOpen ? (
         <button
           type="button"
-          className={`mobile-filter-trigger${isMobileFiltersOpen ? ' active' : ''}`}
-          onClick={() => setIsMobileFiltersOpen((open) => !open)}
-          aria-expanded={isMobileFiltersOpen}
-          aria-controls="mobile-filters-panel"
-        >
-          <span>{t.icons.filters} {t.filters.title}</span>
-          <span className="mobile-filter-trigger-meta">
-            {filteredWines.length} {t.topbar.resultCount}
-          </span>
-        </button>
-
-        <div id="mobile-filters-panel" className={`mobile-filter-panel${isMobileFiltersOpen ? ' open' : ''}`}>
-          {filterControls}
-          <button
-            type="button"
-            className="mobile-filter-apply"
-            onClick={() => setIsMobileFiltersOpen(false)}
-          >
-            {isMobileFiltersOpen ? t.topbar.closeFilters : t.topbar.openFilters}
-          </button>
-        </div>
-      </section>
+          className="mobile-nav-backdrop"
+          aria-label={t.topbar.closeFilters}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      ) : null}
 
       <section className="hero-panel" id="catalog">
         <div>
           <p className="eyebrow">VINS · PUBLIC CATALOG</p>
           <h1>{t.title}</h1>
-          <p className="hero-subtitle">{t.subtitle}</p>
         </div>
-        <div className="hero-metrics" aria-label="catalog summary">
-          <article><span>{t.icons.results} {t.topbar.resultCount}</span><strong>{filteredWines.length}</strong></article>
-          <article><span>{t.icons.avgScore} {t.card.avgScore}</span><strong>{avgCatalogScore.toFixed(1)}</strong></article>
-          <article><span>{t.icons.rewards} {t.card.reward}</span><strong>{awardCount}</strong></article>
+      </section>
+
+      <section className="mobile-filter-dropdown" aria-label={t.filters.title}>
+        <div className="mobile-filter-bar">
+          <button
+            type="button"
+            className={`mobile-filter-trigger${isMobileFiltersOpen ? ' active' : ''}`}
+            onClick={() => {
+              setIsMobileSortOpen(false)
+              setIsMobileFiltersOpen((open) => !open)
+            }}
+            aria-expanded={isMobileFiltersOpen}
+            aria-controls="mobile-filters-panel"
+          >
+            <span>{t.icons.filters} {t.filters.title}</span>
+            <span className="mobile-filter-trigger-meta">
+              {filteredWines.length} {t.topbar.resultCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`mobile-sort-trigger${isMobileSortOpen ? ' active' : ''}${sortKey !== DEFAULT_SORT ? ' has-value' : ''}`}
+            onClick={() => {
+              setIsMobileFiltersOpen(false)
+              setIsMobileSortOpen((open) => !open)
+            }}
+            aria-expanded={isMobileSortOpen}
+            aria-controls="mobile-sort-panel"
+            aria-label={`${t.filters.sort}: ${t.sort[sortKey]}`}
+            title={`${t.filters.sort}: ${t.sort[sortKey]}`}
+          >
+            <span aria-hidden="true">{t.icons.sort}</span>
+          </button>
+        </div>
+
+        {isMobileSortOpen ? (
+          <button
+            type="button"
+            className="mobile-sort-backdrop"
+            aria-label={t.modal.close}
+            onClick={() => setIsMobileSortOpen(false)}
+          />
+        ) : null}
+
+        {isMobileSortOpen ? (
+          <div id="mobile-sort-panel" className="mobile-sort-panel" role="dialog" aria-label={t.filters.sort}>
+            <div className="mobile-sort-panel-head">
+              <span>{t.icons.sort} {t.filters.sort}</span>
+              <button type="button" className="mobile-sort-close" onClick={() => setIsMobileSortOpen(false)} aria-label={t.modal.close}>
+                <span aria-hidden="true">✕</span>
+              </button>
+            </div>
+            <div className="mobile-sort-options" role="listbox" aria-label={t.filters.sort}>
+              {(['score_desc', 'price_asc', 'price_desc', 'latest'] as SortKey[]).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`mobile-sort-option${sortKey === key ? ' active' : ''}`}
+                  onClick={() => {
+                    setSortKey(key)
+                    setIsMobileSortOpen(false)
+                  }}
+                  role="option"
+                  aria-selected={sortKey === key}
+                >
+                  <span>{t.sort[key]}</span>
+                  {sortKey === key ? <span aria-hidden="true">✓</span> : null}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {!isMobileFiltersOpen && activeMobileFilters.length > 0 ? (
+          <div className="mobile-filter-active-bar" aria-label="Active filters">
+            <div className="mobile-filter-active-bar-head">
+              <span className="mobile-filter-active-bar-title">
+                {t.filters.title} {locale === 'ca' ? 'actius' : 'activos'}
+              </span>
+              <button type="button" className="mobile-filter-active-clear" onClick={resetFilters}>
+                {t.filters.clear}
+              </button>
+            </div>
+            <div className="mobile-filter-active-list">
+              {activeMobileFilters.map((filter) => (
+                <button
+                  key={filter.key}
+                  type="button"
+                  className="mobile-filter-active-chip"
+                  onClick={filter.onRemove}
+                  title={filter.label}
+                  aria-label={`${filter.label} · remove`}
+                >
+                  <span className="mobile-filter-active-chip-text">{filter.label}</span>
+                  <span className="mobile-filter-active-chip-x" aria-hidden="true">✕</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {isMobileFiltersOpen ? (
+          <button
+            type="button"
+            className="mobile-filters-backdrop"
+            aria-label={t.topbar.closeFilters}
+            onClick={() => setIsMobileFiltersOpen(false)}
+          />
+        ) : null}
+
+        <div id="mobile-filters-panel" className={`mobile-filter-panel${isMobileFiltersOpen ? ' open' : ''}`}>
+          <div className="mobile-filter-panel-header">
+            <div>
+              <p className="eyebrow">{t.icons.filters} {t.filters.title}</p>
+              <p className="mobile-filter-panel-meta">{filteredWines.length} {t.topbar.resultCount}</p>
+            </div>
+            <button
+              type="button"
+              className="mobile-filter-panel-close"
+              onClick={() => setIsMobileFiltersOpen(false)}
+              aria-label={t.topbar.closeFilters}
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+
+          <div className="mobile-filter-panel-content">
+            {filterControlsCore}
+          </div>
+
+          <div className="mobile-filter-panel-footer">
+            <button type="button" className="mobile-filter-footer-clear" onClick={resetFilters}>
+              {t.filters.clear}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1020,10 +1237,47 @@ export default function App() {
                     </section>
 
                     <div className="wine-card-mobile-summary" aria-label="mobile summary">
-                      <div>{wine.region}</div>
-                      <div>{wine.vintage}</div>
-                      <div>{wine.mariaScore != null ? `M ${wine.mariaScore.toFixed(1)}` : 'M n/d'}</div>
-                      <div>{wine.adriaScore != null ? `A ${wine.adriaScore.toFixed(1)}` : 'A n/d'}</div>
+                      <div className="wine-card-mobile-summary-region">
+                        <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>{countryFlagEmoji(wine.country)}</span>
+                        <span className="wine-card-mobile-region-text">
+                          <span className="wine-card-mobile-region-name">{wine.region}</span>
+                          <span className="wine-card-mobile-region-vintage">{wine.vintage}</span>
+                        </span>
+                        {wine.doLogoImage ? (
+                          <button
+                            type="button"
+                            className="do-logo-inline-button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setSelectedWineId(wine.id)
+                              setActiveModalImageIndex(0)
+                              setDoLogoPreview({ src: wine.doLogoImage!, label: wine.region })
+                            }}
+                            aria-label={`${wine.region} DO`}
+                          >
+                            <img className="do-logo-badge" src={wine.doLogoImage} alt="" loading="lazy" />
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="wine-card-mobile-grapes" aria-label={t.filters.grape}>
+                      {splitGrapeVarieties(wine.grapes).map((grape) => (
+                        <button
+                          key={`${wine.id}-mobile-grape-${grape}`}
+                          type="button"
+                          className="grape-filter-chip grape-filter-chip-secondary grape-filter-chip-compact"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            setGrapeFilter(grape)
+                          }}
+                          aria-label={`${t.filters.grape}: ${grape}`}
+                          title={grape}
+                        >
+                          <span aria-hidden="true">{t.icons.grape}</span>
+                          <span>{grape}</span>
+                        </button>
+                      ))}
                     </div>
 
                     <section className="wine-card-review-section" aria-label="review summary">
@@ -1045,7 +1299,7 @@ export default function App() {
                     </section>
 
                     <div className="wine-card-footer">
-                      <span className="card-link">{t.card.viewDetails}</span>
+                      <span className="card-link">{t.card.viewProfile}</span>
                     </div>
                   </div>
                 </article>
@@ -1069,11 +1323,23 @@ export default function App() {
             <header className="public-wine-modal-header">
               <div>
                 <p className="eyebrow">{t.modal.details}</p>
-                <h2 id="public-wine-modal-title">{selectedWine.name}</h2>
+                <div className="public-wine-modal-title-row">
+                  <h2 id="public-wine-modal-title">{selectedWine.name}</h2>
+                  {selectedWine.rewardBadgeImage ? (
+                    <span
+                      className="public-wine-modal-award-icon"
+                      aria-label={`${selectedWine.reward?.name ?? 'Award'} ${selectedWine.reward?.score ?? ''}`.trim()}
+                      title={`${selectedWine.reward?.name ?? 'Award'} ${selectedWine.reward?.score ?? ''}`.trim()}
+                    >
+                      <img src={selectedWine.rewardBadgeImage} alt="" loading="lazy" />
+                    </span>
+                  ) : null}
+                </div>
                 <p className="muted-line">{selectedWine.winery}</p>
               </div>
-              <button type="button" className="ghost-close" onClick={() => setSelectedWineId(null)}>
-                {t.modal.close}
+              <button type="button" className="ghost-close public-wine-modal-close" onClick={() => setSelectedWineId(null)}>
+                <span className="public-wine-modal-close-icon" aria-hidden="true">✕</span>
+                <span className="public-wine-modal-close-label">{t.modal.close}</span>
               </button>
             </header>
 
@@ -1106,8 +1372,16 @@ export default function App() {
                       <dd className="origin-with-do">
                         <span className="country-flag-badge" aria-label={selectedWine.country} title={selectedWine.country}>{countryFlagEmoji(selectedWine.country)}</span>
                         {selectedWine.doLogoImage ? (
-                          <span className="do-logo-tooltip">
-                            <img className="do-logo-badge" src={selectedWine.doLogoImage} alt={`${selectedWine.region} DO`} loading="lazy" />
+                          <span className="do-logo-tooltip do-logo-tooltip-clickable">
+                            <button
+                              type="button"
+                              className="do-logo-inline-button"
+                              onClick={() => setDoLogoPreview({ src: selectedWine.doLogoImage!, label: selectedWine.region })}
+                              aria-label={`${selectedWine.region} DO`}
+                              title={selectedWine.region}
+                            >
+                              <img className="do-logo-badge" src={selectedWine.doLogoImage} alt={`${selectedWine.region} DO`} loading="lazy" />
+                            </button>
                             <span className="do-logo-tooltip-panel" role="tooltip" aria-hidden="true">
                               <img src={selectedWine.doLogoImage} alt="" loading="lazy" />
                               <span>{selectedWine.region}</span>
@@ -1176,6 +1450,24 @@ export default function App() {
                 </section>
               </div>
             </div>
+          </section>
+        </div>
+      ) : null}
+
+      {doLogoPreview ? (
+        <div className="public-modal-backdrop do-logo-lightbox-backdrop" role="presentation" onClick={() => setDoLogoPreview(null)}>
+          <section
+            className="do-logo-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${doLogoPreview.label} DO`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="ghost-close do-logo-lightbox-close" onClick={() => setDoLogoPreview(null)}>
+              {t.modal.close}
+            </button>
+            <img src={doLogoPreview.src} alt={`${doLogoPreview.label} DO`} loading="lazy" />
+            <p>{doLogoPreview.label}</p>
           </section>
         </div>
       ) : null}
