@@ -1211,13 +1211,21 @@ export default function App() {
                         <dd className="origin-with-do">
                           <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>{countryFlagEmoji(wine.country)}</span>
                           {wine.doLogoImage ? (
-                            <span className="do-logo-tooltip">
+                            <button
+                              type="button"
+                              className="do-logo-tooltip do-logo-tooltip-clickable do-logo-inline-button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setDoLogoPreview({ src: wine.doLogoImage!, label: wine.region })
+                              }}
+                              aria-label={`${wine.region} DO`}
+                            >
                               <img className="do-logo-badge" src={wine.doLogoImage} alt={`${wine.region} DO`} loading="lazy" />
                               <span className="do-logo-tooltip-panel" role="tooltip" aria-hidden="true">
                                 <img src={wine.doLogoImage} alt="" loading="lazy" />
                                 <span>{wine.region}</span>
                               </span>
-                            </span>
+                            </button>
                           ) : null}
                           <span>{wine.region}</span>
                         </dd>
