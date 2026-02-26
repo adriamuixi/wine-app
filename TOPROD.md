@@ -84,14 +84,14 @@ cd ~/apps
 Using HTTPS:
 
 ```bash
-git clone <YOUR_REPO_URL> wine-app
+git clone https://github.com/adriamuixi/wine-app wine-app
 cd wine-app
 ```
 
 Using SSH (recommended if you have deploy keys):
 
 ```bash
-git clone git@github.com:<org>/<repo>.git wine-app
+git clone git@github.com:adriamuixi/wine-app.git wine-app
 cd wine-app
 ```
 
@@ -279,3 +279,105 @@ And configure:
 
 If you want, I can create that `docker-compose.prod.yml` and a production Nginx config next.
 
+## 17. Production Compose (now included)
+
+This repository now includes:
+- `docker-compose.prod.yml`
+- `apps/api/Dockerfile.prod`
+- `apps/web-public/Dockerfile.prod`
+- `apps/web-private/Dockerfile.prod`
+- `infra/nginx/Dockerfile.prod`
+- `infra/nginx/default.prod.conf`
+
+### Start production stack
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+### Run migrations (production)
+
+```bash
+docker compose -f docker-compose.prod.yml exec api php bin/console doctrine:migrations:migrate --no-interaction
+```
+
+### Check status
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
+
+### Logs
+
+```bash
+docker compose -f docker-compose.prod.yml logs -f nginx
+docker compose -f docker-compose.prod.yml logs -f api
+```
+
+### Notes about this production compose
+
+- `db` is **not exposed publicly**.
+- `api` runs with `APP_ENV=prod`.
+- Frontends are built and served as static files by Nginx containers (no Vite dev server).
+- Main `nginx` proxies:
+  - `/` -> `web-public`
+  - `/admin/` -> `web-private`
+  - `/api` -> `api`
+
+### Recommended `.env` additions for production
+
+Add this to your root `.env` on the VPS:
+
+```env
+APP_SECRET=CHANGE_ME_STRONG_RANDOM_SECRET
+HTTP_PORT=80
+```
+
+## 18. Production Deploy (Commands Only)
+
+### First deploy
+
+```bash
+ssh your-user@your-server-ip
+cd ~/apps
+git clone <YOUR_REPO_URL> wine-app
+cd wine-app
+cp .env.example .env
+nano .env
+docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml exec api php bin/console doctrine:migrations:migrate --no-interaction
+docker compose -f docker-compose.prod.yml ps
+```
+
+### Update deploy
+
+```bash
+ssh your-user@your-server-ip
+cd ~/apps/wine-app
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml exec api php bin/console doctrine:migrations:migrate --no-interaction
+docker compose -f docker-compose.prod.yml ps
+```
+
+### Logs
+
+```bash
+docker compose -f docker-compose.prod.yml logs -f nginx
+docker compose -f docker-compose.prod.yml logs -f api
+docker compose -f docker-compose.prod.yml logs -f web-public
+docker compose -f docker-compose.prod.yml logs -f web-private
+```
+
+### Restart / stop
+
+```bash
+docker compose -f docker-compose.prod.yml restart
+docker compose -f docker-compose.prod.yml down
+```
+
+### Backup DB
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > backup_$(date +%F_%H%M%S).sql
+```

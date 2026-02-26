@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: wine_db_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wine}
+      POSTGRES_USER: ${POSTGRES_USER:-wine}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wine}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wine} -d ${POSTGRES_DB:-wine}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.prod
+    container_name: wine_api_prod
+    restart: unless-stopped
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: 0
+      APP_SECRET: ${APP_SECRET:-change-me-prod-secret}
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-wine}:${POSTGRES_PASSWORD:-wine}@db:5432/${POSTGRES_DB:-wine}?serverVersion=16&charset=utf8"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web-public:
+    build:
+      context: ./apps/web-public
+      dockerfile: Dockerfile.prod
+    container_name: wine_web_public_prod
+    restart: unless-stopped
+
+  web-private:
+    build:
+      context: ./apps/web-private
+      dockerfile: Dockerfile.prod
+    container_name: wine_web_private_prod
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: infra/nginx/Dockerfile.prod
+    container_name: wine_nginx_prod
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web-public
+      - web-private
+    ports:
+      - "${HTTP_PORT:-80}:80"
+
+volumes:
+  db_data:

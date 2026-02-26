@@ -1,0 +1,49 @@
+FROM php:8.4-fpm-alpine
+
+# System deps
+RUN apk add --no-cache \
+    bash \
+    git \
+    icu-dev \
+    libzip-dev \
+    linux-headers \
+    postgresql-dev \
+    oniguruma-dev \
+    unzip \
+    wget \
+    $PHPIZE_DEPS
+
+# PHP extensions
+RUN docker-php-ext-install \
+    intl \
+    opcache \
+    pdo \
+    pdo_pgsql \
+    zip
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# PHP config
+COPY php.ini /usr/local/etc/php/conf.d/app.ini
+
+WORKDIR /var/www/html
+
+# Install dependencies first for layer caching
+COPY composer.json composer.lock symfony.lock ./
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-interaction \
+    --no-progress \
+    --optimize-autoloader \
+    --no-scripts
+
+# Copy app source
+COPY . .
+
+# Runtime writable dirs
+RUN mkdir -p var/cache var/log var/sessions \
+    && chown -R www-data:www-data var
+
+EXPOSE 9000
