@@ -368,7 +368,7 @@ type JournalWineRow = {
 }
 
 const CATALAN_JOURNAL_ROWS: JournalWineRow[] = [
-  { date: '26/9/2020', month: 'Setembre', wine: 'Lo cometa', typeCa: 'Blanc', grapes: 'Garnatxa Blanc', aging: 'jove', region: 'Terra Alta', vintage: 2019, alcohol: '13,5 %', techSheet: true, maria: '7', adria: '7,5', place: 'Celler del nou priorat', city: 'Barcelona (Sants)' },
+  { date: '26/9/2020', month: 'Setembre', wine: 'Lo cometa', typeCa: 'Blanc', grapes: 'Garnatxa', aging: 'jove', region: 'Terra Alta', vintage: 2019, alcohol: '13,5 %', techSheet: true, maria: '7', adria: '7,5', place: 'Celler del nou priorat', city: 'Barcelona (Sants)' },
   { date: '27/9/2020', month: 'Setembre', wine: 'Compte ovelles', typeCa: 'Negre', grapes: 'Syrah / Cabernet sauvignon / Merlot', aging: 'jove', region: 'Penedès', vintage: 2020, alcohol: '13 %', techSheet: true, maria: '5', adria: '5,75', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
   { date: '9/10/2020', month: 'Octubre', wine: 'Seré 2018', typeCa: 'Negre', grapes: 'Garnatxa / Carinyena', aging: 'criança', region: 'Montsant', vintage: 2018, alcohol: '14,5 %', techSheet: true, maria: '6,5', adria: '6,25', place: 'Taberna La Parra', city: 'Barcelona (Hostafrancs)' },
   { date: '9/10/2020', month: 'Octubre', wine: 'Vega de Nava', typeCa: 'Negre', grapes: 'Tempranillo', aging: 'reserva', region: 'Ribera del Duero', vintage: 2018, alcohol: '14 %', techSheet: true, maria: '8', adria: '8', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
@@ -376,14 +376,14 @@ const CATALAN_JOURNAL_ROWS: JournalWineRow[] = [
   { date: '24/10/2020', month: 'Octubre', wine: 'Matsu - el pícaro', typeCa: 'Negre', grapes: 'Tinta de toro', aging: 'jove', region: 'Toro', vintage: 2020, alcohol: '14,5 %', techSheet: true, maria: '7,5', adria: '8', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
   { date: '6/11/2020', month: 'Novembre', wine: 'Titella', typeCa: 'Negre', grapes: 'Garnatxa, carinyena, merlot, tempranillo', aging: 'jove', region: 'Montsant', vintage: 2017, alcohol: '13,5 %', techSheet: true, maria: '8', adria: '8,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
   { date: '8/11/2020', month: 'Novembre', wine: 'Ulldemolins', typeCa: 'Negre', grapes: 'Garnatxa', aging: 'criança', region: 'Montsant', vintage: 2016, alcohol: '14,5%', techSheet: true, maria: '6,5', adria: '6,75', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '20/11/2020', month: 'Novembre', wine: 'Clot d’encís blanc de negres', typeCa: 'Blanc', grapes: 'Garnatxa negre', aging: 'jove', region: 'Terra Alta', vintage: 2019, alcohol: '14%', techSheet: true, maria: '7,5', adria: '7,15', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
+  { date: '20/11/2020', month: 'Novembre', wine: 'Clot d’encís blanc de negres', typeCa: 'Blanc', grapes: 'Garnatxa', aging: 'jove', region: 'Terra Alta', vintage: 2019, alcohol: '14%', techSheet: true, maria: '7,5', adria: '7,15', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
   { date: '21/11/2020', month: 'Novembre', wine: 'Ninín', typeCa: 'Negre', grapes: 'Tempranillo', aging: 'criança', region: 'Ribera del Duero', vintage: 2018, alcohol: '14%', techSheet: true, maria: '6,75', adria: '6,9', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '1/12/2020', month: 'Desembre', wine: 'Roca Blanca', typeCa: 'Negre', grapes: 'Garnacha, mazuela, syrah', aging: 'criança', region: 'Montsant', vintage: 2016, alcohol: '13,5%', techSheet: true, maria: '6', adria: '4,25', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
+  { date: '1/12/2020', month: 'Desembre', wine: 'Roca Blanca', typeCa: 'Negre', grapes: 'Garnatxa, mazuela, syrah', aging: 'criança', region: 'Montsant', vintage: 2016, alcohol: '13,5%', techSheet: true, maria: '6', adria: '4,25', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
   { date: '4/12/2020', month: 'Desembre', wine: 'Enate', typeCa: 'Negre', grapes: 'Cabernet sauvignon, merlot', aging: 'jove', region: 'Somontano', vintage: 2017, alcohol: '15%', techSheet: true, maria: '7', adria: '8', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
   { date: '6/12/2020', month: 'Desembre', wine: 'Fulget', typeCa: 'Blanc', grapes: 'Albariño', aging: '', region: 'Rías Baixas', vintage: 2019, alcohol: '12%', techSheet: true, maria: '6,5', adria: '5,5', place: "A'rogueira", city: 'Barcelona (Eixample)' },
   { date: '15/12/2020', month: 'Desembre', wine: 'Roca blanca', typeCa: 'Negre', grapes: 'Garnatxa / carinyena / sirah', aging: 'criança', region: 'Montsant', vintage: 2016, alcohol: '13,5 %', techSheet: true, maria: '5,5', adria: '4,67', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
   { date: '19/12/2020', month: 'Desembre', wine: 'Castillo de Albai', typeCa: 'Negre', grapes: 'Tempranillo', aging: 'reserva', region: 'Rioja', vintage: 2016, alcohol: '13.5 %', techSheet: true, maria: '7', adria: '7,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '24/12/2020', month: 'Desembre', wine: 'Acústic', typeCa: 'Negre', grapes: 'Garnatxa tinta / carinyena', aging: 'criança', region: 'Montsant', vintage: 2018, alcohol: '15 %', techSheet: true, maria: '9,2', adria: '8,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
+  { date: '24/12/2020', month: 'Desembre', wine: 'Acústic', typeCa: 'Negre', grapes: 'Garnatxa / carinyena', aging: 'criança', region: 'Montsant', vintage: 2018, alcohol: '15 %', techSheet: true, maria: '9,2', adria: '8,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
   { date: '25/12/2020', month: 'Desembre', wine: 'Matsu - el recio', typeCa: 'Negre', grapes: 'Tinta de toro', aging: 'criança', region: 'Toro', vintage: null, alcohol: '', techSheet: false, maria: '9', adria: '7,8', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
   { date: '26/12/2020', month: 'Desembre', wine: 'Roureda', typeCa: 'Negre', grapes: 'Tempranillo / Cabernet sauvignon / Merlot', aging: 'reserva', region: 'Tarragona', vintage: 2016, alcohol: '13 %', techSheet: true, maria: '', adria: '', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
   { date: '15/1/2021', month: 'Gener', wine: 'Almodí', typeCa: 'Negre', grapes: 'Garnatxa', aging: 'jove', region: 'Terra Alta', vintage: 2019, alcohol: '14,5 %', techSheet: true, maria: '7,5', adria: '7,5', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
@@ -892,21 +892,29 @@ export default function App() {
 
       <div className="filter-score-group" role="group" aria-label={`${t.icons.minScore} ${t.filters.minScore}`}>
         <span>{t.icons.minScore} {t.filters.minScore}</span>
+        <button
+          type="button"
+          className={`score-filter-reset${minScoreFilter === 'all' ? ' active' : ''}`}
+          onClick={() => setMinScoreFilter('all')}
+          aria-pressed={minScoreFilter === 'all'}
+        >
+          {t.filters.anyScore}
+        </button>
         <div className="filter-score-medals">
           {[
-            { key: 'all', label: t.filters.anyScore, tone: 'all' },
-            { key: 'lt70', label: '<70', tone: 'base' },
-            { key: '70_80', label: '70-80', tone: 'bronze' },
-            { key: '80_90', label: '80-90', tone: 'silver' },
-            { key: 'gte90', label: '90+', tone: 'gold' },
+            { key: 'lt70', label: '<70', tone: 'base', icon: null },
+            { key: '70_80', label: '70-80', tone: 'bronze', icon: '🥉' },
+            { key: '80_90', label: '80-90', tone: 'silver', icon: '🥈' },
+            { key: 'gte90', label: '90+', tone: 'gold', icon: '🥇' },
           ].map((option) => (
             <button
               key={option.key}
               type="button"
-              className={`score-filter-medal ${option.tone}${minScoreFilter === option.key ? ' active' : ''}`}
+              className={`score-filter-medal score-filter-medal-range ${option.tone}${minScoreFilter === option.key ? ' active' : ''}`}
               onClick={() => setMinScoreFilter(option.key as ScoreFilterBucket)}
               aria-pressed={minScoreFilter === option.key}
             >
+              {option.icon ? <span className="score-filter-medal-icon" aria-hidden="true">{option.icon}</span> : null}
               <span>{option.label}</span>
             </button>
           ))}
@@ -1282,25 +1290,6 @@ export default function App() {
                           </button>
                         ) : null}
                       </div>
-                    </div>
-
-                    <div className="wine-card-mobile-grapes" aria-label={t.filters.grape}>
-                      {splitGrapeVarieties(wine.grapes).map((grape) => (
-                        <button
-                          key={`${wine.id}-mobile-grape-${grape}`}
-                          type="button"
-                          className="grape-filter-chip grape-filter-chip-secondary grape-filter-chip-compact"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            setGrapeFilter(grape)
-                          }}
-                          aria-label={`${t.filters.grape}: ${grape}`}
-                          title={grape}
-                        >
-                          <span aria-hidden="true">{t.icons.grape}</span>
-                          <span>{grape}</span>
-                        </button>
-                      ))}
                     </div>
 
                     <section className="wine-card-review-section" aria-label="review summary">

@@ -169,10 +169,10 @@ const mockWines: WineItem[] = journalWineRows.map((row, index) => {
 })
 
 const mockReviews: ReviewItem[] = [
-  { id: 11, wineId: 1, wineName: 'Laderas del Norte', score: 88, createdAt: '2026-02-20', notes: 'Ripe cherry, medium body, easy finish.' },
-  { id: 12, wineId: 6, wineName: 'Gran Reserva 12', score: 95, createdAt: '2026-02-18', notes: 'Oak-forward, structured tannin, long persistence.' },
-  { id: 13, wineId: 2, wineName: 'Mar de Pizarra', score: 84, createdAt: '2026-02-14', notes: 'Citrus and saline notes, crisp acidity.' },
-  { id: 14, wineId: 8, wineName: 'Noches de Burbuja', score: 86, createdAt: '2026-02-12', notes: 'Fresh bubbles, floral nose, clean finish.' },
+  { id: 11, wineId: 1, wineName: 'Lo cometa', score: 88, createdAt: '2026-02-20', notes: 'Cirera madura, cos mitjà i final amable.' },
+  { id: 12, wineId: 16, wineName: 'Acústic', score: 95, createdAt: '2026-02-18', notes: 'Fusta integrada, taní estructurat i persistència llarga.' },
+  { id: 13, wineId: 13, wineName: 'Fulget', score: 84, createdAt: '2026-02-14', notes: 'Perfil fresc, acidesa viva i final net.' },
+  { id: 14, wineId: 20, wineName: 'Muga', score: 86, createdAt: '2026-02-12', notes: 'Aroma net, pas de boca equilibrat i bona longitud.' },
 ]
 
 const AGING_OPTIONS = ['jove', 'criança', 'reserva', 'gran_reserva'] as const
@@ -416,7 +416,7 @@ function buildMockWineProfile(
         ]
       : [
           { name: 'Tempranillo', color: 'red', percentage: '80.00' },
-          { name: 'Garnacha', color: 'red', percentage: '20.00' },
+          { name: 'Garnatxa', color: 'red', percentage: '20.00' },
         ]
 
   const sections: WineProfileSection[] = [
