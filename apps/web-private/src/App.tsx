@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { Bar, BarChart, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts'
 import { LanguageSelector } from './components/LanguageSelector'
 import './App.css'
 import { useI18n } from './i18n/I18nProvider'
@@ -41,7 +41,7 @@ type WineProfileSection = {
 
 type WineProfileMedalTone = 'gold' | 'silver' | 'bronze'
 
-type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'reviews' | 'admin' | 'settings' | 'wineProfile'
+type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'settings' | 'wineProfile'
 type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
 
@@ -50,6 +50,32 @@ type MockUser = {
   name: string
   lastname: string
   email: string
+}
+
+type GrapeBlendRow = {
+  id: number
+  grape: string
+}
+
+type AwardRow = {
+  id: number
+  award: string
+  score: string
+  year: string
+}
+
+type ReviewFormPreset = {
+  wineId: string
+  tastingDate: string
+  overallScore: number
+  aroma: number
+  sweetness: number
+  acidity: number
+  tannin: number
+  body: number
+  persistence: number
+  tags: string[]
+  notes: string
 }
 
 const SAMPLE_WINE_THUMBNAIL_SRC = 'photos/wines/exmaple_wine-hash.png'
@@ -149,6 +175,51 @@ const mockReviews: ReviewItem[] = [
   { id: 14, wineId: 8, wineName: 'Noches de Burbuja', score: 86, createdAt: '2026-02-12', notes: 'Fresh bubbles, floral nose, clean finish.' },
 ]
 
+const AGING_OPTIONS = ['jove', 'criança', 'reserva', 'gran_reserva'] as const
+const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket', 'wine_bar', 'cellar', 'online'] as const
+const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker'] as const
+const GRAPE_OPTIONS = ['Garnatxa', 'Carinyena', 'Tempranillo', 'Cabernet Sauvignon', 'Syrah', 'Macabeu', 'Xarel·lo', 'Parellada'] as const
+const REVIEW_TAG_OPTIONS = ['Afrutado', 'Floral', 'Especiado', 'Mineral', 'Madera marcada', 'Fácil de beber', 'Elegante', 'Potente', 'Gastronómico'] as const
+const SCORE_OPTIONS_0_TO_10 = Array.from({ length: 11 }, (_, value) => value)
+const SCORE_OPTIONS_0_TO_100 = Array.from({ length: 101 }, (_, value) => value)
+const VINTAGE_YEAR_OPTIONS = Array.from({ length: 76 }, (_, index) => String(2026 - index))
+
+function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
+  if (review == null) {
+    return {
+      wineId: '',
+      tastingDate: '2026-02-27',
+      overallScore: 85,
+      aroma: 5,
+      sweetness: 5,
+      acidity: 5,
+      tannin: 5,
+      body: 5,
+      persistence: 5,
+      tags: [],
+      notes: '',
+    }
+  }
+
+  const base = Math.max(0, Math.min(10, Math.round(review.score / 10)))
+  const boosted = Math.max(0, Math.min(10, base + 1))
+  const tags = review.score >= 90 ? ['Elegante', 'Potente', 'Gastronómico'] : ['Afrutado', 'Fácil de beber']
+
+  return {
+    wineId: String(review.wineId),
+    tastingDate: review.createdAt,
+    overallScore: review.score,
+    aroma: boosted,
+    sweetness: Math.max(0, base - 1),
+    acidity: base,
+    tannin: boosted,
+    body: boosted,
+    persistence: base,
+    tags,
+    notes: review.notes,
+  }
+}
+
 const THEME_STORAGE_KEY = 'wine-app-theme-mode'
 const SIDEBAR_STORAGE_KEY = 'wine-app-sidebar-collapsed'
 
@@ -180,6 +251,52 @@ function averageScore(wines: WineItem[], type: WineType): number {
   }
 
   return values.reduce((sum, current) => sum + current, 0) / values.length
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 0) {
+    return (sorted[middle - 1] + sorted[middle]) / 2
+  }
+  return sorted[middle]
+}
+
+function standardDeviation(values: number[]): number {
+  if (values.length <= 1) return 0
+  const avg = values.reduce((sum, value) => sum + value, 0) / values.length
+  const variance = values.reduce((sum, value) => sum + ((value - avg) ** 2), 0) / values.length
+  return Math.sqrt(variance)
+}
+
+function linearRegression(points: Array<{ x: number; y: number }>): { slope: number; intercept: number } {
+  if (points.length === 0) {
+    return { slope: 0, intercept: 0 }
+  }
+
+  const n = points.length
+  const sumX = points.reduce((sum, point) => sum + point.x, 0)
+  const sumY = points.reduce((sum, point) => sum + point.y, 0)
+  const sumXY = points.reduce((sum, point) => sum + (point.x * point.y), 0)
+  const sumXX = points.reduce((sum, point) => sum + (point.x * point.x), 0)
+  const denominator = (n * sumXX) - (sumX ** 2)
+
+  if (denominator === 0) {
+    return { slope: 0, intercept: sumY / n }
+  }
+
+  const slope = ((n * sumXY) - (sumX * sumY)) / denominator
+  const intercept = (sumY - (slope * sumX)) / n
+  return { slope, intercept }
+}
+
+function createSeededRandom(seed: number): () => number {
+  let state = seed >>> 0
+  return () => {
+    state = ((1664525 * state) + 1013904223) >>> 0
+    return state / 4294967296
+  }
 }
 
 function countryFlagEmoji(country: string): string {
@@ -425,8 +542,11 @@ function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [selectedWineSheet, setSelectedWineSheet] = useState<WineItem | null>(null)
   const [selectedWineGallery, setSelectedWineGallery] = useState<WineItem | null>(null)
+  const [selectedWineForEdit, setSelectedWineForEdit] = useState<WineItem | null>(null)
+  const [selectedReviewForEdit, setSelectedReviewForEdit] = useState<ReviewItem | null>(null)
   const [galleryModalVariant, setGalleryModalVariant] = useState<GalleryModalVariant>('full')
   const [activeGalleryImageKey, setActiveGalleryImageKey] = useState<(typeof SAMPLE_WINE_GALLERY)[number]['key']>('bottle')
+  const [dashboardSeed] = useState(() => Math.floor(Math.random() * 2_147_483_647))
   const [defaultSortPreference, setDefaultSortPreference] = useState<'score_desc' | 'recent' | 'price_asc'>('score_desc')
   const [defaultLandingPage, setDefaultLandingPage] = useState<'dashboard' | 'wines' | 'reviews'>('dashboard')
   const [showOnlySpainByDefault, setShowOnlySpainByDefault] = useState(true)
@@ -436,6 +556,40 @@ function App() {
   const [countryFilter, setCountryFilter] = useState<'all' | string>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | WineType>('all')
   const [minScoreFilter, setMinScoreFilter] = useState<'all' | number>('all')
+  const [grapeBlendRows, setGrapeBlendRows] = useState<GrapeBlendRow[]>([
+    { id: 1, grape: 'Tempranillo' },
+  ])
+  const [awardRows, setAwardRows] = useState<AwardRow[]>([])
+
+  const addGrapeBlendRow = () => {
+    setGrapeBlendRows((current) => [
+      ...current,
+      { id: Date.now(), grape: GRAPE_OPTIONS[0] },
+    ])
+  }
+
+  const removeGrapeBlendRow = (rowId: number) => {
+    setGrapeBlendRows((current) => (current.length > 1 ? current.filter((row) => row.id !== rowId) : current))
+  }
+
+  const updateGrapeBlendRow = (rowId: number, patch: Partial<GrapeBlendRow>) => {
+    setGrapeBlendRows((current) => current.map((row) => (row.id === rowId ? { ...row, ...patch } : row)))
+  }
+
+  const addAwardRow = () => {
+    setAwardRows((current) => [
+      ...current,
+      { id: Date.now(), award: AWARD_OPTIONS[0], score: '', year: '' },
+    ])
+  }
+
+  const removeAwardRow = (rowId: number) => {
+    setAwardRows((current) => current.filter((row) => row.id !== rowId))
+  }
+
+  const updateAwardRow = (rowId: number, patch: Partial<AwardRow>) => {
+    setAwardRows((current) => current.map((row) => (row.id === rowId ? { ...row, ...patch } : row)))
+  }
 
   const menuItems: Array<{ key: Exclude<MenuKey, 'wineProfile'>; label: string; short: string; icon: string }> = [
     { key: 'dashboard', label: labels.menu.dashboard, short: 'DB', icon: '⌂' },
@@ -480,6 +634,9 @@ function App() {
 
   const dashboardAnalytics = useMemo(() => {
     const scoredWines = mockWines.filter((wine) => wine.averageScore != null)
+    const scoreValues = scoredWines.map((wine) => wine.averageScore as number)
+    const scoreMedian = median(scoreValues)
+    const scoreStdDev = standardDeviation(scoreValues)
     const sortedByScore = [...scoredWines].sort((a, b) => (b.averageScore ?? 0) - (a.averageScore ?? 0))
     const topWines = sortedByScore.slice(0, 3)
     const lowWines = [...sortedByScore].slice(-3).reverse()
@@ -489,16 +646,30 @@ function App() {
       ? Math.max(...scoredWines.map((wine) => wine.averageScore ?? 0)) - Math.min(...scoredWines.map((wine) => wine.averageScore ?? 0))
       : 0
     const averagePrice = mockWines.reduce((sum, wine) => sum + wine.pricePaid, 0) / mockWines.length
+    const minPrice = Math.min(...mockWines.map((wine) => wine.pricePaid))
+    const maxPrice = Math.max(...mockWines.map((wine) => wine.pricePaid))
+    const maxScore = Math.max(...scoreValues)
+    const minScore = Math.min(...scoreValues)
+    const approvedCount = scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 70).length
+    const approvedRate = scoredWines.length ? (approvedCount / scoredWines.length) * 100 : 0
     const qualityIndex = averagePrice > 0 ? ((metrics.averageRed + metrics.averageWhite) / 2) / averagePrice : 0
 
     const timelineLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
+    const randTimeline = createSeededRandom(dashboardSeed + 17)
+    const randCompare = createSeededRandom(dashboardSeed + 311)
     const monthFormatter = new Intl.DateTimeFormat(timelineLocale, { month: 'short', year: '2-digit' })
     const now = new Date()
+    let previousReviews = 2 + Math.floor(randTimeline() * 3)
+    let previousMedian = 74 + (randTimeline() * 6)
     const reviewTimeline = Array.from({ length: 60 }, (_, index) => {
       const monthDate = new Date(now.getFullYear(), now.getMonth() - (59 - index), 1)
-      const seed = index + 11
-      const reviews = (seed * 7 + 3) % 6 // 0..5 (mock estable)
-      const median = 76 + ((seed * 13) % 17) + (((seed * 5) % 10) / 10) // ~76.0..92.9
+      const reviewsDelta = Math.floor((randTimeline() * 5) - 2) // -2..2
+      const reviewsNoise = randTimeline() < 0.15 ? Math.floor(randTimeline() * 3) : 0
+      const reviews = Math.max(0, Math.min(8, previousReviews + reviewsDelta + reviewsNoise))
+      const medianDelta = ((randTimeline() * 3.2) - 1.6)
+      const median = Math.max(68, Math.min(94, previousMedian + medianDelta))
+      previousReviews = reviews
+      previousMedian = median
       return {
         label: monthFormatter.format(monthDate).replace('.', ''),
         reviews,
@@ -506,14 +677,24 @@ function App() {
       }
     })
 
-    const webVsMyTimeline = [
-      { label: locale === 'ca' ? 'Gen' : 'Ene', web: 18, mine: 3 },
-      { label: locale === 'ca' ? 'Feb' : 'Feb', web: 22, mine: 4 },
-      { label: locale === 'ca' ? 'Mar' : 'Mar', web: 16, mine: 2 },
-      { label: locale === 'ca' ? 'Abr' : 'Abr', web: 28, mine: 5 },
-      { label: locale === 'ca' ? 'Mai' : 'May', web: 24, mine: 4 },
-      { label: locale === 'ca' ? 'Jun' : 'Jun', web: 31, mine: 6 },
-    ]
+    const compareLabels = locale === 'ca'
+      ? ['Gen', 'Feb', 'Mar', 'Abr', 'Mai', 'Jun']
+      : ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun']
+    let previousWeb = 16 + Math.floor(randCompare() * 10)
+    let previousMine = 2 + Math.floor(randCompare() * 3)
+    const webVsMyTimeline = compareLabels.map((label) => {
+      const web = Math.max(8, Math.min(36, previousWeb + Math.floor((randCompare() * 9) - 4)))
+      const mine = Math.max(1, Math.min(9, previousMine + Math.floor((randCompare() * 5) - 2)))
+      previousWeb = web
+      previousMine = mine
+      return { label, web, mine }
+    })
+    const rollingAverage10 = scoredWines.map((_, index) => {
+      const start = Math.max(0, index - 9)
+      const slice = scoredWines.slice(start, index + 1)
+      const avg = slice.reduce((sum, row) => sum + (row.averageScore ?? 0), 0) / slice.length
+      return { index: index + 1, avg: Math.round(avg * 10) / 10 }
+    })
 
     const scoreBuckets = [
       { label: '<60', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) < 60).length },
@@ -540,23 +721,173 @@ function App() {
       { label: 'Peñín', count: awards.filter((entry) => entry.hasAward && entry.awardName === 'penin').length },
     ]
 
+    const valueRows = scoredWines
+      .map((wine) => ({
+        ...wine,
+        valueIndex: wine.pricePaid > 0 ? ((wine.averageScore ?? 0) / wine.pricePaid) : 0,
+      }))
+      .sort((a, b) => b.valueIndex - a.valueIndex)
+    const topValueWines = valueRows.slice(0, 10)
+    const underTenWines = scoredWines.filter((wine) => wine.pricePaid < 10)
+    const underTenWithGreatScore = underTenWines.filter((wine) => (wine.averageScore ?? 0) >= 80)
+    const underTenGreatPct = underTenWines.length ? (underTenWithGreatScore.length / underTenWines.length) * 100 : 0
+    const scoreBands = [
+      { label: '50-59', min: 50, max: 60 },
+      { label: '60-69', min: 60, max: 70 },
+      { label: '70-79', min: 70, max: 80 },
+      { label: '80-89', min: 80, max: 90 },
+      { label: '90+', min: 90, max: 101 },
+    ].map((band) => {
+      const wines = scoredWines.filter((wine) => (wine.averageScore ?? 0) >= band.min && (wine.averageScore ?? 0) < band.max)
+      const avgBandPrice = wines.length ? wines.reduce((sum, wine) => sum + wine.pricePaid, 0) / wines.length : 0
+      return { label: band.label, avgPrice: avgBandPrice, count: wines.length }
+    })
+
+    const byVintageMap = new Map<number, WineItem[]>()
+    scoredWines.forEach((wine) => {
+      if (wine.vintageYear == null) return
+      const current = byVintageMap.get(wine.vintageYear) ?? []
+      current.push(wine)
+      byVintageMap.set(wine.vintageYear, current)
+    })
+    const byVintage = [...byVintageMap.entries()]
+      .map(([year, wines]) => ({
+        year,
+        avgScore: wines.reduce((sum, wine) => sum + (wine.averageScore ?? 0), 0) / wines.length,
+        count: wines.length,
+      }))
+      .sort((a, b) => a.year - b.year)
+    const bestVintage = [...byVintage].sort((a, b) => b.avgScore - a.avgScore)[0] ?? null
+    const oldVintageScores = scoredWines.filter((wine) => (wine.vintageYear ?? 9999) <= 2018).map((wine) => wine.averageScore ?? 0)
+    const recentVintageScores = scoredWines.filter((wine) => (wine.vintageYear ?? 0) >= 2019).map((wine) => wine.averageScore ?? 0)
+    const oldVsRecent = {
+      oldAvg: oldVintageScores.length ? oldVintageScores.reduce((sum, value) => sum + value, 0) / oldVintageScores.length : 0,
+      recentAvg: recentVintageScores.length ? recentVintageScores.reduce((sum, value) => sum + value, 0) / recentVintageScores.length : 0,
+    }
+
+    const byDo = [...new Set(scoredWines.map((wine) => wine.region))].map((region) => {
+      const wines = scoredWines.filter((wine) => wine.region === region)
+      const avgScore = wines.reduce((sum, wine) => sum + (wine.averageScore ?? 0), 0) / wines.length
+      const avgPrice = wines.reduce((sum, wine) => sum + wine.pricePaid, 0) / wines.length
+      const consistency = standardDeviation(wines.map((wine) => wine.averageScore ?? 0))
+      const bestWine = [...wines].sort((a, b) => (b.averageScore ?? 0) - (a.averageScore ?? 0))[0]
+      const bestValue = [...wines]
+        .map((wine) => ({
+          name: wine.name,
+          valueIndex: (wine.averageScore ?? 0) / Math.max(0.01, wine.pricePaid),
+        }))
+        .sort((a, b) => b.valueIndex - a.valueIndex)[0]
+      return {
+        region,
+        count: wines.length,
+        avgScore,
+        avgPrice,
+        consistency,
+        bestWine: bestWine?.name ?? '-',
+        bestValue: bestValue?.valueIndex ?? 0,
+      }
+    })
+    const doRanking = [...byDo].sort((a, b) => b.avgScore - a.avgScore)
+    const doMostConsistent = [...byDo].filter((entry) => entry.count > 1).sort((a, b) => a.consistency - b.consistency)[0] ?? null
+
+    const priceVsScore = scoredWines.map((wine) => ({ price: wine.pricePaid, score: wine.averageScore ?? 0, name: wine.name }))
+    const regression = linearRegression(priceVsScore.map((point) => ({ x: point.price, y: point.score })))
+    const regressionLine = [
+      { price: minPrice, score: (regression.slope * minPrice) + regression.intercept },
+      { price: maxPrice, score: (regression.slope * maxPrice) + regression.intercept },
+    ]
+    const sweetSpotPrice = topValueWines.length
+      ? median(topValueWines.map((wine) => wine.pricePaid))
+      : averagePrice
+
+    const coupleRows = journalWineRows
+      .map((row) => {
+        const maria = parseJournalScore(row.maria)
+        const adria = parseJournalScore(row.adria)
+        if (maria == null || adria == null) {
+          return null
+        }
+        return {
+          wine: row.wine,
+          region: row.region,
+          maria,
+          adria,
+          diff: Math.abs(maria - adria),
+        }
+      })
+      .filter((row): row is { wine: string; region: string; maria: number; adria: number; diff: number } => row !== null)
+    const mariaAvg = coupleRows.length ? coupleRows.reduce((sum, row) => sum + row.maria, 0) / coupleRows.length : 0
+    const adriaAvg = coupleRows.length ? coupleRows.reduce((sum, row) => sum + row.adria, 0) / coupleRows.length : 0
+    const disagreementCount = coupleRows.filter((row) => row.diff > 2).length
+    const disagreementPct = coupleRows.length ? (disagreementCount / coupleRows.length) * 100 : 0
+    const avgDifference = coupleRows.length ? coupleRows.reduce((sum, row) => sum + row.diff, 0) / coupleRows.length : 0
+    const syncIndex = Math.max(0, 100 - (avgDifference * 20) - disagreementPct)
+    const coupleScatter = coupleRows.map((row) => ({ x: row.maria, y: row.adria, wine: row.wine }))
+    const disagreementByDo = [...new Set(coupleRows.map((row) => row.region))].map((region) => {
+      const rows = coupleRows.filter((row) => row.region === region)
+      const avgDiff = rows.reduce((sum, row) => sum + row.diff, 0) / rows.length
+      return { region, avgDiff, count: rows.length }
+    }).sort((a, b) => b.avgDiff - a.avgDiff)
+
+    const placeRows = scoredWines.map((wine) => ({
+      ...wine,
+      placeType: wine.winery.toLowerCase().includes('casa') ? 'supermarket' : 'restaurant',
+    }))
+    const supermarketRows = placeRows.filter((row) => row.placeType === 'supermarket')
+    const restaurantRows = placeRows.filter((row) => row.placeType === 'restaurant')
+    const placeComparison = {
+      supermarketAvgScore: supermarketRows.length ? supermarketRows.reduce((sum, row) => sum + (row.averageScore ?? 0), 0) / supermarketRows.length : 0,
+      restaurantAvgScore: restaurantRows.length ? restaurantRows.reduce((sum, row) => sum + (row.averageScore ?? 0), 0) / restaurantRows.length : 0,
+      supermarketAvgPrice: supermarketRows.length ? supermarketRows.reduce((sum, row) => sum + row.pricePaid, 0) / supermarketRows.length : 0,
+      restaurantAvgPrice: restaurantRows.length ? restaurantRows.reduce((sum, row) => sum + row.pricePaid, 0) / restaurantRows.length : 0,
+    }
+
     return {
       topWines,
       lowWines,
       highScoreCount,
       lowScoreCount,
+      scoreMedian,
+      scoreStdDev,
+      approvedRate,
+      maxScore,
+      minScore,
       scoreSpread,
       averagePrice,
+      minPrice,
+      maxPrice,
       qualityIndex,
       reviewTimeline,
       webVsMyTimeline,
+      rollingAverage10,
       scoreBuckets,
       byType,
       awardsWith,
       awardsWithout,
       awardTypes,
+      topValueWines,
+      underTenGreatPct,
+      underTenGreatCount: underTenWithGreatScore.length,
+      scoreBands,
+      byVintage,
+      bestVintage,
+      oldVsRecent,
+      doRanking,
+      doMostConsistent,
+      priceVsScore,
+      regressionLine,
+      regressionSlope: regression.slope,
+      sweetSpotPrice,
+      mariaAvg,
+      adriaAvg,
+      avgDifference,
+      disagreementPct,
+      syncIndex,
+      coupleScatter,
+      disagreementByDo,
+      placeComparison,
     }
-  }, [locale, metrics.averageRed, metrics.averageWhite])
+  }, [dashboardSeed, locale, metrics.averageRed, metrics.averageWhite])
 
   const priceFormatter = useMemo(
     () => new Intl.NumberFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', { style: 'currency', currency: 'EUR' }),
@@ -567,7 +898,10 @@ function App() {
     dashboard: labels.topbar.overview,
     wines: labels.topbar.wines,
     wineCreate: locale === 'ca' ? 'Crear vi' : 'Crear vino',
+    wineEdit: locale === 'ca' ? 'Editar vi' : 'Editar vino',
     reviews: labels.topbar.reviews,
+    reviewCreate: locale === 'ca' ? 'Crear ressenya' : 'Crear reseña',
+    reviewEdit: locale === 'ca' ? 'Editar ressenya' : 'Editar reseña',
     admin: labels.topbar.admin,
     settings: locale === 'ca' ? 'Configuració' : 'Configuración',
     wineProfile: selectedWineSheet ? `${t('wineProfile.pageTitle')} · ${selectedWineSheet.name}` : t('wineProfile.pageTitle'),
@@ -718,6 +1052,173 @@ function App() {
     setMenu('dashboard')
     setShowMobileMenu(false)
   }
+
+  const openReviewCreate = () => {
+    setSelectedReviewForEdit(null)
+    setMenu('reviewCreate')
+    setShowMobileMenu(false)
+  }
+
+  const openReviewEdit = (review: ReviewItem) => {
+    setSelectedReviewForEdit(review)
+    setMenu('reviewEdit')
+    setShowMobileMenu(false)
+  }
+
+  const reviewEditorPreset = buildReviewFormPreset(selectedReviewForEdit)
+  const createReviewPreset = buildReviewFormPreset(null)
+
+  const openWineCreate = () => {
+    setSelectedWineForEdit(null)
+    setGrapeBlendRows([{ id: 1, grape: 'Tempranillo' }])
+    setAwardRows([])
+    setMenu('wineCreate')
+    setShowMobileMenu(false)
+  }
+
+  const openWineEdit = (wine: WineItem) => {
+    setSelectedWineForEdit(wine)
+    setGrapeBlendRows(
+      wine.type === 'white'
+        ? [{ id: 1, grape: 'Macabeu' }]
+        : [{ id: 1, grape: 'Tempranillo' }],
+    )
+    setAwardRows(
+      wine.id % 5 === 0
+        ? []
+        : [{
+            id: 1,
+            award: wine.id % 2 === 0 ? 'decanter' : 'penin',
+            score: String(Math.min(99, Math.max(80, Math.round((wine.averageScore ?? 84) + 10)))),
+            year: String((wine.vintageYear ?? 2024) + 2),
+          }],
+    )
+    setMenu('wineEdit')
+    setShowMobileMenu(false)
+  }
+
+  const renderReviewEditor = (mode: 'create' | 'edit', preset: ReviewFormPreset) => (
+    <section className="screen-grid">
+      <section className="panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">{labels.reviews.create.eyebrow}</p>
+            <h3>{mode === 'create' ? (locale === 'ca' ? 'Crear ressenya' : 'Crear reseña') : (locale === 'ca' ? 'Editar ressenya' : 'Editar reseña')}</h3>
+          </div>
+          <button type="button" className="ghost-button small" onClick={() => setMenu('reviews')}>
+            {locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}
+          </button>
+        </div>
+
+        <form
+          key={`${mode}-${selectedReviewForEdit?.id ?? 'new'}`}
+          className="stack-form"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <label>
+            {labels.reviews.create.wine}
+            <select defaultValue={preset.wineId}>
+              <option value="" disabled>{labels.reviews.create.selectWine}</option>
+              {mockWines.map((wine) => (
+                <option key={wine.id} value={wine.id}>{wine.name} · {wine.winery}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            {locale === 'ca' ? 'Data de la cata' : 'Fecha de la cata'}
+            <input type="date" defaultValue={preset.tastingDate} />
+          </label>
+
+          <fieldset className="form-block">
+            <legend>{locale === 'ca' ? 'Valoració del Vi' : 'Valoración del Vino'}</legend>
+            <label className="important-rating-field">
+              <span>{locale === 'ca' ? 'Valoració General (0-100)' : 'Valoración General (0-100)'}</span>
+              <select defaultValue={String(preset.overallScore)}>
+                {SCORE_OPTIONS_0_TO_100.map((score) => (
+                  <option key={score} value={score}>{score}</option>
+                ))}
+              </select>
+            </label>
+            <div className="inline-grid triple">
+              <label>
+                {locale === 'ca' ? 'Aroma' : 'Aroma'}
+                <select defaultValue={String(preset.aroma)}>
+                  {SCORE_OPTIONS_0_TO_10.map((score) => (
+                    <option key={score} value={score}>{score}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {locale === 'ca' ? 'Dolçor' : 'Dulzor'}
+                <select defaultValue={String(preset.sweetness)}>
+                  {SCORE_OPTIONS_0_TO_10.map((score) => (
+                    <option key={score} value={score}>{score}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {locale === 'ca' ? 'Acidesa' : 'Acidez'}
+                <select defaultValue={String(preset.acidity)}>
+                  {SCORE_OPTIONS_0_TO_10.map((score) => (
+                    <option key={score} value={score}>{score}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="inline-grid triple">
+              <label>
+                {locale === 'ca' ? 'Taní' : 'Tanino'}
+                <select defaultValue={String(preset.tannin)}>
+                  {SCORE_OPTIONS_0_TO_10.map((score) => (
+                    <option key={score} value={score}>{score}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {locale === 'ca' ? 'Cos' : 'Cuerpo'}
+                <select defaultValue={String(preset.body)}>
+                  {SCORE_OPTIONS_0_TO_10.map((score) => (
+                    <option key={score} value={score}>{score}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {locale === 'ca' ? 'Persistència' : 'Persistencia'}
+                <select defaultValue={String(preset.persistence)}>
+                  {SCORE_OPTIONS_0_TO_10.map((score) => (
+                    <option key={score} value={score}>{score}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="field-stack">
+              <span className="field-label">{locale === 'ca' ? 'Tags de tast' : 'Tags de cata'}</span>
+              <div className="tag-checkbox-grid">
+                {REVIEW_TAG_OPTIONS.map((tag) => (
+                  <label key={tag} className="tag-checkbox-item">
+                    <input type="checkbox" defaultChecked={preset.tags.includes(tag)} />
+                    <span>{tag}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </fieldset>
+
+          <label>
+            {labels.reviews.create.notes}
+            <textarea rows={4} placeholder={labels.reviews.create.notesPlaceholder} defaultValue={preset.notes} />
+          </label>
+
+          <button type="submit" className="primary-button">
+            {mode === 'create'
+              ? labels.reviews.create.submit
+              : (locale === 'ca' ? 'Desar canvis de la ressenya' : 'Guardar cambios de la reseña')}
+          </button>
+        </form>
+      </section>
+    </section>
+  )
 
   if (!loggedIn) {
     return (
@@ -1187,6 +1688,212 @@ function App() {
                 </div>
               </section>
 
+              <section className="panel dashboard-general-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'GENERALS' : 'GENERALES'}</p>
+                    <h3>{locale === 'ca' ? 'Estadístiques base de tast' : 'Estadísticas base de cata'}</h3>
+                  </div>
+                </div>
+                <div className="dashboard-kpi-list">
+                  <article>
+                    <span>{locale === 'ca' ? 'Mediana puntuació' : 'Mediana puntuación'}</span>
+                    <strong>{dashboardAnalytics.scoreMedian.toFixed(1)}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Desviació estàndard' : 'Desviación estándar'}</span>
+                    <strong>{dashboardAnalytics.scoreStdDev.toFixed(2)}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Aprovats (>7)' : 'Aprobados (>7)'}</span>
+                    <strong>{dashboardAnalytics.approvedRate.toFixed(1)}%</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Nota màx / mín' : 'Nota máx / mín'}</span>
+                    <strong>{dashboardAnalytics.maxScore.toFixed(1)} · {dashboardAnalytics.minScore.toFixed(1)}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Rang de preus tastats' : 'Rango de precios catados'}</span>
+                    <strong>{priceFormatter.format(dashboardAnalytics.minPrice)} - {priceFormatter.format(dashboardAnalytics.maxPrice)}</strong>
+                  </article>
+                </div>
+              </section>
+
+              <section className="panel dashboard-price-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'PREU VS QUALITAT' : 'PRECIO VS CALIDAD'}</p>
+                    <h3>{locale === 'ca' ? 'Relació preu/puntuació' : 'Relación precio/puntuación'}</h3>
+                  </div>
+                </div>
+                <div className="chart-shell" aria-label={locale === 'ca' ? 'Scatter de preu i puntuació' : 'Scatter de precio y puntuación'}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" />
+                      <XAxis type="number" dataKey="price" name={locale === 'ca' ? 'Preu' : 'Precio'} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <YAxis type="number" dataKey="score" name={locale === 'ca' ? 'Score' : 'Score'} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        cursor={{ strokeDasharray: '3 3' }}
+                        contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
+                      />
+                      <Scatter data={dashboardAnalytics.priceVsScore} fill="#8f3851" />
+                      <Scatter data={dashboardAnalytics.regressionLine} fill="transparent" line={{ stroke: '#c39a7f', strokeWidth: 2 }} />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="dashboard-hero-footnote">
+                  <span>{locale === 'ca' ? 'Pendent regressió' : 'Pendiente regresión'}: {dashboardAnalytics.regressionSlope.toFixed(3)}</span>
+                  <span>{locale === 'ca' ? 'Preu dolç estimat' : 'Precio dulce estimado'}: {priceFormatter.format(dashboardAnalytics.sweetSpotPrice)}</span>
+                  <span>{locale === 'ca' ? '<10€ amb nota >8' : '<10€ con nota >8'}: {dashboardAnalytics.underTenGreatCount} ({dashboardAnalytics.underTenGreatPct.toFixed(1)}%)</span>
+                </div>
+                <div className="mini-table">
+                  {dashboardAnalytics.topValueWines.slice(0, 5).map((wine) => (
+                    <div key={wine.id} className="mini-table-row">
+                      <span>{wine.name}</span>
+                      <strong>{wine.valueIndex.toFixed(2)}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="mini-table">
+                  {dashboardAnalytics.scoreBands.map((band) => (
+                    <div key={band.label} className="mini-table-row">
+                      <span>{locale === 'ca' ? 'Franja' : 'Franja'} {band.label}</span>
+                      <strong>{band.count > 0 ? priceFormatter.format(band.avgPrice) : '-'}</strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="panel dashboard-vintage-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'PER ANYADA' : 'POR AÑADA'}</p>
+                    <h3>{locale === 'ca' ? 'Evolució per anyada' : 'Evolución por añada'}</h3>
+                  </div>
+                </div>
+                <div className="chart-shell" aria-label={locale === 'ca' ? 'Mitjana per anyada' : 'Media por añada'}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dashboardAnalytics.byVintage} margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" vertical={false} />
+                      <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} width={32} />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }}
+                        contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
+                      />
+                      <Bar dataKey="avgScore" fill="#8f3851" radius={[5, 5, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="dashboard-hero-footnote">
+                  <span>{locale === 'ca' ? 'Millor anyada' : 'Mejor añada'}: {dashboardAnalytics.bestVintage?.year ?? '-'} ({dashboardAnalytics.bestVintage?.avgScore.toFixed(1) ?? '-'})</span>
+                  <span>{locale === 'ca' ? 'Antigues (<=2018)' : 'Antiguas (<=2018)'}: {dashboardAnalytics.oldVsRecent.oldAvg.toFixed(1)}</span>
+                  <span>{locale === 'ca' ? 'Recents (>=2019)' : 'Recientes (>=2019)'}: {dashboardAnalytics.oldVsRecent.recentAvg.toFixed(1)}</span>
+                </div>
+              </section>
+
+              <section className="panel dashboard-do-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'PER DO' : 'POR DO'}</p>
+                    <h3>{locale === 'ca' ? 'Rànquing de DOs' : 'Ranking de DOs'}</h3>
+                  </div>
+                </div>
+                <div className="mini-table">
+                  {dashboardAnalytics.doRanking.slice(0, 6).map((row) => (
+                    <div key={row.region} className="mini-table-row">
+                      <span>{row.region}</span>
+                      <strong>{row.avgScore.toFixed(1)} · {row.bestValue.toFixed(2)}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="dashboard-hero-footnote">
+                  <span>{locale === 'ca' ? 'DO més regular' : 'DO más regular'}: {dashboardAnalytics.doMostConsistent?.region ?? '-'}</span>
+                  <span>{locale === 'ca' ? 'σ mínim' : 'σ mínimo'}: {dashboardAnalytics.doMostConsistent?.consistency.toFixed(2) ?? '-'}</span>
+                </div>
+              </section>
+
+              <section className="panel dashboard-couple-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'COMPARATIVA' : 'COMPARATIVA'}</p>
+                    <h3>{locale === 'ca' ? 'Maria vs Adrià' : 'Maria vs Adrià'}</h3>
+                  </div>
+                </div>
+                <div className="chart-shell" aria-label={locale === 'ca' ? 'Scatter Maria versus Adrià' : 'Scatter Maria versus Adrià'}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" />
+                      <XAxis type="number" dataKey="x" name="Maria" domain={[4, 10]} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <YAxis type="number" dataKey="y" name="Adrià" domain={[4, 10]} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        cursor={{ strokeDasharray: '3 3' }}
+                        contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
+                      />
+                      <ReferenceLine segment={[{ x: 4, y: 4 }, { x: 10, y: 10 }]} stroke="#c39a7f" strokeDasharray="4 4" />
+                      <Scatter data={dashboardAnalytics.coupleScatter} fill="#8f3851" />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="dashboard-kpi-list">
+                  <article>
+                    <span>{locale === 'ca' ? 'Mitjana Maria' : 'Media Maria'}</span>
+                    <strong>{dashboardAnalytics.mariaAvg.toFixed(2)}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Mitjana Adrià' : 'Media Adrià'}</span>
+                    <strong>{dashboardAnalytics.adriaAvg.toFixed(2)}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Diferència mitjana' : 'Diferencia media'}</span>
+                    <strong>{dashboardAnalytics.avgDifference.toFixed(2)}</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Desacords (>2)' : 'Desacuerdos (>2)'}</span>
+                    <strong>{dashboardAnalytics.disagreementPct.toFixed(1)}%</strong>
+                  </article>
+                  <article>
+                    <span>{locale === 'ca' ? 'Índex sincronització' : 'Índice sincronización'}</span>
+                    <strong>{dashboardAnalytics.syncIndex.toFixed(1)}</strong>
+                  </article>
+                </div>
+                <div className="mini-table">
+                  {dashboardAnalytics.disagreementByDo.slice(0, 5).map((row) => (
+                    <div key={row.region} className="mini-table-row">
+                      <span>{row.region}</span>
+                      <strong>{row.avgDiff.toFixed(2)}</strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="panel dashboard-temporal-panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'EVOLUCIÓ' : 'EVOLUCIÓN'}</p>
+                    <h3>{locale === 'ca' ? 'Rolling average (10 vins)' : 'Rolling average (10 vinos)'}</h3>
+                  </div>
+                </div>
+                <div className="chart-shell" aria-label={locale === 'ca' ? 'Mitjana mòbil de 10 vins' : 'Media móvil de 10 vinos'}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={dashboardAnalytics.rollingAverage10} margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" vertical={false} />
+                      <XAxis dataKey="index" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} width={32} />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }}
+                        contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
+                      />
+                      <Line type="monotone" dataKey="avg" stroke="#8f3851" strokeWidth={2.2} dot={false} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="dashboard-hero-footnote">
+                  <span>{locale === 'ca' ? 'Restaurant: nota/preu' : 'Restaurante: nota/precio'} {dashboardAnalytics.placeComparison.restaurantAvgScore.toFixed(1)} / {priceFormatter.format(dashboardAnalytics.placeComparison.restaurantAvgPrice)}</span>
+                  <span>{locale === 'ca' ? 'Supermercat: nota/preu' : 'Supermercado: nota/precio'} {dashboardAnalytics.placeComparison.supermarketAvgScore.toFixed(1)} / {priceFormatter.format(dashboardAnalytics.placeComparison.supermarketAvgPrice)}</span>
+                </div>
+              </section>
+
             </section>
           </section>
         ) : null}
@@ -1203,7 +1910,7 @@ function App() {
                   <span className="pill">
                     {filteredWines.length} {labels.dashboard.search.results}
                   </span>
-                  <button type="button" className="primary-button" onClick={() => setMenu('wineCreate')}>
+                  <button type="button" className="primary-button" onClick={openWineCreate}>
                     {locale === 'ca' ? 'Crear nou vi' : 'Crear nuevo vino'}
                   </button>
                 </div>
@@ -1266,6 +1973,7 @@ function App() {
                       <th>{labels.dashboard.table.region}</th>
                       <th>{labels.dashboard.table.price}</th>
                       <th>{labels.dashboard.table.avg}</th>
+                      <th>{locale === 'ca' ? 'Accions' : 'Acciones'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1311,6 +2019,18 @@ function App() {
                         <td className="wine-col-region" data-label={labels.dashboard.table.region}>{wine.country} · {wine.region}</td>
                         <td className="wine-col-price" data-label={labels.dashboard.table.price}>{priceFormatter.format(wine.pricePaid)}</td>
                         <td className="wine-col-score" data-label={labels.dashboard.table.avg}>{wine.averageScore ?? '-'}</td>
+                        <td className="wine-col-actions" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
+                          <button
+                            type="button"
+                            className="secondary-button small"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              openWineEdit(wine)
+                            }}
+                          >
+                            {locale === 'ca' ? 'Editar vi' : 'Editar vino'}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1320,141 +2040,267 @@ function App() {
           </section>
         ) : null}
 
-        {menu === 'wineCreate' ? (
-          <section className="screen-grid two-columns">
+        {menu === 'wineCreate' || menu === 'wineEdit' ? (
+          <section className="screen-grid">
             <section className="panel">
-              <div className="panel-header">
+              <div className="panel-header wine-create-header">
                 <div>
                   <p className="eyebrow">{labels.wines.add.eyebrow}</p>
-                  <h3>{labels.wines.add.title}</h3>
+                  <h3>{menu === 'wineEdit' ? (locale === 'ca' ? 'Editar vi' : 'Editar vino') : labels.wines.add.title}</h3>
                 </div>
-                <span className="pill muted">{labels.wines.add.badge}</span>
+                <div className="panel-header-actions">
+                  <button type="button" className="ghost-button small" onClick={() => setMenu('wines')}>
+                    {locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}
+                  </button>
+                </div>
               </div>
 
-              <form className="stack-form" onSubmit={(event) => event.preventDefault()}>
-                <label>
-                  {labels.wines.add.name}
-                  <input type="text" placeholder="Clos de la Serra" />
-                </label>
-                <label>
-                  {labels.wines.add.winery}
-                  <input type="text" placeholder="Bodega Example" />
-                </label>
-                <div className="inline-grid">
+              <form className="stack-form wine-create-form" onSubmit={(event) => event.preventDefault()}>
+                <fieldset className="form-block">
+                  <legend>{locale === 'ca' ? 'Dades bàsiques' : 'Datos básicos'}</legend>
                   <label>
-                    {labels.wines.add.type}
-                    <select defaultValue="red">
-                      <option value="red">{labels.wineType.red}</option>
-                      <option value="white">{labels.wineType.white}</option>
-                      <option value="rose">{labels.wineType.rose}</option>
-                      <option value="sparkling">{labels.wineType.sparkling}</option>
-                    </select>
+                    {labels.wines.add.name}
+                    <input type="text" placeholder="Clos de la Serra" defaultValue={selectedWineForEdit?.name ?? ''} />
                   </label>
-                  <label>
-                    {labels.wines.add.vintage}
-                    <input type="number" placeholder="2021" />
-                  </label>
-                </div>
-                <div className="inline-grid">
-                  <label>
-                    {labels.wines.add.country}
-                    <input type="text" placeholder="Spain" />
-                  </label>
-                  <label>
-                    {labels.wines.add.region}
-                    <input type="text" placeholder="Priorat" />
-                  </label>
-                </div>
-                <div className="inline-grid">
-                  <label>
-                    {labels.wines.add.place}
-                    <input type="text" placeholder="Restaurant / Supermarket" />
-                  </label>
-                  <label>
-                    {labels.wines.add.price}
-                    <input type="number" step="0.01" placeholder="18.50" />
-                  </label>
-                </div>
-                <button type="submit" className="primary-button">{labels.wines.add.submit}</button>
-              </form>
-            </section>
+                  <div className="inline-grid triple">
+                    <label>
+                      {labels.wines.add.type}
+                      <select defaultValue={selectedWineForEdit?.type ?? 'red'}>
+                        <option value="red">{labels.wineType.red}</option>
+                        <option value="white">{labels.wineType.white}</option>
+                        <option value="rose">{labels.wineType.rose}</option>
+                        <option value="sparkling">{labels.wineType.sparkling}</option>
+                      </select>
+                    </label>
+                    <label>
+                      {locale === 'ca' ? 'Criança' : 'Crianza'}
+                      <select defaultValue="criança">
+                        {AGING_OPTIONS.map((aging) => (
+                          <option key={aging} value={aging}>{aging}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      {labels.wines.add.vintage}
+                      <select defaultValue={String(selectedWineForEdit?.vintageYear ?? 2021)}>
+                        {VINTAGE_YEAR_OPTIONS.map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="inline-grid triple">
+                    <label>
+                      {locale === 'ca' ? 'Grau alcohòlic (%)' : 'Graduación alcohólica (%)'}
+                      <input type="number" min="0" max="20" step="0.1" placeholder="13.5" defaultValue={selectedWineForEdit ? (selectedWineForEdit.type === 'red' ? 14 : 13) : ''} />
+                    </label>
+                  </div>
+                </fieldset>
 
-            <section className="panel">
-              <div className="panel-header">
-                <div>
-                  <p className="eyebrow">{locale === 'ca' ? 'CAMPOS (MOCK)' : 'CAMPOS (MOCK)'}</p>
-                  <h3>{locale === 'ca' ? 'Checklist de creació de vi' : 'Checklist de creación de vino'}</h3>
-                </div>
-                <button type="button" className="ghost-button small" onClick={() => setMenu('wines')}>
-                  {locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}
-                </button>
-              </div>
-              <div className="list-stack">
-                {[
-                  locale === 'ca' ? 'Dades bàsiques: nom, celler, tipus, anyada' : 'Datos básicos: nombre, bodega, tipo, añada',
-                  locale === 'ca' ? 'Origen: país, regió, DO (si aplica)' : 'Origen: país, región, DO (si aplica)',
-                  locale === 'ca' ? 'Compra: lloc i preu (obligatoris)' : 'Compra: lugar y precio (obligatorios)',
-                  locale === 'ca' ? 'Multimèdia: fotos ampolla davant/darrere' : 'Multimedia: fotos botella frente/detrás',
-                  locale === 'ca' ? 'Metadades: tags interns, notes de catàleg' : 'Metadatos: tags internos, notas de catálogo',
-                  locale === 'ca' ? 'Validació abans de desar (mock)' : 'Validación antes de guardar (mock)',
-                ].map((item) => (
-                  <article key={item} className="list-card">
-                    <div>
-                      <h4>{item}</h4>
-                      <p>{locale === 'ca' ? 'Es refinarà en una iteració següent.' : 'Se refinará en una siguiente iteración.'}</p>
+                <fieldset className="form-block form-block-half">
+                  <legend>{locale === 'ca' ? 'Origen i DO' : 'Origen y DO'}</legend>
+                  <div className="inline-grid">
+                    <label>
+                      {labels.wines.add.country}
+                      <select defaultValue={selectedWineForEdit?.country ?? 'Spain'}>
+                        <option value="Spain">Spain</option>
+                        <option value="France">France</option>
+                        <option value="Portugal">Portugal</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Argentina">Argentina</option>
+                        <option value="Chile">Chile</option>
+                      </select>
+                    </label>
+                    <label>
+                      {labels.wines.add.region}
+                      <select defaultValue={selectedWineForEdit?.region ?? 'Priorat'}>
+                        {Array.from(new Set(mockWines.map((wine) => wine.region))).sort((a, b) => a.localeCompare(b)).map((region) => (
+                          <option key={region} value={region}>{region}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </fieldset>
+
+                <fieldset className="form-block form-block-half">
+                  <legend>{locale === 'ca' ? 'Composició i raïm' : 'Composición y uva'}</legend>
+                  <div className="grape-blend-head">
+                    <span>{locale === 'ca' ? 'Varietat' : 'Variedad'}</span>
+                  </div>
+                  <div className="grape-blend-list">
+                    {grapeBlendRows.map((row) => (
+                      <div key={row.id} className="grape-blend-row">
+                        <button
+                          type="button"
+                          className="icon-square-button"
+                          onClick={() => removeGrapeBlendRow(row.id)}
+                          disabled={grapeBlendRows.length === 1}
+                          aria-label={locale === 'ca' ? 'Eliminar varietat' : 'Eliminar variedad'}
+                          title={locale === 'ca' ? 'Eliminar varietat' : 'Eliminar variedad'}
+                        >
+                          <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                            <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2v8H7v-8Z" fill="currentColor" />
+                          </svg>
+                        </button>
+                        <label className="sr-only" htmlFor={`grape-row-${row.id}`}>{locale === 'ca' ? 'Varietat' : 'Variedad'}</label>
+                        <select
+                          id={`grape-row-${row.id}`}
+                          value={row.grape}
+                          onChange={(event) => updateGrapeBlendRow(row.id, { grape: event.target.value })}
+                        >
+                          {GRAPE_OPTIONS.map((grape) => (
+                            <option key={grape} value={grape}>{grape}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grape-blend-actions">
+                    <button type="button" className="secondary-button small" onClick={addGrapeBlendRow}>
+                      {locale === 'ca' ? 'Afegir varietat' : 'Añadir variedad'}
+                    </button>
+                  </div>
+                </fieldset>
+
+                <fieldset className="form-block">
+                  <legend>{locale === 'ca' ? 'Compra i lloc de la cata' : 'Compra y lugar de la cata'}</legend>
+                  <div className="inline-grid triple">
+                    <label>
+                      {locale === 'ca' ? 'Tipus de lloc' : 'Tipo de lugar'}
+                      <select defaultValue="restaurant">
+                        {PLACE_TYPE_OPTIONS.map((placeType) => (
+                          <option key={placeType} value={placeType}>{placeType}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      {labels.wines.add.place}
+                      <input type="text" placeholder="Celler del Centre" defaultValue={selectedWineForEdit?.winery ?? ''} />
+                    </label>
+                    <label>
+                      {labels.wines.add.price}
+                      <input type="number" min="0" step="0.01" placeholder="18.50" defaultValue={selectedWineForEdit?.pricePaid ?? ''} />
+                    </label>
+                  </div>
+                  <div className="inline-grid">
+                    <label>
+                      {locale === 'ca' ? 'Data de la cata' : 'Fecha de la cata'}
+                      <input type="date" defaultValue="2026-02-27" />
+                    </label>
+                  </div>
+                  <div className="inline-grid">
+                    <label>
+                      {locale === 'ca' ? 'Adreça del lloc' : 'Dirección del lugar'}
+                      <input type="text" placeholder="Carrer Major 12" />
+                    </label>
+                    <label>
+                      {locale === 'ca' ? 'Ciutat' : 'Ciudad'}
+                      <input type="text" placeholder="Barcelona" />
+                    </label>
+                  </div>
+                </fieldset>
+
+                <fieldset className="form-block">
+                  <legend>{locale === 'ca' ? 'Media i premis' : 'Media y premios'}</legend>
+                  <div className="inline-grid triple">
+                    <label>
+                      {locale === 'ca' ? 'Foto ampolla' : 'Foto botella'}
+                      <input type="file" accept="image/*" />
+                    </label>
+                    <label>
+                      {locale === 'ca' ? 'Foto etiqueta davant' : 'Foto etiqueta frontal'}
+                      <input type="file" accept="image/*" />
+                    </label>
+                    <label>
+                      {locale === 'ca' ? 'Foto etiqueta darrere' : 'Foto etiqueta trasera'}
+                      <input type="file" accept="image/*" />
+                    </label>
+                  </div>
+                  <div className="award-rows-scroll">
+                    <div className="award-rows-head">
+                      <span>{locale === 'ca' ? 'Premi' : 'Premio'}</span>
+                      <span>{locale === 'ca' ? 'Puntuació' : 'Puntuación'}</span>
+                      <span>{locale === 'ca' ? 'Any' : 'Año'}</span>
+                      <span aria-hidden="true" />
                     </div>
-                    <button type="button" className="secondary-button small" disabled>{locale === 'ca' ? 'Mock' : 'Mock'}</button>
-                  </article>
-                ))}
-              </div>
+                    <div className="award-rows-list">
+                      {awardRows.map((row) => (
+                        <div key={row.id} className="award-row">
+                        <label className="sr-only" htmlFor={`award-name-${row.id}`}>{locale === 'ca' ? 'Premi' : 'Premio'}</label>
+                        <select
+                          id={`award-name-${row.id}`}
+                          value={row.award}
+                          onChange={(event) => updateAwardRow(row.id, { award: event.target.value })}
+                        >
+                          {AWARD_OPTIONS.map((award) => (
+                            <option key={award} value={award}>{award}</option>
+                          ))}
+                        </select>
+                        <label className="sr-only" htmlFor={`award-score-${row.id}`}>{locale === 'ca' ? 'Puntuació' : 'Puntuación'}</label>
+                        <input
+                          id={`award-score-${row.id}`}
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          placeholder="92.0"
+                          value={row.score}
+                          onChange={(event) => updateAwardRow(row.id, { score: event.target.value })}
+                        />
+                        <label className="sr-only" htmlFor={`award-year-${row.id}`}>{locale === 'ca' ? 'Any' : 'Año'}</label>
+                        <input
+                          id={`award-year-${row.id}`}
+                          type="number"
+                          min="1900"
+                          max="2030"
+                          placeholder="2024"
+                          value={row.year}
+                          onChange={(event) => updateAwardRow(row.id, { year: event.target.value })}
+                        />
+                        <button
+                          type="button"
+                          className="icon-square-button"
+                          onClick={() => removeAwardRow(row.id)}
+                          aria-label={locale === 'ca' ? 'Eliminar premi' : 'Eliminar premio'}
+                          title={locale === 'ca' ? 'Eliminar premi' : 'Eliminar premio'}
+                        >
+                          <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                            <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2v8H7v-8Z" fill="currentColor" />
+                          </svg>
+                        </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="award-rows-actions">
+                    <button type="button" className="secondary-button small" onClick={addAwardRow}>
+                      {locale === 'ca' ? 'Afegir premi' : 'Añadir premio'}
+                    </button>
+                  </div>
+                </fieldset>
+
+                <button type="submit" className="primary-button">
+                  {menu === 'wineEdit' ? (locale === 'ca' ? 'Desar canvis del vi' : 'Guardar cambios del vino') : labels.wines.add.submit}
+                </button>
+              </form>
             </section>
           </section>
         ) : null}
 
         {menu === 'reviews' ? (
-          <section className="screen-grid two-columns">
-            <section className="panel">
-              <div className="panel-header">
-                <div>
-                  <p className="eyebrow">{labels.reviews.create.eyebrow}</p>
-                  <h3>{labels.reviews.create.title}</h3>
-                </div>
-                <span className="pill muted">{labels.reviews.create.badge}</span>
-              </div>
-
-              <form className="stack-form" onSubmit={(event) => event.preventDefault()}>
-                <label>
-                  {labels.reviews.create.wine}
-                  <select defaultValue="">
-                    <option value="" disabled>{labels.reviews.create.selectWine}</option>
-                    {mockWines.map((wine) => (
-                      <option key={wine.id} value={wine.id}>{wine.name} · {wine.winery}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <div className="inline-grid triple">
-                  <label>{labels.reviews.create.score}<input type="number" min={0} max={100} placeholder="90" /></label>
-                  <label>{labels.reviews.create.body}<input type="number" min={0} max={5} placeholder="4" /></label>
-                  <label>{labels.reviews.create.acidity}<input type="number" min={0} max={5} placeholder="3" /></label>
-                </div>
-
-                <label>
-                  {labels.reviews.create.notes}
-                  <textarea rows={4} placeholder={labels.reviews.create.notesPlaceholder} />
-                </label>
-
-                <button type="submit" className="primary-button">{labels.reviews.create.submit}</button>
-              </form>
-            </section>
-
+          <section className="screen-grid">
             <section className="panel">
               <div className="panel-header">
                 <div>
                   <p className="eyebrow">{labels.reviews.edit.title}</p>
-                  <h3>{labels.reviews.edit.title}</h3>
+                  <h3>{locale === 'ca' ? 'Llistat de ressenyes' : 'Listado de reseñas'}</h3>
                 </div>
-                <span className="pill">{mockReviews.length} {labels.reviews.edit.countSuffix}</span>
+                <div className="panel-header-actions">
+                  <span className="pill">{mockReviews.length} {labels.reviews.edit.countSuffix}</span>
+                  <button type="button" className="primary-button" onClick={openReviewCreate}>
+                    {locale === 'ca' ? 'Crear ressenya' : 'Crear reseña'}
+                  </button>
+                </div>
               </div>
 
               <div className="list-stack">
@@ -1469,7 +2315,9 @@ function App() {
                     </div>
                     <p>{review.notes}</p>
                     <div className="review-actions">
-                      <button type="button" className="secondary-button small">{labels.reviews.edit.editAction}</button>
+                      <button type="button" className="secondary-button small" onClick={() => openReviewEdit(review)}>
+                        {labels.reviews.edit.editAction}
+                      </button>
                       <button type="button" className="ghost-button small">{labels.reviews.edit.viewWineAction}</button>
                     </div>
                   </article>
@@ -1478,6 +2326,10 @@ function App() {
             </section>
           </section>
         ) : null}
+
+        {menu === 'reviewCreate' ? renderReviewEditor('create', createReviewPreset) : null}
+
+        {menu === 'reviewEdit' ? renderReviewEditor('edit', reviewEditorPreset) : null}
 
         {menu === 'admin' ? (
           <section className="screen-grid two-columns">

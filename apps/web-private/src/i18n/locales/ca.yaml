@@ -49,7 +49,7 @@ dashboard:
     avgWhiteHint: Puntuació mitjana en vins blancs
   search:
     eyebrow: Cerca vins
-    title: Cercador amb filtres (dades mock)
+    title: Cercador amb filtres
     results: resultats
     search: Cercar
     country: País
@@ -75,7 +75,7 @@ wines:
     region: Regió / DO
     place: Lloc de compra
     price: Preu pagat
-    submit: Desar vi (Mock)
+    submit: Desar vi
   edit:
     eyebrow: Vins
     title: Editar vi existent
@@ -94,7 +94,7 @@ reviews:
     acidity: Acidesa
     notes: Notes
     notesPlaceholder: Descriu aromes, estructura i final...
-    submit: Crear ressenya (Mock)
+    submit: Crear ressenya
   edit:
     eyebrow: Ressenyes
     title: Editar les meves ressenyes

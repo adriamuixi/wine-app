@@ -49,7 +49,7 @@ dashboard:
     avgWhiteHint: Puntuación media en vinos blancos
   search:
     eyebrow: Buscar vinos
-    title: Buscador con filtros (datos mock)
+    title: Buscador con filtros
     results: resultados
     search: Buscar
     country: País
@@ -75,7 +75,7 @@ wines:
     region: Región / DO
     place: Lugar de compra
     price: Precio pagado
-    submit: Guardar vino (Mock)
+    submit: Guardar vino
   edit:
     eyebrow: Vinos
     title: Editar vino existente
@@ -94,7 +94,7 @@ reviews:
     acidity: Acidez
     notes: Notas
     notesPlaceholder: Describe aromas, estructura y final...
-    submit: Crear reseña (Mock)
+    submit: Crear reseña
   edit:
     eyebrow: Reseñas
     title: Editar mis reseñas
