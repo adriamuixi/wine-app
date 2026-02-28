@@ -40,6 +40,7 @@ services:
       - VITE_API_BASE=/api
     volumes:
       - ./apps/web-public:/app
+      - ./shared:/shared:ro
       - /app/node_modules
     expose:
       - "5173"
@@ -53,6 +54,7 @@ services:
       - VITE_API_BASE=/api
     volumes:
       - ./apps/web-private:/app
+      - ./shared:/shared:ro
       - /app/node_modules
     expose:
       - "5173"

@@ -32,15 +32,15 @@ services:
 
   web-public:
     build:
-      context: ./apps/web-public
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: apps/web-public/Dockerfile.prod
     container_name: wine_web_public_prod
     restart: unless-stopped
 
   web-private:
     build:
-      context: ./apps/web-private
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: apps/web-private/Dockerfile.prod
     container_name: wine_web_private_prod
     restart: unless-stopped
 

@@ -149,6 +149,37 @@
   font: inherit;
 }
 
+.admin-login-icon {
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1.06rem;
+  transition: border-color 140ms ease, transform 140ms ease, background-color 140ms ease;
+}
+
+.admin-login-icon-svg {
+  width: 1.12rem;
+  height: 1.12rem;
+  display: block;
+}
+
+.admin-login-icon:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.admin-login-icon:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
 .theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -885,7 +916,6 @@
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: 'tnum' 1, 'lnum' 1;
   color: var(--text);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
 }
 
 .score-badge span {
@@ -1029,6 +1059,8 @@
   align-items: center;
   gap: 0.4rem;
   flex-wrap: wrap;
+  position: relative;
+  isolation: isolate;
 }
 
 .do-logo-badge {
@@ -1047,6 +1079,7 @@
 .do-logo-tooltip {
   position: relative;
   display: inline-flex;
+  z-index: 4;
 }
 
 .do-logo-inline-button {
@@ -1058,6 +1091,8 @@
   background: transparent;
   border-radius: 0.45rem;
   cursor: pointer;
+  position: relative;
+  z-index: 5;
 }
 
 .do-logo-inline-button:focus-visible {
@@ -1077,7 +1112,7 @@
   transform: translateX(-50%) translateY(4px);
   opacity: 0;
   pointer-events: none;
-  z-index: 20;
+  z-index: 60;
   min-width: 8.75rem;
   padding: 0.45rem;
   border-radius: 0.75rem;
@@ -1127,6 +1162,16 @@
   font-size: 0.95rem;
   line-height: 1;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.flag-badge-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
 }
 
 .wine-card-review-section {
@@ -1725,6 +1770,10 @@
   }
 
   .brand-copy p {
+    display: none;
+  }
+
+  .admin-login-icon {
     display: none;
   }
 

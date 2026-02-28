@@ -12,8 +12,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'wine')]
-#[ORM\Index(name: 'wine_winery_name_vintage_idx', columns: ['winery', 'name', 'vintage_year'])]
-#[ORM\Index(name: 'wine_country_region_idx', columns: ['country', 'region_do_id'])]
+#[ORM\Index(name: 'wine_name_vintage_idx', columns: ['name', 'vintage_year'])]
+#[ORM\Index(name: 'wine_country_do_idx', columns: ['country', 'do_id'])]
 class WineRecord
 {
     #[ORM\Id]
@@ -24,15 +24,12 @@ class WineRecord
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[ORM\Column(length: 255)]
-    private string $winery;
-
     #[ORM\Column(name: 'wine_type', enumType: WineType::class)]
     private WineType $wineType;
 
-    #[ORM\ManyToOne(targetEntity: RegionDoRecord::class)]
-    #[ORM\JoinColumn(name: 'region_do_id', referencedColumnName: 'id', nullable: false)]
-    private RegionDoRecord $regionDo;
+    #[ORM\ManyToOne(targetEntity: DoRecord::class)]
+    #[ORM\JoinColumn(name: 'do_id', referencedColumnName: 'id', nullable: false)]
+    private DoRecord $do;
 
     #[ORM\Column(enumType: Country::class)]
     private Country $country;
@@ -45,13 +42,6 @@ class WineRecord
 
     #[ORM\Column(name: 'alcohol_percentage', type: Types::INTEGER, nullable: true)]
     private ?int $alcoholPercentage = null;
-
-    #[ORM\ManyToOne(targetEntity: PlaceRecord::class)]
-    #[ORM\JoinColumn(name: 'purchase_place_id', referencedColumnName: 'id', nullable: false)]
-    private PlaceRecord $purchasePlace;
-
-    #[ORM\Column(name: 'price_paid', type: Types::DECIMAL, precision: 10, scale: 2)]
-    private string $pricePaid;
 
     #[ORM\Column(name: 'created_at', type: 'app_timestamptz_immutable')]
     private \DateTimeImmutable $createdAt;

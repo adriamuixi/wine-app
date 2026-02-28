@@ -44,11 +44,15 @@ CREATE TABLE users (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE region_do (
-  id        BIGSERIAL PRIMARY KEY,
-  name      VARCHAR(255) NOT NULL,
-  country   country NOT NULL,
-  UNIQUE (country, name)
+CREATE TABLE "do" (
+  id            BIGSERIAL PRIMARY KEY,
+  name          VARCHAR(255) NOT NULL,
+  region        VARCHAR(255) NOT NULL,
+  country       country NOT NULL,
+  country_code  VARCHAR(2) NOT NULL,
+  UNIQUE (country, name),
+  CONSTRAINT do_country_code_upper_chk CHECK (country_code = upper(country_code)),
+  CONSTRAINT do_country_code_len_chk CHECK (char_length(country_code) = 2)
 );
 
 CREATE TABLE place (
@@ -57,6 +61,7 @@ CREATE TABLE place (
   name        VARCHAR(255) NOT NULL,
   address     VARCHAR(255),
   city        VARCHAR(120),
+  country     country NOT NULL,
   CONSTRAINT place_fields_by_type_chk CHECK (
     (place_type = 'supermarket' AND address IS NULL AND city IS NULL) OR
     (place_type = 'restaurant'  AND address IS NOT NULL AND city IS NOT NULL)
@@ -72,21 +77,29 @@ CREATE TABLE grape (
 CREATE TABLE wine (
   id                  BIGSERIAL PRIMARY KEY,
   name                VARCHAR(255) NOT NULL,
-  winery              VARCHAR(255) NOT NULL,
   wine_type           wine_type NOT NULL,
-  region_do_id        BIGINT NOT NULL REFERENCES region_do(id),
+  do_id               BIGINT NOT NULL REFERENCES "do"(id),
   country             country NOT NULL,
   aging_type          aging_type,
   vintage_year        INT CHECK (vintage_year IS NULL OR (vintage_year >= 1800 AND vintage_year <= 2200)),
   alcohol_percentage  INT CHECK (alcohol_percentage IS NULL OR (alcohol_percentage >= 0 AND alcohol_percentage <= 100)),
-  purchase_place_id   BIGINT NOT NULL REFERENCES place(id),
-  price_paid          NUMERIC(10,2) NOT NULL CHECK (price_paid >= 0),
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX wine_winery_name_vintage_idx ON wine (winery, name, vintage_year);
-CREATE INDEX wine_country_region_idx ON wine (country, region_do_id);
+CREATE INDEX wine_name_vintage_idx ON wine (name, vintage_year);
+CREATE INDEX wine_country_do_idx ON wine (country, do_id);
+
+CREATE TABLE wine_purchase (
+  id            BIGSERIAL PRIMARY KEY,
+  wine_id       BIGINT NOT NULL REFERENCES wine(id) ON DELETE CASCADE,
+  place_id      BIGINT NOT NULL REFERENCES place(id),
+  price_paid    NUMERIC(10,2) NOT NULL CHECK (price_paid >= 0),
+  purchased_at  TIMESTAMPTZ NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX wine_purchase_wine_purchased_at_idx ON wine_purchase (wine_id, purchased_at DESC);
 
 CREATE TABLE wine_grape (
   wine_id     BIGINT NOT NULL REFERENCES wine(id) ON DELETE CASCADE,

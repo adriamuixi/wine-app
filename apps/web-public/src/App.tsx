@@ -345,9 +345,9 @@ const DICT: Record<Locale, Dictionary> = {
 }
 
 const SHARED_GALLERY = [
-  'photos/wines/exmaple_wine-hash.png',
-  'photos/wines/front_wine-hash.png',
-  'photos/wines/back_wine-hash.png',
+  'images/photos/wines/exmaple_wine-hash.png',
+  'images/photos/wines/front_wine-hash.png',
+  'images/photos/wines/back_wine-hash.png',
 ]
 
 type JournalWineRow = {
@@ -426,25 +426,25 @@ function splitGrapeVarieties(grapes: string): string[] {
 
 function doLogoPathForRegion(region: string): string | undefined {
   const map: Record<string, string> = {
-    'Penedès': '/icons/DO/penedes_DO.png',
-    Montsant: '/icons/DO/montanst_DO.png',
-    'Ribera del Duero': '/icons/DO/ribera_del_duero_DO.png',
-    Somontano: '/icons/DO/somontano_DO.jpg',
-    Toro: '/icons/DO/toro_DO.jpg',
-    Rioja: '/icons/DO/rioja_DO.png',
-    Tarragona: '/icons/DO/tarragona_DO.png',
-    'Terra Alta': '/icons/DO/terra_alta_DO.png',
-    Priorat: '/icons/DO/priorat_DO.png',
-    'Conca de Barberà': '/icons/DO/conca_de_barbera_DO.jpg',
-    'Pla de Bages': '/icons/DO/pla_de_bages_DO.png',
-    Alella: '/icons/DO/alella_DO.png',
-    Empordà: '/icons/DO/emporda_DO.png',
-    Navarra: '/icons/DO/navarra_DO.jpg',
-    Cariñena: '/icons/DO/cariñena_DO.png',
-    Calatayud: '/icons/DO/calatayud_DO.jpg',
-    Cigales: '/icons/DO/cigales_DO.png',
-    Arlanza: '/icons/DO/arlanza_DO.jpg',
-    'Costers del Segre': '/icons/DO/costers_del_segre_DO.png',
+    'Penedès': '/images/icons/DO/penedes_DO.png',
+    Montsant: '/images/icons/DO/montanst_DO.png',
+    'Ribera del Duero': '/images/icons/DO/ribera_del_duero_DO.png',
+    Somontano: '/images/icons/DO/somontano_DO.jpg',
+    Toro: '/images/icons/DO/toro_DO.jpg',
+    Rioja: '/images/icons/DO/rioja_DO.png',
+    Tarragona: '/images/icons/DO/tarragona_DO.png',
+    'Terra Alta': '/images/icons/DO/terra_alta_DO.png',
+    Priorat: '/images/icons/DO/priorat_DO.png',
+    'Conca de Barberà': '/images/icons/DO/conca_de_barbera_DO.jpg',
+    'Pla de Bages': '/images/icons/DO/pla_de_bages_DO.png',
+    Alella: '/images/icons/DO/alella_DO.png',
+    Empordà: '/images/icons/DO/emporda_DO.png',
+    Navarra: '/images/icons/DO/navarra_DO.jpg',
+    Cariñena: '/images/icons/DO/cariñena_DO.png',
+    Calatayud: '/images/icons/DO/calatayud_DO.jpg',
+    Cigales: '/images/icons/DO/cigales_DO.png',
+    Arlanza: '/images/icons/DO/arlanza_DO.jpg',
+    'Costers del Segre': '/images/icons/DO/costers_del_segre_DO.png',
   }
 
   return map[region]
@@ -466,10 +466,84 @@ function countryFlagEmoji(country: string): string {
   return map[country] ?? '🏳️'
 }
 
+function countryFlagPath(country: string): string | null {
+  const map: Record<string, string> = {
+    Spain: '/images/flags/country/spain.png',
+    France: '/images/flags/country/france.png',
+    Italy: '/images/flags/country/italy.png',
+    Portugal: '/images/flags/country/portugal.png',
+    Germany: '/images/flags/country/germany.png',
+    Argentina: '/images/flags/country/argentina.png',
+    Chile: '/images/flags/country/chile.png',
+    USA: '/images/flags/country/united_states.png',
+    'United States': '/images/flags/country/united_states.png',
+    'South Africa': '/images/flags/country/south_africa.png',
+    Australia: '/images/flags/country/australia.png',
+  }
+  return map[country] ?? null
+}
+
+function localizedCountryName(country: string, locale: Locale): string {
+  if (country === 'Spain') return locale === 'ca' ? 'Espanya' : 'España'
+  return country
+}
+
+function autonomousCommunityFlagPathForRegion(region: string): string | null {
+  const map: Record<string, string> = {
+    'Terra Alta': '/images/flags/ccaa/cataluna.png',
+    'Penedès': '/images/flags/ccaa/cataluna.png',
+    Montsant: '/images/flags/ccaa/cataluna.png',
+    Tarragona: '/images/flags/ccaa/cataluna.png',
+    Priorat: '/images/flags/ccaa/cataluna.png',
+    'Conca de Barberà': '/images/flags/ccaa/cataluna.png',
+    'Pla de Bages': '/images/flags/ccaa/cataluna.png',
+    Alella: '/images/flags/ccaa/cataluna.png',
+    Empordà: '/images/flags/ccaa/cataluna.png',
+    'Costers del Segre': '/images/flags/ccaa/cataluna.png',
+    Rioja: '/images/flags/ccaa/la_rioja.png',
+    'Ribera del Duero': '/images/flags/ccaa/castilla_y_leon.png',
+    Toro: '/images/flags/ccaa/castilla_y_leon.png',
+    Cigales: '/images/flags/ccaa/castilla_y_leon.png',
+    Arlanza: '/images/flags/ccaa/castilla_y_leon.png',
+    Somontano: '/images/flags/ccaa/aragon.png',
+    Cariñena: '/images/flags/ccaa/aragon.png',
+    Calatayud: '/images/flags/ccaa/aragon.png',
+    Navarra: '/images/flags/ccaa/navarra.png',
+    'Rías Baixas': '/images/flags/ccaa/galicia.png',
+  }
+  return map[region] ?? null
+}
+
+function autonomousCommunityNameForRegion(region: string): string | null {
+  const map: Record<string, string> = {
+    'Terra Alta': 'Catalunya',
+    'Penedès': 'Catalunya',
+    Montsant: 'Catalunya',
+    Tarragona: 'Catalunya',
+    Priorat: 'Catalunya',
+    'Conca de Barberà': 'Catalunya',
+    'Pla de Bages': 'Catalunya',
+    Alella: 'Catalunya',
+    Empordà: 'Catalunya',
+    'Costers del Segre': 'Catalunya',
+    Rioja: 'La Rioja',
+    'Ribera del Duero': 'Castilla y Leon',
+    Toro: 'Castilla y Leon',
+    Cigales: 'Castilla y Leon',
+    Arlanza: 'Castilla y Leon',
+    Somontano: 'Aragon',
+    Cariñena: 'Aragon',
+    Calatayud: 'Aragon',
+    Navarra: 'Navarra',
+    'Rías Baixas': 'Galicia',
+  }
+  return map[region] ?? null
+}
+
 const imageCycle = [
-  'photos/wines/exmaple_wine-hash.png',
-  'photos/wines/front_wine-hash.png',
-  'photos/wines/back_wine-hash.png',
+  'images/photos/wines/exmaple_wine-hash.png',
+  'images/photos/wines/front_wine-hash.png',
+  'images/photos/wines/back_wine-hash.png',
 ] as const
 
 const MOCK_WINES: WineCard[] = CATALAN_JOURNAL_ROWS.map((row, index) => {
@@ -512,10 +586,10 @@ const MOCK_WINES: WineCard[] = CATALAN_JOURNAL_ROWS.map((row, index) => {
     reward: buildMockReward(avgScore, row.region),
     doLogoImage: doLogoPathForRegion(row.region),
     rewardBadgeImage:
-      index === 0 ? '/icons/awards/penin/thumbs-80/penin-91.png'
-        : index === 1 ? '/icons/awards/penin/thumbs-80/penin-93.png'
-          : index === 2 ? '/icons/awards/penin/thumbs-80/penin-86.png'
-            : index === 3 ? '/icons/awards/penin/thumbs-80/penin-95.png'
+      index === 0 ? '/images/icons/awards/penin/thumbs-80/penin-91.png'
+        : index === 1 ? '/images/icons/awards/penin/thumbs-80/penin-93.png'
+          : index === 2 ? '/images/icons/awards/penin/thumbs-80/penin-86.png'
+            : index === 3 ? '/images/icons/awards/penin/thumbs-80/penin-95.png'
               : undefined,
     notes: `${row.month} · ${row.region}. ${technicalLabel}. ${scoreLabel}.`,
     tags,
@@ -605,7 +679,7 @@ export default function App() {
 
   const t = DICT[locale]
   const isDark = theme === 'dark'
-  const logoSrc = isDark ? 'brand/logo-wordmark-dark.png' : 'brand/logo-wordmark-light.png'
+  const logoSrc = isDark ? 'images/brand/logo-wordmark-dark.png' : 'images/brand/logo-wordmark-light.png'
   const adminHref = useMemo(() => {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1') {
@@ -940,7 +1014,7 @@ export default function App() {
 
       <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
         <div className="brand-block">
-          <img src="brand/icon-square-64.png" className="brand-icon" alt="" aria-hidden="true" />
+          <img src="images/brand/icon-square-64.png" className="brand-icon" alt="" aria-hidden="true" />
           <div className="brand-copy">
             <img src={logoSrc} className="brand-wordmark" alt="Vins Tat & Rosset" />
             <p>{t.appName}</p>
@@ -948,6 +1022,29 @@ export default function App() {
         </div>
 
         <div className="topbar-actions">
+          <a
+            href={adminHref}
+            className="admin-login-icon"
+            aria-label={`${t.topbar.backoffice} Login`}
+            title={`${t.topbar.backoffice} Login`}
+            onClick={() => {
+              window.localStorage.setItem('wine-app-theme-mode', theme)
+            }}
+          >
+            <svg
+              className="admin-login-icon-svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M5 19.2C5.7 15.9 8.4 14 12 14C15.6 14 18.3 15.9 19 19.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M20.5 11.5H16.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M18.5 9.5L20.5 11.5L18.5 13.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </a>
+
           <button
             type="button"
             className="theme-toggle"
@@ -1162,6 +1259,9 @@ export default function App() {
             {filteredWines.map((wine) => {
               const isFeatured = wine.avgScore >= 90
               const scoreTier = wine.avgScore >= 90 ? 'gold' : wine.avgScore >= 80 ? 'silver' : wine.avgScore >= 70 ? 'bronze' : 'base'
+              const countryFlagImage = countryFlagPath(wine.country)
+              const communityFlagImage = wine.country === 'Spain' ? autonomousCommunityFlagPathForRegion(wine.region) : null
+              const communityName = wine.country === 'Spain' ? autonomousCommunityNameForRegion(wine.region) : null
 
               return (
                 <article
@@ -1217,7 +1317,14 @@ export default function App() {
                       <div className="wine-card-meta-box-do">
                         <dt>{t.icons.region} DO</dt>
                         <dd className="origin-with-do">
-                          <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>{countryFlagEmoji(wine.country)}</span>
+                          <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>
+                            {countryFlagImage ? <img className="flag-badge-image" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" /> : countryFlagEmoji(wine.country)}
+                          </span>
+                          {communityFlagImage && communityName ? (
+                            <span className="country-flag-badge" aria-label={`Comunidad autonoma ${communityName}`} title={communityName}>
+                              <img className="flag-badge-image" src={communityFlagImage} alt={communityName} loading="lazy" />
+                            </span>
+                          ) : null}
                           {wine.doLogoImage ? (
                             <button
                               type="button"
@@ -1269,7 +1376,14 @@ export default function App() {
 
                     <div className="wine-card-mobile-summary" aria-label="mobile summary">
                       <div className="wine-card-mobile-summary-region">
-                        <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>{countryFlagEmoji(wine.country)}</span>
+                        <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>
+                          {countryFlagImage ? <img className="flag-badge-image" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" /> : countryFlagEmoji(wine.country)}
+                        </span>
+                        {communityFlagImage && communityName ? (
+                          <span className="country-flag-badge" aria-label={`Comunidad autonoma ${communityName}`} title={communityName}>
+                            <img className="flag-badge-image" src={communityFlagImage} alt={communityName} loading="lazy" />
+                          </span>
+                        ) : null}
                         <span className="wine-card-mobile-region-text">
                           <span className="wine-card-mobile-region-name">{wine.region}</span>
                           <span className="wine-card-mobile-region-vintage">{wine.vintage}</span>
@@ -1375,6 +1489,11 @@ export default function App() {
               </div>
 
               <div className="public-wine-details">
+                {(() => {
+                  const selectedCountryFlagImage = countryFlagPath(selectedWine.country)
+                  const selectedCommunityFlagImage = selectedWine.country === 'Spain' ? autonomousCommunityFlagPathForRegion(selectedWine.region) : null
+                  const selectedCommunityName = selectedWine.country === 'Spain' ? autonomousCommunityNameForRegion(selectedWine.region) : null
+                  return (
                 <section className="detail-card">
                   <h3>{t.icons.details} {t.modal.details}</h3>
                   <dl>
@@ -1382,7 +1501,14 @@ export default function App() {
                     <div>
                       <dt>{t.icons.origin} DO</dt>
                       <dd className="origin-with-do">
-                        <span className="country-flag-badge" aria-label={selectedWine.country} title={selectedWine.country}>{countryFlagEmoji(selectedWine.country)}</span>
+                        <span className="country-flag-badge" aria-label={selectedWine.country} title={selectedWine.country}>
+                          {selectedCountryFlagImage ? <img className="flag-badge-image" src={selectedCountryFlagImage} alt={localizedCountryName(selectedWine.country, locale)} loading="lazy" /> : countryFlagEmoji(selectedWine.country)}
+                        </span>
+                        {selectedCommunityFlagImage && selectedCommunityName ? (
+                          <span className="country-flag-badge" aria-label={`Comunidad autonoma ${selectedCommunityName}`} title={selectedCommunityName}>
+                            <img className="flag-badge-image" src={selectedCommunityFlagImage} alt={selectedCommunityName} loading="lazy" />
+                          </span>
+                        ) : null}
                         {selectedWine.doLogoImage ? (
                           <span className="do-logo-tooltip do-logo-tooltip-clickable">
                             <button
@@ -1427,6 +1553,8 @@ export default function App() {
                     <div><dt>{t.icons.reward} {t.card.reward}</dt><dd>{selectedWine.reward ? `${selectedWine.reward.name}${selectedWine.reward.score ? ` · ${selectedWine.reward.score}` : ''}` : t.modal.rewardNone}</dd></div>
                   </dl>
                 </section>
+                  )
+                })()}
 
                 <section className="detail-card score-detail-card">
                   <h3>{t.icons.avgScore} {t.card.avgScore}</h3>
