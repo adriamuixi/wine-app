@@ -140,25 +140,16 @@ final class SpyWinePhotoRepository implements WinePhotoRepository
         return $this->existing;
     }
 
-    public function createForWine(
+    public function create(
         int $wineId,
-        WinePhotoType $type,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
+        WinePhoto $photo,
     ): int {
         return 55;
     }
 
-    public function updateById(
-        int $id,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
-    ): void {
-        $this->updatedId = $id;
+    public function update(WinePhoto $photo): void
+    {
+        $this->updatedId = $photo->id;
     }
 
     public function findByWineId(int $wineId): array

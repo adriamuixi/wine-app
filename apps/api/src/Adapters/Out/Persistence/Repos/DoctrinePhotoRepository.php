@@ -15,14 +15,8 @@ final readonly class DoctrinePhotoRepository implements WinePhotoRepository
     {
     }
 
-    public function createForWine(
-        int $wineId,
-        WinePhotoType $type,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
-    ): int {
+    public function create(int $wineId, WinePhoto $photo): int
+    {
         $id = $this->entityManager->getConnection()->fetchOne(
             <<<'SQL'
 INSERT INTO wine_photo (wine_id, url, type, hash, size, extension)
@@ -31,11 +25,11 @@ RETURNING id
 SQL,
             [
                 'wine_id' => $wineId,
-                'url' => $url,
-                'type' => $type->value,
-                'hash' => $hash,
-                'size' => $size,
-                'extension' => $extension,
+                'url' => $photo->url,
+                'type' => $photo->type->value,
+                'hash' => $photo->hash,
+                'size' => $photo->size,
+                'extension' => $photo->extension,
             ],
         );
 
@@ -86,21 +80,20 @@ SQL,
         );
     }
 
-    public function updateById(
-        int $id,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
-    ): void {
+    public function update(WinePhoto $photo): void
+    {
+        if (null === $photo->id) {
+            throw new \InvalidArgumentException('photo id is required for update.');
+        }
+
         $this->entityManager->getConnection()->executeStatement(
             'UPDATE wine_photo SET url = :url, hash = :hash, size = :size, extension = :extension WHERE id = :id',
             [
-                'id' => $id,
-                'url' => $url,
-                'hash' => $hash,
-                'size' => $size,
-                'extension' => $extension,
+                'id' => $photo->id,
+                'url' => $photo->url,
+                'hash' => $photo->hash,
+                'size' => $photo->size,
+                'extension' => $photo->extension,
             ],
         );
     }

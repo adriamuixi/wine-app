@@ -1,4 +1,4 @@
-import type { FormEvent, HTMLAttributes, ReactNode, SyntheticEvent } from 'react'
+import type { ChangeEvent, FormEvent, HTMLAttributes, PointerEvent as ReactPointerEvent, ReactNode, SyntheticEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import hljs from 'highlight.js/lib/common'
 import { Bar, BarChart, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts'
@@ -28,6 +28,7 @@ type WineItem = {
   type: WineType
   country: string
   region: string
+  doName: string | null
   vintageYear: number | null
   pricePaid: number
   averageScore: number | null
@@ -89,6 +90,84 @@ type DoApiResponse = {
   items: DoApiItem[]
 }
 
+type WineDetailsApiGrape = {
+  id: number
+  name: string
+  color: 'red' | 'white'
+  percentage: number | null
+}
+
+type WineDetailsApiPurchase = {
+  id: number
+  place: {
+    id: number
+    place_type: 'restaurant' | 'supermarket'
+    name: string
+    address: string | null
+    city: string | null
+    country: Exclude<CountryFilterValue, 'all'>
+  }
+  price_paid: number
+  purchased_at: string
+}
+
+type WineDetailsApiAward = {
+  id: number
+  name: string
+  score: number | null
+  year: number | null
+}
+
+type WineDetailsApiPhoto = {
+  id: number
+  type: 'front_label' | 'back_label' | 'bottle' | null
+  url: string
+  hash: string
+  size: number
+  extension: string
+}
+
+type WineDetailsApiReview = {
+  id: number
+  user: {
+    id: number
+    name: string
+    lastname: string
+  }
+  score: number | null
+  intensity_aroma: number
+  sweetness: number
+  acidity: number
+  tannin: number | null
+  body: number
+  persistence: number
+  bullets: string[]
+  created_at: string
+}
+
+type WineDetailsApiWine = {
+  id: number
+  name: string
+  winery: string | null
+  wine_type: WineType | null
+  do: { id: number; name: string; region: string; country: Exclude<CountryFilterValue, 'all'>; country_code: string } | null
+  country: Exclude<CountryFilterValue, 'all'> | null
+  aging_type: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
+  vintage_year: number | null
+  alcohol_percentage: number | null
+  created_at: string
+  updated_at: string
+  grapes: WineDetailsApiGrape[]
+  purchases: WineDetailsApiPurchase[]
+  awards: WineDetailsApiAward[]
+  photos: WineDetailsApiPhoto[]
+  reviews: WineDetailsApiReview[]
+}
+
+type WineDetailsApiResponse = {
+  wine: WineDetailsApiWine
+}
+
 type WineProfileField = {
   label: string
   value: string
@@ -100,11 +179,10 @@ type WineProfileSection = {
   fields: WineProfileField[]
 }
 
-type WineProfileMedalTone = 'gold' | 'silver' | 'bronze'
-
 type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
 type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
+type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label'
 
 type MockUser = {
   id: number
@@ -126,7 +204,8 @@ type AuthApiResponse = {
 
 type GrapeBlendRow = {
   id: number
-  grape: string
+  grapeId: string
+  percentage: string
 }
 
 type AwardRow = {
@@ -150,13 +229,14 @@ type ReviewFormPreset = {
   notes: string
 }
 
-const SAMPLE_WINE_THUMBNAIL_SRC = '/images/photos/wines/exmaple_wine-hash.png'
-const DEFAULT_WINE_ICON_CANDIDATES = ['/images/photos/wines_photo.png', '/admin/images/photos/wines_photo.png'] as const
+const DEFAULT_NO_PHOTO_SRC = '/images/photos/wines/no-photo.png'
+const SAMPLE_WINE_THUMBNAIL_SRC = DEFAULT_NO_PHOTO_SRC
+const DEFAULT_WINE_ICON_CANDIDATES = [DEFAULT_NO_PHOTO_SRC, `/admin${DEFAULT_NO_PHOTO_SRC}`] as const
 const DEFAULT_WINE_ICON_DATA_URI = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="240" viewBox="0 0 160 240"><rect width="160" height="240" rx="14" fill="%23f3ece3"/><path d="M55 36h50c0 36-10 56-25 71v51h22v18H58v-18h22v-51C65 92 55 72 55 36Z" fill="%238f3851"/><circle cx="80" cy="73" r="24" fill="%23c9657f"/></svg>'
 const SAMPLE_WINE_GALLERY = [
   { key: 'bottle', src: SAMPLE_WINE_THUMBNAIL_SRC },
-  { key: 'front', src: '/images/photos/wines/front_wine-hash.png' },
-  { key: 'back', src: '/images/photos/wines/back_wine-hash.png' },
+  { key: 'front', src: SAMPLE_WINE_THUMBNAIL_SRC },
+  { key: 'back', src: SAMPLE_WINE_THUMBNAIL_SRC },
 ] as const
 
 const mockUser: MockUser = {
@@ -236,6 +316,7 @@ const mockWines: WineItem[] = journalWineRows.map((row, index) => {
     type: mapTypeFromCa(row.typeCa, row.wine),
     country: 'Spain',
     region: row.region,
+    doName: row.region,
     vintageYear: row.vintage,
     pricePaid,
     averageScore,
@@ -249,10 +330,9 @@ const mockReviews: ReviewItem[] = [
   { id: 14, wineId: 20, wineName: 'Muga', score: 86, createdAt: '2026-02-12', notes: 'Aroma net, pas de boca equilibrat i bona longitud.' },
 ]
 
-const AGING_OPTIONS = ['jove', 'criança', 'reserva', 'gran_reserva'] as const
-const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket', 'wine_bar', 'cellar', 'online'] as const
+const AGING_OPTIONS = ['young', 'crianza', 'reserve', 'grand_reserve'] as const
+const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket'] as const
 const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker'] as const
-const GRAPE_OPTIONS = ['Garnatxa', 'Carinyena', 'Tempranillo', 'Cabernet Sauvignon', 'Syrah', 'Macabeu', 'Xarel·lo', 'Parellada'] as const
 const REVIEW_TAG_OPTIONS = ['Afrutado', 'Floral', 'Especiado', 'Mineral', 'Madera marcada', 'Fácil de beber', 'Elegante', 'Potente', 'Gastronómico'] as const
 const SCORE_OPTIONS_0_TO_10 = Array.from({ length: 11 }, (_, value) => value)
 const SCORE_OPTIONS_0_TO_100 = Array.from({ length: 101 }, (_, value) => value)
@@ -515,6 +595,8 @@ function doLogoPathForRegion(region: string): string | null {
     Cigales: '/images/icons/DO/cigales_DO.png',
     Arlanza: '/images/icons/DO/arlanza_DO.jpg',
     'Costers del Segre': '/images/icons/DO/costers_del_segre_DO.png',
+    'Rías Baixas': '/images/icons/DO/logo-rias_baixas_DO.png',
+    'Rias Baixas': '/images/icons/DO/logo-rias_baixas_DO.png',
   }
 
   return map[region] ?? null
@@ -608,16 +690,6 @@ function escapeHtml(value: string): string {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;')
-}
-
-function medalToneFromScore(score: number | null): WineProfileMedalTone | null {
-  if (score == null) {
-    return null
-  }
-
-  if (score >= 90) return 'gold'
-  if (score >= 85) return 'silver'
-  return 'bronze'
 }
 
 function buildMockWineProfile(
@@ -823,6 +895,74 @@ function fallbackToAdminAsset(event: SyntheticEvent<HTMLImageElement, Event>): v
   image.style.display = 'none'
 }
 
+function resolveApiBaseUrl(): string {
+  const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+  const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+  return configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+}
+
+function resolveApiAssetUrl(path: string): string {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  if (!path.startsWith('/')) {
+    return path
+  }
+  return `${resolveApiBaseUrl()}${path}`
+}
+
+function formatApiDate(dateIso: string, locale: string): string {
+  const date = new Date(dateIso)
+  if (Number.isNaN(date.getTime())) {
+    return dateIso
+  }
+  return new Intl.DateTimeFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+function labelForPhotoType(type: WineDetailsApiPhoto['type']): string {
+  if (type === 'bottle') return 'Wine'
+  if (type === 'front_label') return 'Front-label'
+  if (type === 'back_label') return 'Back-label'
+  return 'Photo'
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function labelForAgingType(agingType: WineDetailsApiWine['aging_type'], locale: string): string {
+  if (agingType == null) return '-'
+  const ca: Record<Exclude<WineDetailsApiWine['aging_type'], null>, string> = {
+    young: 'Jove',
+    crianza: 'Criança',
+    reserve: 'Reserva',
+    grand_reserve: 'Gran reserva',
+  }
+  const es: Record<Exclude<WineDetailsApiWine['aging_type'], null>, string> = {
+    young: 'Joven',
+    crianza: 'Crianza',
+    reserve: 'Reserva',
+    grand_reserve: 'Gran reserva',
+  }
+  return locale === 'ca' ? ca[agingType] : es[agingType]
+}
+
+function labelForAwardName(awardName: WineDetailsApiAward['name']): string {
+  const map: Record<WineDetailsApiAward['name'], string> = {
+    penin: 'Peñín',
+    parker: 'Parker',
+    wine_spectator: 'Wine Spectator',
+    decanter: 'Decanter',
+    james_suckling: 'James Suckling',
+    guia_proensa: 'Guía Proensa',
+  }
+  return map[awardName] ?? awardName
+}
+
 function App() {
   const { labels, locale, setLocale, t } = useI18n()
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
@@ -837,8 +977,25 @@ function App() {
   const [loginSubmitting, setLoginSubmitting] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [selectedWineSheet, setSelectedWineSheet] = useState<WineItem | null>(null)
+  const [selectedWineSheetDetails, setSelectedWineSheetDetails] = useState<WineDetailsApiWine | null>(null)
+  const [selectedWineSheetStatus, setSelectedWineSheetStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [selectedWineSheetError, setSelectedWineSheetError] = useState<string | null>(null)
+  const [wineProfileReloadToken, setWineProfileReloadToken] = useState(0)
+  const [photoPickerType, setPhotoPickerType] = useState<WinePhotoSlotType | null>(null)
+  const [photoEditorWineId, setPhotoEditorWineId] = useState<number | null>(null)
+  const [photoEditorType, setPhotoEditorType] = useState<WinePhotoSlotType | null>(null)
+  const [photoEditorSource, setPhotoEditorSource] = useState<string | null>(null)
+  const [photoEditorZoom, setPhotoEditorZoom] = useState(1)
+  const [photoEditorOffsetX, setPhotoEditorOffsetX] = useState(0)
+  const [photoEditorOffsetY, setPhotoEditorOffsetY] = useState(0)
+  const [photoEditorSaving, setPhotoEditorSaving] = useState(false)
+  const [photoEditorError, setPhotoEditorError] = useState<string | null>(null)
+  const [photoDeleteBusyType, setPhotoDeleteBusyType] = useState<WinePhotoSlotType | null>(null)
   const [selectedWineGallery, setSelectedWineGallery] = useState<WineItem | null>(null)
   const [selectedWineForEdit, setSelectedWineForEdit] = useState<WineItem | null>(null)
+  const [wineEditDetails, setWineEditDetails] = useState<WineDetailsApiWine | null>(null)
+  const [wineEditStatus, setWineEditStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [wineEditReloadToken, setWineEditReloadToken] = useState(0)
   const [selectedReviewForEdit, setSelectedReviewForEdit] = useState<ReviewItem | null>(null)
   const [galleryModalVariant, setGalleryModalVariant] = useState<GalleryModalVariant>('full')
   const [activeGalleryImageKey, setActiveGalleryImageKey] = useState<(typeof SAMPLE_WINE_GALLERY)[number]['key']>('bottle')
@@ -864,27 +1021,43 @@ function App() {
   const [doFilter, setDoFilter] = useState<'all' | number>('all')
   const [doSearchText, setDoSearchText] = useState('')
   const [isDoDropdownOpen, setIsDoDropdownOpen] = useState(false)
+  const [createDoCountryFilter, setCreateDoCountryFilter] = useState<CountryFilterValue>('spain')
+  const [createDoSearchText, setCreateDoSearchText] = useState('')
+  const [isCreateDoDropdownOpen, setIsCreateDoDropdownOpen] = useState(false)
+  const [createDoId, setCreateDoId] = useState<'all' | number>('all')
+  const [manufacturingCountry, setManufacturingCountry] = useState<Exclude<CountryFilterValue, 'all'>>('spain')
   const [grapeOptions, setGrapeOptions] = useState<GrapeApiItem[]>([])
   const [doOptions, setDoOptions] = useState<DoApiItem[]>([])
   const [wineItems, setWineItems] = useState<WineItem[]>([])
   const [wineListStatus, setWineListStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [wineListError, setWineListError] = useState<string | null>(null)
+  const [wineListReloadToken, setWineListReloadToken] = useState(0)
+  const [wineDeleteTarget, setWineDeleteTarget] = useState<WineItem | null>(null)
+  const [wineDeleteSubmitting, setWineDeleteSubmitting] = useState(false)
+  const [wineDeleteError, setWineDeleteError] = useState<string | null>(null)
   const [winePage, setWinePage] = useState(1)
   const [wineLimit, setWineLimit] = useState(20)
   const [wineTotalItems, setWineTotalItems] = useState(0)
   const [wineTotalPages, setWineTotalPages] = useState(0)
   const [wineHasNext, setWineHasNext] = useState(false)
   const [wineHasPrev, setWineHasPrev] = useState(false)
+  const [wineFormSubmitting, setWineFormSubmitting] = useState(false)
+  const [wineFormError, setWineFormError] = useState<string | null>(null)
   const doDropdownRef = useRef<HTMLDivElement | null>(null)
+  const createDoDropdownRef = useRef<HTMLDivElement | null>(null)
+  const photoPickerInputRef = useRef<HTMLInputElement | null>(null)
+  const photoEditorCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const photoEditorDragRef = useRef<{ active: boolean; pointerId: number; lastX: number; lastY: number } | null>(null)
   const [grapeBlendRows, setGrapeBlendRows] = useState<GrapeBlendRow[]>([
-    { id: 1, grape: 'Tempranillo' },
+    { id: 1, grapeId: '', percentage: '' },
   ])
   const [awardRows, setAwardRows] = useState<AwardRow[]>([])
+  const firstGrapeOptionId = grapeOptions[0] ? String(grapeOptions[0].id) : ''
 
   const addGrapeBlendRow = () => {
     setGrapeBlendRows((current) => [
       ...current,
-      { id: Date.now(), grape: GRAPE_OPTIONS[0] },
+      { id: Date.now(), grapeId: firstGrapeOptionId, percentage: '' },
     ])
   }
 
@@ -910,6 +1083,14 @@ function App() {
   const updateAwardRow = (rowId: number, patch: Partial<AwardRow>) => {
     setAwardRows((current) => current.map((row) => (row.id === rowId ? { ...row, ...patch } : row)))
   }
+
+  useEffect(() => {
+    if (!firstGrapeOptionId) {
+      return
+    }
+
+    setGrapeBlendRows((current) => current.map((row) => (row.grapeId === '' ? { ...row, grapeId: firstGrapeOptionId } : row)))
+  }, [firstGrapeOptionId])
 
   const menuItems: Array<{ key: Exclude<MenuKey, 'wineProfile'>; label: string; short: string; icon: string }> = [
     { key: 'dashboard', label: labels.menu.dashboard, short: 'DB', icon: '⌂' },
@@ -965,11 +1146,44 @@ function App() {
     })
   }, [doSearchText, dosByCountry])
 
+  const createDosByCountry = useMemo(() => {
+    if (createDoCountryFilter === 'all') {
+      return [] as DoApiItem[]
+    }
+
+    return doOptions
+      .filter((item) => item.country === createDoCountryFilter)
+      .sort((a, b) => {
+        const byRegion = a.region.localeCompare(b.region)
+        if (byRegion !== 0) return byRegion
+        return a.name.localeCompare(b.name)
+      })
+  }, [createDoCountryFilter, doOptions])
+
+  const createFilteredDosBySearch = useMemo(() => {
+    const query = normalizeSearchText(createDoSearchText)
+    if (query === '') {
+      return createDosByCountry
+    }
+
+    return createDosByCountry.filter((item) => {
+      const name = normalizeSearchText(item.name)
+      const region = normalizeSearchText(item.region)
+      return name.includes(query) || region.includes(query)
+    })
+  }, [createDoSearchText, createDosByCountry])
+
   const selectedDoOption = useMemo(
     () => (doFilter === 'all' ? null : doOptions.find((item) => item.id === doFilter) ?? null),
     [doFilter, doOptions],
   )
   const selectedDoCommunityFlagPath = selectedDoOption ? autonomousCommunityFlagPathForRegion(selectedDoOption.region) : null
+  const selectedCreateDoOption = useMemo(
+    () => (createDoId === 'all' ? null : doOptions.find((item) => item.id === createDoId) ?? null),
+    [createDoId, doOptions],
+  )
+  const selectedCreateDoCommunityFlagPath = selectedCreateDoOption ? autonomousCommunityFlagPathForRegion(selectedCreateDoOption.region) : null
+  const primaryEditPurchase = wineEditDetails?.purchases[0] ?? null
 
   const metrics = useMemo(
     () => ({
@@ -1270,7 +1484,8 @@ function App() {
   }
   const galleryLabels = labels.wineProfile.imageLabels
   const isDarkMode = themeMode === 'dark'
-  const brandWordmarkSrc = isDarkMode ? 'images/brand/logo-wordmark-dark.png' : 'images/brand/logo-wordmark-light.png'
+  const brandWordmarkSrc = isDarkMode ? '/images/brand/logo-wordmark-dark.png' : '/images/brand/logo-wordmark-light.png'
+  const brandIconSrc = '/images/brand/icon-square-64.png'
   const themeToggleLabel = isDarkMode ? labels.common.themeSwitchToLight : labels.common.themeSwitchToDark
   const displayedUser = currentUser ?? mockUser
 
@@ -1433,7 +1648,7 @@ function App() {
   }, [searchText])
 
   useEffect(() => {
-    if (menu !== 'wines') {
+    if (!['wines', 'wineCreate', 'wineEdit'].includes(menu)) {
       return
     }
 
@@ -1470,7 +1685,7 @@ function App() {
   }, [menu, grapeOptions.length])
 
   useEffect(() => {
-    if (menu !== 'wines') {
+    if (!['wines', 'wineCreate', 'wineEdit'].includes(menu)) {
       return
     }
 
@@ -1507,6 +1722,110 @@ function App() {
   }, [menu, doOptions.length])
 
   useEffect(() => {
+    if (menu !== 'wineEdit' || !selectedWineForEdit) {
+      return
+    }
+
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+    const controller = new AbortController()
+
+    setWineEditStatus('loading')
+    setWineEditDetails(null)
+
+    fetch(`${apiBaseUrl}/api/wines/${selectedWineForEdit.id}`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+        const payload = await response.json() as WineDetailsApiResponse
+        setWineEditDetails(payload.wine)
+
+        const fallbackCountry = payload.wine.country ?? 'spain'
+        setManufacturingCountry(fallbackCountry)
+        setCreateDoCountryFilter(payload.wine.do?.country ?? fallbackCountry)
+        setCreateDoId(payload.wine.do?.id ?? 'all')
+        setCreateDoSearchText('')
+        setIsCreateDoDropdownOpen(false)
+        setGrapeBlendRows(
+          payload.wine.grapes.length > 0
+            ? payload.wine.grapes.map((grape, index) => ({
+                id: index + 1,
+                grapeId: String(grape.id),
+                percentage: grape.percentage == null ? '' : String(grape.percentage),
+              }))
+            : [{ id: 1, grapeId: firstGrapeOptionId, percentage: '' }],
+        )
+        setAwardRows(
+          payload.wine.awards.map((award, index) => ({
+            id: index + 1,
+            award: award.name,
+            score: award.score == null ? '' : String(award.score),
+            year: award.year == null ? '' : String(award.year),
+          })),
+        )
+        setWineEditStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+        setWineEditStatus('error')
+        setWineFormError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut carregar el vi.' : 'No se pudo cargar el vino.'))
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [menu, selectedWineForEdit, firstGrapeOptionId, locale, wineEditReloadToken])
+
+  useEffect(() => {
+    if (menu !== 'wineProfile' || !selectedWineSheet) {
+      return
+    }
+
+    const controller = new AbortController()
+
+    setSelectedWineSheetStatus('loading')
+    setSelectedWineSheetDetails(null)
+    setSelectedWineSheetError(null)
+
+    fetch(`${resolveApiBaseUrl()}/api/wines/${selectedWineSheet.id}`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+        const payload = await response.json() as WineDetailsApiResponse
+        setSelectedWineSheetDetails(payload.wine)
+        setSelectedWineSheetStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+        setSelectedWineSheetStatus('error')
+        setSelectedWineSheetError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut carregar la fitxa del vi.' : 'No se pudo cargar la ficha del vino.'))
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [menu, selectedWineSheet, locale, wineProfileReloadToken])
+
+  useEffect(() => {
     if (doCountryFilter === 'all') {
       if (doFilter !== 'all') {
         setDoFilter('all')
@@ -1526,6 +1845,27 @@ function App() {
       setDoFilter('all')
     }
   }, [doCountryFilter, doFilter, doOptions, isDoDropdownOpen])
+
+  useEffect(() => {
+    if (createDoCountryFilter === 'all') {
+      if (createDoId !== 'all') {
+        setCreateDoId('all')
+      }
+      if (isCreateDoDropdownOpen) {
+        setIsCreateDoDropdownOpen(false)
+      }
+      return
+    }
+
+    if (createDoId === 'all') {
+      return
+    }
+
+    const existsForCountry = doOptions.some((item) => item.id === createDoId && item.country === createDoCountryFilter)
+    if (!existsForCountry) {
+      setCreateDoId('all')
+    }
+  }, [createDoCountryFilter, createDoId, doOptions, isCreateDoDropdownOpen])
 
   useEffect(() => {
     if (!isDoDropdownOpen) {
@@ -1554,6 +1894,34 @@ function App() {
       document.removeEventListener('keydown', handleEscape)
     }
   }, [isDoDropdownOpen])
+
+  useEffect(() => {
+    if (!isCreateDoDropdownOpen) {
+      return
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!createDoDropdownRef.current) {
+        return
+      }
+      if (event.target instanceof Node && !createDoDropdownRef.current.contains(event.target)) {
+        setIsCreateDoDropdownOpen(false)
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsCreateDoDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isCreateDoDropdownOpen])
 
   useEffect(() => {
     if (menu !== 'wines') {
@@ -1609,6 +1977,7 @@ function App() {
           type: item.wine_type ?? 'red',
           country: countryCodeToLabel(item.country, locale),
           region: item.do?.name ?? '-',
+          doName: item.do?.name ?? null,
           vintageYear: item.vintage_year,
           // List endpoint does not expose price in current API contract.
           pricePaid: 0,
@@ -1636,7 +2005,7 @@ function App() {
     return () => {
       controller.abort()
     }
-  }, [menu, debouncedSearchText, wineCountryFilter, typeFilter, minScoreFilter, grapeFilter, doFilter, winePage, wineLimit, locale])
+  }, [menu, debouncedSearchText, wineCountryFilter, typeFilter, minScoreFilter, grapeFilter, doFilter, winePage, wineLimit, locale, wineListReloadToken])
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -1771,60 +2140,375 @@ function App() {
   }
 
   const closeWineSheet = () => {
-    setMenu('dashboard')
+    setMenu('wines')
   }
 
   const selectedWineProfile = selectedWineSheet
     ? buildMockWineProfile(selectedWineSheet, labels.wineProfile, labels.wineType)
     : null
-  const selectedWineDoLogo = selectedWineSheet ? doLogoPathForRegion(selectedWineSheet.region) : null
+  const selectedWineDoLogo = selectedWineSheetDetails?.do
+    ? (doLogoPathForRegion(selectedWineSheetDetails.do.name) ?? doLogoPathForRegion(selectedWineSheetDetails.do.region))
+    : (selectedWineSheet ? doLogoPathForRegion(selectedWineSheet.region) : null)
   const selectedWineCountryFlagPath = selectedWineSheet ? countryFlagPath(selectedWineSheet.country) : null
-  const selectedWineCommunity = selectedWineSheet ? spanishAutonomousCommunity(selectedWineSheet.region) : null
-  const selectedWineCommunityFlagPath = selectedWineSheet ? autonomousCommunityFlagPathForRegion(selectedWineSheet.region) : null
-  const dbCountryFlags = useMemo(
-    () => Array.from(new Set(mockWines.map((wine) => wine.country))).map((country) => ({
-      country,
-      flagPath: countryFlagPath(country),
-      flag: countryFlagEmoji(country),
-    })),
-    [],
+  const selectedWineCommunity = selectedWineSheetDetails?.do?.country === 'spain' && selectedWineSheetDetails.do != null
+    ? spanishAutonomousCommunity(selectedWineSheetDetails.do.region)
+    : (selectedWineSheet ? spanishAutonomousCommunity(selectedWineSheet.region) : null)
+  const selectedWineCommunityFlagPath = selectedWineCommunity
+    ? autonomousCommunityFlagPathForRegion(selectedWineCommunity.name)
+    : null
+
+  const selectedWineAverageScore = useMemo(() => {
+    if (!selectedWineSheetDetails) {
+      return selectedWineSheet?.averageScore ?? null
+    }
+
+    const scores = selectedWineSheetDetails.reviews
+      .map((review) => review.score)
+      .filter((score): score is number => score != null)
+    if (scores.length === 0) {
+      return selectedWineSheet?.averageScore ?? null
+    }
+    const sum = scores.reduce((acc, score) => acc + score, 0)
+    return Number((sum / scores.length).toFixed(1))
+  }, [selectedWineSheetDetails, selectedWineSheet])
+
+  const selectedWineGrapeDistribution = useMemo(() => {
+    if (!selectedWineSheetDetails) {
+      return []
+    }
+
+    const rows = selectedWineSheetDetails.grapes
+      .filter((grape) => grape.percentage != null && grape.percentage > 0)
+      .map((grape) => ({
+        name: grape.name,
+        value: Number(grape.percentage),
+      }))
+
+    const total = rows.reduce((sum, row) => sum + row.value, 0)
+    if (rows.length < 2 || total <= 0) {
+      return []
+    }
+
+    return rows.map((row) => ({
+      ...row,
+      normalized: (row.value / total) * 100,
+    }))
+  }, [selectedWineSheetDetails])
+
+  const selectedWineGrapePie = useMemo(() => {
+    if (selectedWineGrapeDistribution.length === 0) {
+      return ''
+    }
+
+    const palette = ['#8f3851', '#c16786', '#d68aa3', '#b56a4a', '#9f7a55', '#7f6f66']
+    let start = 0
+    const segments: string[] = []
+    selectedWineGrapeDistribution.forEach((entry, index) => {
+      const end = Math.min(100, start + entry.normalized)
+      segments.push(`${palette[index % palette.length]} ${start.toFixed(2)}% ${end.toFixed(2)}%`)
+      start = end
+    })
+    return `conic-gradient(${segments.join(', ')})`
+  }, [selectedWineGrapeDistribution])
+
+  const selectedWinePhotoSlots = useMemo(() => {
+    const types: WinePhotoSlotType[] = ['bottle', 'front_label', 'back_label']
+    const photos = selectedWineSheetDetails?.photos ?? []
+
+    return types.map((type) => {
+      const uploaded = photos.find((photo) => photo.type === type)
+      const src = uploaded ? resolveApiAssetUrl(uploaded.url) : DEFAULT_WINE_ICON_CANDIDATES[0]
+      return {
+        type,
+        src,
+        uploaded: uploaded != null,
+      }
+    })
+  }, [selectedWineSheetDetails])
+
+  const wineEditPhotoSlots = useMemo(() => {
+    const types: WinePhotoSlotType[] = ['bottle', 'front_label', 'back_label']
+    const photos = wineEditDetails?.photos ?? []
+
+    return types.map((type) => {
+      const uploaded = photos.find((photo) => photo.type === type)
+      const src = uploaded ? resolveApiAssetUrl(uploaded.url) : DEFAULT_WINE_ICON_CANDIDATES[0]
+      return {
+        type,
+        src,
+        uploaded: uploaded != null,
+      }
+    })
+  }, [wineEditDetails])
+
+  const renderWinePhotoManager = (wineId: number, slots: Array<{ type: WinePhotoSlotType; src: string; uploaded: boolean }>) => (
+    <section className="panel wine-profile-photos-panel">
+      <div className="panel-header">
+        <div>
+          <p className="eyebrow">{locale === 'ca' ? 'FOTOS' : 'FOTOS'}</p>
+          <h3>{locale === 'ca' ? 'Galeria del vi' : 'Galería del vino'}</h3>
+        </div>
+        <div className="panel-header-actions">
+          <span className="pill">{slots.filter((slot) => slot.uploaded).length}/3 {locale === 'ca' ? 'pujades' : 'subidas'}</span>
+          <button type="button" className="ghost-button small" onClick={() => startPhotoPick(wineId, 'bottle')}>
+            {locale === 'ca' ? 'Editar' : 'Editar'}
+          </button>
+        </div>
+      </div>
+      <div className="wine-sheet-thumbnail-row">
+        {slots.map((photo) => (
+          <div key={photo.type} className="wine-sheet-mini-photo">
+            <img
+              src={photo.src}
+              alt={`${labelForPhotoType(photo.type)}`}
+              loading="lazy"
+              onError={fallbackToDefaultWineIcon}
+            />
+            <span>{labelForPhotoType(photo.type)}</span>
+            <div className="wine-photo-actions">
+              <button
+                type="button"
+                className="ghost-button tiny"
+                onClick={() => startPhotoPick(wineId, photo.type)}
+              >
+                {locale === 'ca' ? 'Editar' : 'Editar'}
+              </button>
+              <button
+                type="button"
+                className="ghost-button tiny danger"
+                onClick={() => {
+                  void resetWinePhotoToDefault(wineId, photo.type)
+                }}
+                disabled={photoDeleteBusyType === photo.type}
+                title={locale === 'ca' ? 'Eliminar foto' : 'Eliminar foto'}
+                aria-label={locale === 'ca' ? 'Eliminar foto' : 'Eliminar foto'}
+              >
+                🗑
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <input
+        ref={photoPickerInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        onChange={handlePhotoPickerChange}
+      />
+    </section>
   )
-  const spainAutonomousCommunities = useMemo(
-    () => {
-      const map = new Map<string, { name: string; slug: string }>()
-      mockWines
-        .filter((wine) => wine.country === 'Spain')
-        .forEach((wine) => {
-          const community = spanishAutonomousCommunity(wine.region)
-          if (community) {
-            map.set(community.slug, community)
-          }
-        })
-      return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
-    },
-    [],
-  )
 
-  const openDashboardWithWineFilter = (wine: WineItem, target: 'name' | 'type' | 'country' | 'region') => {
-    if (target === 'name') {
-      setSearchText(wine.name)
+  const uploadWinePhoto = async (wineId: number, type: WinePhotoSlotType, file: File): Promise<void> => {
+    const body = new FormData()
+    body.set('type', type)
+    body.set('file', file)
+
+    const response = await fetch(`${resolveApiBaseUrl()}/api/wines/${wineId}/photos`, {
+      method: 'POST',
+      body,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
     }
-
-    if (target === 'region') {
-      setSearchText(wine.region)
-    }
-
-    if (target === 'country') {
-      setWineCountryFilter(countryLabelToFilterValue(wine.country))
-    }
-
-    if (target === 'type') {
-      setTypeFilter(wine.type)
-    }
-
-    setMenu('dashboard')
-    setShowMobileMenu(false)
   }
+
+  const startPhotoPick = (wineId: number, type: WinePhotoSlotType) => {
+    setPhotoEditorWineId(wineId)
+    setPhotoPickerType(type)
+    setPhotoEditorError(null)
+    photoPickerInputRef.current?.click()
+  }
+
+  const handlePhotoPickerChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || photoPickerType == null) {
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+    setPhotoEditorType(photoPickerType)
+    setPhotoEditorSource(objectUrl)
+    setPhotoEditorZoom(1)
+    setPhotoEditorOffsetX(0)
+    setPhotoEditorOffsetY(0)
+    setPhotoEditorError(null)
+    event.currentTarget.value = ''
+  }
+
+  const closePhotoEditor = () => {
+    if (photoEditorSource != null) {
+      URL.revokeObjectURL(photoEditorSource)
+    }
+    setPhotoEditorType(null)
+    setPhotoEditorWineId(null)
+    setPhotoEditorSource(null)
+    setPhotoEditorSaving(false)
+    setPhotoEditorError(null)
+    setPhotoEditorZoom(1)
+    setPhotoEditorOffsetX(0)
+    setPhotoEditorOffsetY(0)
+  }
+
+  const drawPhotoEditorPreview = async (): Promise<{ canvas: HTMLCanvasElement; outputFileName: string } | null> => {
+    if (photoEditorSource == null || photoEditorType == null) {
+      return null
+    }
+    const canvas = photoEditorCanvasRef.current
+    if (canvas == null) {
+      return null
+    }
+
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = () => reject(new Error('image_load_error'))
+      img.src = photoEditorSource
+    })
+
+    const outputWidth = 768
+    const outputHeight = 1024
+    canvas.width = outputWidth
+    canvas.height = outputHeight
+    const ctx = canvas.getContext('2d')
+    if (ctx == null) {
+      return null
+    }
+
+    const baseScale = Math.max(outputWidth / image.naturalWidth, outputHeight / image.naturalHeight)
+    const effectiveScale = baseScale * photoEditorZoom
+    const drawWidth = image.naturalWidth * effectiveScale
+    const drawHeight = image.naturalHeight * effectiveScale
+
+    const panMaxX = Math.max(0, (drawWidth - outputWidth) / 2)
+    const panMaxY = Math.max(0, (drawHeight - outputHeight) / 2)
+    const offsetPxX = (photoEditorOffsetX / 100) * panMaxX
+    const offsetPxY = (photoEditorOffsetY / 100) * panMaxY
+
+    const drawX = (outputWidth - drawWidth) / 2 + offsetPxX
+    const drawY = (outputHeight - drawHeight) / 2 + offsetPxY
+
+    ctx.clearRect(0, 0, outputWidth, outputHeight)
+    ctx.fillStyle = '#0f0b0c'
+    ctx.fillRect(0, 0, outputWidth, outputHeight)
+    ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight)
+
+    return {
+      canvas,
+      outputFileName: `${photoEditorType}.jpg`,
+    }
+  }
+
+  const handlePhotoEditorPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const target = event.currentTarget
+    target.setPointerCapture(event.pointerId)
+    photoEditorDragRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      lastX: event.clientX,
+      lastY: event.clientY,
+    }
+  }
+
+  const handlePhotoEditorPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = photoEditorDragRef.current
+    if (!drag || !drag.active || drag.pointerId !== event.pointerId) {
+      return
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect()
+    const deltaX = event.clientX - drag.lastX
+    const deltaY = event.clientY - drag.lastY
+    drag.lastX = event.clientX
+    drag.lastY = event.clientY
+
+    if (rect.width > 0) {
+      setPhotoEditorOffsetX((current) => clamp(current + ((deltaX / rect.width) * 100), -100, 100))
+    }
+    if (rect.height > 0) {
+      setPhotoEditorOffsetY((current) => clamp(current + ((deltaY / rect.height) * 100), -100, 100))
+    }
+  }
+
+  const handlePhotoEditorPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (photoEditorDragRef.current?.pointerId === event.pointerId) {
+      photoEditorDragRef.current = null
+    }
+  }
+
+  const savePhotoEditor = async () => {
+    if (photoEditorWineId == null || photoEditorType == null) {
+      return
+    }
+    setPhotoEditorSaving(true)
+    setPhotoEditorError(null)
+
+    try {
+      const rendered = await drawPhotoEditorPreview()
+      if (rendered == null) {
+        throw new Error('Unable to render image.')
+      }
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        rendered.canvas.toBlob(
+          (result) => {
+            if (result == null) {
+              reject(new Error('Unable to generate output image.'))
+              return
+            }
+            resolve(result)
+          },
+          'image/jpeg',
+          0.92,
+        )
+      })
+
+      const file = new File([blob], rendered.outputFileName, { type: 'image/jpeg' })
+      await uploadWinePhoto(photoEditorWineId, photoEditorType, file)
+      closePhotoEditor()
+      setWineProfileReloadToken((current) => current + 1)
+      setWineEditReloadToken((current) => current + 1)
+    } catch (error: unknown) {
+      setPhotoEditorError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut pujar la foto.' : 'No se pudo subir la foto.'))
+    } finally {
+      setPhotoEditorSaving(false)
+    }
+  }
+
+  const resetWinePhotoToDefault = async (wineId: number, type: WinePhotoSlotType) => {
+    setPhotoDeleteBusyType(type)
+    try {
+      const defaultResponse = await fetch(DEFAULT_WINE_ICON_CANDIDATES[0], { credentials: 'include' })
+      if (!defaultResponse.ok) {
+        throw new Error(`HTTP ${defaultResponse.status}`)
+      }
+      const blob = await defaultResponse.blob()
+      const file = new File([blob], `${type}-default.png`, { type: blob.type || 'image/png' })
+      await uploadWinePhoto(wineId, type, file)
+      setWineProfileReloadToken((current) => current + 1)
+      setWineEditReloadToken((current) => current + 1)
+    } catch {
+      setPhotoEditorError(locale === 'ca' ? 'No s’ha pogut eliminar la foto.' : 'No se pudo eliminar la foto.')
+    } finally {
+      setPhotoDeleteBusyType(null)
+    }
+  }
+
+  useEffect(() => {
+    if (photoEditorSource == null || photoEditorType == null) {
+      return
+    }
+
+    void drawPhotoEditorPreview().catch(() => {
+      setPhotoEditorError(locale === 'ca' ? 'No s’ha pogut previsualitzar la foto.' : 'No se pudo previsualizar la foto.')
+    })
+  }, [photoEditorSource, photoEditorType, photoEditorZoom, photoEditorOffsetX, photoEditorOffsetY, locale])
 
   const openReviewCreate = () => {
     setSelectedReviewForEdit(null)
@@ -1843,31 +2527,216 @@ function App() {
 
   const openWineCreate = () => {
     setSelectedWineForEdit(null)
-    setGrapeBlendRows([{ id: 1, grape: 'Tempranillo' }])
+    setWineEditDetails(null)
+    setWineEditStatus('idle')
+    setGrapeBlendRows([{ id: 1, grapeId: firstGrapeOptionId, percentage: '' }])
     setAwardRows([])
+    setCreateDoCountryFilter('spain')
+    setCreateDoSearchText('')
+    setIsCreateDoDropdownOpen(false)
+    setCreateDoId('all')
+    setManufacturingCountry('spain')
+    setWineFormError(null)
     setMenu('wineCreate')
     setShowMobileMenu(false)
   }
 
   const openWineEdit = (wine: WineItem) => {
     setSelectedWineForEdit(wine)
-    setGrapeBlendRows(
-      wine.type === 'white'
-        ? [{ id: 1, grape: 'Macabeu' }]
-        : [{ id: 1, grape: 'Tempranillo' }],
-    )
-    setAwardRows(
-      wine.id % 5 === 0
-        ? []
-        : [{
-            id: 1,
-            award: wine.id % 2 === 0 ? 'decanter' : 'penin',
-            score: String(Math.min(99, Math.max(80, Math.round((wine.averageScore ?? 84) + 10)))),
-            year: String((wine.vintageYear ?? 2024) + 2),
-          }],
-    )
+    setWineEditDetails(null)
+    setWineEditStatus('loading')
+    setGrapeBlendRows([{ id: 1, grapeId: firstGrapeOptionId, percentage: '' }])
+    setAwardRows([])
+    const mappedCountry = countryLabelToFilterValue(wine.country)
+    const normalizedCountry = mappedCountry === 'all' ? 'spain' : mappedCountry
+    const matchedDo = doOptions.find((entry) => entry.name === wine.region) ?? null
+    setCreateDoCountryFilter(matchedDo?.country ?? normalizedCountry)
+    setCreateDoSearchText('')
+    setIsCreateDoDropdownOpen(false)
+    setCreateDoId(matchedDo?.id ?? 'all')
+    setManufacturingCountry(normalizedCountry)
+    setWineFormError(null)
     setMenu('wineEdit')
     setShowMobileMenu(false)
+  }
+
+  const openWineDeleteConfirm = (wine: WineItem) => {
+    setWineDeleteTarget(wine)
+    setWineDeleteError(null)
+    setWineDeleteSubmitting(false)
+  }
+
+  const closeWineDeleteConfirm = () => {
+    setWineDeleteTarget(null)
+    setWineDeleteError(null)
+    setWineDeleteSubmitting(false)
+  }
+
+  const confirmDeleteWine = async () => {
+    if (!wineDeleteTarget) {
+      return
+    }
+
+    setWineDeleteSubmitting(true)
+    setWineDeleteError(null)
+    try {
+      const response = await fetch(`${resolveApiBaseUrl()}/api/wines/${wineDeleteTarget.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+
+      if (!response.ok && response.status !== 204) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      closeWineDeleteConfirm()
+      if (wineItems.length === 1 && winePage > 1) {
+        setWinePage((current) => Math.max(1, current - 1))
+      } else {
+        setWineListReloadToken((current) => current + 1)
+      }
+    } catch (error: unknown) {
+      setWineDeleteError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut eliminar el vi.' : 'No se pudo eliminar el vino.'))
+      setWineDeleteSubmitting(false)
+    }
+  }
+
+  const handleWineFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (menu === 'wineEdit') {
+      setWineFormError(locale === 'ca' ? 'L’actualització del vi es connectarà al següent pas.' : 'La actualización del vino se conectará en el siguiente paso.')
+      return
+    }
+
+    const form = new FormData(event.currentTarget)
+    const name = String(form.get('name') ?? '').trim()
+    if (name === '') {
+      setWineFormError(locale === 'ca' ? 'El nom del vi és obligatori.' : 'El nombre del vino es obligatorio.')
+      return
+    }
+
+    const wineryRaw = String(form.get('winery') ?? '').trim()
+    const wineType = String(form.get('wine_type') ?? '').trim()
+    const agingType = String(form.get('aging_type') ?? '').trim()
+    const country = manufacturingCountry
+    const doId = createDoId === 'all' ? null : createDoId
+    const vintageYearRaw = String(form.get('vintage_year') ?? '').trim()
+    const alcoholRaw = String(form.get('alcohol_percentage') ?? '').trim()
+    const placeType = String(form.get('place_type') ?? '').trim()
+    const placeName = String(form.get('place_name') ?? '').trim()
+    const placeAddressRaw = String(form.get('place_address') ?? '').trim()
+    const placeCityRaw = String(form.get('place_city') ?? '').trim()
+    const pricePaidRaw = String(form.get('price_paid') ?? '').trim()
+    const purchasedAtRaw = String(form.get('purchased_at') ?? '').trim()
+
+    if (placeName === '' || pricePaidRaw === '' || purchasedAtRaw === '') {
+      setWineFormError(
+        locale === 'ca'
+          ? 'Compra incompleta: lloc, preu i data són obligatoris.'
+          : 'Compra incompleta: lugar, precio y fecha son obligatorios.',
+      )
+      return
+    }
+
+    const grapes = grapeBlendRows
+      .map((row) => {
+        const grapeId = Number.parseInt(row.grapeId, 10)
+        if (!Number.isInteger(grapeId) || grapeId <= 0) {
+          return null
+        }
+
+        const percentageText = row.percentage.trim()
+        const percentageValue = percentageText === '' ? null : Number(percentageText)
+        const percentage = Number.isFinite(percentageValue) ? percentageValue : null
+
+        return {
+          grape_id: grapeId,
+          percentage,
+        }
+      })
+      .filter((row): row is { grape_id: number; percentage: number | null } => row !== null)
+
+    const awards = awardRows
+      .map((row) => {
+        const score = row.score.trim()
+        const year = row.year.trim()
+        return {
+          name: row.award.trim(),
+          score: score === '' ? null : Number(score),
+          year: year === '' ? null : Number.parseInt(year, 10),
+        }
+      })
+      .filter((row) => row.name !== '' && (row.score === null || Number.isFinite(row.score)) && (row.year === null || Number.isInteger(row.year)))
+
+    const payload = {
+      name,
+      winery: wineryRaw === '' ? null : wineryRaw,
+      wine_type: wineType === '' ? null : wineType,
+      country,
+      aging_type: agingType === '' ? null : agingType,
+      do_id: doId,
+      vintage_year: vintageYearRaw === '' ? null : Number.parseInt(vintageYearRaw, 10),
+      alcohol_percentage: alcoholRaw === '' ? null : Number(alcoholRaw),
+      grapes,
+      purchases: [
+        {
+          place: {
+            place_type: placeType,
+            name: placeName,
+            address: placeAddressRaw === '' ? null : placeAddressRaw,
+            city: placeCityRaw === '' ? null : placeCityRaw,
+            country,
+          },
+          price_paid: pricePaidRaw,
+          purchased_at: purchasedAtRaw,
+        },
+      ],
+      awards,
+    }
+
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+
+    setWineFormSubmitting(true)
+    setWineFormError(null)
+
+    fetch(`${apiBaseUrl}/api/wines`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          let backendMessage = ''
+          try {
+            const data = await response.json() as { error?: string }
+            backendMessage = typeof data.error === 'string' ? data.error : ''
+          } catch {
+            backendMessage = ''
+          }
+          throw new Error(backendMessage || `HTTP ${response.status}`)
+        }
+      })
+      .then(() => {
+        setMenu('wines')
+        setWinePage(1)
+        setShowMobileMenu(false)
+      })
+      .catch((error: unknown) => {
+        setWineFormError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut crear el vi.' : 'No se pudo crear el vino.'))
+      })
+      .finally(() => {
+        setWineFormSubmitting(false)
+      })
   }
 
   const renderReviewEditor = (mode: 'create' | 'edit', preset: ReviewFormPreset) => (
@@ -2084,7 +2953,7 @@ function App() {
         aria-label="Backoffice navigation"
       >
         <div className="sidebar-header">
-          <img src="images/brand/icon-square-64.png" className="brand-mark" alt="Tat & Rosset icon" />
+          <img src={brandIconSrc} className="brand-mark" alt="Tat & Rosset icon" />
           <div className="sidebar-brand-copy">
             <img src={brandWordmarkSrc} className="brand-logo brand-logo-sidebar" alt="Vins Tat & Rosset" />
             <p className="eyebrow">{labels.common.appName}</p>
@@ -2945,6 +3814,8 @@ function App() {
                       <th>{labels.dashboard.table.wine}</th>
                       <th>{labels.dashboard.table.type}</th>
                       <th>{labels.dashboard.table.region}</th>
+                      <th>{locale === 'ca' ? 'Anyada' : 'Añada'}</th>
+                      <th>D.O.</th>
                       <th>{labels.dashboard.table.avg}</th>
                       <th>{locale === 'ca' ? 'Accions' : 'Acciones'}</th>
                     </tr>
@@ -2991,29 +3862,75 @@ function App() {
                         </td>
                         <td className="wine-col-type" data-label={labels.dashboard.table.type}>{wineTypeLabel(wine.type)}</td>
                         <td className="wine-col-region" data-label={labels.dashboard.table.region}>{wine.country} · {wine.region}</td>
+                        <td className="wine-col-vintage" data-label={locale === 'ca' ? 'Anyada' : 'Añada'}>
+                          {wine.vintageYear ?? '-'}
+                        </td>
+                        <td className="wine-col-do" data-label="D.O.">
+                          {wine.doName ? (
+                            <span className="wine-do-chip">
+                              {doLogoPathForRegion(wine.doName) ? (
+                                <img
+                                  src={doLogoPathForRegion(wine.doName) as string}
+                                  alt=""
+                                  className="wine-do-logo"
+                                  loading="lazy"
+                                  aria-hidden="true"
+                                  onError={fallbackToAdminAsset}
+                                />
+                              ) : null}
+                              <span>{wine.doName}</span>
+                            </span>
+                          ) : '-'}
+                        </td>
                         <td className="wine-col-score" data-label={labels.dashboard.table.avg}>{wine.averageScore ?? '-'}</td>
                         <td className="wine-col-actions" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
-                          <button
-                            type="button"
-                            className="secondary-button small"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              openWineEdit(wine)
-                            }}
-                          >
-                            {locale === 'ca' ? 'Editar vi' : 'Editar vino'}
-                          </button>
+                          <div className="wine-actions-wrap">
+                            <button
+                              type="button"
+                              className="table-icon-button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                openWineEdit(wine)
+                              }}
+                              title={locale === 'ca' ? 'Editar vi' : 'Editar vino'}
+                              aria-label={locale === 'ca' ? 'Editar vi' : 'Editar vino'}
+                            >
+                              <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path
+                                  d="M3 17.25V21h3.75L18.37 9.38l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.62-9.62.92.92-9.62 9.62zM20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.3a1 1 0 0 0-1.41 0l-1.5 1.5 3.75 3.75 1.5-1.5z"
+                                  fill="currentColor"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              className="table-icon-button danger"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                openWineDeleteConfirm(wine)
+                              }}
+                              title={locale === 'ca' ? 'Eliminar vi' : 'Eliminar vino'}
+                              aria-label={locale === 'ca' ? 'Eliminar vi' : 'Eliminar vino'}
+                            >
+                              <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path
+                                  d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9zm1 12h8a2 2 0 0 0 2-2V8H6v11a2 2 0 0 0 2 2z"
+                                  fill="currentColor"
+                                />
+                              </svg>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                     {wineListStatus === 'loading' ? (
                       <tr>
-                        <td colSpan={6}>{locale === 'ca' ? 'Carregant vins...' : 'Cargando vinos...'}</td>
+                        <td colSpan={8}>{locale === 'ca' ? 'Carregant vins...' : 'Cargando vinos...'}</td>
                       </tr>
                     ) : null}
                     {wineListStatus === 'ready' && wineItems.length === 0 ? (
                       <tr>
-                        <td colSpan={6}>{locale === 'ca' ? 'Cap vi trobat.' : 'No se encontraron vinos.'}</td>
+                        <td colSpan={8}>{locale === 'ca' ? 'Cap vi trobat.' : 'No se encontraron vinos.'}</td>
                       </tr>
                     ) : null}
                   </tbody>
@@ -3079,69 +3996,223 @@ function App() {
                 </div>
               </div>
 
-              <form className="stack-form wine-create-form" onSubmit={(event) => event.preventDefault()}>
-                <fieldset className="form-block">
-                  <legend>{locale === 'ca' ? 'Dades bàsiques' : 'Datos básicos'}</legend>
-                  <label>
-                    {labels.wines.add.name}
-                    <input type="text" placeholder="Clos de la Serra" defaultValue={selectedWineForEdit?.name ?? ''} />
-                  </label>
-                  <div className="inline-grid triple">
+              <form
+                key={`wine-form-${menu}-${selectedWineForEdit?.id ?? 'new'}-${wineEditDetails?.id ?? 'none'}-${wineEditStatus}`}
+                className="stack-form wine-create-form"
+                onSubmit={handleWineFormSubmit}
+              >
+                <div className={`wine-edit-basic-row${menu === 'wineEdit' && selectedWineForEdit ? ' is-edit' : ''}`}>
+                  <fieldset className="form-block wine-edit-basic-main">
+                    <legend>{locale === 'ca' ? 'Dades bàsiques' : 'Datos básicos'}</legend>
                     <label>
-                      {labels.wines.add.type}
-                      <select defaultValue={selectedWineForEdit?.type ?? 'red'}>
-                        <option value="red">{labels.wineType.red}</option>
-                        <option value="white">{labels.wineType.white}</option>
-                        <option value="rose">{labels.wineType.rose}</option>
-                        <option value="sparkling">{labels.wineType.sparkling}</option>
-                      </select>
+                      {labels.wines.add.name}
+                      <input name="name" type="text" placeholder="Clos de la Serra" defaultValue={wineEditDetails?.name ?? selectedWineForEdit?.name ?? ''} required />
                     </label>
-                    <label>
-                      {locale === 'ca' ? 'Criança' : 'Crianza'}
-                      <select defaultValue="criança">
-                        {AGING_OPTIONS.map((aging) => (
-                          <option key={aging} value={aging}>{aging}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      {labels.wines.add.vintage}
-                      <select defaultValue={String(selectedWineForEdit?.vintageYear ?? 2021)}>
-                        {VINTAGE_YEAR_OPTIONS.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                  <div className="inline-grid triple">
-                    <label>
-                      {locale === 'ca' ? 'Grau alcohòlic (%)' : 'Graduación alcohólica (%)'}
-                      <input type="number" min="0" max="20" step="0.1" placeholder="13.5" defaultValue={selectedWineForEdit ? (selectedWineForEdit.type === 'red' ? 14 : 13) : ''} />
-                    </label>
-                  </div>
-                </fieldset>
+                    <div className="inline-grid triple">
+                      <label>
+                        {labels.wines.add.type}
+                        <select name="wine_type" defaultValue={wineEditDetails?.wine_type ?? selectedWineForEdit?.type ?? 'red'}>
+                          <option value="red">{labels.wineType.red}</option>
+                          <option value="white">{labels.wineType.white}</option>
+                          <option value="rose">{labels.wineType.rose}</option>
+                          <option value="sparkling">{labels.wineType.sparkling}</option>
+                          <option value="sweet">{locale === 'ca' ? 'Dolç' : 'Dulce'}</option>
+                          <option value="fortified">{locale === 'ca' ? 'Fortificat' : 'Fortificado'}</option>
+                        </select>
+                      </label>
+                      <label>
+                        {locale === 'ca' ? 'Criança' : 'Crianza'}
+                        <select name="aging_type" defaultValue={wineEditDetails?.aging_type ?? 'crianza'}>
+                          {AGING_OPTIONS.map((aging) => (
+                            <option key={aging} value={aging}>{aging}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        {labels.wines.add.vintage}
+                        <select name="vintage_year" defaultValue={String(wineEditDetails?.vintage_year ?? selectedWineForEdit?.vintageYear ?? 2021)}>
+                          {VINTAGE_YEAR_OPTIONS.map((year) => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="inline-grid triple">
+                      <label>
+                        {locale === 'ca' ? 'Grau alcohòlic (%)' : 'Graduación alcohólica (%)'}
+                        <input
+                          name="alcohol_percentage"
+                          type="number"
+                          min="0"
+                          max="20"
+                          step="0.1"
+                          placeholder="13.5"
+                          defaultValue={
+                            wineEditDetails?.alcohol_percentage ?? (selectedWineForEdit ? (selectedWineForEdit.type === 'red' ? 14 : 13) : '')
+                          }
+                        />
+                      </label>
+                      <label>
+                        {labels.wines.add.winery}
+                        <input name="winery" type="text" placeholder="Bodega Nova" defaultValue={wineEditDetails?.winery ?? selectedWineForEdit?.winery ?? ''} />
+                      </label>
+                      <label>
+                        {locale === 'ca' ? 'País de fabricació' : 'País de fabricación'}
+                        <select
+                          value={manufacturingCountry}
+                          onChange={(event) => {
+                            const value = event.target.value as Exclude<CountryFilterValue, 'all'>
+                            setManufacturingCountry(value)
+                          }}
+                        >
+                          {WINE_COUNTRY_FILTER_VALUES.map((countryCode) => (
+                            <option key={countryCode} value={countryCode}>{countryCodeToLabel(countryCode, locale)}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  </fieldset>
+
+                  {menu === 'wineEdit' && selectedWineForEdit ? (
+                    <div className="wine-edit-photo-manager">
+                      {renderWinePhotoManager(selectedWineForEdit.id, wineEditPhotoSlots)}
+                    </div>
+                  ) : null}
+                </div>
 
                 <fieldset className="form-block form-block-half">
                   <legend>{locale === 'ca' ? 'Origen i DO' : 'Origen y DO'}</legend>
                   <div className="inline-grid">
                     <label>
-                      {labels.wines.add.country}
-                      <select defaultValue={selectedWineForEdit?.country ?? 'Spain'}>
-                        <option value="Spain">Spain</option>
-                        <option value="France">France</option>
-                        <option value="Portugal">Portugal</option>
-                        <option value="Italy">Italy</option>
-                        <option value="Argentina">Argentina</option>
-                        <option value="Chile">Chile</option>
+                      {locale === 'ca' ? 'País D.O.' : 'País D.O.'}
+                      <select
+                        value={createDoCountryFilter}
+                        onChange={(event) => {
+                          setCreateDoCountryFilter(event.target.value as CountryFilterValue)
+                          setCreateDoId('all')
+                          setCreateDoSearchText('')
+                          setIsCreateDoDropdownOpen(false)
+                        }}
+                      >
+                        <option value="all">{labels.common.allCountries}</option>
+                        {WINE_COUNTRY_FILTER_VALUES.map((countryCode) => (
+                          <option key={countryCode} value={countryCode}>{countryCodeToLabel(countryCode, locale)}</option>
+                        ))}
                       </select>
                     </label>
                     <label>
-                      {labels.wines.add.region}
-                      <select defaultValue={selectedWineForEdit?.region ?? 'Priorat'}>
-                        {Array.from(new Set(mockWines.map((wine) => wine.region))).sort((a, b) => a.localeCompare(b)).map((region) => (
-                          <option key={region} value={region}>{region}</option>
-                        ))}
-                      </select>
+                      {locale === 'ca' ? 'Cerca D.O.' : 'Buscar D.O.'}
+                      <input
+                        type="search"
+                        value={createDoSearchText}
+                        onChange={(event) => setCreateDoSearchText(event.target.value)}
+                        placeholder={
+                          createDoCountryFilter === 'all'
+                            ? (locale === 'ca' ? 'Primer selecciona país' : 'Primero selecciona país')
+                            : (locale === 'ca' ? 'Nom o regió de la D.O.' : 'Nombre o región de la D.O.')
+                        }
+                        disabled={createDoCountryFilter === 'all'}
+                      />
+                    </label>
+                  </div>
+                  <div className="inline-grid">
+                    <label>
+                      D.O.
+                      <div className={`do-combobox${createDoCountryFilter === 'all' ? ' is-disabled' : ''}`} ref={createDoDropdownRef}>
+                        <button
+                          type="button"
+                          className="do-combobox-trigger"
+                          aria-expanded={isCreateDoDropdownOpen}
+                          aria-haspopup="listbox"
+                          onClick={() => {
+                            if (createDoCountryFilter === 'all') {
+                              return
+                            }
+                            setIsCreateDoDropdownOpen((current) => !current)
+                          }}
+                          disabled={createDoCountryFilter === 'all'}
+                        >
+                          <span className="do-combobox-trigger-main">
+                            {selectedCreateDoOption?.country === 'spain' ? (
+                              <>
+                                {selectedCreateDoCommunityFlagPath ? (
+                                  <img
+                                    src={selectedCreateDoCommunityFlagPath}
+                                    alt=""
+                                    className="do-combobox-flag"
+                                    loading="lazy"
+                                    aria-hidden="true"
+                                    onError={fallbackToAdminAsset}
+                                  />
+                                ) : (
+                                  <span className="do-combobox-flag-fallback" aria-hidden="true">🏳️</span>
+                                )}
+                                <span>{selectedCreateDoOption.name}</span>
+                              </>
+                            ) : (
+                              <span>
+                                {selectedCreateDoOption
+                                  ? `${selectedCreateDoOption.region} · ${selectedCreateDoOption.name}`
+                                  : (createDoCountryFilter === 'all'
+                                    ? (locale === 'ca' ? 'Selecciona país abans' : 'Selecciona país antes')
+                                    : (locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.'))}
+                              </span>
+                            )}
+                          </span>
+                          <span className="do-combobox-caret" aria-hidden="true">▾</span>
+                        </button>
+
+                        {isCreateDoDropdownOpen && createDoCountryFilter !== 'all' ? (
+                          <div className="do-combobox-menu" role="listbox" aria-label="D.O.">
+                            <button
+                              type="button"
+                              role="option"
+                              aria-selected={createDoId === 'all'}
+                              className={`do-combobox-option${createDoId === 'all' ? ' is-selected' : ''}`}
+                              onClick={() => {
+                                setCreateDoId('all')
+                                setIsCreateDoDropdownOpen(false)
+                              }}
+                            >
+                              <span>{locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.'}</span>
+                            </button>
+                            {createFilteredDosBySearch.map((item) => {
+                              const isSpanishDo = item.country === 'spain'
+                              const communityFlagPath = isSpanishDo ? autonomousCommunityFlagPathForRegion(item.region) : null
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={createDoId === item.id}
+                                  className={`do-combobox-option${createDoId === item.id ? ' is-selected' : ''}`}
+                                  onClick={() => {
+                                    setCreateDoId(item.id)
+                                    setIsCreateDoDropdownOpen(false)
+                                    setManufacturingCountry(item.country)
+                                  }}
+                                >
+                                  {isSpanishDo ? (
+                                    communityFlagPath ? (
+                                      <img
+                                        src={communityFlagPath}
+                                        alt=""
+                                        className="do-combobox-flag"
+                                        loading="lazy"
+                                        aria-hidden="true"
+                                        onError={fallbackToAdminAsset}
+                                      />
+                                    ) : (
+                                      <span className="do-combobox-flag-fallback" aria-hidden="true">🏳️</span>
+                                    )
+                                  ) : null}
+                                  <span>{item.country === 'spain' ? item.name : `${item.region} · ${item.name}`}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        ) : null}
+                      </div>
                     </label>
                   </div>
                 </fieldset>
@@ -3150,10 +4221,37 @@ function App() {
                   <legend>{locale === 'ca' ? 'Composició i raïm' : 'Composición y uva'}</legend>
                   <div className="grape-blend-head">
                     <span>{locale === 'ca' ? 'Varietat' : 'Variedad'}</span>
+                    <span>{locale === 'ca' ? 'Percentatge (%)' : 'Porcentaje (%)'}</span>
+                    <span aria-hidden="true" />
                   </div>
                   <div className="grape-blend-list">
                     {grapeBlendRows.map((row) => (
                       <div key={row.id} className="grape-blend-row">
+                        <label className="sr-only" htmlFor={`grape-row-${row.id}`}>{locale === 'ca' ? 'Varietat' : 'Variedad'}</label>
+                        <select
+                          id={`grape-row-${row.id}`}
+                          value={row.grapeId}
+                          onChange={(event) => updateGrapeBlendRow(row.id, { grapeId: event.target.value })}
+                        >
+                          {grapesByColor.map((group) => (
+                            <optgroup key={group.key} label={group.label}>
+                              {group.grapes.map((grape) => (
+                                <option key={grape.id} value={String(grape.id)}>{grape.name}</option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                        <label className="sr-only" htmlFor={`grape-row-pct-${row.id}`}>{locale === 'ca' ? 'Percentatge' : 'Porcentaje'}</label>
+                        <input
+                          id={`grape-row-pct-${row.id}`}
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          placeholder="%"
+                          value={row.percentage}
+                          onChange={(event) => updateGrapeBlendRow(row.id, { percentage: event.target.value })}
+                        />
                         <button
                           type="button"
                           className="icon-square-button"
@@ -3166,16 +4264,6 @@ function App() {
                             <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2v8H7v-8Z" fill="currentColor" />
                           </svg>
                         </button>
-                        <label className="sr-only" htmlFor={`grape-row-${row.id}`}>{locale === 'ca' ? 'Varietat' : 'Variedad'}</label>
-                        <select
-                          id={`grape-row-${row.id}`}
-                          value={row.grape}
-                          onChange={(event) => updateGrapeBlendRow(row.id, { grape: event.target.value })}
-                        >
-                          {GRAPE_OPTIONS.map((grape) => (
-                            <option key={grape} value={grape}>{grape}</option>
-                          ))}
-                        </select>
                       </div>
                     ))}
                   </div>
@@ -3191,7 +4279,7 @@ function App() {
                   <div className="inline-grid triple">
                     <label>
                       {locale === 'ca' ? 'Tipus de lloc' : 'Tipo de lugar'}
-                      <select defaultValue="restaurant">
+                      <select name="place_type" defaultValue={primaryEditPurchase?.place.place_type ?? 'restaurant'}>
                         {PLACE_TYPE_OPTIONS.map((placeType) => (
                           <option key={placeType} value={placeType}>{placeType}</option>
                         ))}
@@ -3199,47 +4287,52 @@ function App() {
                     </label>
                     <label>
                       {labels.wines.add.place}
-                      <input type="text" placeholder="Celler del Centre" defaultValue={selectedWineForEdit?.winery ?? ''} />
+                      <input
+                        name="place_name"
+                        type="text"
+                        placeholder="Celler del Centre"
+                        defaultValue={primaryEditPurchase?.place.name ?? ''}
+                        required
+                      />
                     </label>
                     <label>
                       {labels.wines.add.price}
-                      <input type="number" min="0" step="0.01" placeholder="18.50" defaultValue={selectedWineForEdit?.pricePaid ?? ''} />
+                      <input
+                        name="price_paid"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="18.50"
+                        defaultValue={primaryEditPurchase?.price_paid ?? selectedWineForEdit?.pricePaid ?? ''}
+                        required
+                      />
                     </label>
                   </div>
                   <div className="inline-grid">
                     <label>
-                      {locale === 'ca' ? 'Data de la cata' : 'Fecha de la cata'}
-                      <input type="date" defaultValue="2026-02-27" />
+                      {locale === 'ca' ? 'Data de la compra' : 'Fecha de la compra'}
+                      <input
+                        name="purchased_at"
+                        type="date"
+                        defaultValue={primaryEditPurchase?.purchased_at?.slice(0, 10) ?? '2026-02-27'}
+                        required
+                      />
                     </label>
                   </div>
                   <div className="inline-grid">
                     <label>
                       {locale === 'ca' ? 'Adreça del lloc' : 'Dirección del lugar'}
-                      <input type="text" placeholder="Carrer Major 12" />
+                      <input name="place_address" type="text" placeholder="Carrer Major 12" defaultValue={primaryEditPurchase?.place.address ?? ''} />
                     </label>
                     <label>
                       {locale === 'ca' ? 'Ciutat' : 'Ciudad'}
-                      <input type="text" placeholder="Barcelona" />
+                      <input name="place_city" type="text" placeholder="Barcelona" defaultValue={primaryEditPurchase?.place.city ?? ''} />
                     </label>
                   </div>
                 </fieldset>
 
                 <fieldset className="form-block">
-                  <legend>{locale === 'ca' ? 'Media i premis' : 'Media y premios'}</legend>
-                  <div className="inline-grid triple">
-                    <label>
-                      {locale === 'ca' ? 'Foto ampolla' : 'Foto botella'}
-                      <input type="file" accept="image/*" />
-                    </label>
-                    <label>
-                      {locale === 'ca' ? 'Foto etiqueta davant' : 'Foto etiqueta frontal'}
-                      <input type="file" accept="image/*" />
-                    </label>
-                    <label>
-                      {locale === 'ca' ? 'Foto etiqueta darrere' : 'Foto etiqueta trasera'}
-                      <input type="file" accept="image/*" />
-                    </label>
-                  </div>
+                  <legend>{locale === 'ca' ? 'Premis' : 'Premios'}</legend>
                   <div className="award-rows-scroll">
                     <div className="award-rows-head">
                       <span>{locale === 'ca' ? 'Premi' : 'Premio'}</span>
@@ -3303,7 +4396,12 @@ function App() {
                   </div>
                 </fieldset>
 
-                <button type="submit" className="primary-button">
+                {menu === 'wineEdit' && wineEditStatus === 'loading' ? (
+                  <p className="muted">{locale === 'ca' ? 'Carregant dades del vi...' : 'Cargando datos del vino...'}</p>
+                ) : null}
+                {wineFormError ? <p className="error-message">{wineFormError}</p> : null}
+
+                <button type="submit" className="primary-button" disabled={wineFormSubmitting}>
                   {menu === 'wineEdit' ? (locale === 'ca' ? 'Desar canvis del vi' : 'Guardar cambios del vino') : labels.wines.add.submit}
                 </button>
               </form>
@@ -3530,9 +4628,9 @@ function App() {
               <div className="panel-header">
                 <div>
                   <p className="eyebrow">{locale === 'ca' ? 'PREFERÈNCIES' : 'PREFERENCIAS'}</p>
-                  <h3>{locale === 'ca' ? 'Configuració del backoffice (mock)' : 'Configuración del backoffice (mock)'}</h3>
+                  <h3>{locale === 'ca' ? 'Configuració del backoffice' : 'Configuración del backoffice'}</h3>
                 </div>
-                <span className="pill muted">{locale === 'ca' ? 'Mock' : 'Mock'}</span>
+                <span className="pill muted">{locale === 'ca' ? 'Demo' : 'Demo'}</span>
               </div>
 
               <form className="stack-form settings-form" onSubmit={(event) => event.preventDefault()}>
@@ -3606,7 +4704,7 @@ function App() {
               <div className="panel-header">
                 <div>
                   <p className="eyebrow">{locale === 'ca' ? 'EXPERIÈNCIA' : 'EXPERIENCIA'}</p>
-                  <h3>{locale === 'ca' ? 'Preferències extra (mock)' : 'Preferencias extra (mock)'}</h3>
+                  <h3>{locale === 'ca' ? 'Preferències extra' : 'Preferencias extra'}</h3>
                 </div>
               </div>
 
@@ -3629,7 +4727,7 @@ function App() {
                 <article className="list-card settings-toggle-row">
                   <div>
                     <h4>{locale === 'ca' ? 'Targetes compactes' : 'Tarjetas compactas'}</h4>
-                    <p>{locale === 'ca' ? 'Mock d’un mode amb menys espai vertical per les llistes.' : 'Mock de un modo con menos espacio vertical para listas.'}</p>
+                    <p>{locale === 'ca' ? 'Mode amb menys espai vertical per les llistes.' : 'Modo con menos espacio vertical para listas.'}</p>
                   </div>
                   <button
                     type="button"
@@ -3643,7 +4741,7 @@ function App() {
 
                 <article className="list-card">
                   <div>
-                    <h4>{locale === 'ca' ? 'Properes idees (mock)' : 'Próximas ideas (mock)'}</h4>
+                    <h4>{locale === 'ca' ? 'Properes idees' : 'Próximas ideas'}</h4>
                     <p>
                       {locale === 'ca'
                         ? 'Notificacions de noves ressenyes, exportació CSV i preferència de decimals a la puntuació.'
@@ -3660,219 +4758,211 @@ function App() {
           </section>
         ) : null}
 
-        {menu === 'wineProfile' && selectedWineSheet && selectedWineProfile ? (
+        {menu === 'wineProfile' && selectedWineSheet ? (
           <section className="wine-profile-screen">
-            <header className="panel wine-profile-header-panel">
-              <div className="wine-profile-header-main">
-                <div className="wine-profile-title-wrap">
-                  <p className="eyebrow">{selectedWineProfile.headline}</p>
-                  <h3>{selectedWineSheet.name}</h3>
-                  <p className="muted wine-profile-origin-line">
-                    <span className="wine-profile-flag-badge" aria-label={selectedWineSheet.country} title={selectedWineSheet.country}>
-                      {selectedWineCountryFlagPath ? <img className="wine-profile-flag-image" src={selectedWineCountryFlagPath} alt={localizedCountryName(selectedWineSheet.country, locale)} loading="lazy" /> : countryFlagEmoji(selectedWineSheet.country)}
-                    </span>
-                    {selectedWineCommunityFlagPath && selectedWineCommunity ? (
-                      <span className="wine-profile-flag-badge" aria-label={`Comunidad autonoma ${selectedWineCommunity.name}`} title={selectedWineCommunity.name}>
-                        <img className="wine-profile-flag-image" src={selectedWineCommunityFlagPath} alt={selectedWineCommunity.name} loading="lazy" />
-                      </span>
-                    ) : null}
-                    {selectedWineDoLogo ? (
-                      <span className="wine-profile-do-tooltip">
-                        <img className="wine-profile-do-logo" src={selectedWineDoLogo} alt={`${selectedWineSheet.region} DO`} loading="lazy" />
-                        <span className="wine-profile-do-tooltip-panel" role="tooltip" aria-hidden="true">
-                          <img src={selectedWineDoLogo} alt="" loading="lazy" />
-                          <span>{selectedWineSheet.region}</span>
-                        </span>
-                      </span>
-                    ) : null}
-                    <span>{selectedWineSheet.winery} · {selectedWineSheet.region}</span>
-                  </p>
-                </div>
-                <div className="wine-profile-award-box" aria-label="Award">
-                  <span className="wine-profile-award-icon" aria-hidden="true">🏆</span>
-                  {selectedWineProfile.heroAward ? (
-                    <div className="wine-profile-award-content">
-                      <strong>{selectedWineProfile.heroAward.label}</strong>
-                      <span>{selectedWineProfile.heroAward.year}</span>
-                    </div>
-                  ) : (
-                    <div className="wine-profile-award-content">
-                      <strong>-</strong>
-                    </div>
-                  )}
-                </div>
-                <div className={`wine-profile-medal-score${medalToneFromScore(selectedWineProfile.heroAwardScore) ? ` ${medalToneFromScore(selectedWineProfile.heroAwardScore)}` : ''}`}>
-                  <span className="wine-profile-medal-score-label">{t('wineProfile.statAvgScore')}</span>
-                  <strong>{selectedWineProfile.heroAwardScore?.toFixed(1) ?? '-'}</strong>
-                </div>
-              </div>
+            <header className="wine-profile-toolbar">
+              <h3>{selectedWineSheetDetails?.name ?? selectedWineSheet.name}</h3>
               <div className="wine-profile-header-actions">
                 <button type="button" className="ghost-button" onClick={closeWineSheet}>
-                  {t('wineProfile.backToDashboard')}
+                  {locale === 'ca' ? 'Tornar al llistat de vins' : 'Volver al listado de vinos'}
                 </button>
-                <button type="button" className="secondary-button">
-                  {t('wineProfile.editWineMock')}
+                <button type="button" className="secondary-button" onClick={() => openWineEdit(selectedWineSheet)}>
+                  {locale === 'ca' ? 'Editar vi' : 'Editar vino'}
                 </button>
               </div>
             </header>
 
-            <section className="wine-profile-main-grid">
-              <section className="panel wine-profile-photos-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">{t('wineProfile.photosEyebrow')}</p>
-                    <h3>{t('wineProfile.photoRecordPreview')}</h3>
-                  </div>
-                  <span className="pill">{SAMPLE_WINE_GALLERY.length} {t('wineProfile.filesSuffix')}</span>
-                </div>
-                <div className="wine-sheet-thumbnail-row">
-                  {SAMPLE_WINE_GALLERY.map((image) => (
-                    <button
-                      key={image.key}
-                      type="button"
-                      className="wine-sheet-mini-photo"
-                      onClick={() => openWineGallery(selectedWineSheet, 'compact', image.key)}
-                      title={`${galleryLabels[image.key]} · ${t('wineProfile.closeGalleryAria')}`}
-                    >
-                      <img src={image.src} alt={`${selectedWineSheet.name} ${galleryLabels[image.key]}`} onError={fallbackToDefaultWineIcon} />
-                      <span>{galleryLabels[image.key]}</span>
-                    </button>
-                  ))}
-                </div>
+            {selectedWineSheetStatus === 'loading' ? (
+              <section className="panel">
+                <p className="eyebrow">{locale === 'ca' ? 'Carregant' : 'Cargando'}</p>
+                <h3>{locale === 'ca' ? 'Preparant fitxa del vi…' : 'Preparando ficha del vino…'}</h3>
               </section>
+            ) : null}
 
-              <section className="panel wine-profile-summary-panel">
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow">{t('wineProfile.summaryEyebrow')}</p>
-                    <h3>{t('wineProfile.operationalProfile')}</h3>
-                  </div>
-                </div>
-
-                <p className="wine-sheet-description">{selectedWineProfile.summary}</p>
-
-                <div className="wine-sheet-chip-row">
-                  {selectedWineProfile.tags.map((tag: string) => (
-                    <span key={tag} className="pill">{tag}</span>
-                  ))}
-                </div>
-
-                <div className="wine-profile-filter-links" aria-label={t('wineProfile.filtersAria')}>
-                  <button
-                    type="button"
-                    className="filter-link-button"
-                    onClick={() => openDashboardWithWineFilter(selectedWineSheet, 'name')}
-                  >
-                    {t('wineProfile.filterWine')}: {selectedWineSheet.name}
-                  </button>
-                  <button
-                    type="button"
-                    className="filter-link-button"
-                    onClick={() => openDashboardWithWineFilter(selectedWineSheet, 'type')}
-                  >
-                    {t('wineProfile.filterType')}: {wineTypeLabel(selectedWineSheet.type)}
-                  </button>
-                  <button
-                    type="button"
-                    className="filter-link-button"
-                    onClick={() => openDashboardWithWineFilter(selectedWineSheet, 'country')}
-                  >
-                    {t('wineProfile.filterCountry')}: {selectedWineSheet.country}
-                  </button>
-                  <button
-                    type="button"
-                    className="filter-link-button"
-                    onClick={() => openDashboardWithWineFilter(selectedWineSheet, 'region')}
-                  >
-                    {t('wineProfile.filterRegion')}: {selectedWineSheet.region}
-                  </button>
-                </div>
-
-                <div className="wine-profile-origin-strip" aria-label="Countries and Spain autonomous communities">
-                  {selectedWineDoLogo ? (
-                    <div className="wine-profile-origin-row">
-                      <span className="wine-profile-do-chip">
-                        <span className="wine-profile-flag-badge" aria-label={selectedWineSheet.country} title={selectedWineSheet.country}>
-                          {selectedWineCountryFlagPath ? <img className="wine-profile-flag-image" src={selectedWineCountryFlagPath} alt={localizedCountryName(selectedWineSheet.country, locale)} loading="lazy" /> : countryFlagEmoji(selectedWineSheet.country)}
-                        </span>
-                        {selectedWineCommunityFlagPath && selectedWineCommunity ? (
-                          <span className="wine-profile-flag-badge" aria-label={`Comunidad autonoma ${selectedWineCommunity.name}`} title={selectedWineCommunity.name}>
-                            <img className="wine-profile-flag-image" src={selectedWineCommunityFlagPath} alt={selectedWineCommunity.name} loading="lazy" />
-                          </span>
-                        ) : null}
-                        <span className="wine-profile-do-tooltip">
-                          <img className="wine-profile-do-logo" src={selectedWineDoLogo} alt={`${selectedWineSheet.region} DO`} loading="lazy" />
-                          <span className="wine-profile-do-tooltip-panel" role="tooltip" aria-hidden="true">
-                            <img src={selectedWineDoLogo} alt="" loading="lazy" />
-                            <span>{selectedWineSheet.region}</span>
-                          </span>
-                        </span>
-                        <span>{selectedWineSheet.region}</span>
-                      </span>
-                    </div>
-                  ) : null}
-                  <div className="wine-profile-origin-row">
-                    {dbCountryFlags.map(({ country, flag, flagPath }) => (
-                      <span key={country} className="wine-profile-country-flag" title={country} aria-label={country}>
-                        {flagPath ? <img className="wine-profile-flag-image" src={flagPath} alt={localizedCountryName(country, locale)} loading="lazy" /> : flag}
-                      </span>
-                    ))}
-                  </div>
-                  {dbCountryFlags.some((entry) => entry.country === 'Spain') ? (
-                    <div className="wine-profile-origin-row wine-profile-spain-communities">
-                      {spainAutonomousCommunities.map((community) => (
-                        <span key={community.slug} className="wine-profile-community-pill">
-                          <span className="wine-profile-flag-badge" aria-hidden="true">
-                            <img className="wine-profile-flag-image" src={`/images/flags/ccaa/${community.slug}.png`} alt={community.name} loading="lazy" />
-                          </span>
-                          <span>{community.name}</span>
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="wine-profile-stat-strip">
-                  <article>
-                    <span>{t('wineProfile.statAvgScore')}</span>
-                    <strong>{selectedWineSheet.averageScore ?? '-'}</strong>
-                  </article>
-                  <article>
-                    <span>{t('wineProfile.statPricePaid')}</span>
-                    <strong>{priceFormatter.format(selectedWineSheet.pricePaid)}</strong>
-                  </article>
-                  <article>
-                    <span>{t('wineProfile.statVintage')}</span>
-                    <strong>{selectedWineSheet.vintageYear ?? '-'}</strong>
-                  </article>
-                </div>
-
-                <div className="wine-sheet-note-card">
-                  <p className="eyebrow">{t('wineProfile.pairingEyebrow')}</p>
-                  <p>{selectedWineProfile.pairing.join(' · ')}</p>
-                  <p className="muted">{selectedWineProfile.servingNotes}</p>
-                </div>
+            {selectedWineSheetStatus === 'error' ? (
+              <section className="panel">
+                <p className="eyebrow">{locale === 'ca' ? 'Error' : 'Error'}</p>
+                <h3>{locale === 'ca' ? 'No s’ha pogut carregar la fitxa' : 'No se pudo cargar la ficha'}</h3>
+                <p className="muted">{selectedWineSheetError ?? (locale === 'ca' ? 'Torna-ho a provar en uns segons.' : 'Vuelve a intentarlo en unos segundos.')}</p>
               </section>
-            </section>
+            ) : null}
 
-            <section className="wine-sheet-sections wine-profile-sections">
-              {selectedWineProfile.sections.map((section) => (
-                <section key={section.title} className="wine-sheet-card">
-                  <h4>
-                    <span className="wine-sheet-section-icon" aria-hidden="true">{section.icon}</span>
-                    <span>{section.title}</span>
-                  </h4>
-                  <dl className="wine-sheet-kv">
-                    {section.fields.map((field) => (
-                      <div key={`${section.title}-${field.label}`}>
-                        <dt>{field.label}</dt>
-                        <dd>{field.value}</dd>
+            {selectedWineSheetStatus === 'ready' && selectedWineSheetDetails ? (
+              <>
+                <section className="wine-profile-row-one">
+                  <section className="panel wine-profile-card-summary">
+                    <div className="panel-header">
+                      <div>
+                        <p className="eyebrow">{locale === 'ca' ? 'FITXA TÈCNICA' : 'FICHA TÉCNICA'}</p>
+                        <h3>{selectedWineSheetDetails.name}</h3>
                       </div>
-                    ))}
-                  </dl>
+                    </div>
+                    <p className="muted wine-profile-origin-line">
+                      <span className="wine-profile-flag-badge" aria-label={selectedWineSheet.country} title={selectedWineSheet.country}>
+                        {selectedWineCountryFlagPath ? <img className="wine-profile-flag-image" src={selectedWineCountryFlagPath} alt={localizedCountryName(selectedWineSheet.country, locale)} loading="lazy" /> : countryFlagEmoji(selectedWineSheet.country)}
+                      </span>
+                      {selectedWineCommunityFlagPath && selectedWineCommunity ? (
+                        <span className="wine-profile-flag-badge" aria-label={`Comunidad autonoma ${selectedWineCommunity.name}`} title={selectedWineCommunity.name}>
+                          <img className="wine-profile-flag-image" src={selectedWineCommunityFlagPath} alt={selectedWineCommunity.name} loading="lazy" />
+                        </span>
+                      ) : null}
+                      <span>{selectedWineSheetDetails.winery ?? '-'} · {selectedWineSheetDetails.do?.name ?? '-'}</span>
+                    </p>
+                    <div className="wine-profile-kpi-strip">
+                      <article>
+                        <span>{t('wineProfile.statAvgScore')}</span>
+                        <strong>{selectedWineAverageScore ?? '-'}</strong>
+                      </article>
+                      <article>
+                        <span>{locale === 'ca' ? 'Anyada' : 'Añada'}</span>
+                        <strong>{selectedWineSheetDetails.vintage_year ?? '-'}</strong>
+                      </article>
+                    </div>
+                  </section>
+
+                  {renderWinePhotoManager(selectedWineSheet.id, selectedWinePhotoSlots)}
+
+                  <section className="wine-sheet-card wine-profile-card-composition">
+                    <h4>
+                      <span className="wine-sheet-section-icon" aria-hidden="true">🍇</span>
+                      <span>{locale === 'ca' ? 'Composició' : 'Composición'}</span>
+                    </h4>
+                    <div className="wine-profile-grape-layout">
+                      {selectedWineGrapePie !== '' ? (
+                        <div className="wine-profile-grape-pie" style={{ background: selectedWineGrapePie }}>
+                          <span>{locale === 'ca' ? 'Blend' : 'Blend'}</span>
+                        </div>
+                      ) : null}
+                      <div className="wine-profile-grape-list">
+                        {selectedWineSheetDetails.grapes.length > 0 ? selectedWineSheetDetails.grapes.map((grape) => (
+                          <div key={grape.id} className="wine-profile-grape-row">
+                            <span>{grape.name}</span>
+                            <strong>{grape.percentage == null ? '-' : `${grape.percentage}%`}</strong>
+                          </div>
+                        )) : <p className="muted">{locale === 'ca' ? 'Sense varietats informades.' : 'Sin variedades informadas.'}</p>}
+                      </div>
+                    </div>
+                  </section>
                 </section>
-              ))}
-            </section>
+
+                <section className="wine-profile-row-two">
+                  <section className="panel wine-profile-summary-panel wine-profile-card-maininfo">
+                    <div className="panel-header">
+                      <div>
+                        <p className="eyebrow">{locale === 'ca' ? 'FITXA TÈCNICA' : 'FICHA TÉCNICA'}</p>
+                        <h3>{locale === 'ca' ? 'Identitat del vi + Informació' : 'Identidad del vino + Información'}</h3>
+                      </div>
+                    </div>
+
+                    <div className="wine-profile-top-strip">
+                      {selectedWineSheetDetails.do ? (
+                        <section className="wine-profile-do-showcase">
+                          <div className="wine-profile-do-showcase-main">
+                            {selectedWineDoLogo ? (
+                              <img
+                                src={selectedWineDoLogo}
+                                alt={`${selectedWineSheetDetails.do.name} logo`}
+                                className="wine-profile-do-showcase-logo"
+                                loading="lazy"
+                                onError={fallbackToAdminAsset}
+                              />
+                            ) : null}
+                            <div className="wine-profile-do-showcase-text">
+                              <strong>{selectedWineSheetDetails.do.name}</strong>
+                              <span>{selectedWineSheetDetails.do.region}</span>
+                            </div>
+                          </div>
+                          <div className="wine-profile-do-badges">
+                            <span className="wine-profile-do-badge">
+                              {countryCodeToLabel(selectedWineSheetDetails.do.country, locale)}
+                            </span>
+                            {selectedWineSheetDetails.do.country === 'spain' && selectedWineCommunity && selectedWineCommunityFlagPath ? (
+                              <span className="wine-profile-community-showcase">
+                                <img
+                                  src={selectedWineCommunityFlagPath}
+                                  alt={selectedWineCommunity.name}
+                                  loading="lazy"
+                                  onError={fallbackToAdminAsset}
+                                />
+                                <span>{selectedWineCommunity.name}</span>
+                              </span>
+                            ) : null}
+                          </div>
+                        </section>
+                      ) : null}
+
+                    </div>
+
+                    <dl className="wine-profile-facts-grid">
+                      <div>
+                        <dt>{locale === 'ca' ? 'Bodega' : 'Bodega'}</dt>
+                        <dd>{selectedWineSheetDetails.winery ?? '-'}</dd>
+                      </div>
+                      <div>
+                        <dt>{locale === 'ca' ? 'D.O.' : 'D.O.'}</dt>
+                        <dd>{selectedWineSheetDetails.do?.name ?? (locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.')}</dd>
+                      </div>
+                      <div>
+                        <dt>{locale === 'ca' ? 'Regió' : 'Región'}</dt>
+                        <dd>{selectedWineSheetDetails.do?.region ?? '-'}</dd>
+                      </div>
+                      <div>
+                        <dt>{locale === 'ca' ? 'Tipus' : 'Tipo'}</dt>
+                        <dd>{wineTypeLabel(selectedWineSheetDetails.wine_type ?? selectedWineSheet.type)}</dd>
+                      </div>
+                      <div>
+                        <dt>{locale === 'ca' ? 'Criança' : 'Crianza'}</dt>
+                        <dd>{labelForAgingType(selectedWineSheetDetails.aging_type, locale)}</dd>
+                      </div>
+                      <div>
+                        <dt>{locale === 'ca' ? 'Alcohol (%)' : 'Alcohol (%)'}</dt>
+                        <dd>{selectedWineSheetDetails.alcohol_percentage ?? '-'}</dd>
+                      </div>
+                      <div>
+                        <dt>{locale === 'ca' ? 'Actualitzat' : 'Actualizado'}</dt>
+                        <dd>{formatApiDate(selectedWineSheetDetails.updated_at, locale)}</dd>
+                      </div>
+                    </dl>
+                  </section>
+
+                  <section className="wine-sheet-card wine-profile-card-awards">
+                    <h4>
+                      <span className="wine-sheet-section-icon" aria-hidden="true">🏅</span>
+                      <span>{locale === 'ca' ? 'Premis' : 'Premios'}</span>
+                    </h4>
+                    <div className="wine-profile-list-block">
+                      {selectedWineSheetDetails.awards.length > 0 ? selectedWineSheetDetails.awards.map((award) => (
+                        <article key={award.id} className="wine-profile-list-row">
+                          <span>{labelForAwardName(award.name)}</span>
+                          <strong>{award.score != null ? `${award.score}/100` : '-'} · {award.year ?? '-'}</strong>
+                        </article>
+                      )) : <p className="muted">{locale === 'ca' ? 'Sense premis registrats.' : 'Sin premios registrados.'}</p>}
+                    </div>
+                  </section>
+
+                  <section className="wine-sheet-card wine-profile-card-reviews">
+                    <h4>
+                      <span className="wine-sheet-section-icon" aria-hidden="true">✍️</span>
+                      <span>{locale === 'ca' ? 'Ressenyes' : 'Reseñas'}</span>
+                    </h4>
+                    <div className="wine-profile-list-block">
+                      {selectedWineSheetDetails.reviews.length > 0 ? selectedWineSheetDetails.reviews.slice(0, 5).map((review) => (
+                        <article key={review.id} className="wine-profile-list-row wide">
+                          <div>
+                            <strong>{review.user.name} {review.user.lastname}</strong>
+                            <p className="muted">{review.bullets.join(' · ') || '-'}</p>
+                          </div>
+                          <div className="wine-profile-list-row-right">
+                            <strong>{review.score ?? '-'}</strong>
+                            <span>{formatApiDate(review.created_at, locale)}</span>
+                          </div>
+                        </article>
+                      )) : <p className="muted">{locale === 'ca' ? 'Sense ressenyes registrades.' : 'Sin reseñas registradas.'}</p>}
+                    </div>
+                  </section>
+                </section>
+              </>
+            ) : null}
           </section>
         ) : null}
       </section>
@@ -3895,6 +4985,137 @@ function App() {
           </button>
         ))}
       </nav>
+
+      {wineDeleteTarget ? (
+        <div className="modal-backdrop" role="presentation" onClick={closeWineDeleteConfirm}>
+          <section
+            className="confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-wine-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="confirm-modal-header">
+              <p className="eyebrow">{locale === 'ca' ? 'ELIMINAR VI' : 'ELIMINAR VINO'}</p>
+              <h3 id="delete-wine-title">{wineDeleteTarget.name}</h3>
+              <p className="muted">
+                {locale === 'ca'
+                  ? 'Aquesta acció eliminarà el vi i les seves fotos. Vols continuar?'
+                  : 'Esta acción eliminará el vino y sus fotos. ¿Quieres continuar?'}
+              </p>
+            </header>
+            {wineDeleteError ? <p className="error-message">{wineDeleteError}</p> : null}
+            <footer className="confirm-modal-actions">
+              <button type="button" className="ghost-button" onClick={closeWineDeleteConfirm} disabled={wineDeleteSubmitting}>
+                {locale === 'ca' ? 'Cancel·lar' : 'Cancelar'}
+              </button>
+              <button type="button" className="secondary-button" onClick={() => { void confirmDeleteWine() }} disabled={wineDeleteSubmitting}>
+                {wineDeleteSubmitting ? (locale === 'ca' ? 'Eliminant…' : 'Eliminando…') : (locale === 'ca' ? 'Eliminar' : 'Eliminar')}
+              </button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
+
+      {photoEditorType && photoEditorSource ? (
+        <div className="modal-backdrop" role="presentation" onClick={closePhotoEditor}>
+          <section
+            className="photo-editor-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="photo-editor-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="photo-editor-header">
+              <div>
+                <p className="eyebrow">{locale === 'ca' ? 'EDITOR FOTO' : 'EDITOR FOTO'}</p>
+                <h3 id="photo-editor-title">{labelForPhotoType(photoEditorType)}</h3>
+              </div>
+              <button type="button" className="ghost-button small" onClick={closePhotoEditor}>
+                {locale === 'ca' ? 'Tancar' : 'Cerrar'}
+              </button>
+            </header>
+
+            <div className="photo-editor-body">
+              <div
+                className="photo-editor-preview-wrap ratio-3-4"
+                onPointerDown={handlePhotoEditorPointerDown}
+                onPointerMove={handlePhotoEditorPointerMove}
+                onPointerUp={handlePhotoEditorPointerUp}
+                onPointerCancel={handlePhotoEditorPointerUp}
+              >
+                <canvas ref={photoEditorCanvasRef} className="photo-editor-preview" />
+                <div className="photo-editor-zoom-buttons">
+                  <button
+                    type="button"
+                    className="ghost-button tiny"
+                    onClick={() => setPhotoEditorZoom((current) => clamp(current - 0.1, 1, 3))}
+                    aria-label={locale === 'ca' ? 'Disminuir zoom' : 'Disminuir zoom'}
+                  >
+                    -
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button tiny"
+                    onClick={() => setPhotoEditorZoom((current) => clamp(current + 0.1, 1, 3))}
+                    aria-label={locale === 'ca' ? 'Augmentar zoom' : 'Aumentar zoom'}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div className="photo-editor-controls">
+                <p className="muted">
+                  Format 3:4 · {locale === 'ca' ? 'Arrossega la imatge per moure-la' : 'Arrastra la imagen para moverla'}
+                </p>
+                <label>
+                  {locale === 'ca' ? 'Zoom' : 'Zoom'}
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.01"
+                    value={photoEditorZoom}
+                    onChange={(event) => setPhotoEditorZoom(Number(event.target.value))}
+                  />
+                </label>
+                <label>
+                  {locale === 'ca' ? 'Desplaçament X' : 'Desplazamiento X'}
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    step="1"
+                    value={photoEditorOffsetX}
+                    onChange={(event) => setPhotoEditorOffsetX(Number(event.target.value))}
+                  />
+                </label>
+                <label>
+                  {locale === 'ca' ? 'Desplaçament Y' : 'Desplazamiento Y'}
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    step="1"
+                    value={photoEditorOffsetY}
+                    onChange={(event) => setPhotoEditorOffsetY(Number(event.target.value))}
+                  />
+                </label>
+                {photoEditorError ? <p className="error-message">{photoEditorError}</p> : null}
+              </div>
+            </div>
+
+            <footer className="photo-editor-footer">
+              <button type="button" className="ghost-button" onClick={closePhotoEditor}>
+                {locale === 'ca' ? 'Cancelar' : 'Cancelar'}
+              </button>
+              <button type="button" className="secondary-button" disabled={photoEditorSaving} onClick={() => { void savePhotoEditor() }}>
+                {photoEditorSaving ? (locale === 'ca' ? 'Guardant…' : 'Guardando…') : (locale === 'ca' ? 'Guardar' : 'Guardar')}
+              </button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
 
       {selectedWineGallery ? (
         <div className="modal-backdrop" role="presentation" onClick={closeWineGallery}>

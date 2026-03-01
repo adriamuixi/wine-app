@@ -165,6 +165,8 @@ final class WineControllerTest extends TestCase
         self::assertSame(1, $payload['pagination']['page']);
         self::assertSame(20, $payload['pagination']['limit']);
         self::assertSame('List Wine 1', $payload['items'][0]['name']);
+        self::assertSame('bottle', $payload['items'][0]['photos'][0]['type']);
+        self::assertSame('/images/wines/1/bottle.jpg', $payload['items'][0]['photos'][0]['url']);
     }
 
     public function testListReturnsBadRequestForInvalidQueryParam(): void
@@ -291,6 +293,7 @@ final class WineControllerTest extends TestCase
             new DeleteWineHandler($repo, new NoopWinePhotoRepository(), new NoopWinePhotoStorage()),
             new GetWineDetailsHandler($repo),
             new ListWinesHandler($repo),
+            new NoopWinePhotoRepository(),
         );
     }
 }
@@ -412,28 +415,23 @@ final class NoopWinePhotoRepository implements WinePhotoRepository
         return null;
     }
 
-    public function createForWine(
+    public function create(
         int $wineId,
-        WinePhotoType $type,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
+        WinePhoto $photo,
     ): int {
         return 1;
     }
 
-    public function updateById(
-        int $id,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
-    ): void {
+    public function update(WinePhoto $photo): void
+    {
     }
 
     public function findByWineId(int $wineId): array
     {
+        if (1 === $wineId) {
+            return [new WinePhoto(1, '/images/wines/1/bottle.jpg', WinePhotoType::Bottle, 'hash123', 1000, 'jpg')];
+        }
+
         return [];
     }
 }

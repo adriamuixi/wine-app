@@ -1,6 +1,6 @@
 common:
   appName: Wine App
-  mockMode: Mode mock. Aquesta pantalla no crida l’API.
+  mockMode: Mode demo. Aquesta pantalla no crida l’API.
   menu: Menú
   logout: Tanca sessió
   expandSidebar: Expandeix la barra lateral
@@ -28,7 +28,7 @@ login:
   submit: Accedir
   requiredError: Correu i contrasenya són obligatoris.
   demoTitle: Demo
-  demoDescription: Fes servir qualsevol correu/contrasenya per entrar al dashboard mock.
+  demoDescription: Fes servir qualsevol correu/contrasenya per entrar al dashboard.
 menu:
   dashboard: Tauler
   wines: Vins
@@ -43,8 +43,8 @@ dashboard:
     myReviews: Les meves ressenyes
     avgRed: Mitjana vins negres
     avgWhite: Mitjana vins blancs
-    catalogHint: Entrades al catàleg (mock)
-    globalReviewsHint: Ressenyes globals de la plataforma (mock)
+    catalogHint: Entrades al catàleg
+    globalReviewsHint: Ressenyes globals de la plataforma
     myReviewsHint: Ressenyes escrites per mi
     avgRedHint: Puntuació mitjana en vins negres
     avgWhiteHint: Puntuació mitjana en vins blancs
@@ -67,7 +67,7 @@ wines:
   add:
     eyebrow: Vins
     title: Afegir vi al catàleg
-    badge: Formulari mock
+    badge: Formulari
     name: Nom del vi
     winery: Celler
     type: Tipus de vi
@@ -80,7 +80,7 @@ wines:
   edit:
     eyebrow: Vins
     title: Editar vi existent
-    countSuffix: vins mock
+    countSuffix: vins
     action: Editar
 reviews:
   title: Les meves ressenyes
@@ -109,13 +109,13 @@ admin:
     title: Accessos operatius
     items:
       - title: Cua de moderació de ressenyes
-        description: 12 elements pendents (mock)
+        description: 12 elements pendents
         action: Obrir
       - title: Importar vins CSV
-        description: "Darrera importació: fa 2 dies (mock)"
+        description: "Darrera importació: fa 2 dies"
         action: Iniciar
       - title: Auditoria d’etiquetes
-        description: Detectar etiquetes inconsistents (mock)
+        description: Detectar etiquetes inconsistents
         action: Executar
   account:
     eyebrow: Usuari
@@ -128,10 +128,10 @@ admin:
       favoriteStyle: Estil preferit
       lastLogin: Darrer accés
     values:
-      favoriteStyle: Vins negres (mock)
-      lastLogin: Avui · 21:45 (mock)
+      favoriteStyle: Vins negres
+      lastLogin: Avui · 21:45
 topbar:
-  mockDashboard: Tauler mock
+  mockDashboard: Tauler
   overview: Visió general
   wines: Eines de vins
   reviews: Les meves ressenyes
@@ -159,7 +159,7 @@ user:
 wineProfile:
   pageTitle: Perfil del vi
   backToDashboard: Torna al Dashboard
-  editWineMock: Edita vi (Mock)
+  editWineMock: Edita vi
   photosEyebrow: Fotos
   photoRecordPreview: Vista prèvia PhotoRecord
   filesSuffix: fitxers
@@ -219,9 +219,9 @@ wineProfile:
       awardYear: Any del premi
       reviewBulletsEnum: Etiquetes de ressenya
     labels:
-      mockFk: FK mock
-      mockExtraHarvest: Verema (extra mock)
-      reviewSummaryMock: Resum de ressenya (mock)
+      mockFk: FK
+      mockExtraHarvest: Verema (extra)
+      reviewSummaryMock: Resum de ressenya
     templates:
       mockFkValue: "{{id}} ({{mockFk}})"
       recordsCount: "{{count}} registres"
@@ -231,9 +231,9 @@ wineProfile:
       priceEur: "{{price}} EUR"
       reviewSummary: "avg_score={{score}} · intensity_aroma=4 · acidity=3 · body=4 · persistence=4"
     values:
-      photoUrlsMock: Ampolla / etiqueta frontal / etiqueta posterior (fitxers mock a public/photos/wines)
-      placeAddressMock: Carrer de Provença 123 (mock)
-      placeCityMock: Barcelona (mock)
+      photoUrlsMock: Ampolla / etiqueta frontal / etiqueta posterior (fitxers a public/photos/wines)
+      placeAddressMock: Carrer de Provença 123
+      placeCityMock: Barcelona
       placeNameRestaurant: Restaurant Cellar Table
       placeNameSupermarket: Mercat Gourmet Center
       agingYoung: jove

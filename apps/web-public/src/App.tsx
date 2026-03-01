@@ -410,7 +410,7 @@ function mapTypeFromCa(value: string, wineName: string): WineType {
   return 'red'
 }
 
-function buildMockReward(avgScore: number, region: string): WineCard['reward'] | undefined {
+function buildReward(avgScore: number, region: string): WineCard['reward'] | undefined {
   if (avgScore < 88) return undefined
   if (avgScore >= 92) return { name: 'Peñín', score: Math.round(avgScore + 1) }
   if (region.toLowerCase().includes('rioja') || region.toLowerCase().includes('ribera')) return { name: 'Decanter', score: Math.round(avgScore) }
@@ -583,7 +583,7 @@ const MOCK_WINES: WineCard[] = CATALAN_JOURNAL_ROWS.map((row, index) => {
     place: row.place,
     city: row.city || 'n/d',
     techSheet: row.techSheet,
-    reward: buildMockReward(avgScore, row.region),
+    reward: buildReward(avgScore, row.region),
     doLogoImage: doLogoPathForRegion(row.region),
     rewardBadgeImage:
       index === 0 ? '/images/icons/awards/penin/thumbs-80/penin-91.png'

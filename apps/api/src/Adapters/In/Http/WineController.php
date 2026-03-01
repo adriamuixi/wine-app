@@ -32,6 +32,7 @@ use App\Domain\Enum\PlaceType;
 use App\Domain\Enum\WineType;
 use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Model\Wine;
+use App\Domain\Repository\WinePhotoRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,6 +46,7 @@ final class WineController
         private readonly DeleteWineHandler $deleteWineHandler,
         private readonly GetWineDetailsHandler $getWineDetailsHandler,
         private readonly ListWinesHandler $listWinesHandler,
+        private readonly WinePhotoRepository $winePhotos,
     ) {
     }
 
@@ -141,20 +143,31 @@ final class WineController
 
         return new JsonResponse([
             'items' => array_map(
-                static fn ($item): array => [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'winery' => $item->winery,
-                    'wine_type' => $item->wineType,
-                    'country' => $item->country,
-                    'do' => null === $item->doId ? null : [
-                        'id' => $item->doId,
-                        'name' => $item->doName,
-                    ],
-                    'vintage_year' => $item->vintageYear,
-                    'avg_score' => $item->avgScore,
-                    'updated_at' => $item->updatedAt,
-                ],
+                function ($item): array {
+                    $photos = $this->winePhotos->findByWineId($item->id);
+
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'winery' => $item->winery,
+                        'wine_type' => $item->wineType,
+                        'country' => $item->country,
+                        'do' => null === $item->doId ? null : [
+                            'id' => $item->doId,
+                            'name' => $item->doName,
+                        ],
+                        'vintage_year' => $item->vintageYear,
+                        'avg_score' => $item->avgScore,
+                        'updated_at' => $item->updatedAt,
+                        'photos' => array_map(
+                            static fn ($photo): array => [
+                                'type' => $photo->type->value,
+                                'url' => $photo->url,
+                            ],
+                            $photos,
+                        ),
+                    ];
+                },
                 $result->items,
             ),
             'pagination' => [

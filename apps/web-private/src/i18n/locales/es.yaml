@@ -1,6 +1,6 @@
 common:
   appName: Wine App
-  mockMode: Modo mock. Esta pantalla no llama a la API.
+  mockMode: Modo demo. Esta pantalla no llama a la API.
   menu: Menú
   logout: Cerrar sesión
   expandSidebar: Expandir barra lateral
@@ -28,7 +28,7 @@ login:
   submit: Entrar al Backoffice
   requiredError: Email y contraseña son obligatorios.
   demoTitle: Demo
-  demoDescription: Usa cualquier email/contraseña para entrar al dashboard mock.
+  demoDescription: Usa cualquier email/contraseña para entrar al dashboard.
 menu:
   dashboard: Dashboard
   wines: Vinos
@@ -43,8 +43,8 @@ dashboard:
     myReviews: Mis reseñas
     avgRed: Media vinos tintos
     avgWhite: Media vinos blancos
-    catalogHint: Entradas en catálogo (mock)
-    globalReviewsHint: Reseñas globales de la plataforma (mock)
+    catalogHint: Entradas en catálogo
+    globalReviewsHint: Reseñas globales de la plataforma
     myReviewsHint: Reseñas escritas por mí
     avgRedHint: Puntuación media en vinos tintos
     avgWhiteHint: Puntuación media en vinos blancos
@@ -67,7 +67,7 @@ wines:
   add:
     eyebrow: Vinos
     title: Añadir vino al catálogo
-    badge: Formulario mock
+    badge: Formulario
     name: Nombre del vino
     winery: Bodega
     type: Tipo de vino
@@ -80,7 +80,7 @@ wines:
   edit:
     eyebrow: Vinos
     title: Editar vino existente
-    countSuffix: vinos mock
+    countSuffix: vinos
     action: Editar
 reviews:
   title: Mis reseñas
@@ -109,13 +109,13 @@ admin:
     title: Accesos operativos
     items:
       - title: Cola de moderación de reseñas
-        description: 12 elementos pendientes (mock)
+        description: 12 elementos pendientes
         action: Abrir
       - title: Importar vinos CSV
-        description: "Última importación: hace 2 días (mock)"
+        description: "Última importación: hace 2 días"
         action: Iniciar
       - title: Auditoría de etiquetas
-        description: Detectar etiquetas inconsistentes (mock)
+        description: Detectar etiquetas inconsistentes
         action: Ejecutar
   account:
     eyebrow: Usuario
@@ -128,10 +128,10 @@ admin:
       favoriteStyle: Estilo favorito
       lastLogin: Último acceso
     values:
-      favoriteStyle: Vinos tintos (mock)
-      lastLogin: Hoy · 21:45 (mock)
+      favoriteStyle: Vinos tintos
+      lastLogin: Hoy · 21:45
 topbar:
-  mockDashboard: Dashboard mock
+  mockDashboard: Dashboard
   overview: Resumen
   wines: Herramientas de vinos
   reviews: Mis reseñas
@@ -159,7 +159,7 @@ user:
 wineProfile:
   pageTitle: Perfil del vino
   backToDashboard: Volver al Dashboard
-  editWineMock: Editar vino (Mock)
+  editWineMock: Editar vino
   photosEyebrow: Fotos
   photoRecordPreview: Vista previa PhotoRecord
   filesSuffix: archivos
@@ -219,9 +219,9 @@ wineProfile:
       awardYear: Año del premio
       reviewBulletsEnum: Etiquetas de reseña
     labels:
-      mockFk: FK mock
-      mockExtraHarvest: Vendimia (extra mock)
-      reviewSummaryMock: Resumen de reseña (mock)
+      mockFk: FK
+      mockExtraHarvest: Vendimia (extra)
+      reviewSummaryMock: Resumen de reseña
     templates:
       mockFkValue: "{{id}} ({{mockFk}})"
       recordsCount: "{{count}} registros"
@@ -231,9 +231,9 @@ wineProfile:
       priceEur: "{{price}} EUR"
       reviewSummary: "avg_score={{score}} · intensity_aroma=4 · acidity=3 · body=4 · persistence=4"
     values:
-      photoUrlsMock: Botella / etiqueta frontal / etiqueta trasera (archivos mock en public/photos/wines)
-      placeAddressMock: Calle Provença 123 (mock)
-      placeCityMock: Barcelona (mock)
+      photoUrlsMock: Botella / etiqueta frontal / etiqueta trasera (archivos en public/photos/wines)
+      placeAddressMock: Calle Provença 123
+      placeCityMock: Barcelona
       placeNameRestaurant: Restaurant Cellar Table
       placeNameSupermarket: Mercat Gourmet Center
       agingYoung: joven

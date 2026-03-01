@@ -124,24 +124,15 @@ final class PhotoControllerSpyWinePhotoRepository implements WinePhotoRepository
         return null;
     }
 
-    public function createForWine(
+    public function create(
         int $wineId,
-        WinePhotoType $type,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
+        WinePhoto $photo,
     ): int {
         return 88;
     }
 
-    public function updateById(
-        int $id,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
-    ): void {
+    public function update(WinePhoto $photo): void
+    {
     }
 
     public function findByWineId(int $wineId): array

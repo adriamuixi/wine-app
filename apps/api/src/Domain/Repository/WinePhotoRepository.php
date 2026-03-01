@@ -16,20 +16,7 @@ interface WinePhotoRepository
      */
     public function findByWineId(int $wineId): array;
 
-    public function createForWine(
-        int $wineId,
-        WinePhotoType $type,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
-    ): int;
+    public function create(int $wineId, WinePhoto $photo): int;
 
-    public function updateById(
-        int $id,
-        string $url,
-        string $hash,
-        int $size,
-        string $extension,
-    ): void;
+    public function update(WinePhoto $photo): void;
 }

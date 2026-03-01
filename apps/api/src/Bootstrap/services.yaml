@@ -20,7 +20,6 @@ services:
     App\Domain\Repository\UserRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineUserRepository'
     App\Domain\Repository\DoRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineDoRepository'
     App\Domain\Repository\GrapeRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineGrapeRepository'
-    App\Domain\Repository\PlaceRepository: '@App\Adapters\Out\Persistence\Repos\DoctrinePlaceRepository'
     App\Domain\Repository\AwardRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineAwardRepository'
     App\Domain\Repository\ReviewRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineReviewRepository'
     App\Domain\Repository\WineRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineWineRepository'

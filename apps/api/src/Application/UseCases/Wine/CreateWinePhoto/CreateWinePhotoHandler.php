@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\UseCases\Wine\CreateWinePhoto;
 
 use App\Application\Ports\WinePhotoStoragePort;
+use App\Domain\Model\WinePhoto;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
 
@@ -40,19 +41,27 @@ final readonly class CreateWinePhotoHandler
 
         $existing = $this->photos->findByWineAndType($command->wineId, $command->type);
         $url = $this->photoStorage->save($command->sourcePath, $command->wineId, $hash, $extension);
+        $photo = new WinePhoto(
+            id: null,
+            url: $url,
+            type: $command->type,
+            hash: $hash,
+            size: $command->size,
+            extension: $extension,
+        );
 
         if (null === $existing) {
-            $id = $this->photos->createForWine(
-                wineId: $command->wineId,
-                type: $command->type,
+            $id = $this->photos->create($command->wineId, $photo);
+        } else {
+            $id = $existing->id;
+            $this->photos->update(new WinePhoto(
+                id: $existing->id,
                 url: $url,
+                type: $command->type,
                 hash: $hash,
                 size: $command->size,
                 extension: $extension,
-            );
-        } else {
-            $id = $existing->id;
-            $this->photos->updateById($existing->id, $url, $hash, $command->size, $extension);
+            ));
             $this->photoStorage->deleteByUrl($existing->url);
         }
 

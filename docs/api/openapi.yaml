@@ -841,9 +841,19 @@ components:
           format: int64
         name:
           type: string
+    WineListPhoto:
+      type: object
+      required: [type, url]
+      properties:
+        type:
+          type: string
+          enum: [front_label, back_label, bottle]
+        url:
+          type: string
+          example: /images/wines/42/abc123.jpg
     WineListItem:
       type: object
-      required: [id, name, winery, wine_type, country, do, vintage_year, avg_score, updated_at]
+      required: [id, name, winery, wine_type, country, do, vintage_year, avg_score, updated_at, photos]
       properties:
         id:
           type: integer
@@ -875,6 +885,10 @@ components:
         updated_at:
           type: string
           format: date-time
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/WineListPhoto'
     PaginationMeta:
       type: object
       required: [page, limit, total_items, total_pages, has_next, has_prev]
