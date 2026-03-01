@@ -360,7 +360,7 @@ const mockReviews: ReviewItem[] = [
 
 const AGING_OPTIONS = ['young', 'crianza', 'reserve', 'grand_reserve'] as const
 const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket'] as const
-const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker'] as const
+const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker', 'james_suckling', 'guia_proensa'] as const
 const REVIEW_TAG_OPTIONS = ['Afrutado', 'Floral', 'Especiado', 'Mineral', 'Madera marcada', 'Fácil de beber', 'Elegante', 'Potente', 'Gastronómico'] as const
 const REVIEW_TAG_TO_ENUM: Record<(typeof REVIEW_TAG_OPTIONS)[number], WineDetailsApiReview['bullets'][number]> = {
   Afrutado: 'fruity',
@@ -2500,7 +2500,6 @@ function App() {
   const selectedWineDoLogo = selectedWineSheetDetails?.do
     ? (doLogoPathForRegion(selectedWineSheetDetails.do.name) ?? doLogoPathForRegion(selectedWineSheetDetails.do.region))
     : (selectedWineSheet ? doLogoPathForRegion(selectedWineSheet.region) : null)
-  const selectedWineCountryFlagPath = selectedWineSheet ? countryFlagPath(selectedWineSheet.country) : null
   const selectedWineCommunity = selectedWineSheetDetails?.do?.country === 'spain' && selectedWineSheetDetails.do != null
     ? spanishAutonomousCommunity(selectedWineSheetDetails.do.region)
     : (selectedWineSheet ? spanishAutonomousCommunity(selectedWineSheet.region) : null)
@@ -5705,19 +5704,21 @@ function App() {
                         <h3>{selectedWineSheetDetails.name}</h3>
                         <p className="wine-profile-maininfo-subtitle">{locale === 'ca' ? 'Identitat del vi + Informació' : 'Identidad del vino + Información'}</p>
                       </div>
+                      <div className="wine-profile-card-actions">
+                        <button type="button" className="ghost-button small wine-profile-back-button" onClick={closeWineSheet}>
+                          <svg className="wine-profile-back-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path
+                              d="M14.7 5.3a1 1 0 0 1 0 1.4L10.41 11H20a1 1 0 1 1 0 2h-9.59l4.3 4.3a1 1 0 1 1-1.42 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.42 0Z"
+                              fill="currentColor"
+                            />
+                          </svg>
+                          <span className="wine-profile-back-text">{locale === 'ca' ? 'Tornar al llistat de vins' : 'Volver al listado de vinos'}</span>
+                        </button>
+                        <button type="button" className="primary-button small" onClick={() => openWineEdit(selectedWineSheet)}>
+                          {locale === 'ca' ? 'Editar vi' : 'Editar vino'}
+                        </button>
+                      </div>
                     </div>
-
-                    <p className="muted wine-profile-origin-line">
-                      <span className="wine-profile-flag-badge" aria-label={selectedWineSheet.country} title={selectedWineSheet.country}>
-                        {selectedWineCountryFlagPath ? <img className="wine-profile-flag-image" src={selectedWineCountryFlagPath} alt={localizedCountryName(selectedWineSheet.country, locale)} loading="lazy" /> : countryFlagEmoji(selectedWineSheet.country)}
-                      </span>
-                      {selectedWineCommunityFlagPath && selectedWineCommunity ? (
-                        <span className="wine-profile-flag-badge" aria-label={`Comunidad autonoma ${selectedWineCommunity.name}`} title={selectedWineCommunity.name}>
-                          <img className="wine-profile-flag-image" src={selectedWineCommunityFlagPath} alt={selectedWineCommunity.name} loading="lazy" />
-                        </span>
-                      ) : null}
-                      <span>{selectedWineSheetDetails.winery ?? '-'} · {selectedWineSheetDetails.do?.name ?? '-'}</span>
-                    </p>
 
                     <div className="wine-profile-kpi-strip">
                       <article>
@@ -5823,14 +5824,24 @@ function App() {
                     </h4>
                     <div className="wine-profile-list-block">
                       {selectedWineSheetDetails.reviews.length > 0 ? selectedWineSheetDetails.reviews.slice(0, 5).map((review) => (
-                        <article key={review.id} className="wine-profile-list-row wide">
-                          <div>
-                            <strong>{review.user.name} {review.user.lastname}</strong>
-                            <p className="muted">{review.bullets.join(' · ') || '-'}</p>
+                        <article key={review.id} className="wine-profile-review-card">
+                          <div className="wine-profile-review-head">
+                            <div>
+                              <strong>{review.user.name} {review.user.lastname}</strong>
+                              <p className="wine-profile-review-date">{formatApiDate(review.created_at, locale)}</p>
+                            </div>
+                            <span className={`score-pill ${medalToneFromHundred(review.score)}`}>
+                              {review.score == null ? '-' : `${review.score}/100`}
+                            </span>
                           </div>
-                          <div className="wine-profile-list-row-right">
-                            <strong>{review.score ?? '-'}</strong>
-                            <span>{formatApiDate(review.created_at, locale)}</span>
+                          <div className="wine-profile-review-bullets">
+                            {review.bullets.length > 0
+                              ? review.bullets.map((bullet) => (
+                                  <span key={`${review.id}-${bullet}`} className="review-bullet-chip">
+                                    {REVIEW_ENUM_TO_TAG[bullet] ?? bullet}
+                                  </span>
+                                ))
+                              : <span className="review-bullet-chip muted">-</span>}
                           </div>
                         </article>
                       )) : <p className="muted">{locale === 'ca' ? 'Sense ressenyes registrades.' : 'Sin reseñas registradas.'}</p>}

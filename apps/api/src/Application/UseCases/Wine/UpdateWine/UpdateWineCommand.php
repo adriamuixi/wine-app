@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\UseCases\Wine\UpdateWine;
 
 use App\Application\UseCases\Wine\CreateWine\CreateWineGrapeInput;
+use App\Application\UseCases\Wine\CreateWine\CreateWineAwardInput;
 use App\Domain\Enum\AgingType;
 use App\Domain\Enum\Country;
 use App\Domain\Enum\WineType;
@@ -14,6 +15,7 @@ final readonly class UpdateWineCommand
     /**
      * @param array<string,bool> $provided
      * @param list<CreateWineGrapeInput> $grapes
+     * @param list<CreateWineAwardInput> $awards
      */
     public function __construct(
         public int $wineId,
@@ -27,6 +29,7 @@ final readonly class UpdateWineCommand
         public ?float $alcoholPercentage,
         public array $provided,
         public array $grapes = [],
+        public array $awards = [],
     ) {
     }
 

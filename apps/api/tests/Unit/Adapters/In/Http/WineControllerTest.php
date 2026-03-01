@@ -250,6 +250,35 @@ final class WineControllerTest extends TestCase
         self::assertSame(30.0, (float) SpyWineRepository::$lastUpdateCommand->grapes[1]->percentage);
     }
 
+    public function testUpdatePersistsAwardsPayloadInCommand(): void
+    {
+        $controller = $this->controller(updatableWineIds: [20]);
+        $request = Request::create(
+            '/api/wines/20',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Updated Name',
+                'awards' => [
+                    ['name' => 'parker', 'score' => 96.5, 'year' => 2026],
+                    ['name' => 'decanter', 'score' => null, 'year' => null],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(20, $request);
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+        self::assertNotNull(SpyWineRepository::$lastUpdateCommand);
+        self::assertCount(2, SpyWineRepository::$lastUpdateCommand->awards);
+        self::assertSame(AwardName::Parker, SpyWineRepository::$lastUpdateCommand->awards[0]->name);
+        self::assertSame('96.5', SpyWineRepository::$lastUpdateCommand->awards[0]->score);
+        self::assertSame(2026, SpyWineRepository::$lastUpdateCommand->awards[0]->year);
+        self::assertSame(AwardName::Decanter, SpyWineRepository::$lastUpdateCommand->awards[1]->name);
+        self::assertNull(SpyWineRepository::$lastUpdateCommand->awards[1]->score);
+        self::assertNull(SpyWineRepository::$lastUpdateCommand->awards[1]->year);
+    }
+
     public function testUpdateReturnsNotFoundWhenWineDoesNotExist(): void
     {
         $controller = $this->controller(updatableWineIds: []);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\UseCases\Wine\UpdateWine;
 
 use App\Domain\Model\Wine;
+use App\Domain\Model\Award;
 use App\Domain\Model\WineGrape;
 use App\Domain\Repository\DoRepository;
 use App\Domain\Repository\WineRepository;
@@ -75,6 +76,7 @@ final readonly class UpdateWineHandler
             alcoholPercentage: $command->alcoholPercentage,
             provided: $provided,
             grapes: $command->grapes,
+            awards: $command->awards,
         );
     }
 
@@ -99,6 +101,16 @@ final readonly class UpdateWineHandler
         if ($command->isProvided('grapes')) {
             foreach ($command->grapes as $grape) {
                 new WineGrape($grape->grapeId, $grape->percentage);
+            }
+        }
+
+        if ($command->isProvided('awards')) {
+            foreach ($command->awards as $award) {
+                new Award(
+                    name: $award->name,
+                    score: $award->score,
+                    year: $award->year,
+                );
             }
         }
     }

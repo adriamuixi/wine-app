@@ -131,6 +131,7 @@ SQL,
     public function updatePartial(UpdateWineCommand $command): bool
     {
         $hasGrapes = $command->isProvided('grapes');
+        $hasAwards = $command->isProvided('awards');
         $sets = [];
         $params = ['id' => $command->wineId];
 
@@ -167,14 +168,14 @@ SQL,
             $params['alcohol_percentage'] = $command->alcoholPercentage;
         }
 
-        if ([] === $sets && !$hasGrapes) {
+        if ([] === $sets && !$hasGrapes && !$hasAwards) {
             return false;
         }
 
         $connection = $this->entityManager->getConnection();
 
         $affected = $connection->transactional(
-            function (Connection $connection) use ($sets, $params, $command, $hasGrapes): int {
+            function (Connection $connection) use ($sets, $params, $command, $hasGrapes, $hasAwards): int {
                 $setsWithTimestamp = [...$sets, 'updated_at = now()'];
                 $sql = sprintf('UPDATE wine SET %s WHERE id = :id', implode(', ', $setsWithTimestamp));
                 $affected = $connection->executeStatement($sql, $params);
@@ -195,6 +196,25 @@ SQL,
                                 'wine_id' => $command->wineId,
                                 'grape_id' => $grape->grapeId,
                                 'percentage' => $grape->percentage,
+                            ],
+                        );
+                    }
+                }
+
+                if ($hasAwards) {
+                    $connection->executeStatement(
+                        'DELETE FROM wine_award WHERE wine_id = :wine_id',
+                        ['wine_id' => $command->wineId],
+                    );
+
+                    foreach ($command->awards as $award) {
+                        $connection->executeStatement(
+                            'INSERT INTO wine_award (wine_id, name, score, year) VALUES (:wine_id, :name, :score, :year)',
+                            [
+                                'wine_id' => $command->wineId,
+                                'name' => $award->name->value,
+                                'score' => $award->score,
+                                'year' => $award->year,
                             ],
                         );
                     }

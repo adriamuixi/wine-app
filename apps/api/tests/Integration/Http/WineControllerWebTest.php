@@ -248,6 +248,70 @@ final class WineControllerWebTest extends WebTestCase
         self::assertSame('fruity', $response['wine']['reviews'][0]['bullets'][0]);
     }
 
+    public function testUpdateReplacesAwardsInDatabase(): void
+    {
+        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+
+        $client->jsonRequest('POST', '/api/wines', [
+            'name' => 'Update Award Wine',
+            'do_id' => 1,
+            'grapes' => [
+                ['grape_id' => 1, 'percentage' => 100],
+            ],
+            'purchases' => [
+                [
+                    'place' => [
+                        'place_type' => 'restaurant',
+                        'name' => 'Casa Update',
+                        'address' => 'Calle 9',
+                        'city' => 'Madrid',
+                        'country' => 'spain',
+                    ],
+                    'price_paid' => '25.00',
+                    'purchased_at' => '2026-03-01T14:00:00+00:00',
+                ],
+            ],
+            'awards' => [
+                ['name' => 'parker', 'score' => 92.5, 'year' => 2025],
+            ],
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $payload = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $wineId = (int) $payload['wine']['id'];
+
+        $client->jsonRequest('PUT', sprintf('/api/wines/%d', $wineId), [
+            'name' => 'Update Award Wine v2',
+            'awards' => [
+                ['name' => 'decanter', 'score' => 95.0, 'year' => 2026],
+                ['name' => 'james_suckling', 'score' => null, 'year' => null],
+            ],
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        /** @var list<array{name:string,score:?string,year:?int}> $rows */
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT name, score::text AS score, year FROM wine_award WHERE wine_id = :wine_id ORDER BY id ASC',
+            ['wine_id' => $wineId],
+        );
+        self::assertCount(2, $rows);
+        self::assertSame('decanter', $rows[0]['name']);
+        self::assertSame('95.00', $rows[0]['score']);
+        self::assertSame(2026, $rows[0]['year']);
+        self::assertSame('james_suckling', $rows[1]['name']);
+        self::assertNull($rows[1]['score']);
+        self::assertNull($rows[1]['year']);
+
+        $client->jsonRequest('PUT', sprintf('/api/wines/%d', $wineId), [
+            'awards' => [],
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $remaining = (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM wine_award WHERE wine_id = :wine_id',
+            ['wine_id' => $wineId],
+        );
+        self::assertSame(0, $remaining);
+    }
+
     public function testListUsesDefaultPaginationOfTwentyItems(): void
     {
         for ($i = 1; $i <= 25; ++$i) {
