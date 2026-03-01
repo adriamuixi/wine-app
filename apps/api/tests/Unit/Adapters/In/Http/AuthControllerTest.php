@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\AuthController;
-use App\Application\UseCases\Auth\AuthUserCredentials;
+use App\Domain\Model\AuthUser;
 use App\Application\UseCases\Auth\Login\LoginHandler;
 use App\Application\UseCases\Auth\Logout\LogoutHandler;
 use App\Application\UseCases\Auth\Me\GetCurrentUserHandler;
@@ -88,7 +88,7 @@ final class AuthControllerTest extends TestCase
 
     private function controller(bool $passwordOk = true, ?int $authenticatedUserId = null): AuthController
     {
-        $repo = new InMemoryUserRepository(new AuthUserCredentials(1, 'demo@example.com', 'hash', 'Demo', 'User'));
+        $repo = new InMemoryUserRepository(new AuthUser(1, 'demo@example.com', 'hash', 'Demo', 'User'));
         $session = new SpyAuthSessionManager();
         $session->authenticatedUserId = $authenticatedUserId;
 

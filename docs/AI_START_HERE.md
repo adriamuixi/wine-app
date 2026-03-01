@@ -1,29 +1,26 @@
 # AI Start Here
 
-This file is the default companion to `AGENTS.md` for Codex/AI assistants working in this repository.
+Default entrypoint for AI assistants after reading `AGENTS.md`.
 
-Read order for every feature/change:
+## Required Read Order
 
 1. `AGENTS.md`
 2. `docs/README.md`
 3. `docs/ARCHITECTURE_PLAYBOOK.md`
 4. `docs/BACKEND_FEATURE_WORKFLOW.md`
 5. `docs/DOMAIN_RULES_CHECKLIST.md`
-6. `docs/api/openapi.yaml` (for API changes)
+6. `docs/api/openapi.yaml` (if API changes are involved)
 
-## Mandatory updates when changing endpoints
+## Mandatory updates when touching endpoints
 
-If you add/change/remove an endpoint, update all of:
-
-- Controller tests (`apps/api/tests/Unit/Adapters/In/Http/*`)
-- Use case tests (`apps/api/tests/Unit/Application/UseCases/*`)
 - `docs/api/openapi.yaml`
-- Any affected migration/DB docs if payload or enum storage changes
+- controller tests in `apps/api/tests/Unit/Adapters/In/Http/`
+- use case tests in `apps/api/tests/Unit/Application/UseCases/`
 
-## Current Auth Endpoints
+## Current Backend Organization Reminder
 
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `POST /api/auth/logout`
-
-These are session-cookie based endpoints used by `apps/web-private` (and can be reused by any website frontend running on the same domain/origin setup).
+- `Domain/Enum` for shared enums
+- `Domain/Model` for entities
+- `Domain/Repository` for repository contracts
+- `Application/UseCases` for application orchestration
+- `Adapters/*` for incoming/outgoing infrastructure

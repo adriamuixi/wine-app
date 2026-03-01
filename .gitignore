@@ -18,3 +18,7 @@ apps/api/vendor/
 # Misc local coverage/artifacts
 coverage/
 *.log
+
+# Uploaded wine photos (runtime data, never versioned)
+shared/public/images/wines/*
+!shared/public/images/wines/.gitkeep

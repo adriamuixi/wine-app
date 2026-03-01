@@ -24,15 +24,18 @@ class WineRecord
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[ORM\Column(name: 'wine_type', enumType: WineType::class)]
-    private WineType $wineType;
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $winery = null;
+
+    #[ORM\Column(name: 'wine_type', enumType: WineType::class, nullable: true)]
+    private ?WineType $wineType = null;
 
     #[ORM\ManyToOne(targetEntity: DoRecord::class)]
-    #[ORM\JoinColumn(name: 'do_id', referencedColumnName: 'id', nullable: false)]
-    private DoRecord $do;
+    #[ORM\JoinColumn(name: 'do_id', referencedColumnName: 'id', nullable: true)]
+    private ?DoRecord $do = null;
 
-    #[ORM\Column(enumType: Country::class)]
-    private Country $country;
+    #[ORM\Column(enumType: Country::class, nullable: true)]
+    private ?Country $country = null;
 
     #[ORM\Column(name: 'aging_type', enumType: AgingType::class, nullable: true)]
     private ?AgingType $agingType = null;
@@ -40,8 +43,8 @@ class WineRecord
     #[ORM\Column(name: 'vintage_year', type: Types::INTEGER, nullable: true)]
     private ?int $vintageYear = null;
 
-    #[ORM\Column(name: 'alcohol_percentage', type: Types::INTEGER, nullable: true)]
-    private ?int $alcoholPercentage = null;
+    #[ORM\Column(name: 'alcohol_percentage', type: Types::DECIMAL, precision: 4, scale: 1, nullable: true)]
+    private ?string $alcoholPercentage = null;
 
     #[ORM\Column(name: 'created_at', type: 'app_timestamptz_immutable')]
     private \DateTimeImmutable $createdAt;

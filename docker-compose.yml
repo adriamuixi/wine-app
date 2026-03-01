@@ -26,6 +26,11 @@ services:
       XDEBUG_IDEKEY: ${XDEBUG_IDEKEY:-VSCODE}
     volumes:
       - ./apps/api:/var/www/html
+      - ./shared:/shared
+    command: >
+      sh -lc "mkdir -p /shared/public/images/wines &&
+      chmod -R 0777 /shared/public/images/wines &&
+      php-fpm"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -68,6 +73,7 @@ services:
       - "8080:80"
     volumes:
       - ./apps/api/public:/var/www/html/public:ro
+      - ./shared/public/images:/shared_public_images:ro
     depends_on:
       - api
       - web-public

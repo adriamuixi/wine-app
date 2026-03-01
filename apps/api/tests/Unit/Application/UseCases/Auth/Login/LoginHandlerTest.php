@@ -6,9 +6,8 @@ namespace App\Tests\Unit\Application\UseCases\Auth\Login;
 
 use App\Application\Ports\AuthSessionManager;
 use App\Application\Ports\PasswordVerifier;
-use App\Application\Ports\UserRepository;
-use App\Application\UseCases\Auth\AuthUserCredentials;
-use App\Application\UseCases\Auth\AuthUserView;
+use App\Domain\Model\AuthUser;
+use App\Domain\Repository\UserRepository;
 use App\Application\UseCases\Auth\Login\InvalidCredentials;
 use App\Application\UseCases\Auth\Login\LoginCommand;
 use App\Application\UseCases\Auth\Login\LoginHandler;
@@ -59,11 +58,11 @@ final class LoginHandlerTest extends TestCase
 final class InMemoryUserRepository implements UserRepository
 {
     public function __construct(
-        private readonly ?AuthUserCredentials $user = new AuthUserCredentials(1, 'demo@example.com', 'hashed', 'Demo', 'User'),
+        private readonly ?AuthUser $user = new AuthUser(1, 'demo@example.com', 'hashed', 'Demo', 'User'),
     ) {
     }
 
-    public function findAuthByEmail(string $email): ?AuthUserCredentials
+    public function findAuthByEmail(string $email): ?AuthUser
     {
         if (null === $this->user) {
             return null;
@@ -72,13 +71,19 @@ final class InMemoryUserRepository implements UserRepository
         return strtolower($email) === $this->user->email ? $this->user : null;
     }
 
-    public function findAuthUserById(int $id): ?AuthUserView
+    public function findAuthUserById(int $id): ?AuthUser
     {
         if (null === $this->user || $this->user->id !== $id) {
             return null;
         }
 
-        return $this->user->toUserView();
+        return new AuthUser(
+            $this->user->id,
+            $this->user->email,
+            null,
+            $this->user->name,
+            $this->user->lastname,
+        );
     }
 }
 

@@ -1,217 +1,81 @@
+# AGENTS.md
 
----
+Repository instructions for AI assistants and copilots.
 
-# 📄 AGENTS.md
+## Required Read Order
 
-This file is for AI assistants, copilots and automated agents.
+1. `AGENTS.md`
+2. `docs/AI_START_HERE.md`
+3. `docs/README.md`
+4. `docs/ARCHITECTURE_PLAYBOOK.md`
+5. `docs/BACKEND_FEATURE_WORKFLOW.md`
+6. `docs/DOMAIN_RULES_CHECKLIST.md`
+7. `docs/api/openapi.yaml` (if endpoints are touched)
 
-## AI Startup Docs (Repository convention)
+## Architecture Rules (Mandatory)
 
-After reading `AGENTS.md`, agents should read these files before making changes:
+This repository uses Hexagonal Architecture with the current backend structure under `apps/api/src`:
 
-1. `docs/AI_START_HERE.md`
-2. `docs/README.md`
-3. `docs/ARCHITECTURE_PLAYBOOK.md`
-4. `docs/BACKEND_FEATURE_WORKFLOW.md`
-5. `docs/DOMAIN_RULES_CHECKLIST.md`
-6. `docs/api/openapi.yaml` (if API endpoints are involved)
+- `Domain/`
+  - `Model/` business entities (pure PHP)
+  - `Enum/` domain enums shared across layers
+  - `Repository/` repository interfaces (domain contracts)
+- `Application/`
+  - `UseCases/` command/handler/result flow
+  - `Ports/` non-repository ports only (e.g., auth/session/security adapters)
+- `Adapters/`
+  - `In/Http/` controllers
+  - `Out/Persistence/` Doctrine entities + repository adapters
+  - `Out/Storage/` filesystem/storage adapters
+- `Bootstrap/` dependency wiring
 
-## API Documentation & Test Update Rule
+### Strict boundaries
 
-If any API endpoint is added/changed/removed, agents must update:
+- Domain does not depend on Symfony, Doctrine, or HTTP.
+- Repository interfaces belong to `Domain/Repository`, not `Application`.
+- Controllers must stay thin (parse input -> call handler -> map response).
+- Doctrine entities must not contain business logic.
 
-- OpenAPI docs (`docs/api/openapi.yaml`)
-- Controller tests (`apps/api/tests/Unit/Adapters/In/Http/`)
-- Use case tests (`apps/api/tests/Unit/Application/UseCases/`)
+## API Update Rule (Mandatory)
 
-```markdown
-# 🤖 AGENTS.md
+If any endpoint is added/changed/removed, update all:
 
-This repository is designed to be used with AI assistants.
+- `docs/api/openapi.yaml`
+- controller tests in `apps/api/tests/Unit/Adapters/In/Http/`
+- use case tests in `apps/api/tests/Unit/Application/UseCases/`
 
-All agents MUST follow these rules.
+## Database Rules
 
----
+- PostgreSQL + Doctrine ORM.
+- Migrations are mandatory.
+- Do not use `schema:update` for project changes.
+- Primary keys are `BIGINT`.
+- Enums in DB must be aligned with `Domain/Enum`.
 
-## 🧱 Architecture
+## Domain Rules (Core)
 
-This project uses **Hexagonal Architecture (Ports & Adapters)**.
+- Wine is global (not owned by users).
+- Reviews belong to users.
+- One review per user + wine.
+- Scores are immutable after creation.
+- Place and price are required.
+- Vintage is a variant, not a new wine.
 
-Backend layers:
+## Testing Rules
 
-1. Domain
-   - Pure PHP
-   - No Symfony
-   - No Doctrine
-   - No framework dependencies
+- PHPUnit required.
+- Domain logic must have unit tests.
+- Application use cases must be covered.
+- HTTP endpoints need controller or integration coverage.
+- No business refactor without corresponding tests.
 
-2. Application
-   - Use cases
-   - DTOs
-   - Interfaces (ports)
+## Coding Standards
 
-3. Infrastructure
-   - Doctrine repositories
-   - Symfony services
-   - Controllers
-   - External adapters
+- Backend: PHP 8.4, `declare(strict_types=1);`, PSR-12.
+- Constructor injection only.
+- No magic arrays for domain entities.
+- Prefer explicit mapping between layers.
 
-4. UI / API
-   - HTTP controllers
-   - Request/Response mapping
+## Delivery Expectation
 
-STRICT RULE:
-
-❌ Controllers must NOT contain business logic  
-❌ Doctrine entities must NOT contain business logic  
-✅ Domain models contain business rules
-
----
-
-## 🗃 Database
-
-- PostgreSQL
-- Doctrine ORM
-- Migrations are mandatory
-- No schema:update
-
-Primary keys are BIGINT.
-
-Enums are PostgreSQL ENUM types.
-
----
-
-## 🧪 Testing
-
-Required:
-
-- PHPUnit
-- Domain must have unit tests
-- Application services must be covered
-- Infrastructure may use integration tests
-- HTTP controllers/endpoints must have tests (unit or integration)
-- Auth endpoints must include controller tests + use case tests + OpenAPI docs updates
-
-No code without tests for domain logic.
-
----
-
-## 🧑‍💻 Coding standards
-
-Backend:
-
-- PHP 8.4
-- Strict types
-- PSR-12
-- Typed properties
-- Constructor injection only
-- No static helpers
-
-Frontend:
-
-- React + TypeScript
-- Functional components only
-- No class components
-
----
-
-## 📐 Formatting
-
-- 2 spaces frontend
-- 4 spaces PHP
-- No trailing whitespace
-- LF line endings
-
----
-
-## 🧠 Domain rules (important)
-
-- Wine is global
-- Users do NOT own wines
-- Reviews belong to users
-- One review per user + wine
-- Scores immutable after creation
-- Place always required
-- Price always required
-- Vintage is variant, not new wine
-
----
-
-## 🏷 Wine review model
-
-Axes (0–5):
-
-- intensity_aroma
-- sweetness
-- acidity
-- tannin
-- body
-- persistence
-
-Tags (closed list):
-
-- Afrutado
-- Floral
-- Especiado
-- Mineral
-- Madera marcada
-- Fácil de beber
-- Elegante
-- Potente
-- Gastronómico
-
-Tags must never overlap axes.
-
----
-
-## 🔐 Security
-
-- Passwords hashed
-- Never expose secrets
-- Validate all input
-- Use DTOs
-- No direct entity exposure
-
----
-
-## 🐳 Docker
-
-All services must run via docker-compose.
-
-No local PHP installs assumed.
-
----
-
-## ❌ Forbidden patterns
-
-- Fat controllers
-- Active Record
-- Business logic in Doctrine entities
-- God services
-- Circular dependencies
-- Magic arrays
-- Untyped data
-
----
-
-## ✅ Preferred patterns
-
-- Value Objects
-- Repositories
-- Use Cases
-- DTOs
-- Explicit mapping
-- Immutable domain objects
-
----
-
-## 🧭 Goal
-
-Build a maintainable, testable wine platform with:
-
-- Clear domain
-- Stable API
-- Minimal coupling
-- Long-term evolution
-
-AI agents should prioritize correctness, clarity and domain integrity over speed.
+Prioritize correctness and domain integrity over speed.

@@ -6,8 +6,8 @@ namespace App\Application\UseCases\Auth\Login;
 
 use App\Application\Ports\AuthSessionManager;
 use App\Application\Ports\PasswordVerifier;
-use App\Application\Ports\UserRepository;
-use App\Application\UseCases\Auth\AuthUserView;
+use App\Domain\Model\AuthUser;
+use App\Domain\Repository\UserRepository;
 
 final readonly class LoginHandler
 {
@@ -18,11 +18,15 @@ final readonly class LoginHandler
     ) {
     }
 
-    public function handle(LoginCommand $command): AuthUserView
+    public function handle(LoginCommand $command): AuthUser
     {
         $credentials = $this->users->findAuthByEmail(strtolower(trim($command->email)));
 
         if (null === $credentials) {
+            throw new InvalidCredentials('Invalid credentials.');
+        }
+
+        if (null === $credentials->passwordHash) {
             throw new InvalidCredentials('Invalid credentials.');
         }
 
@@ -32,6 +36,12 @@ final readonly class LoginHandler
 
         $this->authSession->loginByUserId($credentials->id);
 
-        return $credentials->toUserView();
+        return new AuthUser(
+            $credentials->id,
+            $credentials->email,
+            null,
+            $credentials->name,
+            $credentials->lastname,
+        );
     }
 }

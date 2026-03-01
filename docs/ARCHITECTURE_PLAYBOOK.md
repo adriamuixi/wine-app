@@ -1,186 +1,92 @@
-# Architecture Playbook (Hexagonal for This Repo)
+# Architecture Playbook (Hexagonal)
 
-This document turns the architectural rules from `AGENTS.md` into a concrete folder and dependency strategy for `apps/api`.
+This document defines the current backend organization for `apps/api/src`.
 
-## Goals
-
-- Keep business rules framework-agnostic.
-- Prevent Symfony/Doctrine leakage into domain logic.
-- Make features implementable as vertical slices without collapsing into fat controllers/services.
-
-## Target Backend Structure (`apps/api/src`)
-
-Use explicit layers and feature-oriented subfolders.
+## Canonical Backend Structure
 
 ```text
 src/
   Domain/
-    Wine/
-      Model/
-      ValueObject/
-      Service/
-      Event/
-      Exception/
-    Review/
-      Model/
-      ValueObject/
-      Service/
-      Exception/
-    Shared/
-      ValueObject/
+    Enum/
+      ... domain enums used across layers
+    Model/
+      ... business entities and invariants
+    Repository/
+      ... repository interfaces (domain contracts)
 
   Application/
-    Review/
-      CreateReview/
-        CreateReviewCommand.php
-        CreateReviewHandler.php
-        CreateReviewResult.php
-    Port/
+    UseCases/
+      <Context>/<UseCase>/
+        *Command.php
+        *Handler.php
+        *Result.php
+    Ports/
+      ... non-repository ports (auth/session/security)
+
+  Adapters/
+    In/
+      Http/
+        ... controllers
+    Out/
       Persistence/
-      Clock/
-      Identity/
-
-  Infrastructure/
-    Persistence/
-      Doctrine/
-        Entity/
-        Repository/
-        Type/
-        Mapper/
-    Symfony/
-      Service/
+        Doctrine/
+          Entity/
+          Type/
+        Repos/
+          ... repository implementations
+      Storage/
+        ... filesystem/storage adapters
       Security/
-    External/
+        ... password/session adapters
 
-  UI/
-    Http/
-      Api/
-        Controller/
-        Request/
-        Response/
-        Mapper/
+  Bootstrap/
+    services.yaml
 ```
 
-## Dependency Rules (Strict)
+## Dependency Direction
 
-Allowed direction:
+Allowed:
 
-- `UI -> Application`
-- `Infrastructure -> Application` (implements ports)
-- `Infrastructure -> Domain` (mapping/persistence adaptation)
+- `Adapters/In -> Application`
 - `Application -> Domain`
-- `Application -> Application\Port`
-- `Domain -> Domain` only
+- `Adapters/Out -> Domain` (implements domain contracts)
+- `Adapters/Out -> Application` (implements non-domain app ports)
 
 Forbidden:
 
-- `Domain -> Symfony`
-- `Domain -> Doctrine`
-- `Application -> Doctrine/Symfony concrete classes`
-- `UI -> Doctrine repositories directly`
+- `Domain -> Application`
+- `Domain -> Symfony/Doctrine`
+- `Application -> Doctrine entities`
+- `Controllers -> Doctrine repositories directly`
 
-## What Goes in Each Layer
+## Layer Responsibilities
 
-## Domain
+### Domain
 
-Contains:
+- Business entities and invariants in `Domain/Model`.
+- Reusable enums in `Domain/Enum`.
+- Repository interfaces in `Domain/Repository`.
 
-- Entities/aggregates (pure PHP objects)
-- Value Objects
-- Domain rules/invariants
-- Domain exceptions
-- Domain services (only when behavior does not fit an entity/VO)
+### Application
 
-Avoid:
+- Use case orchestration only.
+- Command/result DTOs.
+- Non-repository adapter ports in `Application/Ports`.
 
-- Attributes from Doctrine/Symfony
-- HTTP concerns
-- Serialization concerns
-- Arrays as domain payloads
+### Adapters
 
-## Application
+- HTTP controllers and response mapping.
+- Doctrine entities and SQL/ORM infrastructure.
+- Storage/security implementations.
 
-Contains:
+## Practical Rules
 
-- Use case handlers
-- Input/output DTOs (commands/results)
-- Ports (interfaces)
-- Transaction boundary coordination
+- Keep controllers thin.
+- Keep Doctrine entities anemic.
+- Keep repository interfaces in domain.
+- Keep enum definitions in `Domain/Enum`.
+- Do not leak HTTP/database structures into domain models.
 
-Does not contain:
+## Service Wiring Notes
 
-- Doctrine query builder code
-- HTTP request parsing
-- Symfony validation attributes as business rules
-
-## Infrastructure
-
-Contains:
-
-- Doctrine entities and mappings
-- Repository implementations (port adapters)
-- Symfony service wiring
-- Password hashing adapter
-- External clients
-
-Rule:
-
-- Infrastructure translates between persistence shapes and domain objects.
-
-## UI / API
-
-Contains:
-
-- Controllers
-- Request validation DTOs
-- Response DTOs / serializers
-- Mapping from HTTP to application command/result
-
-Rule:
-
-- Controllers orchestrate, they do not decide business rules.
-
-## Naming Conventions
-
-- Domain objects use business names (`Wine`, `Review`, `ScoreAxis`, `Price`, `Place`).
-- Use cases use verb phrases (`CreateReview`, `ListWineReviews`, `RegisterUser`).
-- Ports end with `Interface` only if your team prefers it consistently; otherwise use role names (`ReviewRepository`, `PasswordHasher`).
-- Doctrine entities should be clearly infrastructure-specific (for example suffix `Record` if needed).
-
-## Doctrine Mapping Strategy (Recommended)
-
-Current scaffold maps `src/Entity` globally. For hexagonal alignment, move persistence entities under:
-
-- `src/Infrastructure/Persistence/Doctrine/Entity`
-
-Then configure Doctrine to map only that namespace.
-
-Reason:
-
-- Prevent accidental persistence annotations/attributes on domain classes.
-- Make “Doctrine entity != domain aggregate” explicit.
-
-## Service Registration Strategy (Recommended)
-
-Current scaffold autowires all `src/`. Prefer either:
-
-1. Explicit resource imports per layer, or
-2. Global import with exclusions for pure domain model folders
-
-Goal:
-
-- Domain model objects are created by code, not container magic.
-- Wiring remains predictable.
-
-## First Vertical Slice Template (Backend)
-
-Use this checklist when adding a feature:
-
-1. Add/adjust domain model + invariants.
-2. Add domain unit tests.
-3. Define application command/result + handler.
-4. Add application tests (with fake ports).
-5. Implement infrastructure adapters (Doctrine repo, etc.).
-6. Create migration.
-7. Add thin HTTP controller and request/response mapping.
-8. Add integration test (optional initially, recommended soon).
+`Bootstrap/services.yaml` should map domain repository interfaces to adapter implementations and exclude `Domain/Model` and `Domain/Enum` from container auto-services.

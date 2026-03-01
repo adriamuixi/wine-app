@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Adapters\Out\Persistence\Doctrine\Entity;
 
-use App\Domain\Enum\PhotoType;
+use App\Domain\Enum\WinePhotoType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'photo')]
+#[ORM\Table(name: 'wine_photo')]
 class PhotoRecord
 {
     #[ORM\Id]
@@ -24,6 +24,15 @@ class PhotoRecord
     #[ORM\Column(type: Types::TEXT)]
     private string $url;
 
-    #[ORM\Column(enumType: PhotoType::class, nullable: true)]
-    private ?PhotoType $type = null;
+    #[ORM\Column(enumType: WinePhotoType::class, nullable: true)]
+    private ?WinePhotoType $type = null;
+
+    #[ORM\Column(length: 16)]
+    private string $hash;
+
+    #[ORM\Column(type: 'bigint')]
+    private int $size;
+
+    #[ORM\Column(length: 10)]
+    private string $extension;
 }

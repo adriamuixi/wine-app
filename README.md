@@ -1,50 +1,36 @@
-# 🍷 Wine App
+# Wine App
 
-Personal wine catalog & review platform.
+Wine catalog and review platform.
 
-Stack:
+## Stack
 
-- Backend: Symfony (PHP 8.4, API-first)
-- Frontend: React + Vite (public + private apps)
+- Backend: Symfony (PHP 8.4)
+- Frontend: React + Vite (`web-public`, `web-private`)
 - Database: PostgreSQL
-- Infrastructure: Docker + Docker Compose
+- Infra: Docker + Docker Compose + Nginx
 - Architecture: Hexagonal (Ports & Adapters)
 
-This repository contains:
+## Repository Structure
 
-- Symfony API backend
-- Public React app
-- Private React app (admin / personal area)
-- PostgreSQL database
-- Nginx reverse proxy
+- `apps/api`: Symfony API
+- `apps/web-public`: public React app
+- `apps/web-private`: private/admin React app
+- `infra/nginx`: reverse proxy config
+- `docs`: architecture/workflow/domain docs
 
-## 📦 Project structure
+### Backend Structure (`apps/api/src`)
 
-If your Markdown renderer has trouble with tree blocks, this is the structure as a simple list:
+- `Domain/Enum`: reusable domain enums
+- `Domain/Model`: business entities and invariants
+- `Domain/Repository`: repository contracts (interfaces)
+- `Application/UseCases`: use case handlers and DTOs
+- `Application/Ports`: non-repository ports (security/session adapters)
+- `Adapters/In/Http`: controllers
+- `Adapters/Out/Persistence`: Doctrine adapters/entities
+- `Adapters/Out/Storage`: file/storage adapters
+- `Bootstrap`: dependency wiring
 
- apps/
-  - api/ (Symfony API)
-  - web-public/ (React public UI)
-  - web-private/ (React private UI, served under /admin)
-- infra/
-  - nginx/ (reverse proxy config)
-- docker-compose.yml (root)
-- AGENTS.md (AI guidance)
-- docs/ (repo-specific architecture and development playbooks)
-
----
-
-## Requirements
-
-- Docker + Docker Compose
-- `just` (recommended) or `make`
-
-Optional (if running React outside Docker):
-- Node.js 22+
-
-## Quick start
-
-Using `just`:
+## Quick Start
 
 ```bash
 just setup
@@ -53,18 +39,16 @@ just health
 
 ## URLs
 
-Public: http://localhost:8080/
+- Public: `http://localhost:8080/`
+- Private: `http://localhost:8080/admin/`
+- API: `http://localhost:8080/api`
 
-Private: http://localhost:8080/admin/
+## Documentation
 
-API: http://localhost:8080/api
+Read in this order:
 
-## Development guidance
-
-Read these before adding features:
-
-- `AGENTS.md`
-- `docs/README.md`
-- `docs/ARCHITECTURE_PLAYBOOK.md`
-- `docs/BACKEND_FEATURE_WORKFLOW.md`
-- `docs/DOMAIN_RULES_CHECKLIST.md`
+1. `AGENTS.md`
+2. `docs/README.md`
+3. `docs/ARCHITECTURE_PLAYBOOK.md`
+4. `docs/BACKEND_FEATURE_WORKFLOW.md`
+5. `docs/DOMAIN_RULES_CHECKLIST.md`

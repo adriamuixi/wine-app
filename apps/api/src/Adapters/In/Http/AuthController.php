@@ -9,7 +9,7 @@ use App\Application\UseCases\Auth\Login\LoginCommand;
 use App\Application\UseCases\Auth\Login\LoginHandler;
 use App\Application\UseCases\Auth\Logout\LogoutHandler;
 use App\Application\UseCases\Auth\Me\GetCurrentUserHandler;
-use App\Application\UseCases\Auth\AuthUserView;
+use App\Domain\Model\AuthUser;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -70,7 +70,7 @@ final class AuthController
     /**
      * @return array{id:int,email:string,name:string,lastname:string}
      */
-    private function userPayload(AuthUserView $user): array
+    private function userPayload(AuthUser $user): array
     {
         return [
             'id' => $user->id,

@@ -9,8 +9,8 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'award')]
-#[ORM\Index(name: 'award_wine_name_year_idx', columns: ['wine_id', 'name', 'year'])]
+#[ORM\Table(name: 'wine_award')]
+#[ORM\Index(name: 'wine_award_wine_name_year_idx', columns: ['wine_id', 'name', 'year'])]
 class AwardRecord
 {
     #[ORM\Id]

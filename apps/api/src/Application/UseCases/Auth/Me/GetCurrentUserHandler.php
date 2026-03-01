@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Application\UseCases\Auth\Me;
 
 use App\Application\Ports\AuthSessionManager;
-use App\Application\Ports\UserRepository;
-use App\Application\UseCases\Auth\AuthUserView;
+use App\Domain\Model\AuthUser;
+use App\Domain\Repository\UserRepository;
 
 final readonly class GetCurrentUserHandler
 {
@@ -16,13 +16,18 @@ final readonly class GetCurrentUserHandler
     ) {
     }
 
-    public function handle(): ?AuthUserView
+    public function handle(): ?AuthUser
     {
         $userId = $this->authSession->getAuthenticatedUserId();
         if (null === $userId) {
             return null;
         }
 
-        return $this->users->findAuthUserById($userId);
+        $user = $this->users->findAuthUserById($userId);
+        if (null === $user) {
+            return null;
+        }
+
+        return $user;
     }
 }

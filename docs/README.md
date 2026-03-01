@@ -1,23 +1,23 @@
 # Documentation Index
 
-This folder refines `AGENTS.md` into repository-specific guidance for building the wine platform on this scaffold.
+Repository-specific guidance for architecture, workflow, and domain integrity.
 
-Files:
+## Files
 
-- `docs/REPOSITORY_REVIEW.md`: Current-state review of the repository (gaps, risks, priorities).
-- `docs/ARCHITECTURE_PLAYBOOK.md`: Target folder structure and dependency rules for Hexagonal Architecture.
-- `docs/BACKEND_FEATURE_WORKFLOW.md`: Step-by-step workflow for implementing backend features with Symfony + Doctrine.
-- `docs/FRONTEND_API_GUIDELINES.md`: Frontend structure and API integration rules for both React apps.
-- `docs/DOMAIN_RULES_CHECKLIST.md`: Domain invariants and review-specific modeling checklist.
-- `docs/AI_START_HERE.md`: Default docs entrypoint for AI/Codex workflow after `AGENTS.md`.
-- `docs/api/openapi.yaml`: OpenAPI/Swagger source for the current API endpoints.
+- `docs/AI_START_HERE.md`: entrypoint for AI agents.
+- `docs/ARCHITECTURE_PLAYBOOK.md`: canonical folder/layer structure.
+- `docs/BACKEND_FEATURE_WORKFLOW.md`: implementation workflow for backend features.
+- `docs/DOMAIN_RULES_CHECKLIST.md`: domain invariants and review checklist.
+- `docs/FRONTEND_API_GUIDELINES.md`: frontend integration conventions.
+- `docs/REPOSITORY_REVIEW.md`: repository status and priorities.
+- `docs/api/openapi.yaml`: API source of truth.
+- `docs/database/postgresql_schema_v1.sql`: DB schema reference.
 
-Recommended reading order for new contributors:
+## Recommended Read Order
 
 1. `AGENTS.md`
-2. `docs/REPOSITORY_REVIEW.md`
+2. `docs/AI_START_HERE.md`
 3. `docs/ARCHITECTURE_PLAYBOOK.md`
 4. `docs/BACKEND_FEATURE_WORKFLOW.md`
 5. `docs/DOMAIN_RULES_CHECKLIST.md`
-6. `docs/FRONTEND_API_GUIDELINES.md`
-7. `docs/AI_START_HERE.md`
+6. `docs/api/openapi.yaml` (if API changes are involved)

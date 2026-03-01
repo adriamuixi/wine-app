@@ -1,133 +1,68 @@
 # Backend Feature Workflow (Symfony + Hexagonal)
 
-Use this workflow for every backend feature in `apps/api`.
+Use this workflow for backend work in `apps/api`.
 
-## Golden Rule
+## 1. Start from business rule
 
-Start from the domain rule, not from the controller or database schema.
+Write the rule first in plain language.
 
-## Implementation Sequence
+Examples:
 
-## 1. Write the business rule in plain language
+- one review per user + wine
+- score immutable after creation
+- place and price required
 
-Example:
+## 2. Model domain first
 
-- “A user can review a wine only once.”
-- “Scores are immutable after creation.”
-- “Place and price are required.”
+Update in this order when needed:
 
-If the rule cannot be stated in one sentence, the model is not clear yet.
+1. `Domain/Enum` (shared enum values)
+2. `Domain/Model` (entities + invariants)
+3. `Domain/Repository` (contracts)
 
-## 2. Model the domain
+## 3. Add/adjust use case
 
-Create/update:
+Implement in `Application/UseCases/...`:
 
-- Domain entities/aggregates
-- Value Objects
-- Domain exceptions
+- `*Command`
+- `*Handler`
+- `*Result`
 
-Examples of good VOs in this project:
+If extra adapter abstractions are needed (non-repository concerns), place them in `Application/Ports`.
 
-- `Price`
-- `Place`
-- `ReviewAxes`
-- `ReviewTag` (closed list)
+## 4. Implement adapters
 
-## 3. Add domain unit tests first
+- Persistence adapters under `Adapters/Out/Persistence/Repos`
+- Doctrine entities under `Adapters/Out/Persistence/Doctrine/Entity`
+- Storage/security adapters under `Adapters/Out/...`
+- HTTP controllers under `Adapters/In/Http`
 
-Minimum expectations:
+## 5. Keep boundaries strict
 
-- Happy path
-- Each invariant violation
-- Edge values (axes 0 and 5)
-- Duplicate review prevention behavior (at domain or app layer depending design)
+- No business rules in controllers.
+- No business rules in Doctrine entities.
+- No domain dependency on Symfony/Doctrine.
 
-## 4. Define the use case in Application layer
+## 6. Testing
 
-Create:
+Minimum required for feature completion:
 
-- Command/DTO input
-- Handler/service
-- Result DTO
-- Ports needed by the use case
+- Use case unit tests (`tests/Unit/Application/UseCases/...`)
+- Controller unit/integration tests (`tests/Unit/Adapters/In/Http/...` and/or `tests/Integration/Http/...`)
+- Domain unit tests when domain logic changes
 
-Typical ports:
+## 7. API and DB documentation updates
 
-- `ReviewRepository`
-- `WineRepository`
-- `UserRepository`
-- `Clock`
-- `TransactionManager` (optional, if needed)
+If endpoint behavior changes:
 
-## 5. Validate boundary input (UI/API), not domain truth
+- Update `docs/api/openapi.yaml`
+- Update relevant tests
 
-Use request DTO validation for:
+If schema/enums change:
 
-- Required fields
-- Primitive format checks
-- Basic ranges
+- Create migration
+- Update DB docs when relevant
 
-But keep business truth in Domain/Application:
+## Definition of Done
 
-- “one review per user + wine”
-- “score immutable”
-
-## 6. Implement infrastructure adapters
-
-Add:
-
-- Doctrine persistence entity/entities
-- Repository adapter implementing application port
-- Domain <-> persistence mappers
-- Migration
-
-Do not:
-
-- Return Doctrine entities to controllers
-- Reuse Doctrine entities as API responses
-
-## 7. Add thin controller
-
-Controller responsibilities:
-
-- Parse request
-- Build command DTO
-- Call handler
-- Map result to HTTP response
-- Set status code
-
-Controller must not:
-
-- Contain branching business rules
-- Query Doctrine directly
-- Build domain objects from unvalidated raw arrays inline
-
-## 8. Add tests at the right levels
-
-Required for feature completion:
-
-- Domain unit tests
-- Application tests (ports mocked/faked)
-
-Recommended:
-
-- Repository integration test
-- HTTP endpoint test
-
-## Migration Rules (Important)
-
-- Always create a Doctrine migration for schema changes.
-- Never use `doctrine:schema:update` to mutate DB state.
-- Review enum changes carefully (PostgreSQL enum migrations are not trivial).
-
-## Definition of Done (Backend Feature)
-
-A backend feature is done only if all are true:
-
-- Domain rule implemented in domain code
-- Domain tests added
-- Application use case added and tested
-- Migration created
-- Controller thin and DTO-based
-- No direct entity exposure
-- API response shape documented (at least in code/tests)
+A backend change is done when architecture boundaries are respected, tests pass, and docs/OpenAPI are updated for affected behavior.

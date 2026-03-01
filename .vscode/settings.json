@@ -1,5 +1,6 @@
 {
   "intelephense.environment.phpVersion": "8.4.0",
+  "php.validate.executablePath": "/usr/bin/php8.2",
   "php.validate.enable": false,
   "editor.formatOnSave": true,
   "files.insertFinalNewline": true,

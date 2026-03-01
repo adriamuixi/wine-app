@@ -1,0 +1,491 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Adapters\In\Http;
+
+use App\Adapters\In\Http\WineController;
+use App\Domain\Repository\DoRepository;
+use App\Domain\Repository\GrapeRepository;
+use App\Domain\Repository\WineRepository;
+use App\Domain\Repository\WinePhotoRepository;
+use App\Domain\Model\WinePhoto;
+use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
+use App\Application\UseCases\Wine\CreateWine\CreateWineHandler;
+use App\Application\UseCases\Wine\DeleteWine\DeleteWineHandler;
+use App\Application\UseCases\Wine\GetWine\GetWineDetailsHandler;
+use App\Application\UseCases\Wine\GetWine\WineAwardView;
+use App\Application\UseCases\Wine\GetWine\WineDetailsView;
+use App\Application\UseCases\Wine\GetWine\WineDoView;
+use App\Application\UseCases\Wine\GetWine\WineGrapeView;
+use App\Application\UseCases\Wine\GetWine\WinePhotoView;
+use App\Application\UseCases\Wine\GetWine\WinePurchasePlaceView;
+use App\Application\UseCases\Wine\GetWine\WinePurchaseView;
+use App\Application\UseCases\Wine\GetWine\WineReviewUserView;
+use App\Application\UseCases\Wine\GetWine\WineReviewView;
+use App\Application\UseCases\Wine\ListWines\ListWinesHandler;
+use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
+use App\Application\UseCases\Wine\ListWines\ListWinesResult;
+use App\Application\UseCases\Wine\ListWines\WineListItemView;
+use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
+use App\Application\UseCases\Wine\UpdateWine\UpdateWineHandler;
+use App\Domain\Enum\Country;
+use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Enum\WinePhotoType;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+final class WineControllerTest extends TestCase
+{
+    public function testCreateReturnsBadRequestForInvalidJson(): void
+    {
+        $controller = $this->controller();
+        $request = Request::create('/api/wines', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: '{');
+
+        $response = $controller->create($request);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testCreateReturnsBadRequestWhenNameIsMissing(): void
+    {
+        $controller = $this->controller();
+        $request = Request::create(
+            '/api/wines',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['country' => 'spain'], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testCreateReturnsNotFoundWhenDoDoesNotExist(): void
+    {
+        $controller = $this->controller(doCountries: []);
+        $request = Request::create(
+            '/api/wines',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['name' => 'Mencia', 'do_id' => 999], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    public function testCreateReturnsCreatedWithWineId(): void
+    {
+        $controller = $this->controller(doCountries: [1 => Country::Spain], grapeIds: [5]);
+        $request = Request::create(
+            '/api/wines',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Wine 1',
+                'do_id' => 1,
+                'alcohol_percentage' => 14.5,
+                'grapes' => [
+                    ['grape_id' => 5, 'percentage' => 100],
+                ],
+                'purchases' => [
+                    [
+                        'place' => [
+                            'place_type' => 'restaurant',
+                            'name' => 'Casa Paco',
+                            'address' => 'Calle A',
+                            'city' => 'Madrid',
+                            'country' => 'spain',
+                        ],
+                        'price_paid' => '13.50',
+                        'purchased_at' => '2026-02-28T09:00:00+00:00',
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+        self::assertSame(333, $payload['wine']['id']);
+    }
+
+    public function testCreateAcceptsWineTableStylePayloadKeys(): void
+    {
+        $controller = $this->controller(doCountries: [1 => Country::Spain], grapeIds: [5]);
+        $request = Request::create(
+            '/api/wines',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Wine Alias',
+                'do_id' => 1,
+                'wine_grapes' => [
+                    ['grape_id' => 5, 'percentage' => 100],
+                ],
+                'wine_purchase' => [
+                    [
+                        'place' => [
+                            'place_type' => 'restaurant',
+                            'name' => 'Casa Paco',
+                            'address' => 'Calle A',
+                            'city' => 'Madrid',
+                            'country' => 'spain',
+                        ],
+                        'price_paid' => '13.50',
+                        'purchased_at' => '2026-02-28T09:00:00+00:00',
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+    }
+
+    public function testListReturnsPaginatedWinesWithDefaults(): void
+    {
+        $controller = $this->controller();
+
+        $request = Request::create('/api/wines', 'GET');
+        $response = $controller->list($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSame(1, $payload['pagination']['page']);
+        self::assertSame(20, $payload['pagination']['limit']);
+        self::assertSame('List Wine 1', $payload['items'][0]['name']);
+    }
+
+    public function testListReturnsBadRequestForInvalidQueryParam(): void
+    {
+        $controller = $this->controller();
+
+        $request = Request::create('/api/wines?page=0', 'GET');
+        $response = $controller->list($request);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testListAcceptsExtendedFilterQueryParams(): void
+    {
+        $controller = $this->controller();
+
+        $request = Request::create('/api/wines?search=rioja&wine_type=red&country=spain&do_id=2&grape_id=5&score_bucket=90_plus&sort_by=score&sort_dir=desc', 'GET');
+        $response = $controller->list($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSame('Rioja', $payload['items'][0]['do']['name']);
+        self::assertSame(91.5, $payload['items'][0]['avg_score']);
+    }
+
+    public function testDeleteReturnsNoContentWhenWineExists(): void
+    {
+        $controller = $this->controller(deletableWineIds: [33]);
+
+        $response = $controller->delete(33);
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+    }
+
+    public function testDeleteReturnsNotFoundWhenWineDoesNotExist(): void
+    {
+        $controller = $this->controller(deletableWineIds: []);
+
+        $response = $controller->delete(999);
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    public function testUpdateReturnsNoContentWhenWineExists(): void
+    {
+        $controller = $this->controller(updatableWineIds: [20]);
+        $request = Request::create(
+            '/api/wines/20',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['name' => 'Updated Name'], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(20, $request);
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+    }
+
+    public function testUpdateReturnsNotFoundWhenWineDoesNotExist(): void
+    {
+        $controller = $this->controller(updatableWineIds: []);
+        $request = Request::create(
+            '/api/wines/999',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['name' => 'Updated Name'], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(999, $request);
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    public function testGetByIdReturnsNotFoundWhenWineDoesNotExist(): void
+    {
+        $controller = $this->controller(detailedWineIds: []);
+
+        $response = $controller->getById(404);
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    public function testGetByIdReturnsWineWithNestedRelations(): void
+    {
+        $controller = $this->controller(detailedWineIds: [77]);
+
+        $response = $controller->getById(77);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSame(77, $payload['wine']['id']);
+        self::assertSame('Tempranillo', $payload['wine']['grapes'][0]['name']);
+        self::assertSame('front_label', $payload['wine']['photos'][0]['type']);
+        self::assertSame('parker', $payload['wine']['awards'][0]['name']);
+        self::assertSame('fruity', $payload['wine']['reviews'][0]['bullets'][0]);
+        self::assertSame('Madrid', $payload['wine']['purchases'][0]['place']['city']);
+        self::assertSame('ribera', $payload['wine']['do']['name']);
+    }
+
+    /**
+     * @param array<int,Country> $doCountries
+     * @param list<int> $grapeIds
+     * @param list<int> $deletableWineIds
+     * @param list<int> $updatableWineIds
+     * @param list<int> $detailedWineIds
+     */
+    private function controller(
+        array $doCountries = [],
+        array $grapeIds = [],
+        array $deletableWineIds = [],
+        array $updatableWineIds = [],
+        array $detailedWineIds = [],
+    ): WineController
+    {
+        $repo = new SpyWineRepository($deletableWineIds, $updatableWineIds, $detailedWineIds);
+
+        return new WineController(
+            new CreateWineHandler(
+                $repo,
+                new InMemoryDoRepository($doCountries),
+                new InMemoryGrapeRepository($grapeIds),
+            ),
+            new UpdateWineHandler($repo, new InMemoryDoRepository($doCountries)),
+            new DeleteWineHandler($repo, new NoopWinePhotoRepository()),
+            new GetWineDetailsHandler($repo),
+            new ListWinesHandler($repo),
+        );
+    }
+}
+
+final class SpyWineRepository implements WineRepository
+{
+    /**
+     * @param list<int> $deletableWineIds
+     * @param list<int> $updatableWineIds
+     * @param list<int> $detailedWineIds
+     */
+    public function __construct(
+        private array $deletableWineIds = [],
+        private array $updatableWineIds = [],
+        private array $detailedWineIds = [],
+    )
+    {
+    }
+
+    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    {
+        return 333;
+    }
+
+    public function deleteById(int $id): bool
+    {
+        return in_array($id, $this->deletableWineIds, true);
+    }
+
+    public function updatePartial(UpdateWineCommand $command): bool
+    {
+        return in_array($command->wineId, $this->updatableWineIds, true);
+    }
+
+    public function existsById(int $id): bool
+    {
+        return in_array($id, $this->updatableWineIds, true) || in_array($id, $this->deletableWineIds, true);
+    }
+
+    public function findDetailsById(int $id): ?WineDetailsView
+    {
+        if (!in_array($id, $this->detailedWineIds, true)) {
+            return null;
+        }
+
+        return new WineDetailsView(
+            id: $id,
+            name: 'Wine Full',
+            winery: 'Bodega Demo',
+            wineType: 'red',
+            do: new WineDoView(1, 'ribera', 'Castilla y Leon', 'spain', 'ES'),
+            country: 'spain',
+            agingType: 'reserve',
+            vintageYear: 2020,
+            alcoholPercentage: 14.5,
+            createdAt: '2026-03-01T09:00:00+00:00',
+            updatedAt: '2026-03-01T09:10:00+00:00',
+            grapes: [new WineGrapeView(2, 'Tempranillo', 'red', 90.0)],
+            purchases: [
+                new WinePurchaseView(
+                    10,
+                    new WinePurchasePlaceView(11, 'restaurant', 'Casa Paco', 'Calle A', 'Madrid', 'spain'),
+                    21.5,
+                    '2026-03-01T08:00:00+00:00',
+                ),
+            ],
+            awards: [new WineAwardView(3, 'parker', 93.5, 2025)],
+            photos: [new WinePhotoView(4, 'front_label', '/images/wines/77/front.jpg', 'abc123', 12345, 'jpg')],
+            reviews: [
+                new WineReviewView(
+                    5,
+                    new WineReviewUserView(8, 'Ana', 'Lopez'),
+                    92,
+                    4,
+                    2,
+                    3,
+                    2,
+                    4,
+                    5,
+                    ['fruity'],
+                    '2026-03-01T08:30:00+00:00',
+                ),
+            ],
+        );
+    }
+
+    public function findPaginated(ListWinesQuery $query): ListWinesResult
+    {
+        return new ListWinesResult(
+            items: [
+                new WineListItemView(
+                    id: 1,
+                    name: 'List Wine 1',
+                    winery: 'Bodega 1',
+                    wineType: 'red',
+                    country: 'spain',
+                    doId: 3,
+                    doName: 'Rioja',
+                    vintageYear: 2022,
+                    avgScore: 91.5,
+                    updatedAt: '2026-03-01T09:00:00+00:00',
+                ),
+            ],
+            page: $query->page,
+            limit: $query->limit,
+            totalItems: 1,
+            totalPages: 1,
+        );
+    }
+}
+
+final class NoopWinePhotoRepository implements WinePhotoRepository
+{
+    public function findByWineAndType(int $wineId, WinePhotoType $type): ?WinePhoto
+    {
+        return null;
+    }
+
+    public function createForWine(
+        int $wineId,
+        WinePhotoType $type,
+        string $url,
+        string $hash,
+        int $size,
+        string $extension,
+    ): int {
+        return 1;
+    }
+
+    public function updateById(
+        int $id,
+        string $url,
+        string $hash,
+        int $size,
+        string $extension,
+    ): void {
+    }
+
+    public function save(string $sourcePath, int $wineId, string $hash, string $extension): string
+    {
+        return '/images/wines/'.$wineId.'/'.$hash.'.'.$extension;
+    }
+
+    public function deleteByUrl(string $url): void
+    {
+    }
+
+    public function deleteWineDirectory(int $wineId): void
+    {
+    }
+
+    public function findUrlsByWineId(int $wineId): array
+    {
+        return [];
+    }
+}
+
+final class InMemoryDoRepository implements DoRepository
+{
+    /**
+     * @param array<int,Country> $countryByDoId
+     */
+    public function __construct(private readonly array $countryByDoId)
+    {
+    }
+
+    public function findCountryById(int $id): ?Country
+    {
+        return $this->countryByDoId[$id] ?? null;
+    }
+
+    public function findById(int $id): ?DenominationOfOrigin
+    {
+        $country = $this->findCountryById($id);
+        if (null === $country) {
+            return null;
+        }
+
+        return new DenominationOfOrigin(
+            id: $id,
+            name: 'DO '.$id,
+            region: 'Region '.$id,
+            country: $country,
+            countryCode: 'ES',
+        );
+    }
+}
+
+final class InMemoryGrapeRepository implements GrapeRepository
+{
+    /**
+     * @param list<int> $existingIds
+     */
+    public function __construct(private readonly array $existingIds)
+    {
+    }
+
+    public function findExistingIds(array $ids): array
+    {
+        return array_values(array_intersect($ids, $this->existingIds));
+    }
+}

@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Adapters\Out\Persistence\Repos;
 
 use App\Adapters\Out\Persistence\Doctrine\Entity\UserRecord;
-use App\Application\Ports\UserRepository;
-use App\Application\UseCases\Auth\AuthUserCredentials;
-use App\Application\UseCases\Auth\AuthUserView;
+use App\Domain\Model\AuthUser;
+use App\Domain\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineUserRepository implements UserRepository
@@ -16,7 +15,7 @@ final readonly class DoctrineUserRepository implements UserRepository
     {
     }
 
-    public function findAuthByEmail(string $email): ?AuthUserCredentials
+    public function findAuthByEmail(string $email): ?AuthUser
     {
         /** @var UserRecord|null $user */
         $user = $this->entityManager->getRepository(UserRecord::class)->findOneBy(['email' => $email]);
@@ -24,7 +23,7 @@ final readonly class DoctrineUserRepository implements UserRepository
             return null;
         }
 
-        return new AuthUserCredentials(
+        return new AuthUser(
             $user->getId(),
             $user->getEmail(),
             $user->getPasswordHash(),
@@ -33,7 +32,7 @@ final readonly class DoctrineUserRepository implements UserRepository
         );
     }
 
-    public function findAuthUserById(int $id): ?AuthUserView
+    public function findAuthUserById(int $id): ?AuthUser
     {
         /** @var UserRecord|null $user */
         $user = $this->entityManager->getRepository(UserRecord::class)->find($id);
@@ -41,9 +40,10 @@ final readonly class DoctrineUserRepository implements UserRepository
             return null;
         }
 
-        return new AuthUserView(
+        return new AuthUser(
             $user->getId(),
             $user->getEmail(),
+            null,
             $user->getName(),
             $user->getLastname(),
         );

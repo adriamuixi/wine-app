@@ -63,7 +63,7 @@ CREATE TABLE place (
   city        VARCHAR(120),
   country     country NOT NULL,
   CONSTRAINT place_fields_by_type_chk CHECK (
-    (place_type = 'supermarket' AND address IS NULL AND city IS NULL) OR
+    (place_type = 'supermarket' AND address IS NULL) OR
     (place_type = 'restaurant'  AND address IS NOT NULL AND city IS NOT NULL)
   )
 );
@@ -77,12 +77,13 @@ CREATE TABLE grape (
 CREATE TABLE wine (
   id                  BIGSERIAL PRIMARY KEY,
   name                VARCHAR(255) NOT NULL,
-  wine_type           wine_type NOT NULL,
-  do_id               BIGINT NOT NULL REFERENCES "do"(id),
-  country             country NOT NULL,
+  winery              VARCHAR(255),
+  wine_type           wine_type,
+  do_id               BIGINT REFERENCES "do"(id),
+  country             country,
   aging_type          aging_type,
   vintage_year        INT CHECK (vintage_year IS NULL OR (vintage_year >= 1800 AND vintage_year <= 2200)),
-  alcohol_percentage  INT CHECK (alcohol_percentage IS NULL OR (alcohol_percentage >= 0 AND alcohol_percentage <= 100)),
+  alcohol_percentage  NUMERIC(4,1) CHECK (alcohol_percentage IS NULL OR (alcohol_percentage >= 0 AND alcohol_percentage <= 100)),
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -108,14 +109,19 @@ CREATE TABLE wine_grape (
   PRIMARY KEY (wine_id, grape_id)
 );
 
-CREATE TABLE photo (
+CREATE TABLE wine_photo (
   id       BIGSERIAL PRIMARY KEY,
   wine_id  BIGINT NOT NULL REFERENCES wine(id) ON DELETE CASCADE,
   url      TEXT NOT NULL,
-  type     photo_type
+  type     photo_type,
+  hash     VARCHAR(16) NOT NULL,
+  size     BIGINT NOT NULL,
+  extension VARCHAR(10) NOT NULL
 );
 
-CREATE TABLE award (
+CREATE UNIQUE INDEX wine_photo_wine_type_unique_idx ON wine_photo (wine_id, type) WHERE type IS NOT NULL;
+
+CREATE TABLE wine_award (
   id       BIGSERIAL PRIMARY KEY,
   wine_id  BIGINT NOT NULL REFERENCES wine(id) ON DELETE CASCADE,
   name     award_name NOT NULL,
@@ -123,7 +129,7 @@ CREATE TABLE award (
   year     INT CHECK (year IS NULL OR (year >= 1800 AND year <= 2200))
 );
 
-CREATE INDEX award_wine_name_year_idx ON award (wine_id, name, year);
+CREATE INDEX wine_award_wine_name_year_idx ON wine_award (wine_id, name, year);
 
 CREATE TABLE review (
   id                 BIGSERIAL PRIMARY KEY,
