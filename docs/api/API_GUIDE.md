@@ -15,6 +15,11 @@ Base URL (local): `http://localhost:8080`
   - [`POST /api/auth/logout`](#post-apiauthlogout)
   - [`POST /api/auth/users`](#post-apiauthusers)
   - [`DELETE /api/auth/users`](#delete-apiauthusers)
+- [Reviews](#reviews)
+  - [`GET /api/wines/{wineId}/reviews/{id}`](#get-apiwineswineidreviewsid)
+  - [`POST /api/wines/{wineId}/reviews`](#post-apiwineswineidreviews)
+  - [`PUT /api/wines/{wineId}/reviews/{id}`](#put-apiwineswineidreviewsid)
+  - [`DELETE /api/wines/{wineId}/reviews/{id}`](#delete-apiwineswineidreviewsid)
 - [Wines](#wines)
   - [`GET /api/grapes`](#get-apigrapes)
   - [`GET /api/dos`](#get-apidos)
@@ -193,6 +198,83 @@ Response example (`404`):
 {
   "error": "User not found for email adriamuixi@gmail.com."
 }
+```
+
+---
+
+## Reviews
+
+### `GET /api/wines/{wineId}/reviews/{id}`
+
+Gets one review by id.
+
+Expected:
+- `200` found
+- `404` not found
+
+Example:
+
+```bash
+curl -s http://localhost:8080/api/wines/2/reviews/1 | jq
+```
+
+---
+
+### `POST /api/wines/{wineId}/reviews`
+
+Creates a review for the authenticated user (session required).
+
+Expected:
+- `201` created
+- `400` invalid input
+- `401` unauthenticated
+- `409` review already exists for user+wine
+
+Example:
+
+```bash
+curl -s -b cookies.txt -X POST http://localhost:8080/api/wines/2/reviews \
+  -H 'Content-Type: application/json' \
+  -d '{"score":88,"intensity_aroma":4,"sweetness":2,"acidity":3,"tannin":2,"body":4,"persistence":4,"bullets":["floral"]}' | jq
+```
+
+---
+
+### `PUT /api/wines/{wineId}/reviews/{id}`
+
+Updates review axes/bullets (score is immutable).
+
+Expected:
+- `204` updated
+- `400` invalid input
+- `401` unauthenticated
+- `403` forbidden (review owned by another user)
+- `404` not found
+
+Example:
+
+```bash
+curl -i -b cookies.txt -X PUT http://localhost:8080/api/wines/2/reviews/1 \
+  -H 'Content-Type: application/json' \
+  -d '{"intensity_aroma":5,"sweetness":2,"acidity":2,"tannin":1,"body":4,"persistence":4,"bullets":["elegante"],"score":88}'
+```
+
+---
+
+### `DELETE /api/wines/{wineId}/reviews/{id}`
+
+Deletes a review by id.
+
+Expected:
+- `204` deleted
+- `401` unauthenticated
+- `403` forbidden (review owned by another user)
+- `404` not found
+
+Example:
+
+```bash
+curl -i -b cookies.txt -X DELETE http://localhost:8080/api/wines/2/reviews/1
 ```
 
 ---

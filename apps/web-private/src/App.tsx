@@ -989,6 +989,8 @@ function App() {
   const [menu, setMenu] = useState<MenuKey>('dashboard')
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginSubmitting, setLoginSubmitting] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [selectedWineSheet, setSelectedWineSheet] = useState<WineItem | null>(null)
   const [selectedWineSheetDetails, setSelectedWineSheetDetails] = useState<WineDetailsApiWine | null>(null)
