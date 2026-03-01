@@ -130,6 +130,7 @@ SQL,
 
     public function updatePartial(UpdateWineCommand $command): bool
     {
+        $hasGrapes = $command->isProvided('grapes');
         $sets = [];
         $params = ['id' => $command->wineId];
 
@@ -166,14 +167,42 @@ SQL,
             $params['alcohol_percentage'] = $command->alcoholPercentage;
         }
 
-        if ([] === $sets) {
+        if ([] === $sets && !$hasGrapes) {
             return false;
         }
 
-        $sets[] = 'updated_at = now()';
+        $connection = $this->entityManager->getConnection();
 
-        $sql = sprintf('UPDATE wine SET %s WHERE id = :id', implode(', ', $sets));
-        $affected = $this->entityManager->getConnection()->executeStatement($sql, $params);
+        $affected = $connection->transactional(
+            function (Connection $connection) use ($sets, $params, $command, $hasGrapes): int {
+                $setsWithTimestamp = [...$sets, 'updated_at = now()'];
+                $sql = sprintf('UPDATE wine SET %s WHERE id = :id', implode(', ', $setsWithTimestamp));
+                $affected = $connection->executeStatement($sql, $params);
+                if ($affected <= 0) {
+                    return 0;
+                }
+
+                if ($hasGrapes) {
+                    $connection->executeStatement(
+                        'DELETE FROM wine_grape WHERE wine_id = :wine_id',
+                        ['wine_id' => $command->wineId],
+                    );
+
+                    foreach ($command->grapes as $grape) {
+                        $connection->executeStatement(
+                            'INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (:wine_id, :grape_id, :percentage)',
+                            [
+                                'wine_id' => $command->wineId,
+                                'grape_id' => $grape->grapeId,
+                                'percentage' => $grape->percentage,
+                            ],
+                        );
+                    }
+                }
+
+                return $affected;
+            },
+        );
 
         return $affected > 0;
     }

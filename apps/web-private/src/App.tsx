@@ -29,6 +29,12 @@ type WineItem = {
   country: string
   region: string
   doName: string | null
+  thumbnailSrc: string
+  galleryPreview: {
+    bottle: string
+    front: string
+    back: string
+  }
   vintageYear: number | null
   pricePaid: number
   averageScore: number | null
@@ -52,6 +58,10 @@ type WineListApiItem = {
   do: { id: number; name: string } | null
   vintage_year: number | null
   avg_score: number | null
+  photos?: Array<{
+    type: 'front_label' | 'back_label' | 'bottle'
+    url: string
+  }>
 }
 
 type WineListApiPagination = {
@@ -317,6 +327,12 @@ const mockWines: WineItem[] = journalWineRows.map((row, index) => {
     country: 'Spain',
     region: row.region,
     doName: row.region,
+    thumbnailSrc: SAMPLE_WINE_THUMBNAIL_SRC,
+    galleryPreview: {
+      bottle: SAMPLE_WINE_THUMBNAIL_SRC,
+      front: SAMPLE_WINE_THUMBNAIL_SRC,
+      back: SAMPLE_WINE_THUMBNAIL_SRC,
+    },
     vintageYear: row.vintage,
     pricePaid,
     averageScore,
@@ -1043,6 +1059,7 @@ function App() {
   const [wineHasPrev, setWineHasPrev] = useState(false)
   const [wineFormSubmitting, setWineFormSubmitting] = useState(false)
   const [wineFormError, setWineFormError] = useState<string | null>(null)
+  const [wineSuccessToast, setWineSuccessToast] = useState<string | null>(null)
   const doDropdownRef = useRef<HTMLDivElement | null>(null)
   const createDoDropdownRef = useRef<HTMLDivElement | null>(null)
   const photoPickerInputRef = useRef<HTMLInputElement | null>(null)
@@ -1971,6 +1988,36 @@ function App() {
 
         const payload = await response.json() as WineListApiResponse
         const mappedItems = payload.items.map((item) => ({
+          galleryPreview: (() => {
+            const defaultSrc = DEFAULT_WINE_ICON_CANDIDATES[0]
+            const resolvedByType: Record<'bottle' | 'front' | 'back', string> = {
+              bottle: defaultSrc,
+              front: defaultSrc,
+              back: defaultSrc,
+            }
+
+            item.photos?.forEach((photo) => {
+              const resolvedUrl = resolveApiAssetUrl(photo.url)
+              if (photo.type === 'bottle') {
+                resolvedByType.bottle = resolvedUrl
+              }
+              if (photo.type === 'front_label') {
+                resolvedByType.front = resolvedUrl
+              }
+              if (photo.type === 'back_label') {
+                resolvedByType.back = resolvedUrl
+              }
+            })
+
+            return resolvedByType
+          })(),
+          thumbnailSrc: (() => {
+            const preferredPhoto = item.photos?.find((photo) => photo.type === 'bottle') ?? item.photos?.[0]
+            if (preferredPhoto?.url) {
+              return resolveApiAssetUrl(preferredPhoto.url)
+            }
+            return DEFAULT_WINE_ICON_CANDIDATES[0]
+          })(),
           id: item.id,
           name: item.name,
           winery: item.winery ?? '-',
@@ -2146,6 +2193,16 @@ function App() {
   const selectedWineProfile = selectedWineSheet
     ? buildMockWineProfile(selectedWineSheet, labels.wineProfile, labels.wineType)
     : null
+  const selectedWineGalleryImages = useMemo(
+    () => (selectedWineGallery
+      ? [
+          { key: 'bottle', src: selectedWineGallery.galleryPreview.bottle },
+          { key: 'front', src: selectedWineGallery.galleryPreview.front },
+          { key: 'back', src: selectedWineGallery.galleryPreview.back },
+        ] as const
+      : SAMPLE_WINE_GALLERY),
+    [selectedWineGallery],
+  )
   const selectedWineDoLogo = selectedWineSheetDetails?.do
     ? (doLogoPathForRegion(selectedWineSheetDetails.do.name) ?? doLogoPathForRegion(selectedWineSheetDetails.do.region))
     : (selectedWineSheet ? doLogoPathForRegion(selectedWineSheet.region) : null)
@@ -2250,9 +2307,6 @@ function App() {
         </div>
         <div className="panel-header-actions">
           <span className="pill">{slots.filter((slot) => slot.uploaded).length}/3 {locale === 'ca' ? 'pujades' : 'subidas'}</span>
-          <button type="button" className="ghost-button small" onClick={() => startPhotoPick(wineId, 'bottle')}>
-            {locale === 'ca' ? 'Editar' : 'Editar'}
-          </button>
         </div>
       </div>
       <div className="wine-sheet-thumbnail-row">
@@ -2268,14 +2322,21 @@ function App() {
             <div className="wine-photo-actions">
               <button
                 type="button"
-                className="ghost-button tiny"
+                className="ghost-button tiny photo-icon-button"
                 onClick={() => startPhotoPick(wineId, photo.type)}
+                title={locale === 'ca' ? 'Editar foto' : 'Editar foto'}
+                aria-label={locale === 'ca' ? 'Editar foto' : 'Editar foto'}
               >
-                {locale === 'ca' ? 'Editar' : 'Editar'}
+                <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    d="M3 17.25V21h3.75L18.37 9.38l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.62-9.62.92.92-9.62 9.62zM20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.3a1 1 0 0 0-1.41 0l-1.5 1.5 3.75 3.75 1.5-1.5z"
+                    fill="currentColor"
+                  />
+                </svg>
               </button>
               <button
                 type="button"
-                className="ghost-button tiny danger"
+                className="ghost-button tiny danger photo-icon-button"
                 onClick={() => {
                   void resetWinePhotoToDefault(wineId, photo.type)
                 }}
@@ -2289,18 +2350,10 @@ function App() {
           </div>
         ))}
       </div>
-      <input
-        ref={photoPickerInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="sr-only"
-        onChange={handlePhotoPickerChange}
-      />
     </section>
   )
 
-  const uploadWinePhoto = async (wineId: number, type: WinePhotoSlotType, file: File): Promise<void> => {
+  const uploadWinePhoto = async (wineId: number, type: WinePhotoSlotType, file: File): Promise<string | null> => {
     const body = new FormData()
     body.set('type', type)
     body.set('file', file)
@@ -2317,6 +2370,9 @@ function App() {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
     }
+
+    const payload = await response.json() as { photo?: { url?: string } }
+    return payload.photo?.url ?? null
   }
 
   const startPhotoPick = (wineId: number, type: WinePhotoSlotType) => {
@@ -2470,10 +2526,30 @@ function App() {
       })
 
       const file = new File([blob], rendered.outputFileName, { type: 'image/jpeg' })
-      await uploadWinePhoto(photoEditorWineId, photoEditorType, file)
+      const uploadedUrl = await uploadWinePhoto(photoEditorWineId, photoEditorType, file)
       closePhotoEditor()
       setWineProfileReloadToken((current) => current + 1)
       setWineEditReloadToken((current) => current + 1)
+      setWineListReloadToken((current) => current + 1)
+      if (uploadedUrl != null) {
+        const resolvedUploadedUrl = resolveApiAssetUrl(uploadedUrl)
+        setSelectedWineGallery((current) => {
+          if (current == null || current.id !== photoEditorWineId) {
+            return current
+          }
+
+          return {
+            ...current,
+            thumbnailSrc: photoEditorType === 'bottle' ? resolvedUploadedUrl : current.thumbnailSrc,
+            galleryPreview: {
+              ...current.galleryPreview,
+              ...(photoEditorType === 'bottle' ? { bottle: resolvedUploadedUrl } : {}),
+              ...(photoEditorType === 'front_label' ? { front: resolvedUploadedUrl } : {}),
+              ...(photoEditorType === 'back_label' ? { back: resolvedUploadedUrl } : {}),
+            },
+          }
+        })
+      }
     } catch (error: unknown) {
       setPhotoEditorError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut pujar la foto.' : 'No se pudo subir la foto.'))
     } finally {
@@ -2490,9 +2566,29 @@ function App() {
       }
       const blob = await defaultResponse.blob()
       const file = new File([blob], `${type}-default.png`, { type: blob.type || 'image/png' })
-      await uploadWinePhoto(wineId, type, file)
+      const uploadedUrl = await uploadWinePhoto(wineId, type, file)
       setWineProfileReloadToken((current) => current + 1)
       setWineEditReloadToken((current) => current + 1)
+      setWineListReloadToken((current) => current + 1)
+      if (uploadedUrl != null) {
+        const resolvedUploadedUrl = resolveApiAssetUrl(uploadedUrl)
+        setSelectedWineGallery((current) => {
+          if (current == null || current.id !== wineId) {
+            return current
+          }
+
+          return {
+            ...current,
+            thumbnailSrc: type === 'bottle' ? resolvedUploadedUrl : current.thumbnailSrc,
+            galleryPreview: {
+              ...current.galleryPreview,
+              ...(type === 'bottle' ? { bottle: resolvedUploadedUrl } : {}),
+              ...(type === 'front_label' ? { front: resolvedUploadedUrl } : {}),
+              ...(type === 'back_label' ? { back: resolvedUploadedUrl } : {}),
+            },
+          }
+        })
+      }
     } catch {
       setPhotoEditorError(locale === 'ca' ? 'No s’ha pogut eliminar la foto.' : 'No se pudo eliminar la foto.')
     } finally {
@@ -2607,8 +2703,9 @@ function App() {
   const handleWineFormSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (menu === 'wineEdit') {
-      setWineFormError(locale === 'ca' ? 'L’actualització del vi es connectarà al següent pas.' : 'La actualización del vino se conectará en el siguiente paso.')
+    const isEditing = menu === 'wineEdit'
+    if (isEditing && !selectedWineForEdit) {
+      setWineFormError(locale === 'ca' ? 'No s’ha pogut identificar el vi a editar.' : 'No se pudo identificar el vino a editar.')
       return
     }
 
@@ -2705,8 +2802,8 @@ function App() {
     setWineFormSubmitting(true)
     setWineFormError(null)
 
-    fetch(`${apiBaseUrl}/api/wines`, {
-      method: 'POST',
+    fetch(isEditing ? `${apiBaseUrl}/api/wines/${selectedWineForEdit?.id}` : `${apiBaseUrl}/api/wines`, {
+      method: isEditing ? 'PUT' : 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
@@ -2727,17 +2824,54 @@ function App() {
         }
       })
       .then(() => {
+        const toastMessage = isEditing
+          ? (locale === 'ca'
+            ? `El vi "${name}" s'ha actualitzat correctament.`
+            : `El vino "${name}" se ha actualizado correctamente.`)
+          : (locale === 'ca'
+            ? `El vi "${name}" s'ha creat correctament.`
+            : `El vino "${name}" se ha creado correctamente.`)
+        setWineSuccessToast(toastMessage)
+
+        if (isEditing) {
+          setSelectedWineForEdit(null)
+          setWineEditDetails(null)
+          setWineEditStatus('idle')
+        }
         setMenu('wines')
         setWinePage(1)
+        setWineListReloadToken((current) => current + 1)
         setShowMobileMenu(false)
       })
       .catch((error: unknown) => {
-        setWineFormError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut crear el vi.' : 'No se pudo crear el vino.'))
+        if (error instanceof Error) {
+          setWineFormError(error.message)
+          return
+        }
+        setWineFormError(
+          isEditing
+            ? (locale === 'ca' ? 'No s’ha pogut actualitzar el vi.' : 'No se pudo actualizar el vino.')
+            : (locale === 'ca' ? 'No s’ha pogut crear el vi.' : 'No se pudo crear el vino.'),
+        )
       })
       .finally(() => {
         setWineFormSubmitting(false)
       })
   }
+
+  useEffect(() => {
+    if (wineSuccessToast == null) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setWineSuccessToast(null)
+    }, 4000)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [wineSuccessToast])
 
   const renderReviewEditor = (mode: 'create' | 'edit', preset: ReviewFormPreset) => (
     <section className="screen-grid">
@@ -3836,7 +3970,7 @@ function App() {
                       >
                         <td className="wine-thumb-cell">
                           <img
-                            src={SAMPLE_WINE_THUMBNAIL_SRC}
+                            src={wine.thumbnailSrc}
                             alt={`${wine.name} thumbnail`}
                             className="wine-thumb"
                             loading="lazy"
@@ -5018,7 +5152,7 @@ function App() {
       ) : null}
 
       {photoEditorType && photoEditorSource ? (
-        <div className="modal-backdrop" role="presentation" onClick={closePhotoEditor}>
+        <div className="modal-backdrop modal-backdrop-top" role="presentation" onClick={closePhotoEditor}>
           <section
             className="photo-editor-modal"
             role="dialog"
@@ -5117,6 +5251,15 @@ function App() {
         </div>
       ) : null}
 
+      <input
+        ref={photoPickerInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        onChange={handlePhotoPickerChange}
+      />
+
       {selectedWineGallery ? (
         <div className="modal-backdrop" role="presentation" onClick={closeWineGallery}>
           <section
@@ -5129,7 +5272,59 @@ function App() {
             <header className="image-modal-header">
               <div>
                 <p className="eyebrow">{t('wineProfile.galleryEyebrow')}</p>
-                <h3 id="wine-gallery-title">{selectedWineGallery.name}</h3>
+                <div className="image-modal-title-row">
+                  <h3 id="wine-gallery-title">{selectedWineGallery.name}</h3>
+                  <div className="image-modal-left-actions">
+                    <button
+                      type="button"
+                      className="ghost-button small image-modal-icon-button"
+                      onClick={() => {
+                        const activePhotoType: WinePhotoSlotType =
+                          activeGalleryImageKey === 'front'
+                            ? 'front_label'
+                            : activeGalleryImageKey === 'back'
+                              ? 'back_label'
+                              : 'bottle'
+                        startPhotoPick(selectedWineGallery.id, activePhotoType)
+                      }}
+                      title={locale === 'ca' ? 'Editar foto' : 'Editar foto'}
+                      aria-label={locale === 'ca' ? 'Editar foto' : 'Editar foto'}
+                    >
+                      <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path
+                          d="M3 17.25V21h3.75L18.37 9.38l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.62-9.62.92.92-9.62 9.62zM20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.3a1 1 0 0 0-1.41 0l-1.5 1.5 3.75 3.75 1.5-1.5z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost-button small danger"
+                      onClick={() => {
+                        const activePhotoType: WinePhotoSlotType =
+                          activeGalleryImageKey === 'front'
+                            ? 'front_label'
+                            : activeGalleryImageKey === 'back'
+                              ? 'back_label'
+                              : 'bottle'
+                        void resetWinePhotoToDefault(selectedWineGallery.id, activePhotoType)
+                      }}
+                      disabled={
+                        photoDeleteBusyType === (
+                          activeGalleryImageKey === 'front'
+                            ? 'front_label'
+                            : activeGalleryImageKey === 'back'
+                              ? 'back_label'
+                              : 'bottle'
+                        )
+                      }
+                      title={locale === 'ca' ? 'Eliminar foto' : 'Eliminar foto'}
+                      aria-label={locale === 'ca' ? 'Eliminar foto' : 'Eliminar foto'}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
                 <p className="muted">{selectedWineGallery.winery}</p>
               </div>
               <button type="button" className="ghost-button small" onClick={closeWineGallery} aria-label={t('wineProfile.closeGalleryAria')}>
@@ -5139,7 +5334,7 @@ function App() {
 
             <div className="image-modal-stage">
               <div className="image-modal-rail" role="tablist" aria-label={t('wineProfile.imageViewsAria')}>
-                {SAMPLE_WINE_GALLERY.map((image) => {
+                {selectedWineGalleryImages.map((image) => {
                   const isActive = image.key === activeGalleryImageKey
 
                   return (
@@ -5159,16 +5354,13 @@ function App() {
 
               <figure className="image-modal-viewer">
                 {(() => {
-                  const activeImage = SAMPLE_WINE_GALLERY.find((image) => image.key === activeGalleryImageKey) ?? SAMPLE_WINE_GALLERY[0]
+                  const activeImage = selectedWineGalleryImages.find((image) => image.key === activeGalleryImageKey) ?? selectedWineGalleryImages[0]
 
                   return (
                     <>
                       <img src={activeImage.src} alt={`${selectedWineGallery.name} ${selectedWineProfile?.galleryLabels[activeImage.key] ?? galleryLabels[activeImage.key]}`} onError={fallbackToDefaultWineIcon} />
                       <figcaption>
                         <strong>{selectedWineProfile?.galleryLabels[activeImage.key] ?? galleryLabels[activeImage.key]}</strong>
-                        <span>
-                          {t('wineProfile.imageExampleCaption')}
-                        </span>
                       </figcaption>
                     </>
                   )
@@ -5176,6 +5368,12 @@ function App() {
               </figure>
             </div>
           </section>
+        </div>
+      ) : null}
+
+      {wineSuccessToast ? (
+        <div className="floating-toast floating-toast-success" role="status" aria-live="polite">
+          {wineSuccessToast}
         </div>
       ) : null}
     </main>

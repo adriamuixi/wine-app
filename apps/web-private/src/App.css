@@ -68,6 +68,26 @@ code {
   font-size: 0.92rem;
 }
 
+.floating-toast {
+  position: fixed;
+  top: 0.95rem;
+  right: 1rem;
+  z-index: 420;
+  max-width: min(90vw, 440px);
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(57, 121, 71, 0.35);
+  background: rgba(230, 255, 236, 0.98);
+  box-shadow: 0 12px 28px rgba(20, 24, 21, 0.2);
+  color: #1f5b2a;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.floating-toast-success {
+  border-color: rgba(57, 121, 71, 0.35);
+}
+
 .primary-button,
 .secondary-button,
 .ghost-button,
@@ -1553,17 +1573,18 @@ code {
 }
 
 .wine-actions-wrap {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: center;
   justify-content: flex-end;
   gap: 0.45rem;
 }
 
 .table-icon-button {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  min-height: 38px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 9px;
   border: 1px solid rgba(82, 46, 28, 0.14);
   background: rgba(255, 255, 255, 0.86);
@@ -1590,8 +1611,8 @@ code {
 }
 
 .table-icon-svg {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   display: block;
 }
 
@@ -1636,6 +1657,10 @@ code {
   place-items: center;
   padding: 1rem;
   z-index: 300;
+}
+
+.modal-backdrop-top {
+  z-index: 340;
 }
 
 .image-modal {
@@ -2088,6 +2113,23 @@ code {
   gap: 0.35rem;
 }
 
+.wine-photo-actions .photo-icon-button {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding-inline: 0;
+  justify-content: center;
+}
+
+.wine-photo-actions .photo-icon-button .table-icon-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.wine-photo-actions .photo-icon-button.danger {
+  font-size: 1.15rem;
+}
+
 .wine-profile-summary-panel {
   display: grid;
   align-content: start;
@@ -2476,6 +2518,54 @@ code {
   gap: 0.8rem;
 }
 
+.image-modal-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.image-modal-left-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.image-modal-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.image-modal-title-row h3 {
+  margin: 0;
+}
+
+.image-modal-icon-button {
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.image-modal-left-actions .ghost-button.small.danger {
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  padding-inline: 0;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.image-modal-left-actions .table-icon-svg {
+  width: 24px;
+  height: 24px;
+}
+
 .photo-editor-modal {
   width: min(760px, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
@@ -2657,6 +2747,12 @@ code {
 
 .image-modal-viewer figcaption strong {
   color: #251b15;
+}
+
+.image-modal-photo-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .image-modal-viewer figcaption span {
@@ -4840,6 +4936,50 @@ body {
 
   .topbar-controls .theme-toggle span:last-child {
     display: none;
+  }
+
+  .image-modal-left-actions {
+    gap: 0.55rem;
+  }
+
+  .image-modal-icon-button,
+  .image-modal-left-actions .ghost-button.small.danger {
+    width: 52px;
+    min-width: 52px;
+    height: 52px;
+    font-size: 1.25rem;
+  }
+
+  .image-modal-left-actions .table-icon-svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .photo-editor-zoom-buttons {
+    right: 0.7rem;
+    bottom: 0.7rem;
+    gap: 0.45rem;
+  }
+
+  .photo-editor-zoom-buttons .ghost-button.tiny {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding-inline: 0;
+    font-size: 1.2rem;
+    justify-content: center;
+  }
+
+  .wine-photo-actions .ghost-button.tiny {
+    min-height: 42px;
+    padding-inline: 0.65rem;
+  }
+
+  .floating-toast {
+    top: 0.7rem;
+    right: 0.7rem;
+    left: 0.7rem;
+    max-width: none;
   }
 }
 

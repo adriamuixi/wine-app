@@ -344,10 +344,11 @@ const DICT: Record<Locale, Dictionary> = {
   },
 }
 
+const DEFAULT_PUBLIC_WINE_IMAGE = '/images/photos/wines/no-photo.png'
 const SHARED_GALLERY = [
-  'images/photos/wines/exmaple_wine-hash.png',
-  'images/photos/wines/front_wine-hash.png',
-  'images/photos/wines/back_wine-hash.png',
+  DEFAULT_PUBLIC_WINE_IMAGE,
+  DEFAULT_PUBLIC_WINE_IMAGE,
+  DEFAULT_PUBLIC_WINE_IMAGE,
 ]
 
 type JournalWineRow = {
@@ -541,9 +542,9 @@ function autonomousCommunityNameForRegion(region: string): string | null {
 }
 
 const imageCycle = [
-  'images/photos/wines/exmaple_wine-hash.png',
-  'images/photos/wines/front_wine-hash.png',
-  'images/photos/wines/back_wine-hash.png',
+  DEFAULT_PUBLIC_WINE_IMAGE,
+  DEFAULT_PUBLIC_WINE_IMAGE,
+  DEFAULT_PUBLIC_WINE_IMAGE,
 ] as const
 
 const MOCK_WINES: WineCard[] = CATALAN_JOURNAL_ROWS.map((row, index) => {
@@ -1282,7 +1283,14 @@ export default function App() {
                   }}
                 >
                   <div className="wine-card-media">
-                    <img src={wine.image} alt={wine.name} loading="lazy" />
+                    <img
+                      src={wine.image}
+                      alt={wine.name}
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_PUBLIC_WINE_IMAGE
+                      }}
+                    />
                     <div className="wine-card-overlay" />
                     <div className="wine-card-badges">
                       {isFeatured ? <span className="gold-chip">{t.card.featured90}</span> : null}
@@ -1472,7 +1480,13 @@ export default function App() {
             <div className="public-wine-modal-grid">
               <div className="public-wine-gallery">
                 <div className="public-wine-main-image">
-                  <img src={selectedWine.gallery[activeModalImageIndex] ?? selectedWine.image} alt={selectedWine.name} />
+                  <img
+                    src={selectedWine.gallery[activeModalImageIndex] ?? selectedWine.image}
+                    alt={selectedWine.name}
+                    onError={(event) => {
+                      event.currentTarget.src = DEFAULT_PUBLIC_WINE_IMAGE
+                    }}
+                  />
                 </div>
                 <div className="public-wine-thumbs" aria-label={t.modal.gallery}>
                   {selectedWine.gallery.map((src, index) => (
@@ -1482,7 +1496,14 @@ export default function App() {
                       className={`public-wine-thumb ${activeModalImageIndex === index ? 'active' : ''}`}
                       onClick={() => setActiveModalImageIndex(index)}
                     >
-                      <img src={src} alt={`${selectedWine.name} ${index + 1}`} loading="lazy" />
+                      <img
+                        src={src}
+                        alt={`${selectedWine.name} ${index + 1}`}
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.src = DEFAULT_PUBLIC_WINE_IMAGE
+                        }}
+                      />
                     </button>
                   ))}
                 </div>

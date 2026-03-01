@@ -225,6 +225,31 @@ final class WineControllerTest extends TestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
     }
 
+    public function testUpdatePersistsGrapesPayloadInCommand(): void
+    {
+        $controller = $this->controller(updatableWineIds: [20]);
+        $request = Request::create(
+            '/api/wines/20',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Updated Name',
+                'grapes' => [
+                    ['grape_id' => 5, 'percentage' => 70],
+                    ['grape_id' => 8, 'percentage' => 30],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(20, $request);
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+        self::assertNotNull(SpyWineRepository::$lastUpdateCommand);
+        self::assertCount(2, SpyWineRepository::$lastUpdateCommand->grapes);
+        self::assertSame(70.0, (float) SpyWineRepository::$lastUpdateCommand->grapes[0]->percentage);
+        self::assertSame(30.0, (float) SpyWineRepository::$lastUpdateCommand->grapes[1]->percentage);
+    }
+
     public function testUpdateReturnsNotFoundWhenWineDoesNotExist(): void
     {
         $controller = $this->controller(updatableWineIds: []);
@@ -281,6 +306,7 @@ final class WineControllerTest extends TestCase
         array $detailedWineIds = [],
     ): WineController
     {
+        SpyWineRepository::$lastUpdateCommand = null;
         $repo = new SpyWineRepository($deletableWineIds, $updatableWineIds, $detailedWineIds);
 
         return new WineController(
@@ -300,6 +326,7 @@ final class WineControllerTest extends TestCase
 
 final class SpyWineRepository implements WineRepository
 {
+    public static ?UpdateWineCommand $lastUpdateCommand = null;
     /**
      * @param list<int> $deletableWineIds
      * @param list<int> $updatableWineIds
@@ -325,6 +352,7 @@ final class SpyWineRepository implements WineRepository
 
     public function updatePartial(UpdateWineCommand $command): bool
     {
+        self::$lastUpdateCommand = $command;
         return in_array($command->wineId, $this->updatableWineIds, true);
     }
 

@@ -304,6 +304,7 @@ final class WineController
             'aging_type' => array_key_exists('aging_type', $payload),
             'vintage_year' => array_key_exists('vintage_year', $payload),
             'alcohol_percentage' => array_key_exists('alcohol_percentage', $payload),
+            'grapes' => array_key_exists('grapes', $payload) || array_key_exists('wine_grapes', $payload),
         ];
 
         $name = $this->parseNullableString($payload['name'] ?? null, 'name', $provided['name']);
@@ -314,6 +315,7 @@ final class WineController
         $agingType = $this->parseEnum($payload['aging_type'] ?? null, AgingType::class, 'aging_type');
         $vintageYear = $this->parseNullableInt($payload['vintage_year'] ?? null, 'vintage_year');
         $alcoholPercentage = $this->parseNullableNumber($payload['alcohol_percentage'] ?? null, 'alcohol_percentage');
+        $grapes = $this->parseGrapes($payload['grapes'] ?? $payload['wine_grapes'] ?? []);
 
         return new UpdateWineCommand(
             wineId: $id,
@@ -326,6 +328,7 @@ final class WineController
             vintageYear: $vintageYear,
             alcoholPercentage: $alcoholPercentage,
             provided: $provided,
+            grapes: $grapes,
         );
     }
 

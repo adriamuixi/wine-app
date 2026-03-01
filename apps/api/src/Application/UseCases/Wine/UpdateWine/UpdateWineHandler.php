@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\UseCases\Wine\UpdateWine;
 
 use App\Domain\Model\Wine;
+use App\Domain\Model\WineGrape;
 use App\Domain\Repository\DoRepository;
 use App\Domain\Repository\WineRepository;
 
@@ -73,6 +74,7 @@ final readonly class UpdateWineHandler
             vintageYear: $command->vintageYear,
             alcoholPercentage: $command->alcoholPercentage,
             provided: $provided,
+            grapes: $command->grapes,
         );
     }
 
@@ -92,6 +94,12 @@ final readonly class UpdateWineHandler
 
         if ($command->isProvided('alcohol_percentage')) {
             Wine::assertAlcoholPercentage($command->alcoholPercentage);
+        }
+
+        if ($command->isProvided('grapes')) {
+            foreach ($command->grapes as $grape) {
+                new WineGrape($grape->grapeId, $grape->percentage);
+            }
         }
     }
 }
