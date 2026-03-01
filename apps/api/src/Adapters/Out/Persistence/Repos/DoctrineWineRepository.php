@@ -578,9 +578,16 @@ SQL,
     private function toReviewBullet(string $value): ReviewBullet
     {
         return match ($value) {
+            // Backward compatibility for old Spanish values.
+            'afrutado' => ReviewBullet::Afrutado,
+            'especiado' => ReviewBullet::Especiado,
+            'madera_marcada', 'marked_wood' => ReviewBullet::MaderaMarcada,
+            'facil_de_beber' => ReviewBullet::FacilDeBeber,
+            'elegante' => ReviewBullet::Elegante,
+            'potente' => ReviewBullet::Potente,
+            'gastronomico' => ReviewBullet::Gastronomico,
             'fruity' => ReviewBullet::Afrutado,
             'spicy' => ReviewBullet::Especiado,
-            'marked_wood' => ReviewBullet::MaderaMarcada,
             'easy_drinking' => ReviewBullet::FacilDeBeber,
             'food_friendly' => ReviewBullet::Gastronomico,
             default => ReviewBullet::from($value),

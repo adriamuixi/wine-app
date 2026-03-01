@@ -1,5 +1,5 @@
 common:
-  appName: Wine App
+  appName: Els nostres vins
   mockMode: Mode demo. Aquesta pantalla no crida l’API.
   menu: Menú
   logout: Tanca sessió

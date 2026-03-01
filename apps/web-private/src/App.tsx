@@ -47,6 +47,18 @@ type ReviewItem = {
   score: number
   createdAt: string
   notes: string
+  intensityAroma?: number
+  sweetness?: number
+  acidity?: number
+  tannin?: number
+  body?: number
+  persistence?: number
+  tags?: string[]
+}
+
+type MyWineReviewEntry = {
+  wine: WineItem
+  review: WineDetailsApiReview
 }
 
 type WineListApiItem = {
@@ -151,7 +163,7 @@ type WineDetailsApiReview = {
   tannin: number | null
   body: number
   persistence: number
-  bullets: string[]
+  bullets: Array<'fruity' | 'floral' | 'spicy' | 'mineral' | 'oak_forward' | 'easy_drinking' | 'elegant' | 'powerful' | 'food_friendly'>
   created_at: string
 }
 
@@ -350,6 +362,28 @@ const AGING_OPTIONS = ['young', 'crianza', 'reserve', 'grand_reserve'] as const
 const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket'] as const
 const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker'] as const
 const REVIEW_TAG_OPTIONS = ['Afrutado', 'Floral', 'Especiado', 'Mineral', 'Madera marcada', 'Fácil de beber', 'Elegante', 'Potente', 'Gastronómico'] as const
+const REVIEW_TAG_TO_ENUM: Record<(typeof REVIEW_TAG_OPTIONS)[number], WineDetailsApiReview['bullets'][number]> = {
+  Afrutado: 'fruity',
+  Floral: 'floral',
+  Especiado: 'spicy',
+  Mineral: 'mineral',
+  'Madera marcada': 'oak_forward',
+  'Fácil de beber': 'easy_drinking',
+  Elegante: 'elegant',
+  Potente: 'powerful',
+  Gastronómico: 'food_friendly',
+}
+const REVIEW_ENUM_TO_TAG: Record<WineDetailsApiReview['bullets'][number], (typeof REVIEW_TAG_OPTIONS)[number]> = {
+  fruity: 'Afrutado',
+  floral: 'Floral',
+  spicy: 'Especiado',
+  mineral: 'Mineral',
+  oak_forward: 'Madera marcada',
+  easy_drinking: 'Fácil de beber',
+  elegant: 'Elegante',
+  powerful: 'Potente',
+  food_friendly: 'Gastronómico',
+}
 const SCORE_OPTIONS_0_TO_10 = Array.from({ length: 11 }, (_, value) => value)
 const SCORE_OPTIONS_0_TO_100 = Array.from({ length: 101 }, (_, value) => value)
 const VINTAGE_YEAR_OPTIONS = Array.from({ length: 76 }, (_, index) => String(2026 - index))
@@ -383,20 +417,28 @@ function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
     }
   }
 
+  const hasDetailedAxes = (
+    review.intensityAroma != null
+    && review.sweetness != null
+    && review.acidity != null
+    && review.body != null
+    && review.persistence != null
+  )
+
   const base = Math.max(0, Math.min(10, Math.round(review.score / 10)))
   const boosted = Math.max(0, Math.min(10, base + 1))
-  const tags = review.score >= 90 ? ['Elegante', 'Potente', 'Gastronómico'] : ['Afrutado', 'Fácil de beber']
+  const tags = review.tags ?? (review.score >= 90 ? ['Elegante', 'Potente', 'Gastronómico'] : ['Afrutado', 'Fácil de beber'])
 
   return {
     wineId: String(review.wineId),
     tastingDate: review.createdAt,
     overallScore: review.score,
-    aroma: boosted,
-    sweetness: Math.max(0, base - 1),
-    acidity: base,
-    tannin: boosted,
-    body: boosted,
-    persistence: base,
+    aroma: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.intensityAroma ?? 0) * 2))) : boosted,
+    sweetness: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.sweetness ?? 0) * 2))) : Math.max(0, base - 1),
+    acidity: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.acidity ?? 0) * 2))) : base,
+    tannin: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.tannin ?? 0) * 2))) : boosted,
+    body: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.body ?? 0) * 2))) : boosted,
+    persistence: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.persistence ?? 0) * 2))) : base,
     tags,
     notes: review.notes,
   }
@@ -708,9 +750,97 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#39;')
 }
 
+type WineProfileLabels = {
+  pageTitle: string
+  galleryEyebrow: string
+  imageLabels: {
+    bottle: string
+    front: string
+    back: string
+  }
+  mock: {
+    sectionTitles: {
+      wineRecord: string
+      regionDo: string
+      grapes: string
+      placePurchase: string
+      mediaAwardsReview: string
+    }
+    fieldLabels: {
+      id: string
+      name: string
+      winery: string
+      wineTypeEnum: string
+      agingTypeEnum: string
+      vintageYear: string
+      alcoholPercentage: string
+      pricePaid: string
+      createdAt: string
+      updatedAt: string
+      countryEnum: string
+      regionDoName: string
+      regionDoCountry: string
+      regionDoId: string
+      grapeRows: string
+      purchasePlaceId: string
+      placeTypeEnum: string
+      placeName: string
+      placeAddress: string
+      placeCity: string
+      photoRecordsEnum: string
+      photoUrls: string
+      awardNameEnum: string
+      awardScore: string
+      awardYear: string
+      reviewBulletsEnum: string
+    }
+    labels: {
+      mockFk: string
+      mockExtraHarvest: string
+      reviewSummaryMock: string
+    }
+    templates: {
+      mockFkValue: string
+      recordsCount: string
+      grapeRowLabel: string
+      grapeRowValue: string
+      harvestRange: string
+      priceEur: string
+      reviewSummary: string
+    }
+    values: {
+      agingReserve: string
+      agingYoung: string
+      placeTypeRestaurant: string
+      placeTypeSupermarket: string
+      countrySpain: string
+      countryFrance: string
+      countryPortugal: string
+      photoTypeBottle: string
+      photoTypeFrontLabel: string
+      photoTypeBackLabel: string
+      colorRed: string
+      colorWhite: string
+      placeNameRestaurant: string
+      placeNameSupermarket: string
+      placeAddressMock: string
+      placeCityMock: string
+      photoUrlsMock: string
+      reviewBullets: string
+    }
+    profile: {
+      summaryRed: string
+      summaryOther: string
+      tags: string[]
+      pairing: string[]
+      servingNotes: string
+    }
+  }
+}
+
 function buildMockWineProfile(
   wine: WineItem,
-  wineProfileLabels: any,
+  wineProfileLabels: WineProfileLabels,
   wineTypeLabels: Record<WineType, string>,
 ) {
   const wp = wineProfileLabels
@@ -927,6 +1057,46 @@ function resolveApiAssetUrl(path: string): string {
   return `${resolveApiBaseUrl()}${path}`
 }
 
+function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineItem {
+  const defaultSrc = DEFAULT_WINE_ICON_CANDIDATES[0]
+  const resolvedByType: Record<'bottle' | 'front' | 'back', string> = {
+    bottle: defaultSrc,
+    front: defaultSrc,
+    back: defaultSrc,
+  }
+
+  item.photos?.forEach((photo) => {
+    const resolvedUrl = resolveApiAssetUrl(photo.url)
+    if (photo.type === 'bottle') {
+      resolvedByType.bottle = resolvedUrl
+    }
+    if (photo.type === 'front_label') {
+      resolvedByType.front = resolvedUrl
+    }
+    if (photo.type === 'back_label') {
+      resolvedByType.back = resolvedUrl
+    }
+  })
+
+  const preferredPhoto = item.photos?.find((photo) => photo.type === 'bottle') ?? item.photos?.[0]
+
+  return {
+    galleryPreview: resolvedByType,
+    thumbnailSrc: preferredPhoto?.url ? resolveApiAssetUrl(preferredPhoto.url) : defaultSrc,
+    id: item.id,
+    name: item.name,
+    winery: item.winery ?? '-',
+    type: item.wine_type ?? 'red',
+    country: countryCodeToLabel(item.country, locale),
+    region: item.do?.name ?? '-',
+    doName: item.do?.name ?? null,
+    vintageYear: item.vintage_year,
+    // List endpoint does not expose price in current API contract.
+    pricePaid: 0,
+    averageScore: item.avg_score == null ? null : Math.round(item.avg_score * 10) / 10,
+  }
+}
+
 function formatApiDate(dateIso: string, locale: string): string {
   const date = new Date(dateIso)
   if (Number.isNaN(date.getTime())) {
@@ -948,6 +1118,22 @@ function labelForPhotoType(type: WineDetailsApiPhoto['type']): string {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
+}
+
+function medalToneFromTen(value: number | null): 'gold' | 'silver' | 'bronze' | 'default' {
+  if (value == null) return 'default'
+  if (value >= 9) return 'gold'
+  if (value >= 8) return 'silver'
+  if (value >= 7) return 'bronze'
+  return 'default'
+}
+
+function medalToneFromHundred(value: number | null): 'gold' | 'silver' | 'bronze' | 'default' {
+  if (value == null) return 'default'
+  if (value >= 90) return 'gold'
+  if (value >= 80) return 'silver'
+  if (value >= 70) return 'bronze'
+  return 'default'
 }
 
 function labelForAgingType(agingType: WineDetailsApiWine['aging_type'], locale: string): string {
@@ -1057,6 +1243,20 @@ function App() {
   const [wineTotalPages, setWineTotalPages] = useState(0)
   const [wineHasNext, setWineHasNext] = useState(false)
   const [wineHasPrev, setWineHasPrev] = useState(false)
+  const [isWineFiltersMobileOpen, setIsWineFiltersMobileOpen] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(
+    () => (typeof window !== 'undefined' ? window.matchMedia('(max-width: 640px)').matches : false),
+  )
+  const [myReviewEntries, setMyReviewEntries] = useState<MyWineReviewEntry[]>([])
+  const [myReviewSummaryStatus, setMyReviewSummaryStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [myReviewSummaryError, setMyReviewSummaryError] = useState<string | null>(null)
+  const [reviewTotalWines, setReviewTotalWines] = useState(0)
+  const [reviewListReloadToken, setReviewListReloadToken] = useState(0)
+  const [reviewFormSubmitting, setReviewFormSubmitting] = useState(false)
+  const [reviewFormError, setReviewFormError] = useState<string | null>(null)
+  const [reviewSuccessToast, setReviewSuccessToast] = useState<string | null>(null)
+  const [reviewActionError, setReviewActionError] = useState<string | null>(null)
+  const [reviewDeleteBusyId, setReviewDeleteBusyId] = useState<number | null>(null)
   const [wineFormSubmitting, setWineFormSubmitting] = useState(false)
   const [wineFormError, setWineFormError] = useState<string | null>(null)
   const [wineSuccessToast, setWineSuccessToast] = useState<string | null>(null)
@@ -1069,6 +1269,7 @@ function App() {
     { id: 1, grapeId: '', percentage: '' },
   ])
   const [awardRows, setAwardRows] = useState<AwardRow[]>([])
+  const currentUserId = currentUser?.id ?? null
   const firstGrapeOptionId = grapeOptions[0] ? String(grapeOptions[0].id) : ''
 
   const addGrapeBlendRow = () => {
@@ -1941,7 +2142,53 @@ function App() {
   }, [isCreateDoDropdownOpen])
 
   useEffect(() => {
-    if (menu !== 'wines') {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const query = window.matchMedia('(max-width: 640px)')
+    const onChange = (event: MediaQueryListEvent) => {
+      setIsMobileViewport(event.matches)
+    }
+
+    setIsMobileViewport(query.matches)
+    query.addEventListener('change', onChange)
+    return () => {
+      query.removeEventListener('change', onChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (menu !== 'wines' || !isMobileViewport) {
+      setIsWineFiltersMobileOpen(false)
+      setIsDoDropdownOpen(false)
+    }
+  }, [isMobileViewport, menu])
+
+  useEffect(() => {
+    if (!isWineFiltersMobileOpen) {
+      return
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDoDropdownOpen(false)
+        setIsWineFiltersMobileOpen(false)
+      }
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isWineFiltersMobileOpen])
+
+  useEffect(() => {
+    if (menu !== 'wines' && menu !== 'reviews') {
       return
     }
 
@@ -1987,49 +2234,7 @@ function App() {
         }
 
         const payload = await response.json() as WineListApiResponse
-        const mappedItems = payload.items.map((item) => ({
-          galleryPreview: (() => {
-            const defaultSrc = DEFAULT_WINE_ICON_CANDIDATES[0]
-            const resolvedByType: Record<'bottle' | 'front' | 'back', string> = {
-              bottle: defaultSrc,
-              front: defaultSrc,
-              back: defaultSrc,
-            }
-
-            item.photos?.forEach((photo) => {
-              const resolvedUrl = resolveApiAssetUrl(photo.url)
-              if (photo.type === 'bottle') {
-                resolvedByType.bottle = resolvedUrl
-              }
-              if (photo.type === 'front_label') {
-                resolvedByType.front = resolvedUrl
-              }
-              if (photo.type === 'back_label') {
-                resolvedByType.back = resolvedUrl
-              }
-            })
-
-            return resolvedByType
-          })(),
-          thumbnailSrc: (() => {
-            const preferredPhoto = item.photos?.find((photo) => photo.type === 'bottle') ?? item.photos?.[0]
-            if (preferredPhoto?.url) {
-              return resolveApiAssetUrl(preferredPhoto.url)
-            }
-            return DEFAULT_WINE_ICON_CANDIDATES[0]
-          })(),
-          id: item.id,
-          name: item.name,
-          winery: item.winery ?? '-',
-          type: item.wine_type ?? 'red',
-          country: countryCodeToLabel(item.country, locale),
-          region: item.do?.name ?? '-',
-          doName: item.do?.name ?? null,
-          vintageYear: item.vintage_year,
-          // List endpoint does not expose price in current API contract.
-          pricePaid: 0,
-          averageScore: item.avg_score == null ? null : Math.round(item.avg_score * 10) / 10,
-        }))
+        const mappedItems = payload.items.map((item) => mapWineListItemToWineItem(item, locale))
 
         setWineItems(mappedItems)
         setWinePage(payload.pagination.page)
@@ -2053,6 +2258,95 @@ function App() {
       controller.abort()
     }
   }, [menu, debouncedSearchText, wineCountryFilter, typeFilter, minScoreFilter, grapeFilter, doFilter, winePage, wineLimit, locale, wineListReloadToken])
+
+  useEffect(() => {
+    if (menu !== 'reviews' || currentUserId == null) {
+      return
+    }
+
+    const controller = new AbortController()
+    setMyReviewSummaryStatus('loading')
+    setMyReviewSummaryError(null)
+
+    const loadMyReviews = async () => {
+      try {
+        const allWines: WineItem[] = []
+        let page = 1
+        let totalPages = 1
+        let totalItems = 0
+        const limit = 100
+
+        while (page <= totalPages) {
+          const params = new URLSearchParams()
+          params.set('page', String(page))
+          params.set('limit', String(limit))
+
+          const listResponse = await fetch(`${resolveApiBaseUrl()}/api/wines?${params.toString()}`, {
+            signal: controller.signal,
+            credentials: 'include',
+            headers: {
+              Accept: 'application/json',
+            },
+          })
+
+          if (!listResponse.ok) {
+            throw new Error(`HTTP ${listResponse.status}`)
+          }
+
+          const payload = await listResponse.json() as WineListApiResponse
+          totalPages = payload.pagination.total_pages
+          totalItems = payload.pagination.total_items
+          allWines.push(...payload.items.map((item) => mapWineListItemToWineItem(item, locale)))
+          page += 1
+        }
+
+        const entriesByWine = await Promise.all(
+          allWines.map(async (wine): Promise<MyWineReviewEntry[]> => {
+            const detailsResponse = await fetch(`${resolveApiBaseUrl()}/api/wines/${wine.id}`, {
+              signal: controller.signal,
+              credentials: 'include',
+              headers: {
+                Accept: 'application/json',
+              },
+            })
+
+            if (!detailsResponse.ok) {
+              throw new Error(`HTTP ${detailsResponse.status}`)
+            }
+
+            const detailsPayload = await detailsResponse.json() as WineDetailsApiResponse
+            const myReviews = detailsPayload.wine.reviews.filter((review) => review.user.id === currentUserId)
+            return myReviews.map((review) => ({ wine, review }))
+          }),
+        )
+
+        if (controller.signal.aborted) {
+          return
+        }
+
+        const entries = entriesByWine
+          .flat()
+          .sort((a, b) => new Date(b.review.created_at).getTime() - new Date(a.review.created_at).getTime())
+
+        setReviewTotalWines(totalItems)
+        setMyReviewEntries(entries)
+        setMyReviewSummaryStatus('ready')
+      } catch (error: unknown) {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setMyReviewSummaryStatus('error')
+        setMyReviewSummaryError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’han pogut carregar les teves ressenyes.' : 'No se pudieron cargar tus reseñas.'))
+      }
+    }
+
+    void loadMyReviews()
+
+    return () => {
+      controller.abort()
+    }
+  }, [menu, currentUserId, locale, reviewListReloadToken])
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -2612,14 +2906,76 @@ function App() {
     setShowMobileMenu(false)
   }
 
-  const openReviewEdit = (review: ReviewItem) => {
-    setSelectedReviewForEdit(review)
+  const openReviewEdit = (wine: WineItem, review: WineDetailsApiReview) => {
+    setSelectedReviewForEdit({
+      id: review.id,
+      wineId: wine.id,
+      wineName: wine.name,
+      score: review.score ?? 0,
+      createdAt: review.created_at.slice(0, 10),
+      notes: review.bullets.join(' · '),
+      intensityAroma: review.intensity_aroma,
+      sweetness: review.sweetness,
+      acidity: review.acidity,
+      tannin: review.tannin ?? 0,
+      body: review.body,
+      persistence: review.persistence,
+      tags: review.bullets.map((bullet) => REVIEW_ENUM_TO_TAG[bullet]).filter((tag): tag is (typeof REVIEW_TAG_OPTIONS)[number] => tag != null),
+    })
     setMenu('reviewEdit')
     setShowMobileMenu(false)
   }
 
+  const deleteReview = async (wine: WineItem, review: WineDetailsApiReview) => {
+    const confirmMessage = locale === 'ca'
+      ? 'Vols eliminar aquesta ressenya?'
+      : '¿Quieres eliminar esta reseña?'
+    if (!window.confirm(confirmMessage)) {
+      return
+    }
+
+    setReviewActionError(null)
+    setReviewDeleteBusyId(review.id)
+
+    try {
+      const response = await fetch(`${resolveApiBaseUrl()}/api/wines/${wine.id}/reviews/${review.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+
+      if (!response.ok && response.status !== 204) {
+        let errorMessage = `HTTP ${response.status}`
+        try {
+          const errorPayload = await response.json() as { error?: string }
+          if (typeof errorPayload.error === 'string' && errorPayload.error.trim() !== '') {
+            errorMessage = errorPayload.error
+          }
+        } catch {
+          // Keep HTTP fallback error.
+        }
+        throw new Error(errorMessage)
+      }
+
+      setReviewListReloadToken((current) => current + 1)
+      setReviewSuccessToast(locale === 'ca' ? 'Ressenya eliminada correctament.' : 'Reseña eliminada correctamente.')
+    } catch (error: unknown) {
+      setReviewActionError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut eliminar la ressenya.' : 'No se pudo eliminar la reseña.'))
+    } finally {
+      setReviewDeleteBusyId(null)
+    }
+  }
+
   const reviewEditorPreset = buildReviewFormPreset(selectedReviewForEdit)
-  const createReviewPreset = buildReviewFormPreset(null)
+  const reviewedWineIdSet = useMemo(
+    () => new Set(myReviewEntries.map((entry) => entry.wine.id)),
+    [myReviewEntries],
+  )
+  const createReviewPreset = (() => {
+    return buildReviewFormPreset(null)
+  })()
 
   const openWineCreate = () => {
     setSelectedWineForEdit(null)
@@ -2699,6 +3055,286 @@ function App() {
       setWineDeleteSubmitting(false)
     }
   }
+
+  const resetWineFilters = () => {
+    setSearchText('')
+    setTypeFilter('all')
+    setGrapeFilter('all')
+    setMinScoreFilter('all')
+    setWineCountryFilter('all')
+    setDoCountryFilter('all')
+    setDoFilter('all')
+    setDoSearchText('')
+    setIsDoDropdownOpen(false)
+    setWinePage(1)
+  }
+
+  const wineActiveFiltersCount = useMemo(() => {
+    let count = 0
+    if (searchText.trim() !== '') count += 1
+    if (typeFilter !== 'all') count += 1
+    if (grapeFilter !== 'all') count += 1
+    if (minScoreFilter !== 'all') count += 1
+    if (wineCountryFilter !== 'all') count += 1
+    if (doFilter !== 'all') count += 1
+    return count
+  }, [doFilter, grapeFilter, minScoreFilter, searchText, typeFilter, wineCountryFilter])
+
+  const renderWineFilters = (mode: 'desktop' | 'mobile') => (
+    <>
+      <div className="filter-grid filter-grid-top">
+        <label>
+          {labels.dashboard.search.search}
+          <input
+            type="search"
+            value={searchText}
+            onChange={(event) => {
+              setSearchText(event.target.value)
+              setWinePage(1)
+            }}
+            placeholder={locale === 'ca' ? 'Cerca per nom del vi' : 'Buscar por nombre del vino'}
+          />
+        </label>
+
+        <label>
+          {labels.dashboard.search.type}
+          <select
+            value={typeFilter}
+            onChange={(event) => {
+              setTypeFilter(event.target.value as 'all' | WineType)
+              setWinePage(1)
+            }}
+          >
+            <option value="all">{labels.common.allTypes}</option>
+            <option value="red">{labels.wineType.red}</option>
+            <option value="white">{labels.wineType.white}</option>
+            <option value="rose">{labels.wineType.rose}</option>
+            <option value="sparkling">{labels.wineType.sparkling}</option>
+            <option value="sweet">{wineTypeLabel('sweet')}</option>
+            <option value="fortified">{wineTypeLabel('fortified')}</option>
+          </select>
+        </label>
+
+        <label>
+          {locale === 'ca' ? 'Varietat de raïm' : 'Variedad de uva'}
+          <select
+            value={grapeFilter === 'all' ? 'all' : String(grapeFilter)}
+            onChange={(event) => {
+              setGrapeFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))
+              setWinePage(1)
+            }}
+          >
+            <option value="all">{locale === 'ca' ? 'Totes les varietats' : 'Todas las variedades'}</option>
+            {grapesByColor.map((group) => (
+              <optgroup key={group.key} label={group.label}>
+                {group.grapes.map((grape) => (
+                  <option key={grape.id} value={String(grape.id)}>
+                    {grape.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          {labels.dashboard.search.minScore}
+          <select
+            value={minScoreFilter === 'all' ? 'all' : String(minScoreFilter)}
+            onChange={(event) => {
+              setMinScoreFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))
+              setWinePage(1)
+            }}
+          >
+            <option value="all">{labels.common.anyScore}</option>
+            <option value="80">80+</option>
+            <option value="85">85+</option>
+            <option value="90">90+</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="filter-grid">
+        <label>
+          {locale === 'ca' ? 'País del vi' : 'País del vino'}
+          <select
+            value={wineCountryFilter}
+            onChange={(event) => {
+              setWineCountryFilter(event.target.value as CountryFilterValue)
+              setWinePage(1)
+            }}
+          >
+            {countries.map((country) => (
+              <option key={country} value={country}>
+                {country === 'all' ? labels.common.allCountries : countryCodeToLabel(country, locale)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          {locale === 'ca' ? 'País D.O.' : 'País D.O.'}
+          <select
+            value={doCountryFilter}
+            onChange={(event) => {
+              setDoCountryFilter(event.target.value as CountryFilterValue)
+              setDoFilter('all')
+              setDoSearchText('')
+              setIsDoDropdownOpen(false)
+              setWinePage(1)
+            }}
+          >
+            {countries.map((country) => (
+              <option key={country} value={country}>
+                {country === 'all' ? labels.common.allCountries : countryCodeToLabel(country, locale)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          {locale === 'ca' ? 'Cerca D.O.' : 'Buscar D.O.'}
+          <input
+            type="search"
+            value={doSearchText}
+            onChange={(event) => {
+              setDoSearchText(event.target.value)
+            }}
+            placeholder={
+              doCountryFilter === 'all'
+                ? (locale === 'ca' ? 'Primer selecciona país' : 'Primero selecciona país')
+                : (locale === 'ca' ? 'Nom o regió de la D.O.' : 'Nombre o región de la D.O.')
+            }
+            disabled={doCountryFilter === 'all'}
+          />
+        </label>
+
+        <label>
+          D.O.
+          <div className={`do-combobox${doCountryFilter === 'all' ? ' is-disabled' : ''}`} ref={doDropdownRef}>
+            <button
+              type="button"
+              className="do-combobox-trigger"
+              aria-expanded={isDoDropdownOpen}
+              aria-haspopup="listbox"
+              onClick={() => {
+                if (doCountryFilter === 'all') {
+                  return
+                }
+                setIsDoDropdownOpen((current) => !current)
+              }}
+              disabled={doCountryFilter === 'all'}
+            >
+              <span className="do-combobox-trigger-main">
+                {selectedDoOption?.country === 'spain' ? (
+                  <>
+                    {selectedDoCommunityFlagPath ? (
+                      <img
+                        src={selectedDoCommunityFlagPath}
+                        alt=""
+                        className="do-combobox-flag"
+                        loading="lazy"
+                        aria-hidden="true"
+                        onError={fallbackToAdminAsset}
+                      />
+                    ) : (
+                      <span className="do-combobox-flag-fallback" aria-hidden="true">🏳️</span>
+                    )}
+                    <span>{selectedDoOption.name}</span>
+                  </>
+                ) : (
+                  <span>
+                    {selectedDoOption
+                      ? `${selectedDoOption.region} · ${selectedDoOption.name}`
+                      : (doCountryFilter === 'all'
+                        ? (locale === 'ca' ? 'Selecciona país abans' : 'Selecciona país antes')
+                        : (locale === 'ca' ? 'Totes les D.O.' : 'Todas las D.O.'))}
+                  </span>
+                )}
+              </span>
+              <span className="do-combobox-caret" aria-hidden="true">▾</span>
+            </button>
+
+            {isDoDropdownOpen && doCountryFilter !== 'all' ? (
+              <div className="do-combobox-menu" role="listbox" aria-label="D.O.">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={doFilter === 'all'}
+                  className={`do-combobox-option${doFilter === 'all' ? ' is-selected' : ''}`}
+                  onClick={() => {
+                    setDoFilter('all')
+                    setWinePage(1)
+                    setIsDoDropdownOpen(false)
+                  }}
+                >
+                  <span>{locale === 'ca' ? 'Totes les D.O.' : 'Todas las D.O.'}</span>
+                </button>
+                {filteredDosBySearch.map((item) => {
+                  const isSpanishDo = item.country === 'spain'
+                  const communityFlagPath = isSpanishDo ? autonomousCommunityFlagPathForRegion(item.region) : null
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="option"
+                      aria-selected={doFilter === item.id}
+                      className={`do-combobox-option${doFilter === item.id ? ' is-selected' : ''}`}
+                      onClick={() => {
+                        setDoFilter(item.id)
+                        setWinePage(1)
+                        setIsDoDropdownOpen(false)
+                      }}
+                    >
+                      {isSpanishDo ? (
+                        communityFlagPath ? (
+                          <img
+                            src={communityFlagPath}
+                            alt=""
+                            className="do-combobox-flag"
+                            loading="lazy"
+                            aria-hidden="true"
+                            onError={fallbackToAdminAsset}
+                          />
+                        ) : (
+                          <span className="do-combobox-flag-fallback" aria-hidden="true">🏳️</span>
+                        )
+                      ) : null}
+                      <span>{item.country === 'spain' ? item.name : `${item.region} · ${item.name}`}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
+          </div>
+        </label>
+      </div>
+
+      {mode === 'mobile' ? (
+        <div className="wine-mobile-filters-actions">
+          <button
+            type="button"
+            className="ghost-button small"
+            onClick={() => {
+              resetWineFilters()
+            }}
+          >
+            {locale === 'ca' ? 'Netejar filtres' : 'Limpiar filtros'}
+          </button>
+          <button
+            type="button"
+            className="primary-button small"
+            onClick={() => {
+              setIsDoDropdownOpen(false)
+              setIsWineFiltersMobileOpen(false)
+            }}
+          >
+            {locale === 'ca' ? 'Aplicar filtres' : 'Aplicar filtros'}
+          </button>
+        </div>
+      ) : null}
+    </>
+  )
 
   const handleWineFormSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -2873,36 +3509,192 @@ function App() {
     }
   }, [wineSuccessToast])
 
-  const renderReviewEditor = (mode: 'create' | 'edit', preset: ReviewFormPreset) => (
-    <section className="screen-grid">
-      <section className="panel">
-        <div className="panel-header">
+  useEffect(() => {
+    if (reviewSuccessToast == null) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setReviewSuccessToast(null)
+    }, 4000)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [reviewSuccessToast])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+    if (loggedIn) {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    const previousOverscroll = document.body.style.overscrollBehavior
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.body.style.overscrollBehavior = previousOverscroll
+    }
+  }, [loggedIn])
+
+  const handleReviewFormSubmit = (mode: 'create' | 'edit') => async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setReviewFormError(null)
+    setReviewFormSubmitting(true)
+
+    const form = event.currentTarget
+    const data = new FormData(form)
+
+    const wineIdRaw = String(data.get('wine_id') ?? '').trim()
+    const scoreRaw = String(data.get('score') ?? '').trim()
+    const intensityRaw = String(data.get('intensity_aroma') ?? '').trim()
+    const sweetnessRaw = String(data.get('sweetness') ?? '').trim()
+    const acidityRaw = String(data.get('acidity') ?? '').trim()
+    const tanninRaw = String(data.get('tannin') ?? '').trim()
+    const bodyRaw = String(data.get('body') ?? '').trim()
+    const persistenceRaw = String(data.get('persistence') ?? '').trim()
+    const bulletsRaw = data.getAll('bullets').map((value) => String(value)) as Array<(typeof REVIEW_TAG_OPTIONS)[number]>
+
+    const wineId = Number(wineIdRaw)
+    const score = Number(scoreRaw)
+    const intensityAroma = Number(intensityRaw)
+    const sweetness = Number(sweetnessRaw)
+    const acidity = Number(acidityRaw)
+    const tannin = Number(tanninRaw)
+    const body = Number(bodyRaw)
+    const persistence = Number(persistenceRaw)
+
+    if (!Number.isInteger(wineId) || wineId < 1) {
+      setReviewFormError(locale === 'ca' ? 'Has de seleccionar un vi.' : 'Debes seleccionar un vino.')
+      setReviewFormSubmitting(false)
+      return
+    }
+
+    const payload = {
+      score: Math.max(0, Math.min(100, Math.round(score))),
+      intensity_aroma: Math.max(0, Math.min(5, Math.round(intensityAroma / 2))),
+      sweetness: Math.max(0, Math.min(5, Math.round(sweetness / 2))),
+      acidity: Math.max(0, Math.min(5, Math.round(acidity / 2))),
+      tannin: Math.max(0, Math.min(5, Math.round(tannin / 2))),
+      body: Math.max(0, Math.min(5, Math.round(body / 2))),
+      persistence: Math.max(0, Math.min(5, Math.round(persistence / 2))),
+      bullets: bulletsRaw.map((tag) => REVIEW_TAG_TO_ENUM[tag]),
+    }
+
+    const endpoint = mode === 'create'
+      ? `${resolveApiBaseUrl()}/api/wines/${wineId}/reviews`
+      : `${resolveApiBaseUrl()}/api/wines/${wineId}/reviews/${selectedReviewForEdit?.id ?? 0}`
+    const method = mode === 'create' ? 'POST' : 'PUT'
+
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`
+        try {
+          const errorPayload = await response.json() as { error?: string }
+          if (typeof errorPayload.error === 'string' && errorPayload.error.trim() !== '') {
+            errorMessage = errorPayload.error
+          }
+        } catch {
+          // Keep HTTP-based fallback error message when response is not JSON.
+        }
+        throw new Error(errorMessage)
+      }
+
+      setMenu('reviews')
+      setReviewListReloadToken((current) => current + 1)
+      setReviewSuccessToast(
+        mode === 'create'
+          ? (locale === 'ca' ? 'Ressenya creada correctament.' : 'Reseña creada correctamente.')
+          : (locale === 'ca' ? 'Ressenya actualitzada correctament.' : 'Reseña actualizada correctamente.'),
+      )
+    } catch (error: unknown) {
+      setReviewFormError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut desar la ressenya.' : 'No se pudo guardar la reseña.'))
+    } finally {
+      setReviewFormSubmitting(false)
+    }
+  }
+
+  const renderReviewEditor = (mode: 'create' | 'edit', preset: ReviewFormPreset) => {
+    const reviewFormId = `review-form-${mode}-${selectedReviewForEdit?.id ?? 'new'}`
+    const reviewSubmitLabel = mode === 'create'
+      ? (reviewFormSubmitting ? (locale === 'ca' ? 'Creant...' : 'Creando...') : labels.reviews.create.submit)
+      : (reviewFormSubmitting
+        ? (locale === 'ca' ? 'Desant...' : 'Guardando...')
+        : (locale === 'ca' ? 'Desar canvis de la ressenya' : 'Guardar cambios de la reseña'))
+
+    return (
+      <section className="screen-grid">
+        <section className="panel">
+          <div className="panel-header wine-create-header">
           <div>
             <p className="eyebrow">{labels.reviews.create.eyebrow}</p>
             <h3>{mode === 'create' ? (locale === 'ca' ? 'Crear ressenya' : 'Crear reseña') : (locale === 'ca' ? 'Editar ressenya' : 'Editar reseña')}</h3>
           </div>
-          <button type="button" className="ghost-button small" onClick={() => setMenu('reviews')}>
-            {locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}
-          </button>
-        </div>
+          <div className="panel-header-actions">
+            <button type="button" className="ghost-button small review-editor-back-button" onClick={() => setMenu('reviews')}>
+              <svg className="review-editor-back-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M14.7 5.3a1 1 0 0 1 0 1.4L10.41 11H20a1 1 0 1 1 0 2h-9.59l4.3 4.3a1 1 0 1 1-1.42 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.42 0Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span className="review-editor-back-text">{locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}</span>
+            </button>
+            <button type="submit" className="primary-button small" form={reviewFormId} disabled={reviewFormSubmitting}>
+              {reviewSubmitLabel}
+            </button>
+          </div>
+          </div>
 
-        <form
-          key={`${mode}-${selectedReviewForEdit?.id ?? 'new'}`}
-          className="stack-form"
-          onSubmit={(event) => event.preventDefault()}
-        >
+          <form
+            id={reviewFormId}
+            key={`${mode}-${selectedReviewForEdit?.id ?? 'new'}`}
+            className="stack-form"
+            onSubmit={handleReviewFormSubmit(mode)}
+          >
           <label>
             {labels.reviews.create.wine}
-            <select defaultValue={preset.wineId}>
+            <select name="wine_id" defaultValue={preset.wineId}>
               <option value="" disabled>{labels.reviews.create.selectWine}</option>
-              {mockWines.map((wine) => (
-                <option key={wine.id} value={wine.id}>{wine.name} · {wine.winery}</option>
+              {(wineItems.length > 0 ? wineItems : mockWines).map((wine) => (
+                <option
+                  key={wine.id}
+                  value={wine.id}
+                  disabled={mode === 'create' && reviewedWineIdSet.has(wine.id)}
+                >
+                  {wine.name} · {wine.winery}
+                  {mode === 'create' && reviewedWineIdSet.has(wine.id)
+                    ? ` ${locale === 'ca' ? '(ja ressenyat)' : '(ya reseñado)'}`
+                    : ''}
+                </option>
               ))}
             </select>
+            {mode === 'create' ? (
+              <small className="muted">
+                {locale === 'ca'
+                  ? 'Els vins ja ressenyats apareixen en gris i no es poden seleccionar.'
+                  : 'Los vinos ya reseñados aparecen en gris y no se pueden seleccionar.'}
+              </small>
+            ) : null}
           </label>
 
           <label>
-            {locale === 'ca' ? 'Data de la cata' : 'Fecha de la cata'}
+            {locale === 'ca' ? 'Data de la ressenya' : 'Fecha de la reseña'}
             <input type="date" defaultValue={preset.tastingDate} />
           </label>
 
@@ -2910,7 +3702,7 @@ function App() {
             <legend>{locale === 'ca' ? 'Valoració del Vi' : 'Valoración del Vino'}</legend>
             <label className="important-rating-field">
               <span>{locale === 'ca' ? 'Valoració General (0-100)' : 'Valoración General (0-100)'}</span>
-              <select defaultValue={String(preset.overallScore)}>
+              <select name="score" defaultValue={String(preset.overallScore)}>
                 {SCORE_OPTIONS_0_TO_100.map((score) => (
                   <option key={score} value={score}>{score}</option>
                 ))}
@@ -2919,7 +3711,7 @@ function App() {
             <div className="inline-grid triple">
               <label>
                 {locale === 'ca' ? 'Aroma' : 'Aroma'}
-                <select defaultValue={String(preset.aroma)}>
+                <select name="intensity_aroma" defaultValue={String(preset.aroma)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
@@ -2927,7 +3719,7 @@ function App() {
               </label>
               <label>
                 {locale === 'ca' ? 'Dolçor' : 'Dulzor'}
-                <select defaultValue={String(preset.sweetness)}>
+                <select name="sweetness" defaultValue={String(preset.sweetness)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
@@ -2935,7 +3727,7 @@ function App() {
               </label>
               <label>
                 {locale === 'ca' ? 'Acidesa' : 'Acidez'}
-                <select defaultValue={String(preset.acidity)}>
+                <select name="acidity" defaultValue={String(preset.acidity)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
@@ -2945,7 +3737,7 @@ function App() {
             <div className="inline-grid triple">
               <label>
                 {locale === 'ca' ? 'Taní' : 'Tanino'}
-                <select defaultValue={String(preset.tannin)}>
+                <select name="tannin" defaultValue={String(preset.tannin)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
@@ -2953,7 +3745,7 @@ function App() {
               </label>
               <label>
                 {locale === 'ca' ? 'Cos' : 'Cuerpo'}
-                <select defaultValue={String(preset.body)}>
+                <select name="body" defaultValue={String(preset.body)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
@@ -2961,7 +3753,7 @@ function App() {
               </label>
               <label>
                 {locale === 'ca' ? 'Persistència' : 'Persistencia'}
-                <select defaultValue={String(preset.persistence)}>
+                <select name="persistence" defaultValue={String(preset.persistence)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
@@ -2973,7 +3765,7 @@ function App() {
               <div className="tag-checkbox-grid">
                 {REVIEW_TAG_OPTIONS.map((tag) => (
                   <label key={tag} className="tag-checkbox-item">
-                    <input type="checkbox" defaultChecked={preset.tags.includes(tag)} />
+                    <input type="checkbox" name="bullets" value={tag} defaultChecked={preset.tags.includes(tag)} />
                     <span>{tag}</span>
                   </label>
                 ))}
@@ -2981,20 +3773,17 @@ function App() {
             </div>
           </fieldset>
 
-          <label>
-            {labels.reviews.create.notes}
-            <textarea rows={4} placeholder={labels.reviews.create.notesPlaceholder} defaultValue={preset.notes} />
-          </label>
-
-          <button type="submit" className="primary-button">
-            {mode === 'create'
-              ? labels.reviews.create.submit
-              : (locale === 'ca' ? 'Desar canvis de la ressenya' : 'Guardar cambios de la reseña')}
-          </button>
-        </form>
+            {reviewFormError ? <p className="error-message">{reviewFormError}</p> : null}
+          </form>
+        </section>
       </section>
-    </section>
-  )
+    )
+  }
+
+  const wineFormId = `wine-form-${menu}-${selectedWineForEdit?.id ?? 'new'}-${wineEditDetails?.id ?? 'none'}-${wineEditStatus}`
+  const wineSubmitLabel = menu === 'wineEdit'
+    ? (wineFormSubmitting ? (locale === 'ca' ? 'Desant...' : 'Guardando...') : (locale === 'ca' ? 'Desar vi' : 'Guardar vino'))
+    : (wineFormSubmitting ? (locale === 'ca' ? 'Creant...' : 'Creando...') : labels.wines.add.submit)
 
   if (!authBootstrapped) {
     return (
@@ -3009,8 +3798,16 @@ function App() {
   }
 
   if (!loggedIn) {
+    const publicWebUrl = (import.meta.env.VITE_PUBLIC_WEB_URL as string | undefined)?.trim() || '/'
+
     return (
       <main className="login-shell">
+        <a
+          className="ghost-button small return-web-link return-web-top-link return-web-top-link-right"
+          href={publicWebUrl}
+        >
+          {locale === 'ca' ? 'Web pública' : 'Web pública'}
+        </a>
         <section className="login-stage">
           <section className="login-panel" aria-labelledby="login-title">
             <div className="login-header">
@@ -3698,240 +4495,31 @@ function App() {
                   <span className="pill">
                     {wineTotalItems} {labels.dashboard.search.results}
                   </span>
+                  {isMobileViewport ? (
+                    <button
+                      type="button"
+                      className="secondary-button small wine-mobile-filters-trigger"
+                      onClick={() => {
+                        setIsWineFiltersMobileOpen(true)
+                      }}
+                    >
+                      {locale === 'ca' ? 'Filtres' : 'Filtros'}
+                      <span className="wine-mobile-filters-trigger-count">
+                        {wineActiveFiltersCount}
+                      </span>
+                    </button>
+                  ) : null}
                   <button type="button" className="primary-button" onClick={openWineCreate}>
                     {locale === 'ca' ? 'Crear nou vi' : 'Crear nuevo vino'}
                   </button>
                 </div>
               </div>
 
-              <div className="filter-grid filter-grid-top">
-                <label>
-                  {labels.dashboard.search.search}
-                  <input
-                    type="search"
-                    value={searchText}
-                    onChange={(event) => {
-                      setSearchText(event.target.value)
-                      setWinePage(1)
-                    }}
-                    placeholder={locale === 'ca' ? 'Cerca per nom del vi' : 'Buscar por nombre del vino'}
-                  />
-                </label>
-
-                <label>
-                  {labels.dashboard.search.type}
-                  <select
-                    value={typeFilter}
-                    onChange={(event) => {
-                      setTypeFilter(event.target.value as 'all' | WineType)
-                      setWinePage(1)
-                    }}
-                  >
-                    <option value="all">{labels.common.allTypes}</option>
-                    <option value="red">{labels.wineType.red}</option>
-                    <option value="white">{labels.wineType.white}</option>
-                    <option value="rose">{labels.wineType.rose}</option>
-                    <option value="sparkling">{labels.wineType.sparkling}</option>
-                    <option value="sweet">{wineTypeLabel('sweet')}</option>
-                    <option value="fortified">{wineTypeLabel('fortified')}</option>
-                  </select>
-                </label>
-
-                <label>
-                  {locale === 'ca' ? 'Varietat de raïm' : 'Variedad de uva'}
-                  <select
-                    value={grapeFilter === 'all' ? 'all' : String(grapeFilter)}
-                    onChange={(event) => {
-                      setGrapeFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))
-                      setWinePage(1)
-                    }}
-                  >
-                    <option value="all">{locale === 'ca' ? 'Totes les varietats' : 'Todas las variedades'}</option>
-                    {grapesByColor.map((group) => (
-                      <optgroup key={group.key} label={group.label}>
-                        {group.grapes.map((grape) => (
-                          <option key={grape.id} value={String(grape.id)}>
-                            {grape.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  {labels.dashboard.search.minScore}
-                  <select
-                    value={minScoreFilter === 'all' ? 'all' : String(minScoreFilter)}
-                    onChange={(event) => {
-                      setMinScoreFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))
-                      setWinePage(1)
-                    }}
-                  >
-                    <option value="all">{labels.common.anyScore}</option>
-                    <option value="80">80+</option>
-                    <option value="85">85+</option>
-                    <option value="90">90+</option>
-                  </select>
-                </label>
-              </div>
-
-              <div className="filter-grid">
-                <label>
-                  {locale === 'ca' ? 'País del vi' : 'País del vino'}
-                  <select
-                    value={wineCountryFilter}
-                    onChange={(event) => {
-                      setWineCountryFilter(event.target.value as CountryFilterValue)
-                      setWinePage(1)
-                    }}
-                  >
-                    {countries.map((country) => (
-                      <option key={country} value={country}>
-                        {country === 'all' ? labels.common.allCountries : countryCodeToLabel(country, locale)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  {locale === 'ca' ? 'País D.O.' : 'País D.O.'}
-                  <select
-                    value={doCountryFilter}
-                    onChange={(event) => {
-                      setDoCountryFilter(event.target.value as CountryFilterValue)
-                      setDoFilter('all')
-                      setDoSearchText('')
-                      setIsDoDropdownOpen(false)
-                      setWinePage(1)
-                    }}
-                  >
-                    {countries.map((country) => (
-                      <option key={country} value={country}>
-                        {country === 'all' ? labels.common.allCountries : countryCodeToLabel(country, locale)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  {locale === 'ca' ? 'Cerca D.O.' : 'Buscar D.O.'}
-                  <input
-                    type="search"
-                    value={doSearchText}
-                    onChange={(event) => {
-                      setDoSearchText(event.target.value)
-                    }}
-                    placeholder={
-                      doCountryFilter === 'all'
-                        ? (locale === 'ca' ? 'Primer selecciona país' : 'Primero selecciona país')
-                        : (locale === 'ca' ? 'Nom o regió de la D.O.' : 'Nombre o región de la D.O.')
-                    }
-                    disabled={doCountryFilter === 'all'}
-                  />
-                </label>
-
-                <label>
-                  D.O.
-                  <div className={`do-combobox${doCountryFilter === 'all' ? ' is-disabled' : ''}`} ref={doDropdownRef}>
-                    <button
-                      type="button"
-                      className="do-combobox-trigger"
-                      aria-expanded={isDoDropdownOpen}
-                      aria-haspopup="listbox"
-                      onClick={() => {
-                        if (doCountryFilter === 'all') {
-                          return
-                        }
-                        setIsDoDropdownOpen((current) => !current)
-                      }}
-                      disabled={doCountryFilter === 'all'}
-                    >
-                      <span className="do-combobox-trigger-main">
-                        {selectedDoOption?.country === 'spain' ? (
-                          <>
-                            {selectedDoCommunityFlagPath ? (
-                              <img
-                                src={selectedDoCommunityFlagPath}
-                                alt=""
-                                className="do-combobox-flag"
-                                loading="lazy"
-                                aria-hidden="true"
-                                onError={fallbackToAdminAsset}
-                              />
-                            ) : (
-                              <span className="do-combobox-flag-fallback" aria-hidden="true">🏳️</span>
-                            )}
-                            <span>{selectedDoOption.name}</span>
-                          </>
-                        ) : (
-                          <span>
-                            {selectedDoOption
-                              ? `${selectedDoOption.region} · ${selectedDoOption.name}`
-                              : (doCountryFilter === 'all'
-                                ? (locale === 'ca' ? 'Selecciona país abans' : 'Selecciona país antes')
-                                : (locale === 'ca' ? 'Totes les D.O.' : 'Todas las D.O.'))}
-                          </span>
-                        )}
-                      </span>
-                      <span className="do-combobox-caret" aria-hidden="true">▾</span>
-                    </button>
-
-                    {isDoDropdownOpen && doCountryFilter !== 'all' ? (
-                      <div className="do-combobox-menu" role="listbox" aria-label="D.O.">
-                        <button
-                          type="button"
-                          role="option"
-                          aria-selected={doFilter === 'all'}
-                          className={`do-combobox-option${doFilter === 'all' ? ' is-selected' : ''}`}
-                          onClick={() => {
-                            setDoFilter('all')
-                            setWinePage(1)
-                            setIsDoDropdownOpen(false)
-                          }}
-                        >
-                          <span>{locale === 'ca' ? 'Totes les D.O.' : 'Todas las D.O.'}</span>
-                        </button>
-                        {filteredDosBySearch.map((item) => {
-                          const isSpanishDo = item.country === 'spain'
-                          const communityFlagPath = isSpanishDo ? autonomousCommunityFlagPathForRegion(item.region) : null
-                          return (
-                            <button
-                              key={item.id}
-                              type="button"
-                              role="option"
-                              aria-selected={doFilter === item.id}
-                              className={`do-combobox-option${doFilter === item.id ? ' is-selected' : ''}`}
-                              onClick={() => {
-                                setDoFilter(item.id)
-                                setWinePage(1)
-                                setIsDoDropdownOpen(false)
-                              }}
-                            >
-                              {isSpanishDo ? (
-                                communityFlagPath ? (
-                                  <img
-                                    src={communityFlagPath}
-                                    alt=""
-                                    className="do-combobox-flag"
-                                    loading="lazy"
-                                    aria-hidden="true"
-                                    onError={fallbackToAdminAsset}
-                                  />
-                                ) : (
-                                  <span className="do-combobox-flag-fallback" aria-hidden="true">🏳️</span>
-                                )
-                              ) : null}
-                              <span>{item.country === 'spain' ? item.name : `${item.region} · ${item.name}`}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    ) : null}
-                  </div>
-                </label>
-
-              </div>
+              {!isMobileViewport ? (
+                <div className="wine-filters-desktop">
+                  {renderWineFilters('desktop')}
+                </div>
+              ) : null}
 
               {wineListStatus === 'error' ? (
                 <div className="api-doc-state api-doc-state-error">
@@ -3995,7 +4583,23 @@ function App() {
                           <span>{wine.winery}</span>
                         </td>
                         <td className="wine-col-type" data-label={labels.dashboard.table.type}>{wineTypeLabel(wine.type)}</td>
-                        <td className="wine-col-region" data-label={labels.dashboard.table.region}>{wine.country} · {wine.region}</td>
+                        <td className="wine-col-region" data-label={labels.dashboard.table.region}>
+                          <span className="wine-country-chip">
+                            {countryFlagPath(wine.country) ? (
+                              <img
+                                className="wine-country-flag"
+                                src={countryFlagPath(wine.country) as string}
+                                alt={localizedCountryName(wine.country, locale)}
+                                loading="lazy"
+                                onError={fallbackToAdminAsset}
+                              />
+                            ) : (
+                              <span className="wine-country-emoji" aria-hidden="true">{countryFlagEmoji(wine.country)}</span>
+                            )}
+                            <span>{localizedCountryName(wine.country, locale)}</span>
+                          </span>
+                          <span className="wine-region-text">{wine.region}</span>
+                        </td>
                         <td className="wine-col-vintage" data-label={locale === 'ca' ? 'Anyada' : 'Añada'}>
                           {wine.vintageYear ?? '-'}
                         </td>
@@ -4124,13 +4728,23 @@ function App() {
                   <h3>{menu === 'wineEdit' ? (locale === 'ca' ? 'Editar vi' : 'Editar vino') : labels.wines.add.title}</h3>
                 </div>
                 <div className="panel-header-actions">
-                  <button type="button" className="ghost-button small" onClick={() => setMenu('wines')}>
-                    {locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}
+                  <button type="button" className="ghost-button small review-editor-back-button" onClick={() => setMenu('wines')}>
+                    <svg className="review-editor-back-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path
+                        d="M14.7 5.3a1 1 0 0 1 0 1.4L10.41 11H20a1 1 0 1 1 0 2h-9.59l4.3 4.3a1 1 0 1 1-1.42 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.42 0Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    <span className="review-editor-back-text">{locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}</span>
+                  </button>
+                  <button type="submit" className="primary-button small" form={wineFormId} disabled={wineFormSubmitting}>
+                    {wineSubmitLabel}
                   </button>
                 </div>
               </div>
 
               <form
+                id={wineFormId}
                 key={`wine-form-${menu}-${selectedWineForEdit?.id ?? 'new'}-${wineEditDetails?.id ?? 'none'}-${wineEditStatus}`}
                 className="stack-form wine-create-form"
                 onSubmit={handleWineFormSubmit}
@@ -4534,10 +5148,6 @@ function App() {
                   <p className="muted">{locale === 'ca' ? 'Carregant dades del vi...' : 'Cargando datos del vino...'}</p>
                 ) : null}
                 {wineFormError ? <p className="error-message">{wineFormError}</p> : null}
-
-                <button type="submit" className="primary-button" disabled={wineFormSubmitting}>
-                  {menu === 'wineEdit' ? (locale === 'ca' ? 'Desar canvis del vi' : 'Guardar cambios del vino') : labels.wines.add.submit}
-                </button>
               </form>
             </section>
           </section>
@@ -4546,40 +5156,172 @@ function App() {
         {menu === 'reviews' ? (
           <section className="screen-grid">
             <section className="panel">
-              <div className="panel-header">
+              <div className="panel-header review-summary-header">
                 <div>
                   <p className="eyebrow">{labels.reviews.edit.title}</p>
-                  <h3>{locale === 'ca' ? 'Llistat de ressenyes' : 'Listado de reseñas'}</h3>
+                  <h3>{locale === 'ca' ? 'Resum de ressenyes' : 'Resumen de reseñas'}</h3>
                 </div>
                 <div className="panel-header-actions">
-                  <span className="pill">{mockReviews.length} {labels.reviews.edit.countSuffix}</span>
                   <button type="button" className="primary-button" onClick={openReviewCreate}>
                     {locale === 'ca' ? 'Crear ressenya' : 'Crear reseña'}
                   </button>
                 </div>
               </div>
 
-              <div className="list-stack">
-                {mockReviews.map((review) => (
-                  <article key={review.id} className="review-card">
-                    <div className="review-card-header">
-                      <div>
-                        <h4>{review.wineName}</h4>
-                        <p>{review.createdAt}</p>
-                      </div>
-                      <span className="score-pill">{review.score}</span>
-                    </div>
-                    <p>{review.notes}</p>
-                    <div className="review-actions">
-                      <button type="button" className="secondary-button small" onClick={() => openReviewEdit(review)}>
-                        {labels.reviews.edit.editAction}
-                      </button>
-                      <button type="button" className="ghost-button small">{labels.reviews.edit.viewWineAction}</button>
-                    </div>
-                  </article>
-                ))}
+              <div className="review-kpi-strip">
+                <article className="review-kpi-card">
+                  <p>{locale === 'ca' ? 'Vins totals' : 'Vinos totales'}</p>
+                  <strong>{reviewTotalWines}</strong>
+                  <span>{locale === 'ca' ? 'Catàleg global' : 'Catálogo global'}</span>
+                </article>
+                <article className="review-kpi-card review-kpi-card-mine">
+                  <p>{locale === 'ca' ? 'Les meves ressenyes' : 'Mis reseñas'}</p>
+                  <strong>{myReviewEntries.length}</strong>
+                  <span>{locale === 'ca' ? 'Compte actual' : 'Cuenta actual'}</span>
+                </article>
+                <article className="review-kpi-card review-kpi-card-pending">
+                  <p>{locale === 'ca' ? 'Pendents' : 'Pendientes'}</p>
+                  <strong>{Math.max(0, reviewTotalWines - myReviewEntries.length)}</strong>
+                  <span>{locale === 'ca' ? 'Vins per ressenyar' : 'Vinos por reseñar'}</span>
+                </article>
               </div>
+
+              {myReviewSummaryStatus === 'loading' ? (
+                <p className="muted">{locale === 'ca' ? 'Calculant resum de ressenyes...' : 'Calculando resumen de reseñas...'}</p>
+              ) : null}
+
+              {myReviewSummaryStatus === 'error' ? (
+                <p className="error-message">{myReviewSummaryError ?? (locale === 'ca' ? 'No s’ha pogut calcular el resum.' : 'No se pudo calcular el resumen.')}</p>
+              ) : null}
+              {reviewActionError ? <p className="error-message">{reviewActionError}</p> : null}
+
+              <section className="review-my-list">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{locale === 'ca' ? 'MEVES RESSENYES' : 'MIS RESEÑAS'}</p>
+                    <h3>{locale === 'ca' ? 'Llistat de ressenyes de la teva compte' : 'Listado de reseñas de tu cuenta'}</h3>
+                  </div>
+                </div>
+
+                <div className="list-stack">
+                  {myReviewEntries.length > 0 ? myReviewEntries.map((entry) => {
+                    const doRegion = entry.wine.doName ?? entry.wine.region
+                    const doLabel = doRegion && doRegion !== '-'
+                      ? doRegion
+                      : (locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.')
+                    const doLogoPath = doLogoPathForRegion(doLabel)
+                    const countryFlagPathValue = countryFlagPath(entry.wine.country)
+
+                    return (
+                    <article key={`my-review-${entry.review.id}`} className="review-card">
+                      <div className="review-main-col">
+                        <div className="review-card-top">
+                          <img
+                            src={entry.wine.thumbnailSrc}
+                            alt={`${entry.wine.name} bottle`}
+                            className="review-wine-thumb"
+                            loading="lazy"
+                            onError={fallbackToDefaultWineIcon}
+                          />
+                          <div className="review-card-header">
+                            <div>
+                              <h4>{entry.wine.name}</h4>
+                              <p>{entry.wine.winery} · {formatApiDate(entry.review.created_at, locale)}</p>
+                              <div className="review-origin-row">
+                                <span className="review-origin-chip">
+                                  {countryFlagPathValue
+                                    ? <img className="review-origin-flag" src={countryFlagPathValue} alt={localizedCountryName(entry.wine.country, locale)} loading="lazy" />
+                                    : <span className="review-origin-emoji" aria-hidden="true">{countryFlagEmoji(entry.wine.country)}</span>}
+                                  <span>{entry.wine.country}</span>
+                                </span>
+                                <span className="review-origin-chip">
+                                  {doLogoPath
+                                    ? <img className="review-origin-do-logo" src={doLogoPath} alt={`${doLabel} logo`} onError={fallbackToAdminAsset} />
+                                    : null}
+                                  <span>{doLabel}</span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="review-bullets">
+                          {entry.review.bullets.length > 0 ? entry.review.bullets.map((bullet) => (
+                            <span key={`${entry.review.id}-${bullet}`} className="review-bullet-chip">
+                              {REVIEW_ENUM_TO_TAG[bullet] ?? bullet}
+                            </span>
+                          )) : <span className="review-bullet-chip muted">-</span>}
+                        </div>
+                      </div>
+                      <div className="review-metrics-col">
+                        <dl className="review-metrics-grid review-metrics-grid-inline">
+                          <div>
+                            <dt>{locale === 'ca' ? 'Aroma' : 'Aroma'}</dt>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.intensity_aroma * 2)}`}>{entry.review.intensity_aroma * 2}/10</dd>
+                          </div>
+                          <div>
+                            <dt>{locale === 'ca' ? 'Dolçor' : 'Dulzor'}</dt>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.sweetness * 2)}`}>{entry.review.sweetness * 2}/10</dd>
+                          </div>
+                          <div>
+                            <dt>{locale === 'ca' ? 'Acidesa' : 'Acidez'}</dt>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.acidity * 2)}`}>{entry.review.acidity * 2}/10</dd>
+                          </div>
+                          <div>
+                            <dt>{locale === 'ca' ? 'Taní' : 'Tanino'}</dt>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.tannin == null ? null : entry.review.tannin * 2)}`}>{entry.review.tannin == null ? '-' : `${entry.review.tannin * 2}/10`}</dd>
+                          </div>
+                          <div>
+                            <dt>{locale === 'ca' ? 'Cos' : 'Cuerpo'}</dt>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.body * 2)}`}>{entry.review.body * 2}/10</dd>
+                          </div>
+                          <div>
+                            <dt>{locale === 'ca' ? 'Persistència' : 'Persistencia'}</dt>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.persistence * 2)}`}>{entry.review.persistence * 2}/10</dd>
+                          </div>
+                        </dl>
+                      </div>
+                      <div className="review-score-col">
+                        <div className="review-card-header-right">
+                          <div className="review-score-summary">
+                            <span className={`score-pill ${medalToneFromHundred(entry.review.score)}`}>{entry.review.score == null ? '-' : `${entry.review.score}/100`}</span>
+                            <small>{locale === 'ca' ? 'Puntuació total (100)' : 'Puntuación total (100)'}</small>
+                          </div>
+                          <div className="review-actions review-actions-inline review-actions-end">
+                            <button
+                              type="button"
+                              className="table-icon-button"
+                              aria-label={labels.reviews.edit.editAction}
+                              title={labels.reviews.edit.editAction}
+                              onClick={() => openReviewEdit(entry.wine, entry.review)}
+                            >
+                              <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25Zm2.92 2.33H5v-.92l8.06-8.06.92.92L5.92 19.58ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.33-2.33a1 1 0 0 0-1.41 0l-1.18 1.18 3.75 3.75 1.17-1.19Z" fill="currentColor" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              className="table-icon-button danger"
+                              aria-label={locale === 'ca' ? 'Eliminar ressenya' : 'Eliminar reseña'}
+                              title={locale === 'ca' ? 'Eliminar ressenya' : 'Eliminar reseña'}
+                              disabled={reviewDeleteBusyId === entry.review.id}
+                              onClick={() => { void deleteReview(entry.wine, entry.review) }}
+                            >
+                              <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2v8H7v-8Z" fill="currentColor" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                    )
+                  }) : (
+                    <p className="muted">{locale === 'ca' ? 'Encara no has creat ressenyes.' : 'Todavía no has creado reseñas.'}</p>
+                  )}
+                </div>
+              </section>
             </section>
+
           </section>
         ) : null}
 
@@ -4897,10 +5639,16 @@ function App() {
             <header className="wine-profile-toolbar">
               <h3>{selectedWineSheetDetails?.name ?? selectedWineSheet.name}</h3>
               <div className="wine-profile-header-actions">
-                <button type="button" className="ghost-button" onClick={closeWineSheet}>
-                  {locale === 'ca' ? 'Tornar al llistat de vins' : 'Volver al listado de vinos'}
+                <button type="button" className="ghost-button wine-profile-back-button" onClick={closeWineSheet}>
+                  <svg className="wine-profile-back-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      d="M14.7 5.3a1 1 0 0 1 0 1.4L10.41 11H20a1 1 0 1 1 0 2h-9.59l4.3 4.3a1 1 0 1 1-1.42 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.42 0Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span className="wine-profile-back-text">{locale === 'ca' ? 'Tornar al llistat de vins' : 'Volver al listado de vinos'}</span>
                 </button>
-                <button type="button" className="secondary-button" onClick={() => openWineEdit(selectedWineSheet)}>
+                <button type="button" className="primary-button" onClick={() => openWineEdit(selectedWineSheet)}>
                   {locale === 'ca' ? 'Editar vi' : 'Editar vino'}
                 </button>
               </div>
@@ -4924,36 +5672,6 @@ function App() {
             {selectedWineSheetStatus === 'ready' && selectedWineSheetDetails ? (
               <>
                 <section className="wine-profile-row-one">
-                  <section className="panel wine-profile-card-summary">
-                    <div className="panel-header">
-                      <div>
-                        <p className="eyebrow">{locale === 'ca' ? 'FITXA TÈCNICA' : 'FICHA TÉCNICA'}</p>
-                        <h3>{selectedWineSheetDetails.name}</h3>
-                      </div>
-                    </div>
-                    <p className="muted wine-profile-origin-line">
-                      <span className="wine-profile-flag-badge" aria-label={selectedWineSheet.country} title={selectedWineSheet.country}>
-                        {selectedWineCountryFlagPath ? <img className="wine-profile-flag-image" src={selectedWineCountryFlagPath} alt={localizedCountryName(selectedWineSheet.country, locale)} loading="lazy" /> : countryFlagEmoji(selectedWineSheet.country)}
-                      </span>
-                      {selectedWineCommunityFlagPath && selectedWineCommunity ? (
-                        <span className="wine-profile-flag-badge" aria-label={`Comunidad autonoma ${selectedWineCommunity.name}`} title={selectedWineCommunity.name}>
-                          <img className="wine-profile-flag-image" src={selectedWineCommunityFlagPath} alt={selectedWineCommunity.name} loading="lazy" />
-                        </span>
-                      ) : null}
-                      <span>{selectedWineSheetDetails.winery ?? '-'} · {selectedWineSheetDetails.do?.name ?? '-'}</span>
-                    </p>
-                    <div className="wine-profile-kpi-strip">
-                      <article>
-                        <span>{t('wineProfile.statAvgScore')}</span>
-                        <strong>{selectedWineAverageScore ?? '-'}</strong>
-                      </article>
-                      <article>
-                        <span>{locale === 'ca' ? 'Anyada' : 'Añada'}</span>
-                        <strong>{selectedWineSheetDetails.vintage_year ?? '-'}</strong>
-                      </article>
-                    </div>
-                  </section>
-
                   {renderWinePhotoManager(selectedWineSheet.id, selectedWinePhotoSlots)}
 
                   <section className="wine-sheet-card wine-profile-card-composition">
@@ -4984,8 +5702,32 @@ function App() {
                     <div className="panel-header">
                       <div>
                         <p className="eyebrow">{locale === 'ca' ? 'FITXA TÈCNICA' : 'FICHA TÉCNICA'}</p>
-                        <h3>{locale === 'ca' ? 'Identitat del vi + Informació' : 'Identidad del vino + Información'}</h3>
+                        <h3>{selectedWineSheetDetails.name}</h3>
+                        <p className="wine-profile-maininfo-subtitle">{locale === 'ca' ? 'Identitat del vi + Informació' : 'Identidad del vino + Información'}</p>
                       </div>
+                    </div>
+
+                    <p className="muted wine-profile-origin-line">
+                      <span className="wine-profile-flag-badge" aria-label={selectedWineSheet.country} title={selectedWineSheet.country}>
+                        {selectedWineCountryFlagPath ? <img className="wine-profile-flag-image" src={selectedWineCountryFlagPath} alt={localizedCountryName(selectedWineSheet.country, locale)} loading="lazy" /> : countryFlagEmoji(selectedWineSheet.country)}
+                      </span>
+                      {selectedWineCommunityFlagPath && selectedWineCommunity ? (
+                        <span className="wine-profile-flag-badge" aria-label={`Comunidad autonoma ${selectedWineCommunity.name}`} title={selectedWineCommunity.name}>
+                          <img className="wine-profile-flag-image" src={selectedWineCommunityFlagPath} alt={selectedWineCommunity.name} loading="lazy" />
+                        </span>
+                      ) : null}
+                      <span>{selectedWineSheetDetails.winery ?? '-'} · {selectedWineSheetDetails.do?.name ?? '-'}</span>
+                    </p>
+
+                    <div className="wine-profile-kpi-strip">
+                      <article>
+                        <span>{t('wineProfile.statAvgScore')}</span>
+                        <strong>{selectedWineAverageScore ?? '-'}</strong>
+                      </article>
+                      <article>
+                        <span>{locale === 'ca' ? 'Anyada' : 'Añada'}</span>
+                        <strong>{selectedWineSheetDetails.vintage_year ?? '-'}</strong>
+                      </article>
                     </div>
 
                     <div className="wine-profile-top-strip">
@@ -5120,10 +5862,49 @@ function App() {
         ))}
       </nav>
 
-      {wineDeleteTarget ? (
-        <div className="modal-backdrop" role="presentation" onClick={closeWineDeleteConfirm}>
+      {isMobileViewport && isWineFiltersMobileOpen ? (
+        <div
+          className="modal-backdrop wine-mobile-filters-backdrop"
+          role="presentation"
+          onClick={() => {
+            setIsDoDropdownOpen(false)
+            setIsWineFiltersMobileOpen(false)
+          }}
+        >
           <section
-            className="confirm-modal"
+            className="wine-mobile-filters-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wine-mobile-filters-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="wine-mobile-filters-header">
+              <div>
+                <p className="eyebrow">{locale === 'ca' ? 'FILTRES' : 'FILTROS'}</p>
+                <h3 id="wine-mobile-filters-title">{locale === 'ca' ? 'Filtrar vins' : 'Filtrar vinos'}</h3>
+              </div>
+              <button
+                type="button"
+                className="ghost-button small"
+                onClick={() => {
+                  setIsDoDropdownOpen(false)
+                  setIsWineFiltersMobileOpen(false)
+                }}
+              >
+                {locale === 'ca' ? 'Tancar' : 'Cerrar'}
+              </button>
+            </header>
+            <div className="wine-mobile-filters-content">
+              {renderWineFilters('mobile')}
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {wineDeleteTarget ? (
+        <div className="modal-backdrop wine-delete-backdrop" role="presentation" onClick={closeWineDeleteConfirm}>
+          <section
+            className="confirm-modal wine-delete-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-wine-title"
@@ -5270,7 +6051,7 @@ function App() {
             onClick={(event) => event.stopPropagation()}
           >
             <header className="image-modal-header">
-              <div>
+              <div className="image-modal-head-main">
                 <p className="eyebrow">{t('wineProfile.galleryEyebrow')}</p>
                 <div className="image-modal-title-row">
                   <h3 id="wine-gallery-title">{selectedWineGallery.name}</h3>
@@ -5374,6 +6155,12 @@ function App() {
       {wineSuccessToast ? (
         <div className="floating-toast floating-toast-success" role="status" aria-live="polite">
           {wineSuccessToast}
+        </div>
+      ) : null}
+
+      {reviewSuccessToast ? (
+        <div className="floating-toast floating-toast-success" role="status" aria-live="polite">
+          {reviewSuccessToast}
         </div>
       ) : null}
     </main>

@@ -145,7 +145,7 @@ const DEFAULT_SORT: SortKey = 'score_desc'
 
 const DICT: Record<Locale, Dictionary> = {
   ca: {
-    appName: 'Wine App',
+    appName: 'Els nostres vins',
     title: 'Catàleg de vins',
     subtitle: 'Selecció pública amb fitxes visuals, puntuació mitjana i reconeixements destacats.',
     searchPlaceholder: 'Cerca per nom, celler o regió...',
@@ -244,7 +244,7 @@ const DICT: Record<Locale, Dictionary> = {
     },
   },
   es: {
-    appName: 'Wine App',
+    appName: 'Els nostres vins',
     title: 'Catálogo de vinos',
     subtitle: 'Selección pública con fichas visuales, puntuación media y reconocimientos destacados.',
     searchPlaceholder: 'Buscar por nombre, bodega o región...',

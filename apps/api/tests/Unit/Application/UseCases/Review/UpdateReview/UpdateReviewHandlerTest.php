@@ -35,7 +35,8 @@ final class UpdateReviewHandlerTest extends TestCase
         $saved = $repository->findById(1);
         self::assertNotNull($saved);
         self::assertSame(5, $saved->intensityAroma);
-        self::assertSame(['elegante'], $saved->bulletsAsValues());
+        self::assertSame(90, $saved->score);
+        self::assertSame(['elegant'], $saved->bulletsAsValues());
     }
 
     public function testUpdateThrowsWhenReviewMissing(): void
@@ -56,12 +57,10 @@ final class UpdateReviewHandlerTest extends TestCase
         ));
     }
 
-    public function testUpdateThrowsWhenScoreChanges(): void
+    public function testUpdateAllowsScoreChanges(): void
     {
         $repository = new InMemoryWineReviewRepository();
         $handler = new UpdateReviewHandler($repository);
-
-        $this->expectException(UpdateReviewValidationException::class);
 
         $handler->handle(new UpdateReviewCommand(
             id: 1,
@@ -73,6 +72,10 @@ final class UpdateReviewHandlerTest extends TestCase
             persistence: 4,
             score: 91,
         ));
+
+        $saved = $repository->findById(1);
+        self::assertNotNull($saved);
+        self::assertSame(91, $saved->score);
     }
 }
 

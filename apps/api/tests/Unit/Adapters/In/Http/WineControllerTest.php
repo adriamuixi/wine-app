@@ -286,7 +286,7 @@ final class WineControllerTest extends TestCase
         self::assertSame('Tempranillo', $payload['wine']['grapes'][0]['name']);
         self::assertSame('front_label', $payload['wine']['photos'][0]['type']);
         self::assertSame('parker', $payload['wine']['awards'][0]['name']);
-        self::assertSame('afrutado', $payload['wine']['reviews'][0]['bullets'][0]);
+        self::assertSame('fruity', $payload['wine']['reviews'][0]['bullets'][0]);
         self::assertSame('Madrid', $payload['wine']['purchases'][0]['place']['city']);
         self::assertSame('ribera', $payload['wine']['do']['name']);
     }

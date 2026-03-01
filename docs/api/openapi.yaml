@@ -654,7 +654,7 @@ components:
           example: Invalid credentials.
     ReviewBulletValue:
       type: string
-      enum: [afrutado, floral, especiado, mineral, madera_marcada, facil_de_beber, elegante, potente, gastronomico]
+      enum: [fruity, floral, spicy, mineral, oak_forward, easy_drinking, elegant, powerful, food_friendly]
     Review:
       type: object
       required: [id, user_id, wine_id, intensity_aroma, sweetness, acidity, body, persistence, bullets]

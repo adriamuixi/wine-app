@@ -114,7 +114,7 @@ final class ReviewControllerTest extends TestCase
                 'tannin' => 1,
                 'body' => 4,
                 'persistence' => 4,
-                'bullets' => ['elegante'],
+                'bullets' => ['elegant'],
                 'score' => 88,
             ], JSON_THROW_ON_ERROR),
         );
@@ -138,7 +138,7 @@ final class ReviewControllerTest extends TestCase
                 'tannin' => 1,
                 'body' => 4,
                 'persistence' => 4,
-                'bullets' => ['elegante'],
+                'bullets' => ['elegant'],
                 'score' => 88,
             ], JSON_THROW_ON_ERROR),
         );

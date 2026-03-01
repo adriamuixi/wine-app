@@ -20,10 +20,6 @@ final readonly class UpdateReviewHandler
             throw new UpdateReviewNotFound(sprintf('Review %d not found.', $command->id));
         }
 
-        if (null !== $command->score && $command->score !== $existing->score) {
-            throw new UpdateReviewValidationException('score is immutable after creation.');
-        }
-
         try {
             $updated = new WineReview(
                 id: $existing->id,
@@ -36,7 +32,7 @@ final readonly class UpdateReviewHandler
                 body: $command->body,
                 persistence: $command->persistence,
                 bullets: $command->bullets,
-                score: $existing->score,
+                score: $command->score ?? $existing->score,
                 createdAt: $existing->createdAt,
                 userName: $existing->userName,
                 userLastname: $existing->userLastname,

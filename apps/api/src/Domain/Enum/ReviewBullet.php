@@ -6,13 +6,13 @@ namespace App\Domain\Enum;
 
 enum ReviewBullet: string
 {
-    case Afrutado = 'afrutado';
+    case Afrutado = 'fruity';
     case Floral = 'floral';
-    case Especiado = 'especiado';
+    case Especiado = 'spicy';
     case Mineral = 'mineral';
-    case MaderaMarcada = 'madera_marcada';
-    case FacilDeBeber = 'facil_de_beber';
-    case Elegante = 'elegante';
-    case Potente = 'potente';
-    case Gastronomico = 'gastronomico';
+    case MaderaMarcada = 'oak_forward';
+    case FacilDeBeber = 'easy_drinking';
+    case Elegante = 'elegant';
+    case Potente = 'powerful';
+    case Gastronomico = 'food_friendly';
 }

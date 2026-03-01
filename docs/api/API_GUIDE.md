@@ -242,7 +242,7 @@ curl -s -b cookies.txt -X POST http://localhost:8080/api/wines/2/reviews \
 
 ### `PUT /api/wines/{wineId}/reviews/{id}`
 
-Updates review axes/bullets (score is immutable).
+Updates review axes/bullets (score can also be updated).
 
 Expected:
 - `204` updated
@@ -256,7 +256,7 @@ Example:
 ```bash
 curl -i -b cookies.txt -X PUT http://localhost:8080/api/wines/2/reviews/1 \
   -H 'Content-Type: application/json' \
-  -d '{"intensity_aroma":5,"sweetness":2,"acidity":2,"tannin":1,"body":4,"persistence":4,"bullets":["elegante"],"score":88}'
+  -d '{"intensity_aroma":5,"sweetness":2,"acidity":2,"tannin":1,"body":4,"persistence":4,"bullets":["elegant"],"score":88}'
 ```
 
 ---
