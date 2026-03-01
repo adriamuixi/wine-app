@@ -93,6 +93,32 @@ curl -i -b cookies.txt -X POST http://localhost:8080/api/auth/logout
 
 ## Wines
 
+### `GET /api/grapes`
+
+Returns all grapes from DB.
+
+Example:
+
+```bash
+curl -s "http://localhost:8080/api/grapes" | jq
+```
+
+Response shape:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "Tempranillo",
+      "color": "red"
+    }
+  ]
+}
+```
+
+---
+
 ### `GET /api/wines`
 
 Paginated wine listing with filters.

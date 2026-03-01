@@ -2,20 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Wine\CreatePhoto;
+namespace App\Application\UseCases\Wine\CreateWinePhoto;
 
 use App\Domain\Enum\WinePhotoType;
 
-final readonly class CreateWinePhotoResult
+final readonly class CreateWinePhotoCommand
 {
     public function __construct(
-        public int $id,
         public int $wineId,
         public WinePhotoType $type,
-        public string $url,
-        public string $hash,
+        public string $sourcePath,
+        public string $originalFilename,
         public int $size,
-        public string $extension,
     ) {
     }
 }

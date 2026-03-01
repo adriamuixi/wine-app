@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Adapters\In\Http;
 
-use App\Application\UseCases\Wine\CreatePhoto\CreateWinePhotoCommand;
-use App\Application\UseCases\Wine\CreatePhoto\CreateWinePhotoHandler;
-use App\Application\UseCases\Wine\CreatePhoto\CreateWinePhotoNotFound;
-use App\Application\UseCases\Wine\CreatePhoto\CreateWinePhotoValidationException;
+use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoCommand;
+use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoHandler;
+use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoNotFound;
+use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoValidationException;
 use App\Domain\Enum\WinePhotoType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

@@ -34,6 +34,7 @@ menu:
   wines: Vins
   reviews: Ressenyes
   admin: Eines Admin
+  apiDoc: API Doc
 dashboard:
   title: Visió general
   metrics:
@@ -135,6 +136,7 @@ topbar:
   wines: Eines de vins
   reviews: Les meves ressenyes
   admin: Eines Admin
+  apiDoc: Documentació API
   welcome: Benvingut
   signedInAs: Sessió iniciada com a
   shellReady: Aquest shell està llest per a mòduls del dashboard.
@@ -144,6 +146,13 @@ topbar:
   nextStepDesc: Afegir rutes i mòduls de vins, ressenyes i administració.
   mobileReadyTitle: Preparat per a mòbil
   mobileReadyDesc: El layout és responsive per a mòbil i tauleta.
+apiDoc:
+  eyebrow: API
+  title: Guia d'API (Markdown)
+  description: Contingut carregat des de `/guide.md` del backend.
+  loading: Carregant guia d'API...
+  error: No s'ha pogut carregar la guia d'API.
+  refresh: Recarrega
 user:
   backoffice: Backoffice
   role: Administrador de Celler

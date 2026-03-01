@@ -8,7 +8,7 @@ use App\Adapters\In\Http\AuthController;
 use App\Domain\Model\AuthUser;
 use App\Application\UseCases\Auth\Login\LoginHandler;
 use App\Application\UseCases\Auth\Logout\LogoutHandler;
-use App\Application\UseCases\Auth\Me\GetCurrentUserHandler;
+use App\Application\UseCases\Auth\User\GetCurrentUserHandler;
 use App\Tests\Unit\Application\UseCases\Auth\Login\InMemoryUserRepository;
 use App\Tests\Unit\Application\UseCases\Auth\Login\SpyAuthSessionManager;
 use App\Tests\Unit\Application\UseCases\Auth\Login\StubPasswordVerifier;

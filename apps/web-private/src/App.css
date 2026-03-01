@@ -930,6 +930,10 @@ code {
   margin-bottom: 0.9rem;
 }
 
+.filter-grid-top {
+  grid-template-columns: 2.4fr minmax(130px, 180px);
+}
+
 .dashboard-rich-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -2833,11 +2837,13 @@ code {
   .mobile-bottom-nav-item:nth-child(2) .mobile-bottom-nav-icon { color: #8f3851; }
   .mobile-bottom-nav-item:nth-child(3) .mobile-bottom-nav-icon { color: #6b6f9f; }
   .mobile-bottom-nav-item:nth-child(4) .mobile-bottom-nav-icon { color: #8a6a45; }
+  .mobile-bottom-nav-item:nth-child(5) .mobile-bottom-nav-icon { color: #3b7f78; }
 
   .mobile-bottom-nav-item.active:nth-child(1) .mobile-bottom-nav-icon { color: #6e5346; }
   .mobile-bottom-nav-item.active:nth-child(2) .mobile-bottom-nav-icon { color: #8f3851; }
   .mobile-bottom-nav-item.active:nth-child(3) .mobile-bottom-nav-icon { color: #4f5a97; }
   .mobile-bottom-nav-item.active:nth-child(4) .mobile-bottom-nav-icon { color: #735534; }
+  .mobile-bottom-nav-item.active:nth-child(5) .mobile-bottom-nav-icon { color: #236c64; }
 
   .mobile-bottom-nav-label {
     font-size: 0.62rem;
@@ -4037,4 +4043,251 @@ body {
   .topbar-controls .theme-toggle span:last-child {
     display: none;
   }
+}
+
+.api-doc-viewer {
+  margin-top: 1rem;
+  border: 1px solid var(--theme-border);
+  border-radius: 16px;
+  background: var(--theme-surface);
+  max-height: min(68vh, 920px);
+  overflow: auto;
+}
+
+.api-doc-markdown {
+  margin: 0;
+  padding: 1.15rem 1.2rem;
+  line-height: 1.5;
+  color: var(--theme-text);
+  font-size: 0.93rem;
+}
+
+.api-doc-markdown > *:first-child {
+  margin-top: 0;
+}
+
+.api-doc-markdown > *:last-child {
+  margin-bottom: 0;
+}
+
+.api-doc-markdown h1,
+.api-doc-markdown h2,
+.api-doc-markdown h3,
+.api-doc-markdown h4 {
+  line-height: 1.24;
+  margin: 1.2rem 0 0.55rem;
+  color: var(--theme-text-strong);
+}
+
+.api-doc-markdown h1 {
+  font-size: 1.5rem;
+}
+
+.api-doc-markdown h2 {
+  font-size: 1.25rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid var(--theme-border);
+}
+
+.api-doc-markdown h3 {
+  font-size: 1.08rem;
+}
+
+.api-doc-markdown p {
+  margin: 0.65rem 0;
+  color: var(--theme-text);
+}
+
+.api-doc-markdown ul,
+.api-doc-markdown ol {
+  margin: 0.65rem 0 0.8rem 1.15rem;
+}
+
+.api-doc-markdown li + li {
+  margin-top: 0.3rem;
+}
+
+.api-doc-markdown a {
+  color: var(--theme-accent-strong);
+}
+
+.api-doc-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--theme-border);
+  margin: 1rem 0;
+}
+
+.api-doc-markdown code {
+  padding: 0.12rem 0.33rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--theme-surface) 82%, var(--theme-accent-soft));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.84em;
+  word-break: break-word;
+}
+
+.api-doc-markdown pre {
+  margin: 0.8rem 0;
+  padding: 0;
+  border-radius: 0;
+  overflow: auto;
+  border: 0;
+  background: transparent;
+}
+
+.api-doc-markdown pre code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--theme-text);
+  font-size: 0.9rem;
+}
+
+.api-doc-code-block {
+  margin: 0.8rem 0;
+  border: 1px solid color-mix(in srgb, var(--theme-border) 90%, var(--theme-accent-soft));
+  border-radius: 10px;
+  overflow: hidden;
+  background: #10141e;
+}
+
+.api-doc-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.42rem 0.62rem;
+  background: #151b2a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.api-doc-code-lang {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9fb0d8;
+  font-weight: 700;
+}
+
+.api-doc-code-copy {
+  border: 1px solid rgba(208, 217, 255, 0.32);
+  background: rgba(208, 217, 255, 0.1);
+  color: #e8eeff;
+  border-radius: 8px;
+  padding: 0.22rem 0.56rem;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.api-doc-code-copy:hover,
+.api-doc-code-copy:focus-visible {
+  background: rgba(208, 217, 255, 0.2);
+  border-color: rgba(208, 217, 255, 0.55);
+}
+
+.api-doc-code-block pre {
+  margin: 0;
+  padding: 0.9rem 0.95rem;
+  border: 0;
+  border-radius: 0;
+  background: #10141e;
+}
+
+.api-doc-code-block code.hljs {
+  display: block;
+  color: #d9e2ff;
+}
+
+.api-doc-code-block .hljs-keyword,
+.api-doc-code-block .hljs-selector-tag,
+.api-doc-code-block .hljs-literal {
+  color: #ff8f70;
+}
+
+.api-doc-code-block .hljs-string,
+.api-doc-code-block .hljs-attr,
+.api-doc-code-block .hljs-template-tag {
+  color: #a6e3a1;
+}
+
+.api-doc-code-block .hljs-number,
+.api-doc-code-block .hljs-symbol,
+.api-doc-code-block .hljs-variable {
+  color: #f9e2af;
+}
+
+.api-doc-code-block .hljs-comment,
+.api-doc-code-block .hljs-quote {
+  color: #8ea2cf;
+}
+
+.api-doc-code-block .hljs-title,
+.api-doc-code-block .hljs-function {
+  color: #89b4fa;
+}
+
+.api-doc-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.9rem 0;
+  font-size: 0.9rem;
+}
+
+.api-doc-markdown th,
+.api-doc-markdown td {
+  border: 1px solid var(--theme-border);
+  padding: 0.5rem 0.62rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.api-doc-markdown th {
+  background: color-mix(in srgb, var(--theme-surface) 90%, var(--theme-accent-soft));
+  color: var(--theme-text-strong);
+}
+
+.api-doc-markdown blockquote {
+  margin: 0.75rem 0;
+  padding: 0.1rem 0 0.1rem 0.75rem;
+  border-left: 3px solid color-mix(in srgb, var(--theme-accent) 55%, var(--theme-border));
+  color: color-mix(in srgb, var(--theme-text) 90%, white);
+}
+
+.api-doc-state {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--theme-border);
+  background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-accent-soft));
+  color: var(--theme-text);
+}
+
+.api-doc-state-error {
+  border-color: color-mix(in srgb, #c53b51 25%, var(--theme-border));
+  background: color-mix(in srgb, #c53b51 10%, var(--theme-surface));
+}
+
+.api-doc-error-detail {
+  margin: 0.4rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.82rem;
+}
+
+.pagination-bar {
+  margin-top: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pagination-meta {
+  font-size: 0.88rem;
+  color: var(--theme-text-muted);
+}
+
+.pagination-actions {
+  display: flex;
+  gap: 0.45rem;
 }

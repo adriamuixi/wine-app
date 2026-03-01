@@ -8,7 +8,7 @@ use App\Application\UseCases\Auth\Login\InvalidCredentials;
 use App\Application\UseCases\Auth\Login\LoginCommand;
 use App\Application\UseCases\Auth\Login\LoginHandler;
 use App\Application\UseCases\Auth\Logout\LogoutHandler;
-use App\Application\UseCases\Auth\Me\GetCurrentUserHandler;
+use App\Application\UseCases\Auth\User\GetCurrentUserHandler;
 use App\Domain\Model\AuthUser;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

@@ -94,6 +94,18 @@ paths:
       responses:
         '204':
           description: Logged out (idempotent)
+  /api/grapes:
+    get:
+      summary: List all grapes
+      operationId: getGrapesList
+      tags: [Grape]
+      responses:
+        '200':
+          description: Grapes list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrapeListResponse'
   /api/wines:
     get:
       summary: List wines (paginated)
@@ -877,3 +889,23 @@ components:
             $ref: '#/components/schemas/WineListItem'
         pagination:
           $ref: '#/components/schemas/PaginationMeta'
+    GrapeListItem:
+      type: object
+      required: [id, name, color]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        color:
+          type: string
+          enum: [red, white]
+    GrapeListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrapeListItem'

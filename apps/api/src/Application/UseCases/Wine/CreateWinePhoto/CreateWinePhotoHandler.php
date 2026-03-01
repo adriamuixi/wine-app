@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Wine\CreatePhoto;
+namespace App\Application\UseCases\Wine\CreateWinePhoto;
 
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;

@@ -34,6 +34,7 @@ menu:
   wines: Vinos
   reviews: Reseñas
   admin: Herramientas Admin
+  apiDoc: API Doc
 dashboard:
   title: Resumen
   metrics:
@@ -135,6 +136,7 @@ topbar:
   wines: Herramientas de vinos
   reviews: Mis reseñas
   admin: Herramientas Admin
+  apiDoc: Documentación API
   welcome: Bienvenido
   signedInAs: Sesión iniciada como
   shellReady: Este shell está listo para módulos de dashboard.
@@ -144,6 +146,13 @@ topbar:
   nextStepDesc: Añadir rutas y módulos de vinos, reseñas y administración.
   mobileReadyTitle: Preparado para móvil
   mobileReadyDesc: El layout es responsive para móvil y tablet.
+apiDoc:
+  eyebrow: API
+  title: Guía de API (Markdown)
+  description: Contenido cargado desde `/guide.md` del backend.
+  loading: Cargando guía de API...
+  error: No se pudo cargar la guía de API.
+  refresh: Recargar
 user:
   backoffice: Backoffice
   role: Administrador de Bodega

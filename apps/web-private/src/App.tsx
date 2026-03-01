@@ -1,11 +1,25 @@
-import type { FormEvent } from 'react'
+import type { FormEvent, HTMLAttributes, ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
+import hljs from 'highlight.js/lib/common'
 import { Bar, BarChart, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts'
+import ReactMarkdown from 'react-markdown'
 import { LanguageSelector } from './components/LanguageSelector'
 import './App.css'
 import { useI18n } from './i18n/I18nProvider'
 
-type WineType = 'red' | 'white' | 'rose' | 'sparkling'
+type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'sweet' | 'fortified'
+type CountryFilterValue =
+  | 'all'
+  | 'spain'
+  | 'france'
+  | 'italy'
+  | 'portugal'
+  | 'germany'
+  | 'argentina'
+  | 'chile'
+  | 'united_states'
+  | 'south_africa'
+  | 'australia'
 
 type WineItem = {
   id: number
@@ -28,6 +42,41 @@ type ReviewItem = {
   notes: string
 }
 
+type WineListApiItem = {
+  id: number
+  name: string
+  winery: string | null
+  wine_type: WineType | null
+  country: Exclude<CountryFilterValue, 'all'> | null
+  do: { id: number; name: string } | null
+  vintage_year: number | null
+  avg_score: number | null
+}
+
+type WineListApiPagination = {
+  page: number
+  limit: number
+  total_items: number
+  total_pages: number
+  has_next: boolean
+  has_prev: boolean
+}
+
+type WineListApiResponse = {
+  items: WineListApiItem[]
+  pagination: WineListApiPagination
+}
+
+type GrapeApiItem = {
+  id: number
+  name: string
+  color: 'red' | 'white'
+}
+
+type GrapeApiResponse = {
+  items: GrapeApiItem[]
+}
+
 type WineProfileField = {
   label: string
   value: string
@@ -41,7 +90,7 @@ type WineProfileSection = {
 
 type WineProfileMedalTone = 'gold' | 'silver' | 'bronze'
 
-type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'settings' | 'wineProfile'
+type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
 type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
 
@@ -183,6 +232,18 @@ const REVIEW_TAG_OPTIONS = ['Afrutado', 'Floral', 'Especiado', 'Mineral', 'Mader
 const SCORE_OPTIONS_0_TO_10 = Array.from({ length: 11 }, (_, value) => value)
 const SCORE_OPTIONS_0_TO_100 = Array.from({ length: 101 }, (_, value) => value)
 const VINTAGE_YEAR_OPTIONS = Array.from({ length: 76 }, (_, index) => String(2026 - index))
+const WINE_COUNTRY_FILTER_VALUES: Exclude<CountryFilterValue, 'all'>[] = [
+  'spain',
+  'france',
+  'italy',
+  'portugal',
+  'germany',
+  'argentina',
+  'chile',
+  'united_states',
+  'south_africa',
+  'australia',
+]
 
 function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
   if (review == null) {
@@ -337,6 +398,69 @@ function localizedCountryName(country: string, locale: string): string {
   return country
 }
 
+function countryCodeToLabel(countryCode: Exclude<CountryFilterValue, 'all'> | null, locale: string): string {
+  if (countryCode == null) {
+    return '-'
+  }
+
+  const mapCa: Record<Exclude<CountryFilterValue, 'all'>, string> = {
+    spain: 'Espanya',
+    france: 'França',
+    italy: 'Itàlia',
+    portugal: 'Portugal',
+    germany: 'Alemanya',
+    argentina: 'Argentina',
+    chile: 'Xile',
+    united_states: 'Estats Units',
+    south_africa: 'Sud-àfrica',
+    australia: 'Austràlia',
+  }
+  const mapEs: Record<Exclude<CountryFilterValue, 'all'>, string> = {
+    spain: 'España',
+    france: 'Francia',
+    italy: 'Italia',
+    portugal: 'Portugal',
+    germany: 'Alemania',
+    argentina: 'Argentina',
+    chile: 'Chile',
+    united_states: 'Estados Unidos',
+    south_africa: 'Sudáfrica',
+    australia: 'Australia',
+  }
+
+  return locale === 'ca' ? mapCa[countryCode] : mapEs[countryCode]
+}
+
+function countryLabelToFilterValue(country: string): CountryFilterValue {
+  const normalized = country.trim().toLowerCase()
+  const map: Record<string, Exclude<CountryFilterValue, 'all'>> = {
+    spain: 'spain',
+    españa: 'spain',
+    espanya: 'spain',
+    france: 'france',
+    francia: 'france',
+    frança: 'france',
+    italy: 'italy',
+    italia: 'italy',
+    portugal: 'portugal',
+    germany: 'germany',
+    alemania: 'germany',
+    alemanya: 'germany',
+    argentina: 'argentina',
+    chile: 'chile',
+    usa: 'united_states',
+    'united states': 'united_states',
+    'estados unidos': 'united_states',
+    'estats units': 'united_states',
+    'south africa': 'south_africa',
+    'sudáfrica': 'south_africa',
+    'sud-àfrica': 'south_africa',
+    australia: 'australia',
+  }
+
+  return map[normalized] ?? 'all'
+}
+
 function doLogoPathForRegion(region: string): string | null {
   const map: Record<string, string> = {
     'Penedès': '/images/icons/DO/penedes_DO.png',
@@ -394,6 +518,15 @@ function autonomousCommunityFlagPathForRegion(region: string): string | null {
   const community = spanishAutonomousCommunity(region)
   if (!community) return null
   return `/images/flags/ccaa/${community.slug}.png`
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
 }
 
 function medalToneFromScore(score: number | null): WineProfileMedalTone | null {
@@ -590,11 +723,29 @@ function App() {
   const [defaultLandingPage, setDefaultLandingPage] = useState<'dashboard' | 'wines' | 'reviews'>('dashboard')
   const [showOnlySpainByDefault, setShowOnlySpainByDefault] = useState(true)
   const [compactCardsPreference, setCompactCardsPreference] = useState(false)
+  const [apiGuideMarkdown, setApiGuideMarkdown] = useState('')
+  const [apiGuideStatus, setApiGuideStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [apiGuideError, setApiGuideError] = useState<string | null>(null)
+  const [apiGuideUrl, setApiGuideUrl] = useState<string | null>(null)
+  const [apiGuideReloadToken, setApiGuideReloadToken] = useState(0)
+  const [copiedApiCodeKey, setCopiedApiCodeKey] = useState<string | null>(null)
 
   const [searchText, setSearchText] = useState('')
-  const [countryFilter, setCountryFilter] = useState<'all' | string>('all')
+  const [debouncedSearchText, setDebouncedSearchText] = useState('')
+  const [countryFilter, setCountryFilter] = useState<CountryFilterValue>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | WineType>('all')
   const [minScoreFilter, setMinScoreFilter] = useState<'all' | number>('all')
+  const [grapeFilter, setGrapeFilter] = useState<'all' | number>('all')
+  const [grapeOptions, setGrapeOptions] = useState<GrapeApiItem[]>([])
+  const [wineItems, setWineItems] = useState<WineItem[]>([])
+  const [wineListStatus, setWineListStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [wineListError, setWineListError] = useState<string | null>(null)
+  const [winePage, setWinePage] = useState(1)
+  const [wineLimit, setWineLimit] = useState(20)
+  const [wineTotalItems, setWineTotalItems] = useState(0)
+  const [wineTotalPages, setWineTotalPages] = useState(0)
+  const [wineHasNext, setWineHasNext] = useState(false)
+  const [wineHasPrev, setWineHasPrev] = useState(false)
   const [grapeBlendRows, setGrapeBlendRows] = useState<GrapeBlendRow[]>([
     { id: 1, grape: 'Tempranillo' },
   ])
@@ -635,30 +786,27 @@ function App() {
     { key: 'wines', label: labels.menu.wines, short: 'W', icon: '🍷' },
     { key: 'reviews', label: labels.menu.reviews, short: 'R', icon: '✎' },
     { key: 'admin', label: labels.menu.admin, short: 'A', icon: '⚙' },
+    { key: 'apiDocs', label: labels.menu.apiDoc, short: 'API', icon: '🧭' },
   ]
 
   const countries = useMemo(
-    () => ['all', ...Array.from(new Set(mockWines.map((wine) => wine.country)))],
+    () => ['all', ...WINE_COUNTRY_FILTER_VALUES] as CountryFilterValue[],
     [],
   )
 
-  const filteredWines = useMemo(() => {
-    const query = searchText.trim().toLowerCase()
+  const grapesByColor = useMemo(() => {
+    const reds = grapeOptions
+      .filter((grape) => grape.color === 'red')
+      .sort((a, b) => a.name.localeCompare(b.name))
+    const whites = grapeOptions
+      .filter((grape) => grape.color === 'white')
+      .sort((a, b) => a.name.localeCompare(b.name))
 
-    return mockWines.filter((wine) => {
-      const matchesText =
-        query === '' ||
-        wine.name.toLowerCase().includes(query) ||
-        wine.winery.toLowerCase().includes(query) ||
-        wine.region.toLowerCase().includes(query)
-
-      const matchesCountry = countryFilter === 'all' || wine.country === countryFilter
-      const matchesType = typeFilter === 'all' || wine.type === typeFilter
-      const matchesScore = minScoreFilter === 'all' || (wine.averageScore ?? 0) >= minScoreFilter
-
-      return matchesText && matchesCountry && matchesType && matchesScore
-    })
-  }, [searchText, countryFilter, typeFilter, minScoreFilter])
+    return [
+      { key: 'red', label: locale === 'ca' ? 'Negres' : 'Tintas', grapes: reds },
+      { key: 'white', label: locale === 'ca' ? 'Blanques' : 'Blancas', grapes: whites },
+    ]
+  }, [grapeOptions, locale])
 
   const metrics = useMemo(
     () => ({
@@ -942,11 +1090,21 @@ function App() {
     reviewCreate: locale === 'ca' ? 'Crear ressenya' : 'Crear reseña',
     reviewEdit: locale === 'ca' ? 'Editar ressenya' : 'Editar reseña',
     admin: labels.topbar.admin,
+    apiDocs: labels.topbar.apiDoc,
     settings: locale === 'ca' ? 'Configuració' : 'Configuración',
     wineProfile: selectedWineSheet ? `${t('wineProfile.pageTitle')} · ${selectedWineSheet.name}` : t('wineProfile.pageTitle'),
   }[menu]
 
-  const wineTypeLabel = (type: WineType) => labels.wineType[type]
+  const wineTypeLabel = (type: WineType) => {
+    const localized = labels.wineType[type]
+    if (typeof localized === 'string' && localized.trim() !== '') {
+      return localized
+    }
+
+    if (type === 'sweet') return locale === 'ca' ? 'Dolç' : 'Dulce'
+    if (type === 'fortified') return locale === 'ca' ? 'Fortificat' : 'Fortificado'
+    return type
+  }
   const galleryLabels = labels.wineProfile.imageLabels
   const isDarkMode = themeMode === 'dark'
   const brandWordmarkSrc = isDarkMode ? 'images/brand/logo-wordmark-dark.png' : 'images/brand/logo-wordmark-light.png'
@@ -996,6 +1154,186 @@ function App() {
     }
   }, [selectedWineGallery])
 
+  useEffect(() => {
+    if (menu !== 'apiDocs') {
+      return
+    }
+
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+    const requestUrl = `${apiBaseUrl}/guide.md`
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => {
+      controller.abort('timeout')
+    }, 12_000)
+
+    setApiGuideUrl(requestUrl)
+    setApiGuideStatus('loading')
+    setApiGuideError(null)
+
+    fetch(requestUrl, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'text/markdown',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} for ${requestUrl}`)
+        }
+
+        const markdown = await response.text()
+        setApiGuideMarkdown(markdown)
+        setApiGuideStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted && controller.signal.reason !== 'timeout') {
+          return
+        }
+
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        setApiGuideStatus('error')
+        setApiGuideError(message)
+      })
+      .finally(() => {
+        window.clearTimeout(timeoutId)
+      })
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      controller.abort()
+    }
+  }, [menu, apiGuideReloadToken])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchText(searchText.trim())
+    }, 260)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [searchText])
+
+  useEffect(() => {
+    if (menu !== 'wines') {
+      return
+    }
+
+    if (grapeOptions.length > 0) {
+      return
+    }
+
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+    const controller = new AbortController()
+
+    fetch(`${apiBaseUrl}/api/grapes`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as GrapeApiResponse
+        setGrapeOptions(payload.items)
+      })
+      .catch(() => {
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [menu, grapeOptions.length])
+
+  useEffect(() => {
+    if (menu !== 'wines') {
+      return
+    }
+
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+    const params = new URLSearchParams()
+    params.set('page', String(winePage))
+    params.set('limit', String(wineLimit))
+    if (debouncedSearchText !== '') {
+      params.set('search', debouncedSearchText)
+    }
+    if (countryFilter !== 'all') {
+      params.set('country', countryFilter)
+    }
+    if (typeFilter !== 'all') {
+      params.set('wine_type', typeFilter)
+    }
+    if (minScoreFilter !== 'all') {
+      params.set('score_min', String(minScoreFilter))
+    }
+    if (grapeFilter !== 'all') {
+      params.set('grape_id', String(grapeFilter))
+    }
+
+    const controller = new AbortController()
+    setWineListStatus('loading')
+    setWineListError(null)
+
+    fetch(`${apiBaseUrl}/api/wines?${params.toString()}`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as WineListApiResponse
+        const mappedItems = payload.items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          winery: item.winery ?? '-',
+          type: item.wine_type ?? 'red',
+          country: countryCodeToLabel(item.country, locale),
+          region: item.do?.name ?? '-',
+          vintageYear: item.vintage_year,
+          // List endpoint does not expose price in current API contract.
+          pricePaid: 0,
+          averageScore: item.avg_score == null ? null : Math.round(item.avg_score * 10) / 10,
+        }))
+
+        setWineItems(mappedItems)
+        setWinePage(payload.pagination.page)
+        setWineLimit(payload.pagination.limit)
+        setWineTotalItems(payload.pagination.total_items)
+        setWineTotalPages(payload.pagination.total_pages)
+        setWineHasNext(payload.pagination.has_next)
+        setWineHasPrev(payload.pagination.has_prev)
+        setWineListStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setWineListStatus('error')
+        setWineListError(error instanceof Error ? error.message : 'Unknown error')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [menu, debouncedSearchText, countryFilter, typeFilter, minScoreFilter, grapeFilter, winePage, wineLimit, locale])
+
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -1012,6 +1350,31 @@ function App() {
     setLoggedIn(false)
     setShowMobileMenu(false)
     setMenu('dashboard')
+  }
+
+  const handleCopyApiCodeBlock = async (rawCode: string, copyKey: string) => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(rawCode)
+      } else {
+        const textarea = document.createElement('textarea')
+        textarea.value = rawCode
+        textarea.setAttribute('readonly', '')
+        textarea.style.position = 'absolute'
+        textarea.style.left = '-9999px'
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+
+      setCopiedApiCodeKey(copyKey)
+      window.setTimeout(() => {
+        setCopiedApiCodeKey((current) => (current === copyKey ? null : current))
+      }, 1700)
+    } catch {
+      setCopiedApiCodeKey(null)
+    }
   }
 
   const toggleTheme = () => {
@@ -1091,7 +1454,7 @@ function App() {
     }
 
     if (target === 'country') {
-      setCountryFilter(wine.country)
+      setCountryFilter(countryLabelToFilterValue(wine.country))
     }
 
     if (target === 'type') {
@@ -1957,7 +2320,7 @@ function App() {
                 </div>
                 <div className="panel-header-actions">
                   <span className="pill">
-                    {filteredWines.length} {labels.dashboard.search.results}
+                    {wineTotalItems} {labels.dashboard.search.results}
                   </span>
                   <button type="button" className="primary-button" onClick={openWineCreate}>
                     {locale === 'ca' ? 'Crear nou vi' : 'Crear nuevo vino'}
@@ -1965,23 +2328,50 @@ function App() {
                 </div>
               </div>
 
-              <div className="filter-grid">
+              <div className="filter-grid filter-grid-top">
                 <label>
                   {labels.dashboard.search.search}
                   <input
                     type="search"
                     value={searchText}
-                    onChange={(event) => setSearchText(event.target.value)}
-                    placeholder={labels.common.searchPlaceholder}
+                    onChange={(event) => {
+                      setSearchText(event.target.value)
+                      setWinePage(1)
+                    }}
+                    placeholder={locale === 'ca' ? 'Cerca per nom del vi' : 'Buscar por nombre del vino'}
                   />
                 </label>
 
                 <label>
+                  {locale === 'ca' ? 'Límit' : 'Límite'}
+                  <select
+                    value={String(wineLimit)}
+                    onChange={(event) => {
+                      setWineLimit(Number(event.target.value))
+                      setWinePage(1)
+                    }}
+                  >
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="filter-grid">
+                <label>
                   {labels.dashboard.search.country}
-                  <select value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)}>
+                  <select
+                    value={countryFilter}
+                    onChange={(event) => {
+                      setCountryFilter(event.target.value as CountryFilterValue)
+                      setWinePage(1)
+                    }}
+                  >
                     {countries.map((country) => (
                       <option key={country} value={country}>
-                        {country === 'all' ? labels.common.allCountries : country}
+                        {country === 'all' ? labels.common.allCountries : countryCodeToLabel(country, locale)}
                       </option>
                     ))}
                   </select>
@@ -1989,12 +2379,42 @@ function App() {
 
                 <label>
                   {labels.dashboard.search.type}
-                  <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as 'all' | WineType)}>
+                  <select
+                    value={typeFilter}
+                    onChange={(event) => {
+                      setTypeFilter(event.target.value as 'all' | WineType)
+                      setWinePage(1)
+                    }}
+                  >
                     <option value="all">{labels.common.allTypes}</option>
                     <option value="red">{labels.wineType.red}</option>
                     <option value="white">{labels.wineType.white}</option>
                     <option value="rose">{labels.wineType.rose}</option>
                     <option value="sparkling">{labels.wineType.sparkling}</option>
+                    <option value="sweet">{wineTypeLabel('sweet')}</option>
+                    <option value="fortified">{wineTypeLabel('fortified')}</option>
+                  </select>
+                </label>
+
+                <label>
+                  {locale === 'ca' ? 'Varietat de raïm' : 'Variedad de uva'}
+                  <select
+                    value={grapeFilter === 'all' ? 'all' : String(grapeFilter)}
+                    onChange={(event) => {
+                      setGrapeFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))
+                      setWinePage(1)
+                    }}
+                  >
+                    <option value="all">{locale === 'ca' ? 'Totes les varietats' : 'Todas las variedades'}</option>
+                    {grapesByColor.map((group) => (
+                      <optgroup key={group.key} label={group.label}>
+                        {group.grapes.map((grape) => (
+                          <option key={grape.id} value={String(grape.id)}>
+                            {grape.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </label>
 
@@ -2002,7 +2422,10 @@ function App() {
                   {labels.dashboard.search.minScore}
                   <select
                     value={minScoreFilter === 'all' ? 'all' : String(minScoreFilter)}
-                    onChange={(event) => setMinScoreFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))}
+                    onChange={(event) => {
+                      setMinScoreFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))
+                      setWinePage(1)
+                    }}
                   >
                     <option value="all">{labels.common.anyScore}</option>
                     <option value="80">80+</option>
@@ -2012,6 +2435,13 @@ function App() {
                 </label>
               </div>
 
+              {wineListStatus === 'error' ? (
+                <div className="api-doc-state api-doc-state-error">
+                  <p>{locale === 'ca' ? 'No s’ha pogut carregar el llistat de vins.' : 'No se pudo cargar el listado de vinos.'}</p>
+                  {wineListError ? <p className="api-doc-error-detail">{wineListError}</p> : null}
+                </div>
+              ) : null}
+
               <div className="table-wrap">
                 <table className="wine-table">
                   <thead>
@@ -2020,13 +2450,12 @@ function App() {
                       <th>{labels.dashboard.table.wine}</th>
                       <th>{labels.dashboard.table.type}</th>
                       <th>{labels.dashboard.table.region}</th>
-                      <th>{labels.dashboard.table.price}</th>
                       <th>{labels.dashboard.table.avg}</th>
                       <th>{locale === 'ca' ? 'Accions' : 'Acciones'}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredWines.map((wine) => (
+                    {wineItems.map((wine) => (
                       <tr
                         key={wine.id}
                         className="wine-row-clickable"
@@ -2066,7 +2495,6 @@ function App() {
                         </td>
                         <td className="wine-col-type" data-label={labels.dashboard.table.type}>{wineTypeLabel(wine.type)}</td>
                         <td className="wine-col-region" data-label={labels.dashboard.table.region}>{wine.country} · {wine.region}</td>
-                        <td className="wine-col-price" data-label={labels.dashboard.table.price}>{priceFormatter.format(wine.pricePaid)}</td>
                         <td className="wine-col-score" data-label={labels.dashboard.table.avg}>{wine.averageScore ?? '-'}</td>
                         <td className="wine-col-actions" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
                           <button
@@ -2082,8 +2510,44 @@ function App() {
                         </td>
                       </tr>
                     ))}
+                    {wineListStatus === 'loading' ? (
+                      <tr>
+                        <td colSpan={6}>{locale === 'ca' ? 'Carregant vins...' : 'Cargando vinos...'}</td>
+                      </tr>
+                    ) : null}
+                    {wineListStatus === 'ready' && wineItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={6}>{locale === 'ca' ? 'Cap vi trobat.' : 'No se encontraron vinos.'}</td>
+                      </tr>
+                    ) : null}
                   </tbody>
                 </table>
+              </div>
+
+              <div className="pagination-bar">
+                <div className="pagination-meta">
+                  {locale === 'ca'
+                    ? `Pàgina ${winePage} de ${wineTotalPages || 1} · Total ${wineTotalItems} · Mostrant ${wineItems.length}`
+                    : `Página ${winePage} de ${wineTotalPages || 1} · Total ${wineTotalItems} · Mostrando ${wineItems.length}`}
+                </div>
+                <div className="pagination-actions">
+                  <button
+                    type="button"
+                    className="secondary-button small"
+                    disabled={!wineHasPrev || wineListStatus === 'loading'}
+                    onClick={() => setWinePage((current) => Math.max(1, current - 1))}
+                  >
+                    {locale === 'ca' ? 'Anterior' : 'Anterior'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button small"
+                    disabled={!wineHasNext || wineListStatus === 'loading'}
+                    onClick={() => setWinePage((current) => current + 1)}
+                  >
+                    {locale === 'ca' ? 'Següent' : 'Siguiente'}
+                  </button>
+                </div>
               </div>
             </section>
           </section>
@@ -2436,6 +2900,115 @@ function App() {
                   <dd>{labels.admin.account.values.lastLogin}</dd>
                 </div>
               </dl>
+            </section>
+          </section>
+        ) : null}
+
+        {menu === 'apiDocs' ? (
+          <section className="screen-grid">
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <p className="eyebrow">{labels.apiDoc.eyebrow}</p>
+                  <h3>{labels.apiDoc.title}</h3>
+                </div>
+                <div className="panel-header-actions">
+                  <button
+                    type="button"
+                    className="secondary-button small"
+                    onClick={() => {
+                      setApiGuideMarkdown('')
+                      setApiGuideError(null)
+                      setApiGuideReloadToken((current) => current + 1)
+                    }}
+                  >
+                    {labels.apiDoc.refresh}
+                  </button>
+                </div>
+              </div>
+
+              <p className="muted">{labels.apiDoc.description}</p>
+
+              {apiGuideStatus === 'loading' ? (
+                <div className="api-doc-state">{labels.apiDoc.loading}</div>
+              ) : null}
+
+              {apiGuideStatus === 'error' ? (
+                <div className="api-doc-state api-doc-state-error">
+                  <p>{labels.apiDoc.error}</p>
+                  {apiGuideUrl ? <p className="api-doc-error-detail">{apiGuideUrl}</p> : null}
+                  {apiGuideError ? <p className="api-doc-error-detail">{apiGuideError}</p> : null}
+                </div>
+              ) : null}
+
+              {apiGuideStatus === 'ready' ? (
+                <article className="api-doc-viewer">
+                  <div className="api-doc-markdown">
+                    <ReactMarkdown
+                      components={{
+                        code(componentProps) {
+                          const { inline, className, children, ...props } = componentProps as {
+                            inline?: boolean
+                            className?: string
+                            children?: ReactNode
+                          } & Record<string, unknown>
+                          const rawCode = String(children).replace(/\n$/, '')
+                          if (inline) {
+                            return (
+                              <code className={className} {...(props as HTMLAttributes<HTMLElement>)}>
+                                {children}
+                              </code>
+                            )
+                          }
+
+                          const language = className?.replace('language-', '').trim().toLowerCase() || ''
+                          if (language !== 'bash' && language !== 'json') {
+                            return (
+                              <code className={className} {...(props as HTMLAttributes<HTMLElement>)}>
+                                {children}
+                              </code>
+                            )
+                          }
+
+                          const copyKey = `${language}:${rawCode.slice(0, 90)}`
+                          let highlightedCode: string
+                          try {
+                            highlightedCode = hljs.highlight(rawCode, { language, ignoreIllegals: true }).value
+                          } catch {
+                            highlightedCode = escapeHtml(rawCode)
+                          }
+
+                          return (
+                            <div className="api-doc-code-block">
+                              <div className="api-doc-code-header">
+                                <span className="api-doc-code-lang">{language}</span>
+                                <button
+                                  type="button"
+                                  className="api-doc-code-copy"
+                                  onClick={() => {
+                                    void handleCopyApiCodeBlock(rawCode, copyKey)
+                                  }}
+                                >
+                                  {copiedApiCodeKey === copyKey ? 'Copied' : 'Copy'}
+                                </button>
+                              </div>
+                              <pre>
+                                <code
+                                  className="hljs"
+                                  // Trusted source: internal API guide markdown.
+                                  dangerouslySetInnerHTML={{ __html: highlightedCode }}
+                                />
+                              </pre>
+                            </div>
+                          )
+                        },
+                      }}
+                    >
+                      {apiGuideMarkdown}
+                    </ReactMarkdown>
+                  </div>
+                </article>
+              ) : null}
             </section>
           </section>
         ) : null}

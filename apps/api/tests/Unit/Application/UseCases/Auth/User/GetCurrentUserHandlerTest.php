@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Application\UseCases\Auth\Me;
+namespace App\Tests\Unit\Application\UseCases\Auth\User;
 
-use App\Application\UseCases\Auth\Me\GetCurrentUserHandler;
+use App\Application\UseCases\Auth\User\GetCurrentUserHandler;
 use App\Tests\Unit\Application\UseCases\Auth\Login\InMemoryUserRepository;
 use App\Tests\Unit\Application\UseCases\Auth\Login\SpyAuthSessionManager;
 use PHPUnit\Framework\TestCase;

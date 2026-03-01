@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Auth\Me;
+namespace App\Application\UseCases\Auth\User;
 
 use App\Application\Ports\AuthSessionManager;
 use App\Domain\Model\AuthUser;

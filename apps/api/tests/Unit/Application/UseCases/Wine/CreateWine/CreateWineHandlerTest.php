@@ -270,4 +270,9 @@ final class InMemoryGrapeRepository implements GrapeRepository
     {
         return array_values(array_intersect($ids, $this->existingIds));
     }
+
+    public function findAll(): array
+    {
+        return [];
+    }
 }

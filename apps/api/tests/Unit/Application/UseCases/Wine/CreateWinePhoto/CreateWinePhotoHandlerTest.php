@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Application\UseCases\Wine\CreatePhoto;
+namespace App\Tests\Unit\Application\UseCases\Wine\CreateWinePhoto;
 
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
-use App\Application\UseCases\Wine\CreatePhoto\CreateWinePhotoCommand;
-use App\Application\UseCases\Wine\CreatePhoto\CreateWinePhotoHandler;
-use App\Application\UseCases\Wine\CreatePhoto\CreateWinePhotoNotFound;
-use App\Application\UseCases\Wine\CreatePhoto\CreateWinePhotoValidationException;
+use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoCommand;
+use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoHandler;
+use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoNotFound;
+use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoValidationException;
 use App\Domain\Model\WinePhoto;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Application\UseCases\Wine\GetWine\WineDetailsView;
