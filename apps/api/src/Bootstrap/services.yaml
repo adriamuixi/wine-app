@@ -24,7 +24,8 @@ services:
     App\Domain\Repository\AwardRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineAwardRepository'
     App\Domain\Repository\ReviewRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineReviewRepository'
     App\Domain\Repository\WineRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineWineRepository'
-    App\Domain\Repository\WinePhotoRepository: '@App\Adapters\Out\Persistence\Repos\WinePhotoRepositoryAdapter'
+    App\Domain\Repository\WinePhotoRepository: '@App\Adapters\Out\Persistence\Repos\DoctrinePhotoRepository'
+    App\Application\Ports\WinePhotoStoragePort: '@App\Adapters\Out\Storage\LocalWinePhotoStorage'
 
     App\Adapters\Out\Storage\LocalWinePhotoStorage:
         arguments:

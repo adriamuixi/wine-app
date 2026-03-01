@@ -12,4 +12,7 @@ interface DoRepository
     public function findById(int $id): ?DenominationOfOrigin;
 
     public function findCountryById(int $id): ?Country;
+
+    /** @return list<DenominationOfOrigin> */
+    public function findAll(): array;
 }

@@ -26,6 +26,7 @@ services:
       XDEBUG_IDEKEY: ${XDEBUG_IDEKEY:-VSCODE}
     volumes:
       - ./apps/api:/var/www/html
+      - ./docs:/docs:ro
       - ./shared:/shared
     command: >
       sh -lc "mkdir -p /shared/public/images/wines &&

@@ -24,6 +24,8 @@ final readonly class WineReview
         public ?int $score = null,
         public ?int $id = null,
         public ?\DateTimeImmutable $createdAt = null,
+        public ?string $userName = null,
+        public ?string $userLastname = null,
     ) {
         if ($this->userId < 1) {
             throw new \InvalidArgumentException('user_id must be >= 1.');
@@ -51,9 +53,21 @@ final readonly class WineReview
             self::assertAxisInRange('tannin', $this->tannin);
         }
 
-        if (count($this->bullets) !== count(array_unique($this->bullets))) {
+        $bulletValues = $this->bulletsAsValues();
+        if (count($bulletValues) !== count(array_unique($bulletValues))) {
             throw new \InvalidArgumentException('review bullets must be unique.');
         }
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function bulletsAsValues(): array
+    {
+        return array_map(
+            static fn (ReviewBullet $bullet): string => $bullet->value,
+            $this->bullets,
+        );
     }
 
     private static function assertAxisInRange(string $axis, int $value): void

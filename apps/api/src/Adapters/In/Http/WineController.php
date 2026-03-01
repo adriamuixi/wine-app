@@ -16,8 +16,6 @@ use App\Application\UseCases\Wine\DeleteWine\DeleteWineHandler;
 use App\Application\UseCases\Wine\DeleteWine\WineNotFound;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsHandler;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsNotFound;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
-use App\Application\UseCases\Wine\GetWine\WineDoView;
 use App\Application\UseCases\Wine\ListWines\ListWinesHandler;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesSort;
@@ -32,6 +30,8 @@ use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
 use App\Domain\Enum\PlaceType;
 use App\Domain\Enum\WineType;
+use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Model\Wine;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -611,26 +611,26 @@ final class WineController
      *     reviews:list<array{id:int,user:array{id:int,name:string,lastname:string},score:?int,intensity_aroma:int,sweetness:int,acidity:int,tannin:?int,body:int,persistence:int,bullets:list<string>,created_at:string}>
      * }
      */
-    private function winePayload(WineDetailsView $wine): array
+    private function winePayload(Wine $wine): array
     {
         return [
             'id' => $wine->id,
             'name' => $wine->name,
             'winery' => $wine->winery,
-            'wine_type' => $wine->wineType,
+            'wine_type' => $wine->wineType?->value,
             'do' => $this->doPayload($wine->do),
-            'country' => $wine->country,
-            'aging_type' => $wine->agingType,
+            'country' => $wine->country?->value,
+            'aging_type' => $wine->agingType?->value,
             'vintage_year' => $wine->vintageYear,
             'alcohol_percentage' => $wine->alcoholPercentage,
             'created_at' => $wine->createdAt,
             'updated_at' => $wine->updatedAt,
             'grapes' => array_map(
                 static fn ($grape): array => [
-                    'id' => $grape->id,
+                    'id' => $grape->grapeId,
                     'name' => $grape->name,
-                    'color' => $grape->color,
-                    'percentage' => $grape->percentage,
+                    'color' => $grape->color?->value,
+                    'percentage' => $grape->percentageAsFloat(),
                 ],
                 $wine->grapes,
             ),
@@ -639,22 +639,22 @@ final class WineController
                     'id' => $purchase->id,
                     'place' => [
                         'id' => $purchase->place->id,
-                        'place_type' => $purchase->place->placeType,
+                        'place_type' => $purchase->place->placeType->value,
                         'name' => $purchase->place->name,
                         'address' => $purchase->place->address,
                         'city' => $purchase->place->city,
-                        'country' => $purchase->place->country,
+                        'country' => $purchase->place->country->value,
                     ],
-                    'price_paid' => $purchase->pricePaid,
-                    'purchased_at' => $purchase->purchasedAt,
+                    'price_paid' => $purchase->pricePaidAsFloat(),
+                    'purchased_at' => $purchase->purchasedAt->format(\DateTimeInterface::ATOM),
                 ],
                 $wine->purchases,
             ),
             'awards' => array_map(
                 static fn ($award): array => [
                     'id' => $award->id,
-                    'name' => $award->name,
-                    'score' => $award->score,
+                    'name' => $award->name->value,
+                    'score' => $award->scoreAsFloat(),
                     'year' => $award->year,
                 ],
                 $wine->awards,
@@ -662,7 +662,7 @@ final class WineController
             'photos' => array_map(
                 static fn ($photo): array => [
                     'id' => $photo->id,
-                    'type' => $photo->type,
+                    'type' => $photo->type->value,
                     'url' => $photo->url,
                     'hash' => $photo->hash,
                     'size' => $photo->size,
@@ -674,9 +674,9 @@ final class WineController
                 static fn ($review): array => [
                     'id' => $review->id,
                     'user' => [
-                        'id' => $review->user->id,
-                        'name' => $review->user->name,
-                        'lastname' => $review->user->lastname,
+                        'id' => $review->userId,
+                        'name' => $review->userName,
+                        'lastname' => $review->userLastname,
                     ],
                     'score' => $review->score,
                     'intensity_aroma' => $review->intensityAroma,
@@ -685,8 +685,8 @@ final class WineController
                     'tannin' => $review->tannin,
                     'body' => $review->body,
                     'persistence' => $review->persistence,
-                    'bullets' => $review->bullets,
-                    'created_at' => $review->createdAt,
+                    'bullets' => $review->bulletsAsValues(),
+                    'created_at' => $review->createdAt?->format(\DateTimeInterface::ATOM),
                 ],
                 $wine->reviews,
             ),
@@ -696,7 +696,7 @@ final class WineController
     /**
      * @return array{id:int,name:string,region:string,country:string,country_code:string}|null
      */
-    private function doPayload(?WineDoView $wineDo): ?array
+    private function doPayload(?DenominationOfOrigin $wineDo): ?array
     {
         if (null === $wineDo) {
             return null;
@@ -706,7 +706,7 @@ final class WineController
             'id' => $wineDo->id,
             'name' => $wineDo->name,
             'region' => $wineDo->region,
-            'country' => $wineDo->country,
+            'country' => $wineDo->country->value,
             'country_code' => $wineDo->countryCode,
         ];
     }

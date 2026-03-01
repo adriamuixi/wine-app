@@ -4,6 +4,27 @@ This guide documents all available HTTP endpoints with practical examples.
 
 Base URL (local): `http://localhost:8080`
 
+## Table of Contents
+
+- [Conventions](#conventions)
+- [Health](#health)
+  - [`GET /api`](#get-api)
+- [Auth](#auth)
+  - [`POST /api/auth/login`](#post-apiauthlogin)
+  - [`GET /api/auth/me`](#get-apiauthme)
+  - [`POST /api/auth/logout`](#post-apiauthlogout)
+- [Wines](#wines)
+  - [`GET /api/grapes`](#get-apigrapes)
+  - [`GET /api/dos`](#get-apidos)
+  - [`GET /api/wines`](#get-apiwines)
+  - [`POST /api/wines`](#post-apiwines)
+  - [`GET /api/wines/{id}`](#get-apiwinesid)
+  - [`PUT /api/wines/{id}`](#put-apiwinesid)
+  - [`DELETE /api/wines/{id}`](#delete-apiwinesid)
+  - [`POST /api/wines/{id}/photos`](#post-apiwinesidphotos)
+- [Guide Endpoint](#guide-endpoint)
+  - [`GET /guide.md`](#get-guidemd)
+
 ## Conventions
 
 - Content type for JSON requests: `application/json`
@@ -112,6 +133,34 @@ Response shape:
       "id": 1,
       "name": "Tempranillo",
       "color": "red"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /api/dos`
+
+Returns all denominations of origin from DB.
+
+Example:
+
+```bash
+curl -s "http://localhost:8080/api/dos" | jq
+```
+
+Response shape:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "Rioja",
+      "region": "La Rioja",
+      "country": "spain",
+      "country_code": "ES"
     }
   ]
 }

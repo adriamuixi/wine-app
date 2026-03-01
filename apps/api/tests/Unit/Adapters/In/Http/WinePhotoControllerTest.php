@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\WinePhotoController;
+use App\Application\Ports\WinePhotoStoragePort;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoCommand;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoHandler;
 use App\Domain\Model\WinePhoto;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
+use App\Domain\Model\Wine;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
@@ -72,6 +73,7 @@ final class WinePhotoControllerTest extends TestCase
             new CreateWinePhotoHandler(
                 new PhotoControllerSpyWineRepository($existingWineIds),
                 new PhotoControllerSpyWinePhotoRepository(),
+                new PhotoControllerSpyWinePhotoStorage(),
             ),
         );
     }
@@ -84,7 +86,7 @@ final class PhotoControllerSpyWineRepository implements WineRepository
     {
     }
 
-    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    public function create(CreateWineCommand $command, ?Country $country): int
     {
         return 1;
     }
@@ -104,7 +106,7 @@ final class PhotoControllerSpyWineRepository implements WineRepository
         return in_array($id, $this->existingWineIds, true);
     }
 
-    public function findDetailsById(int $id): ?WineDetailsView
+    public function findById(int $id): ?Wine
     {
         return null;
     }
@@ -142,11 +144,14 @@ final class PhotoControllerSpyWinePhotoRepository implements WinePhotoRepository
     ): void {
     }
 
-    public function findUrlsByWineId(int $wineId): array
+    public function findByWineId(int $wineId): array
     {
         return [];
     }
+}
 
+final class PhotoControllerSpyWinePhotoStorage implements WinePhotoStoragePort
+{
     public function save(string $sourcePath, int $wineId, string $hash, string $extension): string
     {
         return '/images/wines/'.$wineId.'/hash.'.$extension;

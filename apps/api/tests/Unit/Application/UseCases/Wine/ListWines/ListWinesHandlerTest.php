@@ -6,7 +6,7 @@ namespace App\Tests\Unit\Application\UseCases\Wine\ListWines;
 
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
+use App\Domain\Model\Wine;
 use App\Application\UseCases\Wine\ListWines\ListWinesHandler;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
@@ -88,7 +88,7 @@ final class SpyWineRepository implements WineRepository
 {
     public ?ListWinesQuery $received = null;
 
-    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    public function create(CreateWineCommand $command, ?Country $country): int
     {
         return 1;
     }
@@ -108,7 +108,7 @@ final class SpyWineRepository implements WineRepository
         return false;
     }
 
-    public function findDetailsById(int $id): ?WineDetailsView
+    public function findById(int $id): ?Wine
     {
         return null;
     }

@@ -8,10 +8,11 @@ use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsHandler;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsNotFound;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
+use App\Domain\Model\Wine;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
+use App\Domain\Enum\WineType;
 use App\Domain\Enum\Country;
 use PHPUnit\Framework\TestCase;
 
@@ -19,13 +20,13 @@ final class GetWineDetailsHandlerTest extends TestCase
 {
     public function testItReturnsWineDetailsWhenWineExists(): void
     {
-        $wine = new WineDetailsView(
+        $wine = new Wine(
             id: 10,
             name: 'Mencia',
             winery: null,
-            wineType: 'red',
+            wineType: WineType::Red,
             do: null,
-            country: 'spain',
+            country: Country::Spain,
             agingType: null,
             vintageYear: 2021,
             alcoholPercentage: 13.5,
@@ -56,11 +57,11 @@ final class GetWineDetailsHandlerTest extends TestCase
 
 final class SpyWineRepository implements WineRepository
 {
-    public function __construct(private readonly ?WineDetailsView $details)
+    public function __construct(private readonly ?Wine $details)
     {
     }
 
-    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    public function create(CreateWineCommand $command, ?Country $country): int
     {
         return 1;
     }
@@ -80,7 +81,7 @@ final class SpyWineRepository implements WineRepository
         return false;
     }
 
-    public function findDetailsById(int $id): ?WineDetailsView
+    public function findById(int $id): ?Wine
     {
         if (null === $this->details || $id !== $this->details->id) {
             return null;

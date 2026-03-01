@@ -7,7 +7,7 @@ namespace App\Tests\Unit\Application\UseCases\Wine\UpdateWine;
 use App\Domain\Repository\DoRepository;
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
+use App\Domain\Model\Wine;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
@@ -115,7 +115,7 @@ final class SpyWineRepository implements WineRepository
     {
     }
 
-    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    public function create(CreateWineCommand $command, ?Country $country): int
     {
         return 1;
     }
@@ -137,7 +137,7 @@ final class SpyWineRepository implements WineRepository
         return in_array($id, $this->updatable, true);
     }
 
-    public function findDetailsById(int $id): ?WineDetailsView
+    public function findById(int $id): ?Wine
     {
         return null;
     }
@@ -176,5 +176,10 @@ final class InMemoryDoRepository implements DoRepository
             country: $country,
             countryCode: 'ES',
         );
+    }
+
+    public function findAll(): array
+    {
+        return [];
     }
 }

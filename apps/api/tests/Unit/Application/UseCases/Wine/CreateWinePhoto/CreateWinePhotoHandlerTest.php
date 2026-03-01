@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Application\UseCases\Wine\CreateWinePhoto;
 
+use App\Application\Ports\WinePhotoStoragePort;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoCommand;
@@ -12,7 +13,7 @@ use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoNotFound;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoValidationException;
 use App\Domain\Model\WinePhoto;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
+use App\Domain\Model\Wine;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
@@ -30,12 +31,14 @@ final class CreateWinePhotoHandlerTest extends TestCase
 
         $wineRepo = new SpyWineRepository(existingIds: [1]);
         $photoRepo = new SpyWinePhotoRepository();
-        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo);
+        $photoStorage = new SpyWinePhotoStorage();
+        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage);
         $result = $handler->handle(new CreateWinePhotoCommand(1, WinePhotoType::Bottle, $tmp, 'bottle.jpg', 12));
 
         self::assertSame(55, $result->id);
         self::assertSame('/images/wines/1/hash123.jpg', $result->url);
         self::assertSame('jpg', $result->extension);
+        self::assertSame('/images/wines/1/hash123.jpg', $photoStorage->savedUrl);
     }
 
     public function testItThrowsWhenWineDoesNotExist(): void
@@ -47,6 +50,7 @@ final class CreateWinePhotoHandlerTest extends TestCase
         $handler = new CreateWinePhotoHandler(
             new SpyWineRepository(existingIds: []),
             new SpyWinePhotoRepository(),
+            new SpyWinePhotoStorage(),
         );
 
         $this->expectException(CreateWinePhotoNotFound::class);
@@ -62,6 +66,7 @@ final class CreateWinePhotoHandlerTest extends TestCase
         $handler = new CreateWinePhotoHandler(
             new SpyWineRepository(existingIds: [1]),
             new SpyWinePhotoRepository(),
+            new SpyWinePhotoStorage(),
         );
 
         $this->expectException(CreateWinePhotoValidationException::class);
@@ -76,12 +81,13 @@ final class CreateWinePhotoHandlerTest extends TestCase
 
         $wineRepo = new SpyWineRepository(existingIds: [1]);
         $photoRepo = new SpyWinePhotoRepository();
+        $photoStorage = new SpyWinePhotoStorage();
         $photoRepo->existing = new WinePhoto(77, '/images/wines/1/old.jpg', WinePhotoType::Bottle);
-        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo);
+        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage);
         $result = $handler->handle(new CreateWinePhotoCommand(1, WinePhotoType::Bottle, $tmp, 'bottle.jpg', 24));
 
         self::assertSame(77, $result->id);
-        self::assertSame('/images/wines/1/old.jpg', $photoRepo->deletedUrl);
+        self::assertSame('/images/wines/1/old.jpg', $photoStorage->deletedUrl);
         self::assertSame(77, $photoRepo->updatedId);
     }
 }
@@ -93,7 +99,7 @@ final class SpyWineRepository implements WineRepository
     {
     }
 
-    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    public function create(CreateWineCommand $command, ?Country $country): int
     {
         return 1;
     }
@@ -113,7 +119,7 @@ final class SpyWineRepository implements WineRepository
         return in_array($id, $this->existingIds, true);
     }
 
-    public function findDetailsById(int $id): ?WineDetailsView
+    public function findById(int $id): ?Wine
     {
         return null;
     }
@@ -128,7 +134,6 @@ final class SpyWinePhotoRepository implements WinePhotoRepository
 {
     public ?WinePhoto $existing = null;
     public ?int $updatedId = null;
-    public ?string $deletedUrl = null;
 
     public function findByWineAndType(int $wineId, WinePhotoType $type): ?WinePhoto
     {
@@ -156,14 +161,22 @@ final class SpyWinePhotoRepository implements WinePhotoRepository
         $this->updatedId = $id;
     }
 
-    public function findUrlsByWineId(int $wineId): array
+    public function findByWineId(int $wineId): array
     {
         return [];
     }
+}
+
+final class SpyWinePhotoStorage implements WinePhotoStoragePort
+{
+    public ?string $savedUrl = null;
+    public ?string $deletedUrl = null;
 
     public function save(string $sourcePath, int $wineId, string $hash, string $extension): string
     {
-        return '/images/wines/'.$wineId.'/hash123.'.$extension;
+        $this->savedUrl = '/images/wines/'.$wineId.'/hash123.'.$extension;
+
+        return $this->savedUrl;
     }
 
     public function deleteByUrl(string $url): void

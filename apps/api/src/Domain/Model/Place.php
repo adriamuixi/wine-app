@@ -15,7 +15,12 @@ final readonly class Place
         public ?string $address,
         public ?string $city,
         public Country $country,
+        public ?int $id = null,
     ) {
+        if (null !== $this->id && $this->id < 1) {
+            throw new \InvalidArgumentException('place id must be >= 1.');
+        }
+
         if ('' === trim($this->name)) {
             throw new \InvalidArgumentException('purchases.place.name is required.');
         }

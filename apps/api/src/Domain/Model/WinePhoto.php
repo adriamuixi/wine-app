@@ -12,6 +12,9 @@ final readonly class WinePhoto
         public int $id,
         public string $url,
         public WinePhotoType $type,
+        public ?string $hash = null,
+        public ?int $size = null,
+        public ?string $extension = null,
     ) {
         if ($this->id < 1) {
             throw new \InvalidArgumentException('photo id must be >= 1.');
@@ -19,6 +22,18 @@ final readonly class WinePhoto
 
         if ('' === trim($this->url)) {
             throw new \InvalidArgumentException('photo url is required.');
+        }
+
+        if (null !== $this->hash && '' === trim($this->hash)) {
+            throw new \InvalidArgumentException('photo hash must not be empty.');
+        }
+
+        if (null !== $this->size && $this->size < 0) {
+            throw new \InvalidArgumentException('photo size must be >= 0.');
+        }
+
+        if (null !== $this->extension && '' === trim($this->extension)) {
+            throw new \InvalidArgumentException('photo extension must not be empty.');
         }
     }
 }

@@ -1,5 +1,5 @@
-import type { FormEvent, HTMLAttributes, ReactNode } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent, HTMLAttributes, ReactNode, SyntheticEvent } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import hljs from 'highlight.js/lib/common'
 import { Bar, BarChart, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts'
 import ReactMarkdown from 'react-markdown'
@@ -77,6 +77,18 @@ type GrapeApiResponse = {
   items: GrapeApiItem[]
 }
 
+type DoApiItem = {
+  id: number
+  name: string
+  region: string
+  country: Exclude<CountryFilterValue, 'all'>
+  country_code: string
+}
+
+type DoApiResponse = {
+  items: DoApiItem[]
+}
+
 type WineProfileField = {
   label: string
   value: string
@@ -99,6 +111,17 @@ type MockUser = {
   name: string
   lastname: string
   email: string
+}
+
+type AuthApiUser = {
+  id: number
+  email: string
+  name: string
+  lastname: string
+}
+
+type AuthApiResponse = {
+  user: AuthApiUser
 }
 
 type GrapeBlendRow = {
@@ -127,11 +150,13 @@ type ReviewFormPreset = {
   notes: string
 }
 
-const SAMPLE_WINE_THUMBNAIL_SRC = 'images/photos/wines/exmaple_wine-hash.png'
+const SAMPLE_WINE_THUMBNAIL_SRC = '/images/photos/wines/exmaple_wine-hash.png'
+const DEFAULT_WINE_ICON_CANDIDATES = ['/images/photos/wines_photo.png', '/admin/images/photos/wines_photo.png'] as const
+const DEFAULT_WINE_ICON_DATA_URI = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="240" viewBox="0 0 160 240"><rect width="160" height="240" rx="14" fill="%23f3ece3"/><path d="M55 36h50c0 36-10 56-25 71v51h22v18H58v-18h22v-51C65 92 55 72 55 36Z" fill="%238f3851"/><circle cx="80" cy="73" r="24" fill="%23c9657f"/></svg>'
 const SAMPLE_WINE_GALLERY = [
   { key: 'bottle', src: SAMPLE_WINE_THUMBNAIL_SRC },
-  { key: 'front', src: 'images/photos/wines/front_wine-hash.png' },
-  { key: 'back', src: 'images/photos/wines/back_wine-hash.png' },
+  { key: 'front', src: '/images/photos/wines/front_wine-hash.png' },
+  { key: 'back', src: '/images/photos/wines/back_wine-hash.png' },
 ] as const
 
 const mockUser: MockUser = {
@@ -461,6 +486,14 @@ function countryLabelToFilterValue(country: string): CountryFilterValue {
   return map[normalized] ?? 'all'
 }
 
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
 function doLogoPathForRegion(region: string): string | null {
   const map: Record<string, string> = {
     'Penedès': '/images/icons/DO/penedes_DO.png',
@@ -488,30 +521,78 @@ function doLogoPathForRegion(region: string): string | null {
 }
 
 function spanishAutonomousCommunity(region: string): { name: string; slug: string } | null {
-  const regionToCommunity: Record<string, { name: string; slug: string }> = {
-    'Terra Alta': { name: 'Catalunya', slug: 'cataluna' },
-    'Penedès': { name: 'Catalunya', slug: 'cataluna' },
-    'Montsant': { name: 'Catalunya', slug: 'cataluna' },
-    Tarragona: { name: 'Catalunya', slug: 'cataluna' },
-    Priorat: { name: 'Catalunya', slug: 'cataluna' },
-    'Conca de Barberà': { name: 'Catalunya', slug: 'cataluna' },
-    'Pla de Bages': { name: 'Catalunya', slug: 'cataluna' },
-    Alella: { name: 'Catalunya', slug: 'cataluna' },
-    Empordà: { name: 'Catalunya', slug: 'cataluna' },
-    'Costers del Segre': { name: 'Catalunya', slug: 'cataluna' },
-    Rioja: { name: 'La Rioja', slug: 'la_rioja' },
-    'Ribera del Duero': { name: 'Castilla y Leon', slug: 'castilla_y_leon' },
-    Toro: { name: 'Castilla y Leon', slug: 'castilla_y_leon' },
-    Cigales: { name: 'Castilla y Leon', slug: 'castilla_y_leon' },
-    Arlanza: { name: 'Castilla y Leon', slug: 'castilla_y_leon' },
-    Somontano: { name: 'Aragon', slug: 'aragon' },
-    Cariñena: { name: 'Aragon', slug: 'aragon' },
-    Calatayud: { name: 'Aragon', slug: 'aragon' },
-    Navarra: { name: 'Navarra', slug: 'navarra' },
-    'Rías Baixas': { name: 'Galicia', slug: 'galicia' },
+  const normalizeRegionKey = (value: string): string => normalizeSearchText(value).replace(/[^a-z0-9]+/g, ' ').trim()
+
+  const slugToCommunityName: Record<string, string> = {
+    andalucia: 'Andalucía',
+    aragon: 'Aragón',
+    asturias: 'Asturias',
+    canarias: 'Canarias',
+    castilla_y_leon: 'Castilla y León',
+    castilla_la_mancha: 'Castilla-La Mancha',
+    cataluna: 'Cataluña',
+    comunidad_valenciana: 'Comunidad Valenciana',
+    extremadura: 'Extremadura',
+    galicia: 'Galicia',
+    baleares: 'Islas Baleares',
+    la_rioja: 'La Rioja',
+    madrid: 'Madrid',
+    murcia: 'Murcia',
+    navarra: 'Navarra',
+    pais_vasco: 'País Vasco',
   }
 
-  return regionToCommunity[region] ?? null
+  const regionToCommunitySlug: Record<string, keyof typeof slugToCommunityName> = {
+    // CCAA names from DB
+    andalucia: 'andalucia',
+    aragon: 'aragon',
+    asturias: 'asturias',
+    canarias: 'canarias',
+    'castilla y leon': 'castilla_y_leon',
+    'castilla leon': 'castilla_y_leon',
+    'castilla la mancha': 'castilla_la_mancha',
+    cataluna: 'cataluna',
+    'comunidad valenciana': 'comunidad_valenciana',
+    extremadura: 'extremadura',
+    galicia: 'galicia',
+    'islas baleares': 'baleares',
+    baleares: 'baleares',
+    'la rioja': 'la_rioja',
+    madrid: 'madrid',
+    murcia: 'murcia',
+    navarra: 'navarra',
+    'pais vasco': 'pais_vasco',
+    // Legacy DO region names to keep compatibility in other views
+    'terra alta': 'cataluna',
+    penedes: 'cataluna',
+    montsant: 'cataluna',
+    tarragona: 'cataluna',
+    priorat: 'cataluna',
+    'conca de barbera': 'cataluna',
+    'pla de bages': 'cataluna',
+    alella: 'cataluna',
+    emporda: 'cataluna',
+    'costers del segre': 'cataluna',
+    rioja: 'la_rioja',
+    'ribera del duero': 'castilla_y_leon',
+    toro: 'castilla_y_leon',
+    cigales: 'castilla_y_leon',
+    arlanza: 'castilla_y_leon',
+    somontano: 'aragon',
+    carinena: 'aragon',
+    calatayud: 'aragon',
+    'rias baixas': 'galicia',
+  }
+
+  const slug = regionToCommunitySlug[normalizeRegionKey(region)]
+  if (!slug) {
+    return null
+  }
+
+  return {
+    name: slugToCommunityName[slug],
+    slug,
+  }
 }
 
 function autonomousCommunityFlagPathForRegion(region: string): string | null {
@@ -702,15 +783,58 @@ function buildMockWineProfile(
   }
 }
 
+function fallbackToDefaultWineIcon(event: SyntheticEvent<HTMLImageElement, Event>): void {
+  const image = event.currentTarget
+  const attemptRaw = image.dataset.fallbackAttempt ?? '0'
+  const attempt = Number.parseInt(attemptRaw, 10)
+  if (Number.isNaN(attempt) || attempt < 0) {
+    image.dataset.fallbackAttempt = '0'
+    image.src = DEFAULT_WINE_ICON_CANDIDATES[0]
+    return
+  }
+
+  if (attempt < DEFAULT_WINE_ICON_CANDIDATES.length) {
+    image.dataset.fallbackAttempt = String(attempt + 1)
+    image.src = DEFAULT_WINE_ICON_CANDIDATES[attempt]
+    return
+  }
+
+  image.onerror = null
+  image.src = DEFAULT_WINE_ICON_DATA_URI
+}
+
+function fallbackToAdminAsset(event: SyntheticEvent<HTMLImageElement, Event>): void {
+  const image = event.currentTarget
+  const attemptRaw = image.dataset.fallbackAttempt ?? '0'
+  const attempt = Number.parseInt(attemptRaw, 10)
+  const originalSrc = image.dataset.originalSrc ?? image.getAttribute('src') ?? ''
+
+  if (!image.dataset.originalSrc) {
+    image.dataset.originalSrc = originalSrc
+  }
+
+  if (attempt === 0 && originalSrc.startsWith('/images/')) {
+    image.dataset.fallbackAttempt = '1'
+    image.src = `/admin${originalSrc}`
+    return
+  }
+
+  image.onerror = null
+  image.style.display = 'none'
+}
+
 function App() {
   const { labels, locale, setLocale, t } = useI18n()
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(getInitialSidebarCollapsed)
   const [loggedIn, setLoggedIn] = useState(false)
+  const [authBootstrapped, setAuthBootstrapped] = useState(false)
+  const [currentUser, setCurrentUser] = useState<MockUser | null>(null)
   const [menu, setMenu] = useState<MenuKey>('dashboard')
   const [email, setEmail] = useState('demo@example.com')
   const [password, setPassword] = useState('demo1234')
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginSubmitting, setLoginSubmitting] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [selectedWineSheet, setSelectedWineSheet] = useState<WineItem | null>(null)
   const [selectedWineGallery, setSelectedWineGallery] = useState<WineItem | null>(null)
@@ -732,11 +856,16 @@ function App() {
 
   const [searchText, setSearchText] = useState('')
   const [debouncedSearchText, setDebouncedSearchText] = useState('')
-  const [countryFilter, setCountryFilter] = useState<CountryFilterValue>('all')
+  const [wineCountryFilter, setWineCountryFilter] = useState<CountryFilterValue>('all')
+  const [doCountryFilter, setDoCountryFilter] = useState<CountryFilterValue>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | WineType>('all')
   const [minScoreFilter, setMinScoreFilter] = useState<'all' | number>('all')
   const [grapeFilter, setGrapeFilter] = useState<'all' | number>('all')
+  const [doFilter, setDoFilter] = useState<'all' | number>('all')
+  const [doSearchText, setDoSearchText] = useState('')
+  const [isDoDropdownOpen, setIsDoDropdownOpen] = useState(false)
   const [grapeOptions, setGrapeOptions] = useState<GrapeApiItem[]>([])
+  const [doOptions, setDoOptions] = useState<DoApiItem[]>([])
   const [wineItems, setWineItems] = useState<WineItem[]>([])
   const [wineListStatus, setWineListStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [wineListError, setWineListError] = useState<string | null>(null)
@@ -746,6 +875,7 @@ function App() {
   const [wineTotalPages, setWineTotalPages] = useState(0)
   const [wineHasNext, setWineHasNext] = useState(false)
   const [wineHasPrev, setWineHasPrev] = useState(false)
+  const doDropdownRef = useRef<HTMLDivElement | null>(null)
   const [grapeBlendRows, setGrapeBlendRows] = useState<GrapeBlendRow[]>([
     { id: 1, grape: 'Tempranillo' },
   ])
@@ -807,6 +937,39 @@ function App() {
       { key: 'white', label: locale === 'ca' ? 'Blanques' : 'Blancas', grapes: whites },
     ]
   }, [grapeOptions, locale])
+
+  const dosByCountry = useMemo(() => {
+    if (doCountryFilter === 'all') {
+      return [] as DoApiItem[]
+    }
+
+    return doOptions
+      .filter((item) => item.country === doCountryFilter)
+      .sort((a, b) => {
+        const byRegion = a.region.localeCompare(b.region)
+        if (byRegion !== 0) return byRegion
+        return a.name.localeCompare(b.name)
+      })
+  }, [doCountryFilter, doOptions])
+
+  const filteredDosBySearch = useMemo(() => {
+    const query = normalizeSearchText(doSearchText)
+    if (query === '') {
+      return dosByCountry
+    }
+
+    return dosByCountry.filter((item) => {
+      const name = normalizeSearchText(item.name)
+      const region = normalizeSearchText(item.region)
+      return name.includes(query) || region.includes(query)
+    })
+  }, [doSearchText, dosByCountry])
+
+  const selectedDoOption = useMemo(
+    () => (doFilter === 'all' ? null : doOptions.find((item) => item.id === doFilter) ?? null),
+    [doFilter, doOptions],
+  )
+  const selectedDoCommunityFlagPath = selectedDoOption ? autonomousCommunityFlagPathForRegion(selectedDoOption.region) : null
 
   const metrics = useMemo(
     () => ({
@@ -1109,6 +1272,7 @@ function App() {
   const isDarkMode = themeMode === 'dark'
   const brandWordmarkSrc = isDarkMode ? 'images/brand/logo-wordmark-dark.png' : 'images/brand/logo-wordmark-light.png'
   const themeToggleLabel = isDarkMode ? labels.common.themeSwitchToLight : labels.common.themeSwitchToDark
+  const displayedUser = currentUser ?? mockUser
 
   useEffect(() => {
     document.documentElement.dataset.theme = themeMode
@@ -1153,6 +1317,57 @@ function App() {
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [selectedWineGallery])
+
+  useEffect(() => {
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+    const controller = new AbortController()
+    setAuthBootstrapped(false)
+
+    fetch(`${apiBaseUrl}/api/auth/me`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (response.status === 401) {
+          setLoggedIn(false)
+          setCurrentUser(null)
+          return
+        }
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as AuthApiResponse
+        setCurrentUser({
+          id: payload.user.id,
+          email: payload.user.email,
+          name: payload.user.name,
+          lastname: payload.user.lastname,
+        })
+        setLoggedIn(true)
+      })
+      .catch(() => {
+        if (controller.signal.aborted) {
+          return
+        }
+        setLoggedIn(false)
+        setCurrentUser(null)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setAuthBootstrapped(true)
+        }
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [])
 
   useEffect(() => {
     if (menu !== 'apiDocs') {
@@ -1259,6 +1474,92 @@ function App() {
       return
     }
 
+    if (doOptions.length > 0) {
+      return
+    }
+
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+    const controller = new AbortController()
+
+    fetch(`${apiBaseUrl}/api/dos`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as DoApiResponse
+        setDoOptions(payload.items)
+      })
+      .catch(() => {
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [menu, doOptions.length])
+
+  useEffect(() => {
+    if (doCountryFilter === 'all') {
+      if (doFilter !== 'all') {
+        setDoFilter('all')
+      }
+      if (isDoDropdownOpen) {
+        setIsDoDropdownOpen(false)
+      }
+      return
+    }
+
+    if (doFilter === 'all') {
+      return
+    }
+
+    const existsForCountry = doOptions.some((item) => item.id === doFilter && item.country === doCountryFilter)
+    if (!existsForCountry) {
+      setDoFilter('all')
+    }
+  }, [doCountryFilter, doFilter, doOptions, isDoDropdownOpen])
+
+  useEffect(() => {
+    if (!isDoDropdownOpen) {
+      return
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!doDropdownRef.current) {
+        return
+      }
+      if (event.target instanceof Node && !doDropdownRef.current.contains(event.target)) {
+        setIsDoDropdownOpen(false)
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDoDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isDoDropdownOpen])
+
+  useEffect(() => {
+    if (menu !== 'wines') {
+      return
+    }
+
     const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
     const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
     const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
@@ -1268,8 +1569,8 @@ function App() {
     if (debouncedSearchText !== '') {
       params.set('search', debouncedSearchText)
     }
-    if (countryFilter !== 'all') {
-      params.set('country', countryFilter)
+    if (wineCountryFilter !== 'all') {
+      params.set('country', wineCountryFilter)
     }
     if (typeFilter !== 'all') {
       params.set('wine_type', typeFilter)
@@ -1279,6 +1580,9 @@ function App() {
     }
     if (grapeFilter !== 'all') {
       params.set('grape_id', String(grapeFilter))
+    }
+    if (doFilter !== 'all') {
+      params.set('do_id', String(doFilter))
     }
 
     const controller = new AbortController()
@@ -1332,7 +1636,7 @@ function App() {
     return () => {
       controller.abort()
     }
-  }, [menu, debouncedSearchText, countryFilter, typeFilter, minScoreFilter, grapeFilter, winePage, wineLimit, locale])
+  }, [menu, debouncedSearchText, wineCountryFilter, typeFilter, minScoreFilter, grapeFilter, doFilter, winePage, wineLimit, locale])
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -1343,13 +1647,70 @@ function App() {
     }
 
     setLoginError(null)
-    setLoggedIn(true)
+    setLoginSubmitting(true)
+
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+
+    fetch(`${apiBaseUrl}/api/auth/login`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        email: email.trim(),
+        password,
+      }),
+    })
+      .then(async (response) => {
+        if (response.status === 401) {
+          throw new Error(locale === 'ca' ? 'Credencials invàlides.' : 'Credenciales inválidas.')
+        }
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as AuthApiResponse
+        setCurrentUser({
+          id: payload.user.id,
+          email: payload.user.email,
+          name: payload.user.name,
+          lastname: payload.user.lastname,
+        })
+        setLoggedIn(true)
+        setMenu('dashboard')
+        setShowMobileMenu(false)
+      })
+      .catch((error: unknown) => {
+        setLoggedIn(false)
+        setCurrentUser(null)
+        setLoginError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut iniciar sessió.' : 'No se pudo iniciar sesión.'))
+      })
+      .finally(() => {
+        setLoginSubmitting(false)
+      })
   }
 
   const handleLogout = () => {
-    setLoggedIn(false)
-    setShowMobileMenu(false)
-    setMenu('dashboard')
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+
+    fetch(`${apiBaseUrl}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    }).finally(() => {
+      setLoggedIn(false)
+      setCurrentUser(null)
+      setShowMobileMenu(false)
+      setMenu('dashboard')
+    })
   }
 
   const handleCopyApiCodeBlock = async (rawCode: string, copyKey: string) => {
@@ -1454,7 +1815,7 @@ function App() {
     }
 
     if (target === 'country') {
-      setCountryFilter(countryLabelToFilterValue(wine.country))
+      setWineCountryFilter(countryLabelToFilterValue(wine.country))
     }
 
     if (target === 'type') {
@@ -1632,6 +1993,18 @@ function App() {
     </section>
   )
 
+  if (!authBootstrapped) {
+    return (
+      <main className="login-shell">
+        <section className="login-stage">
+          <section className="login-panel">
+            <p className="muted">{locale === 'ca' ? 'Comprovant sessió...' : 'Comprobando sesión...'}</p>
+          </section>
+        </section>
+      </main>
+    )
+  }
+
   if (!loggedIn) {
     return (
       <main className="login-shell">
@@ -1693,8 +2066,8 @@ function App() {
                 </p>
               ) : null}
 
-              <button type="submit" className="primary-button">
-                {labels.login.submit}
+              <button type="submit" className="primary-button" disabled={loginSubmitting}>
+                {loginSubmitting ? (locale === 'ca' ? 'Entrant...' : 'Entrando...') : labels.login.submit}
               </button>
             </form>
           </section>
@@ -1757,13 +2130,13 @@ function App() {
         <section
           className="sidebar-user"
           aria-label="User information"
-          title={isSidebarCollapsed ? `${mockUser.name} ${mockUser.lastname}` : undefined}
+          title={isSidebarCollapsed ? `${displayedUser.name} ${displayedUser.lastname}` : undefined}
         >
-          <div className="avatar">{mockUser.name[0]}</div>
+          <div className="avatar">{displayedUser.name[0]}</div>
           <div className="user-meta">
-            <p className="user-name">{mockUser.name} {mockUser.lastname}</p>
+            <p className="user-name">{displayedUser.name} {displayedUser.lastname}</p>
             <p className="user-role">{labels.user.role}</p>
-            <p className="user-email">{mockUser.email}</p>
+            <p className="user-email">{displayedUser.email}</p>
           </div>
           <button
             type="button"
@@ -2343,41 +2716,6 @@ function App() {
                 </label>
 
                 <label>
-                  {locale === 'ca' ? 'Límit' : 'Límite'}
-                  <select
-                    value={String(wineLimit)}
-                    onChange={(event) => {
-                      setWineLimit(Number(event.target.value))
-                      setWinePage(1)
-                    }}
-                  >
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                  </select>
-                </label>
-              </div>
-
-              <div className="filter-grid">
-                <label>
-                  {labels.dashboard.search.country}
-                  <select
-                    value={countryFilter}
-                    onChange={(event) => {
-                      setCountryFilter(event.target.value as CountryFilterValue)
-                      setWinePage(1)
-                    }}
-                  >
-                    {countries.map((country) => (
-                      <option key={country} value={country}>
-                        {country === 'all' ? labels.common.allCountries : countryCodeToLabel(country, locale)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
                   {labels.dashboard.search.type}
                   <select
                     value={typeFilter}
@@ -2435,6 +2773,163 @@ function App() {
                 </label>
               </div>
 
+              <div className="filter-grid">
+                <label>
+                  {locale === 'ca' ? 'País del vi' : 'País del vino'}
+                  <select
+                    value={wineCountryFilter}
+                    onChange={(event) => {
+                      setWineCountryFilter(event.target.value as CountryFilterValue)
+                      setWinePage(1)
+                    }}
+                  >
+                    {countries.map((country) => (
+                      <option key={country} value={country}>
+                        {country === 'all' ? labels.common.allCountries : countryCodeToLabel(country, locale)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  {locale === 'ca' ? 'País D.O.' : 'País D.O.'}
+                  <select
+                    value={doCountryFilter}
+                    onChange={(event) => {
+                      setDoCountryFilter(event.target.value as CountryFilterValue)
+                      setDoFilter('all')
+                      setDoSearchText('')
+                      setIsDoDropdownOpen(false)
+                      setWinePage(1)
+                    }}
+                  >
+                    {countries.map((country) => (
+                      <option key={country} value={country}>
+                        {country === 'all' ? labels.common.allCountries : countryCodeToLabel(country, locale)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  {locale === 'ca' ? 'Cerca D.O.' : 'Buscar D.O.'}
+                  <input
+                    type="search"
+                    value={doSearchText}
+                    onChange={(event) => {
+                      setDoSearchText(event.target.value)
+                    }}
+                    placeholder={
+                      doCountryFilter === 'all'
+                        ? (locale === 'ca' ? 'Primer selecciona país' : 'Primero selecciona país')
+                        : (locale === 'ca' ? 'Nom o regió de la D.O.' : 'Nombre o región de la D.O.')
+                    }
+                    disabled={doCountryFilter === 'all'}
+                  />
+                </label>
+
+                <label>
+                  D.O.
+                  <div className={`do-combobox${doCountryFilter === 'all' ? ' is-disabled' : ''}`} ref={doDropdownRef}>
+                    <button
+                      type="button"
+                      className="do-combobox-trigger"
+                      aria-expanded={isDoDropdownOpen}
+                      aria-haspopup="listbox"
+                      onClick={() => {
+                        if (doCountryFilter === 'all') {
+                          return
+                        }
+                        setIsDoDropdownOpen((current) => !current)
+                      }}
+                      disabled={doCountryFilter === 'all'}
+                    >
+                      <span className="do-combobox-trigger-main">
+                        {selectedDoOption?.country === 'spain' ? (
+                          <>
+                            {selectedDoCommunityFlagPath ? (
+                              <img
+                                src={selectedDoCommunityFlagPath}
+                                alt=""
+                                className="do-combobox-flag"
+                                loading="lazy"
+                                aria-hidden="true"
+                                onError={fallbackToAdminAsset}
+                              />
+                            ) : (
+                              <span className="do-combobox-flag-fallback" aria-hidden="true">🏳️</span>
+                            )}
+                            <span>{selectedDoOption.name}</span>
+                          </>
+                        ) : (
+                          <span>
+                            {selectedDoOption
+                              ? `${selectedDoOption.region} · ${selectedDoOption.name}`
+                              : (doCountryFilter === 'all'
+                                ? (locale === 'ca' ? 'Selecciona país abans' : 'Selecciona país antes')
+                                : (locale === 'ca' ? 'Totes les D.O.' : 'Todas las D.O.'))}
+                          </span>
+                        )}
+                      </span>
+                      <span className="do-combobox-caret" aria-hidden="true">▾</span>
+                    </button>
+
+                    {isDoDropdownOpen && doCountryFilter !== 'all' ? (
+                      <div className="do-combobox-menu" role="listbox" aria-label="D.O.">
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={doFilter === 'all'}
+                          className={`do-combobox-option${doFilter === 'all' ? ' is-selected' : ''}`}
+                          onClick={() => {
+                            setDoFilter('all')
+                            setWinePage(1)
+                            setIsDoDropdownOpen(false)
+                          }}
+                        >
+                          <span>{locale === 'ca' ? 'Totes les D.O.' : 'Todas las D.O.'}</span>
+                        </button>
+                        {filteredDosBySearch.map((item) => {
+                          const isSpanishDo = item.country === 'spain'
+                          const communityFlagPath = isSpanishDo ? autonomousCommunityFlagPathForRegion(item.region) : null
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              role="option"
+                              aria-selected={doFilter === item.id}
+                              className={`do-combobox-option${doFilter === item.id ? ' is-selected' : ''}`}
+                              onClick={() => {
+                                setDoFilter(item.id)
+                                setWinePage(1)
+                                setIsDoDropdownOpen(false)
+                              }}
+                            >
+                              {isSpanishDo ? (
+                                communityFlagPath ? (
+                                  <img
+                                    src={communityFlagPath}
+                                    alt=""
+                                    className="do-combobox-flag"
+                                    loading="lazy"
+                                    aria-hidden="true"
+                                    onError={fallbackToAdminAsset}
+                                  />
+                                ) : (
+                                  <span className="do-combobox-flag-fallback" aria-hidden="true">🏳️</span>
+                                )
+                              ) : null}
+                              <span>{item.country === 'spain' ? item.name : `${item.region} · ${item.name}`}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                </label>
+
+              </div>
+
               {wineListStatus === 'error' ? (
                 <div className="api-doc-state api-doc-state-error">
                   <p>{locale === 'ca' ? 'No s’ha pogut carregar el llistat de vins.' : 'No se pudo cargar el listado de vinos.'}</p>
@@ -2474,6 +2969,7 @@ function App() {
                             alt={`${wine.name} thumbnail`}
                             className="wine-thumb"
                             loading="lazy"
+                            onError={fallbackToDefaultWineIcon}
                             role="button"
                             tabIndex={0}
                             onClick={(event) => {
@@ -2531,6 +3027,21 @@ function App() {
                     : `Página ${winePage} de ${wineTotalPages || 1} · Total ${wineTotalItems} · Mostrando ${wineItems.length}`}
                 </div>
                 <div className="pagination-actions">
+                  <label className="pagination-limit-inline">
+                    <span>{locale === 'ca' ? 'Límit' : 'Límite'}</span>
+                    <select
+                      value={String(wineLimit)}
+                      onChange={(event) => {
+                        setWineLimit(Number(event.target.value))
+                        setWinePage(1)
+                      }}
+                    >
+                      <option value="10">10</option>
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </label>
                   <button
                     type="button"
                     className="secondary-button small"
@@ -2877,11 +3388,11 @@ function App() {
               <dl className="detail-grid">
                 <div>
                   <dt>{labels.admin.account.labels.name}</dt>
-                  <dd>{mockUser.name} {mockUser.lastname}</dd>
+                  <dd>{displayedUser.name} {displayedUser.lastname}</dd>
                 </div>
                 <div>
                   <dt>{labels.admin.account.labels.email}</dt>
-                  <dd>{mockUser.email}</dd>
+                  <dd>{displayedUser.email}</dd>
                 </div>
                 <div>
                   <dt>{labels.admin.account.labels.role}</dt>
@@ -3223,7 +3734,7 @@ function App() {
                       onClick={() => openWineGallery(selectedWineSheet, 'compact', image.key)}
                       title={`${galleryLabels[image.key]} · ${t('wineProfile.closeGalleryAria')}`}
                     >
-                      <img src={image.src} alt={`${selectedWineSheet.name} ${galleryLabels[image.key]}`} />
+                      <img src={image.src} alt={`${selectedWineSheet.name} ${galleryLabels[image.key]}`} onError={fallbackToDefaultWineIcon} />
                       <span>{galleryLabels[image.key]}</span>
                     </button>
                   ))}
@@ -3418,7 +3929,7 @@ function App() {
                       onClick={() => setActiveGalleryImageKey(image.key)}
                       aria-pressed={isActive}
                     >
-                      <img src={image.src} alt={`${selectedWineGallery.name} ${selectedWineProfile?.galleryLabels[image.key] ?? galleryLabels[image.key]}`} loading="lazy" />
+                      <img src={image.src} alt={`${selectedWineGallery.name} ${selectedWineProfile?.galleryLabels[image.key] ?? galleryLabels[image.key]}`} loading="lazy" onError={fallbackToDefaultWineIcon} />
                       <span>{selectedWineProfile?.galleryLabels[image.key] ?? galleryLabels[image.key]}</span>
                     </button>
                   )
@@ -3431,7 +3942,7 @@ function App() {
 
                   return (
                     <>
-                      <img src={activeImage.src} alt={`${selectedWineGallery.name} ${selectedWineProfile?.galleryLabels[activeImage.key] ?? galleryLabels[activeImage.key]}`} />
+                      <img src={activeImage.src} alt={`${selectedWineGallery.name} ${selectedWineProfile?.galleryLabels[activeImage.key] ?? galleryLabels[activeImage.key]}`} onError={fallbackToDefaultWineIcon} />
                       <figcaption>
                         <strong>{selectedWineProfile?.galleryLabels[activeImage.key] ?? galleryLabels[activeImage.key]}</strong>
                         <span>

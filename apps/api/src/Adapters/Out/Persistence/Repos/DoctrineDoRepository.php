@@ -44,4 +44,22 @@ final readonly class DoctrineDoRepository implements DoRepository
             countryCode: (string) $row['country_code'],
         );
     }
+
+    public function findAll(): array
+    {
+        $rows = $this->entityManager->getConnection()->fetchAllAssociative(
+            'SELECT id, name, region, country, country_code FROM "do" ORDER BY country ASC, region ASC, name ASC',
+        );
+
+        return array_map(
+            static fn (array $row): DenominationOfOrigin => new DenominationOfOrigin(
+                id: (int) $row['id'],
+                name: (string) $row['name'],
+                region: (string) $row['region'],
+                country: Country::from((string) $row['country']),
+                countryCode: (string) $row['country_code'],
+            ),
+            $rows,
+        );
+    }
 }

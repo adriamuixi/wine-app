@@ -15,7 +15,7 @@ use App\Application\UseCases\Wine\CreateWine\CreateWinePlaceInput;
 use App\Application\UseCases\Wine\CreateWine\CreateWinePurchaseInput;
 use App\Application\UseCases\Wine\CreateWine\CreateWineReferenceNotFound;
 use App\Application\UseCases\Wine\CreateWine\CreateWineValidationException;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
+use App\Domain\Model\Wine;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
@@ -192,7 +192,7 @@ final class SpyWineRepository implements WineRepository
     public ?CreateWineCommand $lastCommand = null;
     public ?Country $lastCountry = null;
 
-    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    public function create(CreateWineCommand $command, ?Country $country): int
     {
         $this->lastCommand = $command;
         $this->lastCountry = $country;
@@ -215,7 +215,7 @@ final class SpyWineRepository implements WineRepository
         return false;
     }
 
-    public function findDetailsById(int $id): ?WineDetailsView
+    public function findById(int $id): ?Wine
     {
         return null;
     }
@@ -254,6 +254,11 @@ final class InMemoryDoRepository implements DoRepository
             country: $country,
             countryCode: 'ES',
         );
+    }
+
+    public function findAll(): array
+    {
+        return [];
     }
 }
 

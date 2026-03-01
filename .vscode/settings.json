@@ -1,4 +1,7 @@
 {
+  "editor.codeLens": true,
+  "intelephense.referencesCodeLens.enabled": true,
+  "intelephense.implementationsCodeLens.enabled": true,
   "intelephense.environment.phpVersion": "8.4.0",
   "php.validate.executablePath": "/usr/bin/php8.2",
   "php.validate.enable": false,

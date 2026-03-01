@@ -5,32 +5,36 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\WineController;
+use App\Application\Ports\WinePhotoStoragePort;
 use App\Domain\Repository\DoRepository;
 use App\Domain\Repository\GrapeRepository;
 use App\Domain\Repository\WineRepository;
 use App\Domain\Repository\WinePhotoRepository;
-use App\Domain\Model\WinePhoto;
+use App\Domain\Model\Award;
+use App\Domain\Model\Place;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Application\UseCases\Wine\CreateWine\CreateWineHandler;
 use App\Application\UseCases\Wine\DeleteWine\DeleteWineHandler;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsHandler;
-use App\Application\UseCases\Wine\GetWine\WineAwardView;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
-use App\Application\UseCases\Wine\GetWine\WineDoView;
-use App\Application\UseCases\Wine\GetWine\WineGrapeView;
-use App\Application\UseCases\Wine\GetWine\WinePhotoView;
-use App\Application\UseCases\Wine\GetWine\WinePurchasePlaceView;
-use App\Application\UseCases\Wine\GetWine\WinePurchaseView;
-use App\Application\UseCases\Wine\GetWine\WineReviewUserView;
-use App\Application\UseCases\Wine\GetWine\WineReviewView;
+use App\Domain\Model\Wine;
+use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Model\WineGrape;
+use App\Domain\Model\WinePhoto;
+use App\Domain\Model\WinePurchase;
+use App\Domain\Model\WineReview;
 use App\Application\UseCases\Wine\ListWines\ListWinesHandler;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\ListWines\WineListItemView;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineHandler;
+use App\Domain\Enum\AgingType;
+use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
-use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Enum\GrapeColor;
+use App\Domain\Enum\PlaceType;
+use App\Domain\Enum\ReviewBullet;
+use App\Domain\Enum\WineType;
 use App\Domain\Enum\WinePhotoType;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -255,7 +259,7 @@ final class WineControllerTest extends TestCase
         self::assertSame('Tempranillo', $payload['wine']['grapes'][0]['name']);
         self::assertSame('front_label', $payload['wine']['photos'][0]['type']);
         self::assertSame('parker', $payload['wine']['awards'][0]['name']);
-        self::assertSame('fruity', $payload['wine']['reviews'][0]['bullets'][0]);
+        self::assertSame('afrutado', $payload['wine']['reviews'][0]['bullets'][0]);
         self::assertSame('Madrid', $payload['wine']['purchases'][0]['place']['city']);
         self::assertSame('ribera', $payload['wine']['do']['name']);
     }
@@ -284,7 +288,7 @@ final class WineControllerTest extends TestCase
                 new InMemoryGrapeRepository($grapeIds),
             ),
             new UpdateWineHandler($repo, new InMemoryDoRepository($doCountries)),
-            new DeleteWineHandler($repo, new NoopWinePhotoRepository()),
+            new DeleteWineHandler($repo, new NoopWinePhotoRepository(), new NoopWinePhotoStorage()),
             new GetWineDetailsHandler($repo),
             new ListWinesHandler($repo),
         );
@@ -306,7 +310,7 @@ final class SpyWineRepository implements WineRepository
     {
     }
 
-    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    public function create(CreateWineCommand $command, ?Country $country): int
     {
         return 333;
     }
@@ -326,48 +330,51 @@ final class SpyWineRepository implements WineRepository
         return in_array($id, $this->updatableWineIds, true) || in_array($id, $this->deletableWineIds, true);
     }
 
-    public function findDetailsById(int $id): ?WineDetailsView
+    public function findById(int $id): ?Wine
     {
         if (!in_array($id, $this->detailedWineIds, true)) {
             return null;
         }
 
-        return new WineDetailsView(
+        return new Wine(
             id: $id,
             name: 'Wine Full',
             winery: 'Bodega Demo',
-            wineType: 'red',
-            do: new WineDoView(1, 'ribera', 'Castilla y Leon', 'spain', 'ES'),
-            country: 'spain',
-            agingType: 'reserve',
+            wineType: WineType::Red,
+            do: new DenominationOfOrigin(1, 'ribera', 'Castilla y Leon', Country::Spain, 'ES'),
+            country: Country::Spain,
+            agingType: AgingType::Reserve,
             vintageYear: 2020,
             alcoholPercentage: 14.5,
             createdAt: '2026-03-01T09:00:00+00:00',
             updatedAt: '2026-03-01T09:10:00+00:00',
-            grapes: [new WineGrapeView(2, 'Tempranillo', 'red', 90.0)],
+            grapes: [new WineGrape(2, '90', 'Tempranillo', GrapeColor::Red)],
             purchases: [
-                new WinePurchaseView(
+                new WinePurchase(
+                    new Place(PlaceType::Restaurant, 'Casa Paco', 'Calle A', 'Madrid', Country::Spain, 11),
+                    '21.5',
+                    new \DateTimeImmutable('2026-03-01T08:00:00+00:00'),
                     10,
-                    new WinePurchasePlaceView(11, 'restaurant', 'Casa Paco', 'Calle A', 'Madrid', 'spain'),
-                    21.5,
-                    '2026-03-01T08:00:00+00:00',
                 ),
             ],
-            awards: [new WineAwardView(3, 'parker', 93.5, 2025)],
-            photos: [new WinePhotoView(4, 'front_label', '/images/wines/77/front.jpg', 'abc123', 12345, 'jpg')],
+            awards: [new Award(AwardName::Parker, '93.5', 2025, 3)],
+            photos: [new WinePhoto(4, '/images/wines/77/front.jpg', WinePhotoType::FrontLabel, 'abc123', 12345, 'jpg')],
             reviews: [
-                new WineReviewView(
-                    5,
-                    new WineReviewUserView(8, 'Ana', 'Lopez'),
-                    92,
-                    4,
-                    2,
-                    3,
-                    2,
-                    4,
-                    5,
-                    ['fruity'],
-                    '2026-03-01T08:30:00+00:00',
+                new WineReview(
+                    userId: 8,
+                    wineId: $id,
+                    intensityAroma: 4,
+                    sweetness: 2,
+                    acidity: 3,
+                    tannin: 2,
+                    body: 4,
+                    persistence: 5,
+                    bullets: [ReviewBullet::Afrutado],
+                    score: 92,
+                    id: 5,
+                    createdAt: new \DateTimeImmutable('2026-03-01T08:30:00+00:00'),
+                    userName: 'Ana',
+                    userLastname: 'Lopez',
                 ),
             ],
         );
@@ -425,6 +432,14 @@ final class NoopWinePhotoRepository implements WinePhotoRepository
     ): void {
     }
 
+    public function findByWineId(int $wineId): array
+    {
+        return [];
+    }
+}
+
+final class NoopWinePhotoStorage implements WinePhotoStoragePort
+{
     public function save(string $sourcePath, int $wineId, string $hash, string $extension): string
     {
         return '/images/wines/'.$wineId.'/'.$hash.'.'.$extension;
@@ -438,10 +453,6 @@ final class NoopWinePhotoRepository implements WinePhotoRepository
     {
     }
 
-    public function findUrlsByWineId(int $wineId): array
-    {
-        return [];
-    }
 }
 
 final class InMemoryDoRepository implements DoRepository
@@ -472,6 +483,11 @@ final class InMemoryDoRepository implements DoRepository
             country: $country,
             countryCode: 'ES',
         );
+    }
+
+    public function findAll(): array
+    {
+        return [];
     }
 }
 

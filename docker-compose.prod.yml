@@ -26,6 +26,8 @@ services:
       APP_DEBUG: 0
       APP_SECRET: ${APP_SECRET:-change-me-prod-secret}
       DATABASE_URL: "postgresql://${POSTGRES_USER:-wine}:${POSTGRES_PASSWORD:-wine}@db:5432/${POSTGRES_DB:-wine}?serverVersion=16&charset=utf8"
+    volumes:
+      - ./docs:/docs:ro
     depends_on:
       db:
         condition: service_healthy

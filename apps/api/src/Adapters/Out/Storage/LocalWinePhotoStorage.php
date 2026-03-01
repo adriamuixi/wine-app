@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapters\Out\Storage;
 
-final readonly class LocalWinePhotoStorage
+use App\Application\Ports\WinePhotoStoragePort;
+
+final readonly class LocalWinePhotoStorage implements WinePhotoStoragePort
 {
     public function __construct(private string $baseDir)
     {

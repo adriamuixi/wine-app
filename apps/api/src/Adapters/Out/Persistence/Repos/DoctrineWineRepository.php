@@ -5,22 +5,28 @@ declare(strict_types=1);
 namespace App\Adapters\Out\Persistence\Repos;
 
 use App\Domain\Repository\WineRepository;
-use App\Application\UseCases\Wine\GetWine\WineAwardView;
-use App\Application\UseCases\Wine\GetWine\WineDetailsView;
-use App\Application\UseCases\Wine\GetWine\WineDoView;
-use App\Application\UseCases\Wine\GetWine\WineGrapeView;
-use App\Application\UseCases\Wine\GetWine\WinePhotoView;
-use App\Application\UseCases\Wine\GetWine\WinePurchasePlaceView;
-use App\Application\UseCases\Wine\GetWine\WinePurchaseView;
-use App\Application\UseCases\Wine\GetWine\WineReviewUserView;
-use App\Application\UseCases\Wine\GetWine\WineReviewView;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\ListWines\ListWinesSort;
 use App\Application\UseCases\Wine\ListWines\WineListItemView;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
+use App\Domain\Enum\AgingType;
+use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
+use App\Domain\Enum\GrapeColor;
+use App\Domain\Enum\PlaceType;
+use App\Domain\Enum\ReviewBullet;
+use App\Domain\Enum\WineType;
+use App\Domain\Enum\WinePhotoType;
+use App\Domain\Model\Award;
+use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Model\Place;
+use App\Domain\Model\Wine;
+use App\Domain\Model\WineGrape;
+use App\Domain\Model\WinePhoto;
+use App\Domain\Model\WinePurchase;
+use App\Domain\Model\WineReview;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -32,7 +38,7 @@ final readonly class DoctrineWineRepository implements WineRepository
     {
     }
 
-    public function createWithRelations(CreateWineCommand $command, ?Country $country): int
+    public function create(CreateWineCommand $command, ?Country $country): int
     {
         /** @var int $wineId */
         $wineId = $this->entityManager->getConnection()->transactional(
@@ -182,7 +188,7 @@ SQL,
         return false !== $value;
     }
 
-    public function findDetailsById(int $id): ?WineDetailsView
+    public function findById(int $id): ?Wine
     {
         $connection = $this->entityManager->getConnection();
 
@@ -217,11 +223,11 @@ SQL,
         }
 
         $grapes = array_map(
-            static fn (array $row): WineGrapeView => new WineGrapeView(
-                id: (int) $row['id'],
+            static fn (array $row): WineGrape => new WineGrape(
+                grapeId: (int) $row['id'],
+                percentage: null === $row['percentage'] ? null : (string) $row['percentage'],
                 name: (string) $row['name'],
-                color: (string) $row['color'],
-                percentage: null === $row['percentage'] ? null : (float) $row['percentage'],
+                color: GrapeColor::from((string) $row['color']),
             ),
             $connection->fetchAllAssociative(
                 <<<'SQL'
@@ -236,18 +242,18 @@ SQL,
         );
 
         $purchases = array_map(
-            fn (array $row): WinePurchaseView => new WinePurchaseView(
-                id: (int) $row['id'],
-                place: new WinePurchasePlaceView(
-                    id: (int) $row['place_id'],
-                    placeType: (string) $row['place_type'],
+            fn (array $row): WinePurchase => new WinePurchase(
+                place: new Place(
+                    placeType: PlaceType::from((string) $row['place_type']),
                     name: (string) $row['place_name'],
                     address: null === $row['place_address'] ? null : (string) $row['place_address'],
                     city: null === $row['place_city'] ? null : (string) $row['place_city'],
-                    country: (string) $row['place_country'],
+                    country: Country::from((string) $row['place_country']),
+                    id: (int) $row['place_id'],
                 ),
-                pricePaid: (float) $row['price_paid'],
-                purchasedAt: $this->toIso8601((string) $row['purchased_at']),
+                pricePaid: (string) $row['price_paid'],
+                purchasedAt: new \DateTimeImmutable((string) $row['purchased_at']),
+                id: (int) $row['id'],
             ),
             $connection->fetchAllAssociative(
                 <<<'SQL'
@@ -271,11 +277,11 @@ SQL,
         );
 
         $awards = array_map(
-            static fn (array $row): WineAwardView => new WineAwardView(
-                id: (int) $row['id'],
-                name: (string) $row['name'],
-                score: null === $row['score'] ? null : (float) $row['score'],
+            static fn (array $row): Award => new Award(
+                name: AwardName::from((string) $row['name']),
+                score: null === $row['score'] ? null : (string) $row['score'],
                 year: null === $row['year'] ? null : (int) $row['year'],
+                id: (int) $row['id'],
             ),
             $connection->fetchAllAssociative(
                 <<<'SQL'
@@ -289,10 +295,10 @@ SQL,
         );
 
         $photos = array_map(
-            static fn (array $row): WinePhotoView => new WinePhotoView(
+            static fn (array $row): WinePhoto => new WinePhoto(
                 id: (int) $row['id'],
-                type: null === $row['type'] ? null : (string) $row['type'],
                 url: (string) $row['url'],
+                type: WinePhotoType::from((string) $row['type']),
                 hash: (string) $row['hash'],
                 size: (int) $row['size'],
                 extension: (string) $row['extension'],
@@ -313,6 +319,7 @@ SQL,
 SELECT
     r.id,
     r.user_id,
+    r.wine_id,
     r.score,
     r.intensity_aroma,
     r.sweetness,
@@ -333,20 +340,20 @@ SQL,
 
         $reviews = $this->mapReviews($connection, $reviewRows);
 
-        return new WineDetailsView(
+        return new Wine(
             id: (int) $wineRow['id'],
             name: (string) $wineRow['name'],
             winery: null === $wineRow['winery'] ? null : (string) $wineRow['winery'],
-            wineType: null === $wineRow['wine_type'] ? null : (string) $wineRow['wine_type'],
-            do: null === $wineRow['do_id'] ? null : new WineDoView(
+            wineType: null === $wineRow['wine_type'] ? null : WineType::from((string) $wineRow['wine_type']),
+            do: null === $wineRow['do_id'] ? null : new DenominationOfOrigin(
                 id: (int) $wineRow['do_id'],
                 name: (string) $wineRow['do_name'],
                 region: (string) $wineRow['do_region'],
-                country: (string) $wineRow['do_country'],
+                country: Country::from((string) $wineRow['do_country']),
                 countryCode: (string) $wineRow['do_country_code'],
             ),
-            country: null === $wineRow['country'] ? null : (string) $wineRow['country'],
-            agingType: null === $wineRow['aging_type'] ? null : (string) $wineRow['aging_type'],
+            country: null === $wineRow['country'] ? null : Country::from((string) $wineRow['country']),
+            agingType: null === $wineRow['aging_type'] ? null : AgingType::from((string) $wineRow['aging_type']),
             vintageYear: null === $wineRow['vintage_year'] ? null : (int) $wineRow['vintage_year'],
             alcoholPercentage: null === $wineRow['alcohol_percentage'] ? null : (float) $wineRow['alcohol_percentage'],
             createdAt: $this->toIso8601((string) $wineRow['created_at']),
@@ -485,7 +492,7 @@ SQL,
     /**
      * @param list<array<string,mixed>> $reviewRows
      *
-     * @return list<WineReviewView>
+     * @return list<WineReview>
      */
     private function mapReviews(Connection $connection, array $reviewRows): array
     {
@@ -511,22 +518,24 @@ SQL,
         }
 
         return array_map(
-            fn (array $row): WineReviewView => new WineReviewView(
-                id: (int) $row['id'],
-                user: new WineReviewUserView(
-                    id: (int) $row['user_id'],
-                    name: (string) $row['user_name'],
-                    lastname: (string) $row['user_lastname'],
-                ),
-                score: null === $row['score'] ? null : (int) $row['score'],
+            fn (array $row): WineReview => new WineReview(
+                userId: (int) $row['user_id'],
+                wineId: (int) $row['wine_id'],
                 intensityAroma: (int) $row['intensity_aroma'],
                 sweetness: (int) $row['sweetness'],
                 acidity: (int) $row['acidity'],
                 tannin: null === $row['tannin'] ? null : (int) $row['tannin'],
                 body: (int) $row['body'],
                 persistence: (int) $row['persistence'],
-                bullets: $bulletsByReviewId[(int) $row['id']] ?? [],
-                createdAt: $this->toIso8601((string) $row['created_at']),
+                bullets: array_map(
+                    fn (string $bullet): ReviewBullet => $this->toReviewBullet($bullet),
+                    $bulletsByReviewId[(int) $row['id']] ?? [],
+                ),
+                score: null === $row['score'] ? null : (int) $row['score'],
+                id: (int) $row['id'],
+                createdAt: new \DateTimeImmutable((string) $row['created_at']),
+                userName: (string) $row['user_name'],
+                userLastname: (string) $row['user_lastname'],
             ),
             $reviewRows,
         );
@@ -535,6 +544,18 @@ SQL,
     private function toIso8601(string $value): string
     {
         return (new \DateTimeImmutable($value))->format(\DateTimeInterface::ATOM);
+    }
+
+    private function toReviewBullet(string $value): ReviewBullet
+    {
+        return match ($value) {
+            'fruity' => ReviewBullet::Afrutado,
+            'spicy' => ReviewBullet::Especiado,
+            'marked_wood' => ReviewBullet::MaderaMarcada,
+            'easy_drinking' => ReviewBullet::FacilDeBeber,
+            'food_friendly' => ReviewBullet::Gastronomico,
+            default => ReviewBullet::from($value),
+        };
     }
 
     private function resolveSortColumn(string $sortBy): string

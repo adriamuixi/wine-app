@@ -6,9 +6,10 @@ namespace App\Adapters\Out\Persistence\Repos;
 
 use App\Domain\Enum\WinePhotoType;
 use App\Domain\Model\WinePhoto;
+use App\Domain\Repository\WinePhotoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
-final readonly class DoctrinePhotoRepository
+final readonly class DoctrinePhotoRepository implements WinePhotoRepository
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {
@@ -44,7 +45,7 @@ SQL,
     public function findByWineAndType(int $wineId, WinePhotoType $type): ?WinePhoto
     {
         $row = $this->entityManager->getConnection()->fetchAssociative(
-            'SELECT id, url, type FROM wine_photo WHERE wine_id = :wine_id AND type = :type LIMIT 1',
+            'SELECT id, url, type, hash, size, extension FROM wine_photo WHERE wine_id = :wine_id AND type = :type LIMIT 1',
             [
                 'wine_id' => $wineId,
                 'type' => $type->value,
@@ -56,9 +57,32 @@ SQL,
         }
 
         return new WinePhoto(
-            (int) $row['id'],
-            (string) $row['url'],
-            WinePhotoType::from((string) $row['type']),
+            id: (int) $row['id'],
+            url: (string) $row['url'],
+            type: WinePhotoType::from((string) $row['type']),
+            hash: null === $row['hash'] ? null : (string) $row['hash'],
+            size: null === $row['size'] ? null : (int) $row['size'],
+            extension: null === $row['extension'] ? null : (string) $row['extension'],
+        );
+    }
+
+    public function findByWineId(int $wineId): array
+    {
+        $rows = $this->entityManager->getConnection()->fetchAllAssociative(
+            'SELECT id, url, type, hash, size, extension FROM wine_photo WHERE wine_id = :wine_id ORDER BY id ASC',
+            ['wine_id' => $wineId],
+        );
+
+        return array_map(
+            static fn (array $row): WinePhoto => new WinePhoto(
+                id: (int) $row['id'],
+                url: (string) $row['url'],
+                type: WinePhotoType::from((string) $row['type']),
+                hash: null === $row['hash'] ? null : (string) $row['hash'],
+                size: null === $row['size'] ? null : (int) $row['size'],
+                extension: null === $row['extension'] ? null : (string) $row['extension'],
+            ),
+            $rows,
         );
     }
 
@@ -81,13 +105,4 @@ SQL,
         );
     }
 
-    public function findUrlsByWineId(int $wineId): array
-    {
-        $urls = $this->entityManager->getConnection()->fetchFirstColumn(
-            'SELECT url FROM wine_photo WHERE wine_id = :wine_id',
-            ['wine_id' => $wineId],
-        );
-
-        return array_values(array_map(static fn (mixed $url): string => (string) $url, $urls));
-    }
 }

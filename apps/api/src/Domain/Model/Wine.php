@@ -10,9 +10,17 @@ use App\Domain\Enum\WineType;
 
 final readonly class Wine
 {
+    public ?int $id;
     public string $name;
     public ?string $winery;
 
+    /**
+     * @param list<WineGrape> $grapes
+     * @param list<WinePurchase> $purchases
+     * @param list<Award> $awards
+     * @param list<WinePhoto> $photos
+     * @param list<WineReview> $reviews
+     */
     public function __construct(
         string $name,
         ?string $winery,
@@ -21,7 +29,21 @@ final readonly class Wine
         public ?AgingType $agingType,
         public ?int $vintageYear,
         public ?float $alcoholPercentage,
+        ?int $id = null,
+        public ?DenominationOfOrigin $do = null,
+        public ?string $createdAt = null,
+        public ?string $updatedAt = null,
+        public array $grapes = [],
+        public array $purchases = [],
+        public array $awards = [],
+        public array $photos = [],
+        public array $reviews = [],
     ) {
+        if (null !== $id && $id < 1) {
+            throw new \InvalidArgumentException('wine id must be >= 1.');
+        }
+        $this->id = $id;
+
         $normalizedName = trim($name);
         if ('' === $normalizedName) {
             throw new \InvalidArgumentException('name is required.');

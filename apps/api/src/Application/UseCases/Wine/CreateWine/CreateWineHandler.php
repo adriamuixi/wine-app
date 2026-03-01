@@ -68,7 +68,7 @@ final readonly class CreateWineHandler
             awards: $command->awards,
         );
 
-        return new CreateWineResult($this->wines->createWithRelations($persistableCommand, $resolvedCountry));
+        return new CreateWineResult($this->wines->create($persistableCommand, $resolvedCountry));
     }
 
     private function validateBusinessRules(CreateWineCommand $command): void
