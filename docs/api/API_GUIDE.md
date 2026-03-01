@@ -71,7 +71,7 @@ Example 1 (success):
 ```bash
 curl -i -c cookies.txt -X POST http://localhost:8080/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"demo@example.com","password":"demo1234"}'
+  -d '{"email":"adriamuixi@gmail.com","password":"wine1234"}'
 ```
 
 Example 2 (invalid credentials):
@@ -79,7 +79,7 @@ Example 2 (invalid credentials):
 ```bash
 curl -s -X POST http://localhost:8080/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"demo@example.com","password":"wrong"}' | jq
+  -d '{"email":"adriamuixi@gmail.com","password":"wrong"}' | jq
 ```
 
 ---
@@ -108,6 +108,34 @@ Clears current session.
 
 ```bash
 curl -i -b cookies.txt -X POST http://localhost:8080/api/auth/logout
+```
+
+---
+
+### `POST /api/auth/users`
+
+Creates a user with name, lastname, email and password.
+
+Example:
+
+```bash
+curl -s -X POST http://localhost:8080/api/auth/users \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Adria","lastname":"Muixi","email":"adriamuixi@gmail.com","password":"wine1234"}' | jq
+```
+
+---
+
+### `DELETE /api/auth/users`
+
+Deletes a user by email.
+
+Example:
+
+```bash
+curl -i -X DELETE http://localhost:8080/api/auth/users \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"adriamuixi@gmail.com"}'
 ```
 
 ---

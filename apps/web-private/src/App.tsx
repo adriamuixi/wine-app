@@ -987,8 +987,6 @@ function App() {
   const [authBootstrapped, setAuthBootstrapped] = useState(false)
   const [currentUser, setCurrentUser] = useState<MockUser | null>(null)
   const [menu, setMenu] = useState<MenuKey>('dashboard')
-  const [email, setEmail] = useState('demo@example.com')
-  const [password, setPassword] = useState('demo1234')
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginSubmitting, setLoginSubmitting] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)

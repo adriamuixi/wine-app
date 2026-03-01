@@ -15,7 +15,7 @@ final readonly class DoctrineUserRepository implements UserRepository
     {
     }
 
-    public function findAuthByEmail(string $email): ?AuthUser
+    public function findByEmail(string $email): ?AuthUser
     {
         /** @var UserRecord|null $user */
         $user = $this->entityManager->getRepository(UserRecord::class)->findOneBy(['email' => $email]);
@@ -32,7 +32,7 @@ final readonly class DoctrineUserRepository implements UserRepository
         );
     }
 
-    public function findAuthUserById(int $id): ?AuthUser
+    public function findById(int $id): ?AuthUser
     {
         /** @var UserRecord|null $user */
         $user = $this->entityManager->getRepository(UserRecord::class)->find($id);
@@ -47,5 +47,41 @@ final readonly class DoctrineUserRepository implements UserRepository
             $user->getName(),
             $user->getLastname(),
         );
+    }
+
+    public function create(string $email, string $name, string $lastname, string $passwordHash): AuthUser
+    {
+        $connection = $this->entityManager->getConnection();
+        $id = (int) $connection->fetchOne(
+            <<<'SQL'
+INSERT INTO users (email, name, lastname, password_hash)
+VALUES (:email, :name, :lastname, :password_hash)
+RETURNING id
+SQL,
+            [
+                'email' => $email,
+                'name' => $name,
+                'lastname' => $lastname,
+                'password_hash' => $passwordHash,
+            ],
+        );
+
+        return new AuthUser(
+            $id,
+            $email,
+            $passwordHash,
+            $name,
+            $lastname,
+        );
+    }
+
+    public function deleteByEmail(string $email): bool
+    {
+        $affected = $this->entityManager->getConnection()->executeStatement(
+            'DELETE FROM users WHERE email = :email',
+            ['email' => $email],
+        );
+
+        return $affected > 0;
     }
 }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\AuthController;
+use App\Application\UseCases\Auth\User\CreateUser\CreateUserHandler;
+use App\Application\UseCases\Auth\User\DeleteUser\DeleteUserByEmailHandler;
 use App\Domain\Model\AuthUser;
 use App\Application\UseCases\Auth\Login\LoginHandler;
 use App\Application\UseCases\Auth\Logout\LogoutHandler;
@@ -86,6 +88,41 @@ final class AuthControllerTest extends TestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
     }
 
+    public function testCreateUserReturnsCreated(): void
+    {
+        $controller = $this->controller();
+        $request = Request::create(
+            '/api/auth/users',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'email' => 'new@example.com',
+                'name' => 'New',
+                'lastname' => 'User',
+                'password' => 'secret123',
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->createUser($request);
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+    }
+
+    public function testDeleteUserReturnsNoContent(): void
+    {
+        $controller = $this->controller();
+        $request = Request::create(
+            '/api/auth/users',
+            'DELETE',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['email' => 'demo@example.com'], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->deleteUser($request);
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+    }
+
     private function controller(bool $passwordOk = true, ?int $authenticatedUserId = null): AuthController
     {
         $repo = new InMemoryUserRepository(new AuthUser(1, 'demo@example.com', 'hash', 'Demo', 'User'));
@@ -96,6 +133,8 @@ final class AuthControllerTest extends TestCase
             new LoginHandler($repo, new StubPasswordVerifier($passwordOk), $session),
             new GetCurrentUserHandler($session, $repo),
             new LogoutHandler($session),
+            new CreateUserHandler($repo),
+            new DeleteUserByEmailHandler($repo),
         );
     }
 }

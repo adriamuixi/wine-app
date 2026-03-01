@@ -23,7 +23,7 @@ final readonly class GetCurrentUserHandler
             return null;
         }
 
-        $user = $this->users->findAuthUserById($userId);
+        $user = $this->users->findById($userId);
         if (null === $user) {
             return null;
         }

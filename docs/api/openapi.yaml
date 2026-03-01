@@ -94,6 +94,61 @@ paths:
       responses:
         '204':
           description: Logged out (idempotent)
+  /api/auth/users:
+    post:
+      summary: Create auth user
+      operationId: postAuthUsersCreate
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuthUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete user by email
+      operationId: deleteAuthUsersByEmail
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAuthUserRequest'
+      responses:
+        '204':
+          description: User deleted
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/grapes:
     get:
       summary: List all grapes
@@ -373,11 +428,37 @@ components:
         email:
           type: string
           format: email
-          example: demo@example.com
+          example: adriamuixi@gmail.com
         password:
           type: string
           format: password
-          example: demo1234
+          example: wine1234
+    CreateAuthUserRequest:
+      type: object
+      required: [email, name, lastname, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: adriamuixi@gmail.com
+        name:
+          type: string
+          example: Adria
+        lastname:
+          type: string
+          example: Muixi
+        password:
+          type: string
+          format: password
+          example: wine1234
+    DeleteAuthUserRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          example: adriamuixi@gmail.com
     AuthUser:
       type: object
       required: [id, email, name, lastname]
@@ -389,13 +470,13 @@ components:
         email:
           type: string
           format: email
-          example: demo@example.com
+          example: adriamuixi@gmail.com
         name:
           type: string
-          example: Demo
+          example: Adria
         lastname:
           type: string
-          example: User
+          example: Muixi
     AuthUserResponse:
       type: object
       required: [user]

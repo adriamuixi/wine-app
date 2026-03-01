@@ -57,12 +57,14 @@ final class LoginHandlerTest extends TestCase
 
 final class InMemoryUserRepository implements UserRepository
 {
+    private int $lastId = 1;
+
     public function __construct(
         private readonly ?AuthUser $user = new AuthUser(1, 'demo@example.com', 'hashed', 'Demo', 'User'),
     ) {
     }
 
-    public function findAuthByEmail(string $email): ?AuthUser
+    public function findByEmail(string $email): ?AuthUser
     {
         if (null === $this->user) {
             return null;
@@ -71,7 +73,7 @@ final class InMemoryUserRepository implements UserRepository
         return strtolower($email) === $this->user->email ? $this->user : null;
     }
 
-    public function findAuthUserById(int $id): ?AuthUser
+    public function findById(int $id): ?AuthUser
     {
         if (null === $this->user || $this->user->id !== $id) {
             return null;
@@ -84,6 +86,18 @@ final class InMemoryUserRepository implements UserRepository
             $this->user->name,
             $this->user->lastname,
         );
+    }
+
+    public function create(string $email, string $name, string $lastname, string $passwordHash): AuthUser
+    {
+        $this->lastId += 1;
+
+        return new AuthUser($this->lastId, strtolower($email), $passwordHash, $name, $lastname);
+    }
+
+    public function deleteByEmail(string $email): bool
+    {
+        return null !== $this->user && strtolower($email) === $this->user->email;
     }
 }
 

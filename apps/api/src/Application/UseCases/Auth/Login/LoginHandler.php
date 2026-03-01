@@ -20,7 +20,7 @@ final readonly class LoginHandler
 
     public function handle(LoginCommand $command): AuthUser
     {
-        $credentials = $this->users->findAuthByEmail(strtolower(trim($command->email)));
+        $credentials = $this->users->findByEmail(strtolower(trim($command->email)));
 
         if (null === $credentials) {
             throw new InvalidCredentials('Invalid credentials.');
