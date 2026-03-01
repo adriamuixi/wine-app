@@ -13,6 +13,8 @@ Base URL (local): `http://localhost:8080`
   - [`POST /api/auth/login`](#post-apiauthlogin)
   - [`GET /api/auth/me`](#get-apiauthme)
   - [`POST /api/auth/logout`](#post-apiauthlogout)
+  - [`POST /api/auth/users`](#post-apiauthusers)
+  - [`DELETE /api/auth/users`](#delete-apiauthusers)
 - [Wines](#wines)
   - [`GET /api/grapes`](#get-apigrapes)
   - [`GET /api/dos`](#get-apidos)
@@ -116,6 +118,11 @@ curl -i -b cookies.txt -X POST http://localhost:8080/api/auth/logout
 
 Creates a user with name, lastname, email and password.
 
+Expected:
+- `201` created
+- `400` invalid input
+- `409` email already exists
+
 Example:
 
 ```bash
@@ -124,11 +131,45 @@ curl -s -X POST http://localhost:8080/api/auth/users \
   -d '{"name":"Adria","lastname":"Muixi","email":"adriamuixi@gmail.com","password":"wine1234"}' | jq
 ```
 
+Response example (`201`):
+
+```json
+{
+  "user": {
+    "id": 12,
+    "email": "adriamuixi@gmail.com",
+    "name": "Adria",
+    "lastname": "Muixi"
+  }
+}
+```
+
+Response example (`400`):
+
+```json
+{
+  "error": "Field \"email\" must be a valid email address."
+}
+```
+
+Response example (`409`):
+
+```json
+{
+  "error": "User already exists for email adriamuixi@gmail.com."
+}
+```
+
 ---
 
 ### `DELETE /api/auth/users`
 
 Deletes a user by email.
+
+Expected:
+- `204` deleted
+- `400` invalid email/body
+- `404` user not found
 
 Example:
 
@@ -136,6 +177,22 @@ Example:
 curl -i -X DELETE http://localhost:8080/api/auth/users \
   -H 'Content-Type: application/json' \
   -d '{"email":"adriamuixi@gmail.com"}'
+```
+
+Example (`204` deleted, no body):
+
+```bash
+curl -i -X DELETE http://localhost:8080/api/auth/users \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"gascon.maria@gmail.com"}'
+```
+
+Response example (`404`):
+
+```json
+{
+  "error": "User not found for email adriamuixi@gmail.com."
+}
 ```
 
 ---
