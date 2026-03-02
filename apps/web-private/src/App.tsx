@@ -1310,12 +1310,62 @@ function App() {
     setGrapeBlendRows((current) => current.map((row) => (row.grapeId === '' ? { ...row, grapeId: firstGrapeOptionId } : row)))
   }, [firstGrapeOptionId])
 
-  const menuItems: Array<{ key: Exclude<MenuKey, 'wineProfile'>; label: string; short: string; icon: string }> = [
-    { key: 'dashboard', label: labels.menu.dashboard, short: 'DB', icon: '⌂' },
-    { key: 'wines', label: labels.menu.wines, short: 'W', icon: '🍷' },
-    { key: 'reviews', label: labels.menu.reviews, short: 'R', icon: '✎' },
-    { key: 'admin', label: labels.menu.admin, short: 'A', icon: '⚙' },
-    { key: 'apiDocs', label: labels.menu.apiDoc, short: 'API', icon: '🧭' },
+  const menuItems: Array<{ key: Exclude<MenuKey, 'wineProfile'>; label: string; short: string; icon: ReactNode }> = [
+    {
+      key: 'dashboard',
+      label: labels.menu.dashboard,
+      short: 'DB',
+      icon: (
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 9.8V20a1 1 0 0 0 1 1h4.5v-6h3v6H18a1 1 0 0 0 1-1V9.8" />
+        </svg>
+      ),
+    },
+    {
+      key: 'wines',
+      label: labels.menu.wines,
+      short: 'W',
+      icon: (
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M8 3h8c0 4.2-1.2 6.8-4 8.6V17h3v3H9v-3h3v-5.4C9.2 9.8 8 7.2 8 3Z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'reviews',
+      label: labels.menu.reviews,
+      short: 'R',
+      icon: (
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 20h4l10-10-4-4L4 16v4Z" />
+          <path d="m12.5 7.5 4 4" />
+        </svg>
+      ),
+    },
+    {
+      key: 'admin',
+      label: labels.menu.admin,
+      short: 'A',
+      icon: (
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
+          <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.3-1.8-3.1-2.3.5a7.8 7.8 0 0 0-.8-.6l-.3-2.3h-3.6l-.3 2.3c-.3.2-.6.4-.8.6l-2.3-.5-1.8 3.1 2 1.3a7.8 7.8 0 0 0 .1 1l-2 1.3 1.8 3.1 2.3-.5c.2.2.5.4.8.6l.3 2.3h3.6l.3-2.3c.3-.2.6-.4.8-.6l2.3.5 1.8-3.1-2-1.3Z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'apiDocs',
+      label: labels.menu.apiDoc,
+      short: 'API',
+      icon: (
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="m15.5 8.5-2.2 5.2-5.3 2.2 2.2-5.2 5.3-2.2Z" />
+          <circle cx="12" cy="12" r="1" />
+        </svg>
+      ),
+    },
   ]
 
   const countries = useMemo(
@@ -2721,7 +2771,8 @@ function App() {
       img.src = photoEditorSource
     })
 
-    const outputWidth = 768
+    const isBottlePhoto = photoEditorType === 'bottle'
+    const outputWidth = isBottlePhoto ? 576 : 768
     const outputHeight = 1024
     canvas.width = outputWidth
     canvas.height = outputHeight
@@ -5964,7 +6015,7 @@ function App() {
 
             <div className="photo-editor-body">
               <div
-                className="photo-editor-preview-wrap ratio-3-4"
+                className={`photo-editor-preview-wrap ${photoEditorType === 'bottle' ? 'ratio-9-16' : 'ratio-3-4'}`}
                 onPointerDown={handlePhotoEditorPointerDown}
                 onPointerMove={handlePhotoEditorPointerMove}
                 onPointerUp={handlePhotoEditorPointerUp}
@@ -5992,7 +6043,7 @@ function App() {
               </div>
               <div className="photo-editor-controls">
                 <p className="muted">
-                  Format 3:4 · {locale === 'ca' ? 'Arrossega la imatge per moure-la' : 'Arrastra la imagen para moverla'}
+                  Format {photoEditorType === 'bottle' ? '9:16' : '3:4'} · {locale === 'ca' ? 'Arrossega la imatge per moure-la' : 'Arrastra la imagen para moverla'}
                 </p>
                 <label>
                   {locale === 'ca' ? 'Zoom' : 'Zoom'}

@@ -104,6 +104,14 @@ final class WineControllerWebTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
         $payload = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $wineId = (int) $payload['wine']['id'];
+        $placeIds = array_map(
+            static fn (mixed $value): int => (int) $value,
+            $this->connection->fetchFirstColumn(
+                'SELECT place_id FROM wine_purchase WHERE wine_id = :wine_id',
+                ['wine_id' => $wineId],
+            ),
+        );
+        self::assertNotSame([], $placeIds);
 
         $client->request('DELETE', sprintf('/api/wines/%d', $wineId));
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
@@ -111,10 +119,16 @@ final class WineControllerWebTest extends WebTestCase
         $wineCount = (int) $this->connection->fetchOne('SELECT count(*) FROM wine WHERE id = :id', ['id' => $wineId]);
         $grapeCount = (int) $this->connection->fetchOne('SELECT count(*) FROM wine_grape WHERE wine_id = :wine_id', ['wine_id' => $wineId]);
         $purchaseCount = (int) $this->connection->fetchOne('SELECT count(*) FROM wine_purchase WHERE wine_id = :wine_id', ['wine_id' => $wineId]);
+        $placeCount = (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM place WHERE id IN (:place_ids)',
+            ['place_ids' => $placeIds],
+            ['place_ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER],
+        );
 
         self::assertSame(0, $wineCount);
         self::assertSame(0, $grapeCount);
         self::assertSame(0, $purchaseCount);
+        self::assertSame(0, $placeCount);
     }
 
     public function testDeleteRemovesWinePhotosFromDiskAndDirectory(): void

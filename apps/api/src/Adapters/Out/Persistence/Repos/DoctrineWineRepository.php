@@ -120,9 +120,43 @@ SQL,
 
     public function deleteById(int $id): bool
     {
-        $affected = $this->entityManager->getConnection()->executeStatement(
-            'DELETE FROM wine WHERE id = :id',
-            ['id' => $id],
+        $connection = $this->entityManager->getConnection();
+        $affected = $connection->transactional(
+            function (Connection $connection) use ($id): int {
+                $placeIds = array_map(
+                    static fn (mixed $value): int => (int) $value,
+                    $connection->fetchFirstColumn(
+                        'SELECT place_id FROM wine_purchase WHERE wine_id = :wine_id',
+                        ['wine_id' => $id],
+                    ),
+                );
+
+                $affected = $connection->executeStatement(
+                    'DELETE FROM wine WHERE id = :id',
+                    ['id' => $id],
+                );
+                if ($affected <= 0) {
+                    return 0;
+                }
+
+                if ([] !== $placeIds) {
+                    $connection->executeStatement(
+                        <<<'SQL'
+DELETE FROM place p
+WHERE p.id IN (:place_ids)
+  AND NOT EXISTS (
+    SELECT 1
+    FROM wine_purchase wp
+    WHERE wp.place_id = p.id
+  )
+SQL,
+                        ['place_ids' => $placeIds],
+                        ['place_ids' => ArrayParameterType::INTEGER],
+                    );
+                }
+
+                return $affected;
+            },
         );
 
         return $affected > 0;
