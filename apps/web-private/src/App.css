@@ -6661,8 +6661,27 @@ body {
   }
 
   .photo-editor-preview-wrap {
-    min-height: 320px;
+    min-height: 240px;
     padding: 0.45rem;
+  }
+
+  .photo-editor-preview-wrap.ratio-9-16 {
+    width: min(54vw, 208px);
+    justify-self: center;
+  }
+
+  .photo-editor-preview-wrap.ratio-3-4 {
+    width: min(64vw, 248px);
+    justify-self: center;
+  }
+
+  .photo-editor-preview-wrap.ratio-1-1 {
+    width: min(64vw, 248px);
+    justify-self: center;
+  }
+
+  .photo-editor-preview-wrap.ratio-free {
+    min-height: 200px;
   }
 
   .photo-editor-controls {
