@@ -1,6 +1,5 @@
 common:
   appName: Els nostres vins
-  mockMode: Mode demo. Aquesta pantalla no crida l’API.
   menu: Menú
   logout: Tanca sessió
   expandSidebar: Expandeix la barra lateral
@@ -131,7 +130,6 @@ admin:
       favoriteStyle: Vins negres
       lastLogin: Avui · 21:45
 topbar:
-  mockDashboard: Tauler
   overview: Visió general
   wines: Eines de vins
   reviews: Les meves ressenyes
@@ -159,7 +157,6 @@ user:
 wineProfile:
   pageTitle: Perfil del vi
   backToDashboard: Torna al Dashboard
-  editWineMock: Edita vi
   photosEyebrow: Fotos
   photoRecordPreview: Vista prèvia PhotoRecord
   filesSuffix: fitxers
@@ -185,84 +182,6 @@ wineProfile:
     front: Etiqueta frontal
     back: Etiqueta posterior
     situation: Situació
-  mock:
-    sectionTitles:
-      wineRecord: WineRecord · Identificació
-      regionDo: RegionDoRecord · Origen
-      grapes: WineGrapeRecord + GrapeRecord
-      placePurchase: PlaceRecord + compra
-      mediaAwardsReview: PhotoRecord + AwardRecord + resum de ressenya
-    fieldLabels:
-      id: ID
-      name: Nom del vi
-      winery: Celler
-      wineTypeEnum: Tipus de vi
-      agingTypeEnum: Criança
-      vintageYear: Anyada
-      alcoholPercentage: Alcohol (%)
-      pricePaid: Preu pagat
-      createdAt: Creat el
-      updatedAt: Actualitzat el
-      countryEnum: País
-      regionDoName: Regió / D.O.
-      regionDoCountry: País de la regió
-      regionDoId: ID regió / D.O.
-      grapeRows: Composició de raïm
-      purchasePlaceId: ID lloc de compra
-      placeTypeEnum: Tipus de lloc
-      placeName: Nom del lloc
-      placeAddress: Adreça
-      placeCity: Ciutat
-      photoRecordsEnum: Tipus de foto
-      photoUrls: Fitxers de fotos
-      awardNameEnum: Premi / font
-      awardScore: Puntuació del premi
-      awardYear: Any del premi
-      reviewBulletsEnum: Etiquetes de ressenya
-    labels:
-      mockFk: FK
-      mockExtraHarvest: Verema (extra)
-      reviewSummaryMock: Resum de ressenya
-    templates:
-      mockFkValue: "{{id}} ({{mockFk}})"
-      recordsCount: "{{count}} registres"
-      grapeRowLabel: "raïm_{{index}}"
-      grapeRowValue: "{{name}} · color: {{color}} · percentatge: {{percentage}}"
-      harvestRange: "{{year}}-09-18 → {{year}}-10-02"
-      priceEur: "{{price}} EUR"
-      reviewSummary: "avg_score={{score}} · intensity_aroma=4 · acidity=3 · body=4 · persistence=4"
-    values:
-      photoUrlsMock: Ampolla / etiqueta frontal / etiqueta posterior (fitxers a public/photos/wines)
-      placeAddressMock: Carrer de Provença 123
-      placeCityMock: Barcelona
-      placeNameRestaurant: Restaurant Cellar Table
-      placeNameSupermarket: Mercat Gourmet Center
-      agingYoung: jove
-      agingReserve: reserva
-      reviewBullets: elegant, mineral, gastronòmic
-      countrySpain: espanya
-      countryFrance: frança
-      countryPortugal: portugal
-      placeTypeRestaurant: restaurant
-      placeTypeSupermarket: supermercat
-      colorRed: negre
-      colorWhite: blanc
-      photoTypeBottle: ampolla
-      photoTypeFrontLabel: etiqueta frontal
-      photoTypeBackLabel: etiqueta posterior
-      photoTypeSituation: situació
-    profile:
-      summaryRed: Vi estructurat, taní polit i final llarg. Perfil gastronòmic.
-      summaryOther: Perfil fresc, aromàtic i bona acidesa. Molt versàtil a taula.
-      tags:
-        - Elegant
-        - Gastronòmic
-        - Mineral
-      pairing:
-        - Arrossos
-        - Carn blanca
-        - Formatges curats
-      servingNotes: Decantar 20 minuts si és jove. Servir en copa de mida mitjana.
 wineType:
   red: Negre
   white: Blanc

@@ -202,23 +202,12 @@ type WineDetailsApiResponse = {
   wine: WineDetailsApiWine
 }
 
-type WineProfileField = {
-  label: string
-  value: string
-}
-
-type WineProfileSection = {
-  icon: string
-  title: string
-  fields: WineProfileField[]
-}
-
 type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
 type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
 type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label' | 'situation'
 
-type MockUser = {
+type AppUser = {
   id: number
   name: string
   lastname: string
@@ -274,105 +263,12 @@ const SAMPLE_WINE_GALLERY = [
   { key: 'situation', src: SAMPLE_WINE_THUMBNAIL_SRC },
 ] as const
 
-const mockUser: MockUser = {
-  id: 1,
-  name: 'Adrià',
-  lastname: 'Sommelier',
-  email: 'adria@example.com',
+const DEFAULT_USER_PLACEHOLDER: AppUser = {
+  id: 0,
+  name: '-',
+  lastname: '',
+  email: '-',
 }
-
-type JournalWineRow = {
-  wine: string
-  typeCa: string
-  region: string
-  vintage: number | null
-  maria: string
-  adria: string
-  place: string
-}
-
-const journalWineRows: JournalWineRow[] = [
-  { wine: 'Lo cometa', typeCa: 'Blanc', region: 'Terra Alta', vintage: 2019, maria: '7', adria: '7,5', place: 'Celler del nou priorat' },
-  { wine: 'Compte ovelles', typeCa: 'Negre', region: 'Penedès', vintage: 2020, maria: '5', adria: '5,75', place: 'Casa Rosset' },
-  { wine: 'Seré 2018', typeCa: 'Negre', region: 'Montsant', vintage: 2018, maria: '6,5', adria: '6,25', place: 'Taberna La Parra' },
-  { wine: 'Vega de Nava', typeCa: 'Negre', region: 'Ribera del Duero', vintage: 2018, maria: '8', adria: '8', place: 'Casa Tat' },
-  { wine: 'Chateldon', typeCa: 'Negre', region: 'Penedès', vintage: 2019, maria: '8', adria: '', place: 'Casa Rosset' },
-  { wine: 'Matsu - el pícaro', typeCa: 'Negre', region: 'Toro', vintage: 2020, maria: '7,5', adria: '8', place: 'Casa Tat' },
-  { wine: 'Titella', typeCa: 'Negre', region: 'Montsant', vintage: 2017, maria: '8', adria: '8,1', place: 'Casa Rosset' },
-  { wine: 'Ulldemolins', typeCa: 'Negre', region: 'Montsant', vintage: 2016, maria: '6,5', adria: '6,75', place: 'Casa Tat' },
-  { wine: 'Clot d’encís blanc de negres', typeCa: 'Blanc', region: 'Terra Alta', vintage: 2019, maria: '7,5', adria: '7,15', place: 'Casa Tat' },
-  { wine: 'Ninín', typeCa: 'Negre', region: 'Ribera del Duero', vintage: 2018, maria: '6,75', adria: '6,9', place: 'Casa Rosset' },
-  { wine: 'Roca Blanca', typeCa: 'Negre', region: 'Montsant', vintage: 2016, maria: '6', adria: '4,25', place: 'Casa Tat' },
-  { wine: 'Enate', typeCa: 'Negre', region: 'Somontano', vintage: 2017, maria: '7', adria: '8', place: 'Casa Rosset' },
-  { wine: 'Fulget', typeCa: 'Blanc', region: 'Rías Baixas', vintage: 2019, maria: '6,5', adria: '5,5', place: "A'rogueira" },
-  { wine: 'Roca blanca', typeCa: 'Negre', region: 'Montsant', vintage: 2016, maria: '5,5', adria: '4,67', place: 'Casa Tat' },
-  { wine: 'Castillo de Albai', typeCa: 'Negre', region: 'Rioja', vintage: 2016, maria: '7', adria: '7,1', place: 'Casa Rosset' },
-  { wine: 'Acústic', typeCa: 'Negre', region: 'Montsant', vintage: 2018, maria: '9,2', adria: '8,1', place: 'Casa Rosset' },
-  { wine: 'Matsu - el recio', typeCa: 'Negre', region: 'Toro', vintage: null, maria: '9', adria: '7,8', place: 'Casa Rosset' },
-  { wine: 'Roureda', typeCa: 'Negre', region: 'Tarragona', vintage: 2016, maria: '', adria: '', place: 'Casa Tat' },
-  { wine: 'Almodí', typeCa: 'Negre', region: 'Terra Alta', vintage: 2019, maria: '7,5', adria: '7,5', place: 'Casa Rosset' },
-  { wine: 'Muga', typeCa: 'Negre', region: 'Rioja', vintage: 2017, maria: '8', adria: '7', place: 'Casa Tat' },
-  { wine: "L'isard", typeCa: 'Negre', region: 'Penedès', vintage: 2019, maria: '7,7', adria: '7,1', place: 'Casa Rosset' },
-  { wine: 'Sumarroca classic', typeCa: 'Negre', region: 'Penedès', vintage: 2019, maria: '7', adria: '8', place: 'Casa Rosset' },
-  { wine: 'Condado de Teón', typeCa: 'Negre', region: 'Ribera del Duero', vintage: 2018, maria: '6,5', adria: '6,1', place: 'Casa Tat' },
-  { wine: 'Rosum', typeCa: 'Negre', region: 'Toro', vintage: 2017, maria: '8,5', adria: '7,1', place: 'Casa Tat' },
-]
-
-function parseJournalScore(value: string): number | null {
-  const normalized = value.trim().replace(',', '.')
-  if (!normalized) {
-    return null
-  }
-
-  const numeric = Number(normalized)
-  return Number.isFinite(numeric) ? numeric : null
-}
-
-function mapTypeFromCa(value: string, wineName: string): WineType {
-  const text = value.trim().toLowerCase()
-  if (text.includes('blanc')) return 'white'
-  if (text.includes('rosat')) return 'rose'
-  if (text.includes('escum')) return 'sparkling'
-  if (wineName.toLowerCase().includes('classic') || wineName.toLowerCase().includes('cava')) return 'sparkling'
-  return 'red'
-}
-
-const mockWines: WineItem[] = journalWineRows.map((row, index) => {
-  const maria = parseJournalScore(row.maria)
-  const adria = parseJournalScore(row.adria)
-  const avgTen = maria != null && adria != null ? (maria + adria) / 2 : (maria ?? adria ?? 6.8)
-  const averageScore = Math.round(avgTen * 100) / 10
-  const pricePaid = Number((9 + (avgTen * 1.9) + ((index % 5) * 1.75)).toFixed(2))
-
-  return {
-    id: index + 1,
-    name: row.wine,
-    winery: row.place,
-    type: mapTypeFromCa(row.typeCa, row.wine),
-    country: 'Spain',
-    region: row.region,
-    doName: row.region,
-    doLogoImage: null,
-    thumbnailSrc: SAMPLE_WINE_THUMBNAIL_SRC,
-    galleryPreview: {
-      bottle: SAMPLE_WINE_THUMBNAIL_SRC,
-      front: SAMPLE_WINE_THUMBNAIL_SRC,
-      back: SAMPLE_WINE_THUMBNAIL_SRC,
-      situation: SAMPLE_WINE_THUMBNAIL_SRC,
-    },
-    vintageYear: row.vintage,
-    agingType: null,
-    pricePaid,
-    averageScore,
-  }
-})
-
-const mockReviews: ReviewItem[] = [
-  { id: 11, wineId: 1, wineName: 'Lo cometa', score: 88, createdAt: '2026-02-20', notes: 'Cirera madura, cos mitjà i final amable.' },
-  { id: 12, wineId: 16, wineName: 'Acústic', score: 95, createdAt: '2026-02-18', notes: 'Fusta integrada, taní estructurat i persistència llarga.' },
-  { id: 13, wineId: 13, wineName: 'Fulget', score: 84, createdAt: '2026-02-14', notes: 'Perfil fresc, acidesa viva i final net.' },
-  { id: 14, wineId: 20, wineName: 'Muga', score: 86, createdAt: '2026-02-12', notes: 'Aroma net, pas de boca equilibrat i bona longitud.' },
-]
 
 const AGING_OPTIONS = ['young', 'crianza', 'reserve', 'grand_reserve'] as const
 const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket'] as const
@@ -762,261 +658,6 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#39;')
 }
 
-type WineProfileLabels = {
-  pageTitle: string
-  galleryEyebrow: string
-  imageLabels: {
-    bottle: string
-    front: string
-    back: string
-    situation: string
-  }
-  mock: {
-    sectionTitles: {
-      wineRecord: string
-      regionDo: string
-      grapes: string
-      placePurchase: string
-      mediaAwardsReview: string
-    }
-    fieldLabels: {
-      id: string
-      name: string
-      winery: string
-      wineTypeEnum: string
-      agingTypeEnum: string
-      vintageYear: string
-      alcoholPercentage: string
-      pricePaid: string
-      createdAt: string
-      updatedAt: string
-      countryEnum: string
-      regionDoName: string
-      regionDoCountry: string
-      regionDoId: string
-      grapeRows: string
-      purchasePlaceId: string
-      placeTypeEnum: string
-      placeName: string
-      placeAddress: string
-      placeCity: string
-      photoRecordsEnum: string
-      photoUrls: string
-      awardNameEnum: string
-      awardScore: string
-      awardYear: string
-      reviewBulletsEnum: string
-    }
-    labels: {
-      mockFk: string
-      mockExtraHarvest: string
-      reviewSummaryMock: string
-    }
-    templates: {
-      mockFkValue: string
-      recordsCount: string
-      grapeRowLabel: string
-      grapeRowValue: string
-      harvestRange: string
-      priceEur: string
-      reviewSummary: string
-    }
-    values: {
-      agingReserve: string
-      agingYoung: string
-      placeTypeRestaurant: string
-      placeTypeSupermarket: string
-      countrySpain: string
-      countryFrance: string
-      countryPortugal: string
-      photoTypeBottle: string
-      photoTypeFrontLabel: string
-      photoTypeBackLabel: string
-      photoTypeSituation: string
-      colorRed: string
-      colorWhite: string
-      placeNameRestaurant: string
-      placeNameSupermarket: string
-      placeAddressMock: string
-      placeCityMock: string
-      photoUrlsMock: string
-      reviewBullets: string
-    }
-    profile: {
-      summaryRed: string
-      summaryOther: string
-      tags: string[]
-      pairing: string[]
-      servingNotes: string
-    }
-  }
-}
-
-function buildMockWineProfile(
-  wine: WineItem,
-  wineProfileLabels: WineProfileLabels,
-  wineTypeLabels: Record<WineType, string>,
-) {
-  const wp = wineProfileLabels
-  const wm = wineProfileLabels.mock
-  const formatTemplate = (template: string, values: Record<string, string | number>) =>
-    Object.entries(values).reduce(
-      (result, [key, value]) => result.replaceAll(`{{${key}}}`, String(value)),
-      template,
-    )
-  const harvest = (wine.vintageYear ?? 2021) - 1
-  const wineTypeValue = `${wineTypeLabels[wine.type].toLowerCase()} (${wine.type})`
-  const aging = wine.type === 'red' ? wm.values.agingReserve : wm.values.agingYoung
-  const placeType = wine.id % 2 === 0 ? 'restaurant' : 'supermarket'
-  const placeTypeDisplay = placeType === 'restaurant' ? wm.values.placeTypeRestaurant : wm.values.placeTypeSupermarket
-  const countryCode = wine.country.toLowerCase().replaceAll(' ', '_')
-  const countryDisplayMap: Record<string, string> = {
-    Spain: wm.values.countrySpain,
-    France: wm.values.countryFrance,
-    Portugal: wm.values.countryPortugal,
-  }
-  const countryDisplay = countryDisplayMap[wine.country] ?? countryCode
-  const alcoholPercentage = wine.type === 'red' ? 14 : wine.type === 'sparkling' ? 12 : 13
-  const createdAt = `2026-02-${String(5 + wine.id).padStart(2, '0')}T18:30:00Z`
-  const updatedAt = `2026-02-${String(15 + wine.id).padStart(2, '0')}T10:15:00Z`
-  const photosSummary = [
-    wm.values.photoTypeBottle,
-    wm.values.photoTypeFrontLabel,
-    wm.values.photoTypeBackLabel,
-    wm.values.photoTypeSituation,
-  ].join(', ')
-  const awardName = wine.id % 2 === 0 ? 'decanter' : 'penin'
-  const awardScore = (88 + (wine.id % 6)).toFixed(1)
-  const awardYear = wine.vintageYear ? wine.vintageYear + 2 : 2026
-  const awardPresent = wine.id % 5 !== 0
-  const grapeRows = wine.type === 'white'
-    ? [
-        { name: 'Albariño', color: 'white', percentage: '70.00' },
-        { name: 'Godello', color: 'white', percentage: '30.00' },
-      ]
-    : wine.type === 'sparkling'
-      ? [
-          { name: 'Macabeo', color: 'white', percentage: '45.00' },
-          { name: 'Xarel·lo', color: 'white', percentage: '35.00' },
-          { name: 'Parellada', color: 'white', percentage: '20.00' },
-        ]
-      : [
-          { name: 'Tempranillo', color: 'red', percentage: '80.00' },
-          { name: 'Garnatxa', color: 'red', percentage: '20.00' },
-        ]
-
-  const sections: WineProfileSection[] = [
-    {
-      icon: '🍷',
-      title: wm.sectionTitles.wineRecord,
-      fields: [
-        { label: wm.fieldLabels.id, value: String(wine.id) },
-        { label: wm.fieldLabels.name, value: wine.name },
-        { label: wm.fieldLabels.winery, value: wine.winery },
-        { label: wm.fieldLabels.wineTypeEnum, value: wineTypeValue },
-        { label: wm.fieldLabels.agingTypeEnum, value: aging },
-        { label: wm.fieldLabels.vintageYear, value: String(wine.vintageYear ?? '-') },
-        { label: wm.fieldLabels.alcoholPercentage, value: `${alcoholPercentage}` },
-        { label: wm.fieldLabels.pricePaid, value: `${wine.pricePaid.toFixed(2)}` },
-        { label: wm.fieldLabels.createdAt, value: createdAt },
-        { label: wm.fieldLabels.updatedAt, value: updatedAt },
-      ],
-    },
-    {
-      icon: '🗺',
-      title: wm.sectionTitles.regionDo,
-      fields: [
-        { label: wm.fieldLabels.countryEnum, value: countryDisplay },
-        { label: wm.fieldLabels.regionDoName, value: wine.region },
-        { label: wm.fieldLabels.regionDoCountry, value: countryDisplay },
-        { label: wm.fieldLabels.regionDoId, value: formatTemplate(wm.templates.mockFkValue, { id: 100 + wine.id, mockFk: wm.labels.mockFk }) },
-      ],
-    },
-    {
-      icon: '🍇',
-      title: wm.sectionTitles.grapes,
-      fields: [
-        { label: wm.fieldLabels.grapeRows, value: formatTemplate(wm.templates.recordsCount, { count: grapeRows.length }) },
-        {
-          label: formatTemplate(wm.templates.grapeRowLabel, { index: 1 }),
-          value: formatTemplate(wm.templates.grapeRowValue, {
-            ...grapeRows[0],
-            color: grapeRows[0].color === 'red' ? wm.values.colorRed : wm.values.colorWhite,
-          }),
-        },
-        ...(grapeRows[1]
-          ? [{
-              label: formatTemplate(wm.templates.grapeRowLabel, { index: 2 }),
-              value: formatTemplate(wm.templates.grapeRowValue, {
-                ...grapeRows[1],
-                color: grapeRows[1].color === 'red' ? wm.values.colorRed : wm.values.colorWhite,
-              }),
-            }]
-          : []),
-        ...(grapeRows[2]
-          ? [{
-              label: formatTemplate(wm.templates.grapeRowLabel, { index: 3 }),
-              value: formatTemplate(wm.templates.grapeRowValue, {
-                ...grapeRows[2],
-                color: grapeRows[2].color === 'red' ? wm.values.colorRed : wm.values.colorWhite,
-              }),
-            }]
-          : []),
-        { label: wm.labels.mockExtraHarvest, value: formatTemplate(wm.templates.harvestRange, { year: harvest }) },
-      ],
-    },
-    {
-      icon: '📍',
-      title: wm.sectionTitles.placePurchase,
-      fields: [
-        { label: wm.fieldLabels.purchasePlaceId, value: formatTemplate(wm.templates.mockFkValue, { id: 200 + wine.id, mockFk: wm.labels.mockFk }) },
-        { label: wm.fieldLabels.placeTypeEnum, value: placeTypeDisplay },
-        { label: wm.fieldLabels.placeName, value: placeType === 'restaurant' ? wm.values.placeNameRestaurant : wm.values.placeNameSupermarket },
-        { label: wm.fieldLabels.placeAddress, value: wm.values.placeAddressMock },
-        { label: wm.fieldLabels.placeCity, value: wm.values.placeCityMock },
-        { label: wm.fieldLabels.pricePaid, value: formatTemplate(wm.templates.priceEur, { price: wine.pricePaid.toFixed(2) }) },
-      ],
-    },
-    {
-      icon: '🖼',
-      title: wm.sectionTitles.mediaAwardsReview,
-      fields: [
-        { label: wm.fieldLabels.photoRecordsEnum, value: photosSummary },
-        { label: wm.fieldLabels.photoUrls, value: wm.values.photoUrlsMock },
-        { label: wm.fieldLabels.awardNameEnum, value: awardName },
-        { label: wm.fieldLabels.awardScore, value: awardScore },
-        { label: wm.fieldLabels.awardYear, value: String(awardYear) },
-        { label: wm.labels.reviewSummaryMock, value: formatTemplate(wm.templates.reviewSummary, { score: wine.averageScore ?? '-' }) },
-        { label: wm.fieldLabels.reviewBulletsEnum, value: wm.values.reviewBullets },
-      ],
-    },
-  ]
-
-  return {
-    headline: wp.pageTitle,
-    summary: wine.type === 'red' ? wm.profile.summaryRed : wm.profile.summaryOther,
-    tags: wm.profile.tags,
-    pairing: wm.profile.pairing,
-    servingNotes: wm.profile.servingNotes,
-    galleryLabels: {
-      bottle: wp.imageLabels.bottle,
-      front: wp.imageLabels.front,
-      back: wp.imageLabels.back,
-      situation: wp.imageLabels.situation,
-      photosTitle: wp.galleryEyebrow,
-    },
-    heroAward: awardPresent
-      ? {
-          icon: '🏅',
-          label: awardName,
-          year: String(awardYear),
-        }
-      : null,
-    heroAwardScore: awardPresent ? Number(awardScore) : null,
-    sections,
-  }
-}
-
 function getDefaultNoPhotoSrc(): string {
   if (typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark') {
     return DEFAULT_NO_PHOTO_DARK_SRC
@@ -1254,7 +895,7 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(getInitialSidebarCollapsed)
   const [loggedIn, setLoggedIn] = useState(false)
   const [authBootstrapped, setAuthBootstrapped] = useState(false)
-  const [currentUser, setCurrentUser] = useState<MockUser | null>(null)
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null)
   const [menu, setMenu] = useState<MenuKey>('dashboard')
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginSubmitting, setLoginSubmitting] = useState(false)
@@ -1836,7 +1477,7 @@ function App() {
   const brandWordmarkTopbarSrc = '/images/brand/logo-wordmark-dark.png'
   const brandIconSrc = '/images/brand/icon-square-64.png'
   const themeToggleLabel = isDarkMode ? labels.common.themeSwitchToLight : labels.common.themeSwitchToDark
-  const displayedUser = currentUser ?? mockUser
+  const displayedUser = currentUser ?? DEFAULT_USER_PLACEHOLDER
 
   useEffect(() => {
     document.documentElement.dataset.theme = themeMode
@@ -2656,9 +2297,6 @@ function App() {
     setMenu('wines')
   }
 
-  const selectedWineProfile = selectedWineSheet
-    ? buildMockWineProfile(selectedWineSheet, labels.wineProfile, labels.wineType)
-    : null
   const selectedWineGalleryImages = useMemo(
     () => (selectedWineGallery
       ? [
@@ -4320,7 +3958,7 @@ function App() {
           </button>
 
           <div className="topbar-copy">
-            <p className="eyebrow">{labels.topbar.mockDashboard}</p>
+            <p className="eyebrow">{labels.topbar.overview}</p>
             <h2>{menuTitle}</h2>
           </div>
 
@@ -6477,8 +6115,8 @@ function App() {
                       onClick={() => setActiveGalleryImageKey(image.key)}
                       aria-pressed={isActive}
                     >
-                      <img src={image.src} alt={`${selectedWineGallery.name} ${selectedWineProfile?.galleryLabels[image.key] ?? galleryLabels[image.key]}`} loading="lazy" onError={fallbackToDefaultWineIcon} />
-                      <span>{selectedWineProfile?.galleryLabels[image.key] ?? galleryLabels[image.key]}</span>
+                      <img src={image.src} alt={`${selectedWineGallery.name} ${galleryLabels[image.key]}`} loading="lazy" onError={fallbackToDefaultWineIcon} />
+                      <span>{galleryLabels[image.key]}</span>
                     </button>
                   )
                 })}
@@ -6490,9 +6128,9 @@ function App() {
 
                   return (
                     <>
-                      <img src={activeImage.src} alt={`${selectedWineGallery.name} ${selectedWineProfile?.galleryLabels[activeImage.key] ?? galleryLabels[activeImage.key]}`} onError={fallbackToDefaultWineIcon} />
+                      <img src={activeImage.src} alt={`${selectedWineGallery.name} ${galleryLabels[activeImage.key]}`} onError={fallbackToDefaultWineIcon} />
                       <figcaption>
-                        <strong>{selectedWineProfile?.galleryLabels[activeImage.key] ?? galleryLabels[activeImage.key]}</strong>
+                        <strong>{galleryLabels[activeImage.key]}</strong>
                       </figcaption>
                     </>
                   )

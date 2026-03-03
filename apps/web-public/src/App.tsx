@@ -82,6 +82,39 @@ type WineListApiResponse = {
   }
 }
 
+type DoApiItem = {
+  id: number
+  name: string
+  region: string
+  country: NonNullable<WineListApiItem['country']>
+  country_code: string
+  logo_image: string | null
+}
+
+type DoApiResponse = {
+  items: DoApiItem[]
+}
+
+type DoFilterOption = {
+  id: number
+  name: string
+  region: string
+  countryCode: NonNullable<WineListApiItem['country']>
+  countryLabel: string
+  doLogoImage?: string
+}
+
+type WineDetailsApiResponse = {
+  wine?: {
+    grapes?: Array<{
+      id?: number
+      name?: string
+      color?: 'red' | 'white'
+      percentage?: number | null
+    }>
+  }
+}
+
 type Dictionary = {
   appName: string
   title: string
@@ -391,13 +424,6 @@ function resolvePublicWineImageForTheme(src: string, isDark: boolean): string {
   return src
 }
 
-const SHARED_GALLERY = [
-  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
-  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
-  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
-  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
-]
-
 function buildReward(avgScore: number, region: string): WineCard['reward'] | undefined {
   if (avgScore < 88) return undefined
   if (avgScore >= 92) return { name: 'Peñín', score: Math.round(avgScore + 1) }
@@ -412,7 +438,7 @@ function splitGrapeVarieties(grapes: string): string[] {
     .filter(Boolean)
 }
 
-function normalizeText(value: string): string {
+function normalizeSearchText(value: string): string {
   return value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -472,56 +498,88 @@ function localizedCountryName(country: string, locale: Locale): string {
   return country
 }
 
-function autonomousCommunityFlagPathForRegion(region: string): string | null {
-  const map: Record<string, string> = {
-    'Terra Alta': '/images/flags/ccaa/cataluna.png',
-    'Penedès': '/images/flags/ccaa/cataluna.png',
-    Montsant: '/images/flags/ccaa/cataluna.png',
-    Tarragona: '/images/flags/ccaa/cataluna.png',
-    Priorat: '/images/flags/ccaa/cataluna.png',
-    'Conca de Barberà': '/images/flags/ccaa/cataluna.png',
-    'Pla de Bages': '/images/flags/ccaa/cataluna.png',
-    Alella: '/images/flags/ccaa/cataluna.png',
-    Empordà: '/images/flags/ccaa/cataluna.png',
-    'Costers del Segre': '/images/flags/ccaa/cataluna.png',
-    Rioja: '/images/flags/ccaa/la_rioja.png',
-    'Ribera del Duero': '/images/flags/ccaa/castilla_y_leon.png',
-    Toro: '/images/flags/ccaa/castilla_y_leon.png',
-    Cigales: '/images/flags/ccaa/castilla_y_leon.png',
-    Arlanza: '/images/flags/ccaa/castilla_y_leon.png',
-    Somontano: '/images/flags/ccaa/aragon.png',
-    Cariñena: '/images/flags/ccaa/aragon.png',
-    Calatayud: '/images/flags/ccaa/aragon.png',
-    Navarra: '/images/flags/ccaa/navarra.png',
-    'Rías Baixas': '/images/flags/ccaa/galicia.png',
+function spanishAutonomousCommunity(region: string): { name: string; slug: string } | null {
+  const normalizeRegionKey = (value: string): string => normalizeSearchText(value).replace(/[^a-z0-9]+/g, ' ').trim()
+
+  const slugToCommunityName: Record<string, string> = {
+    andalucia: 'Andalucía',
+    aragon: 'Aragón',
+    asturias: 'Asturias',
+    canarias: 'Canarias',
+    castilla_y_leon: 'Castilla y León',
+    castilla_la_mancha: 'Castilla-La Mancha',
+    cataluna: 'Cataluña',
+    comunidad_valenciana: 'Comunidad Valenciana',
+    extremadura: 'Extremadura',
+    galicia: 'Galicia',
+    baleares: 'Islas Baleares',
+    la_rioja: 'La Rioja',
+    madrid: 'Madrid',
+    murcia: 'Murcia',
+    navarra: 'Navarra',
+    pais_vasco: 'País Vasco',
   }
-  return map[region] ?? null
+
+  const regionToCommunitySlug: Record<string, keyof typeof slugToCommunityName> = {
+    andalucia: 'andalucia',
+    aragon: 'aragon',
+    asturias: 'asturias',
+    canarias: 'canarias',
+    'castilla y leon': 'castilla_y_leon',
+    'castilla leon': 'castilla_y_leon',
+    'castilla la mancha': 'castilla_la_mancha',
+    cataluna: 'cataluna',
+    'comunidad valenciana': 'comunidad_valenciana',
+    extremadura: 'extremadura',
+    galicia: 'galicia',
+    'islas baleares': 'baleares',
+    baleares: 'baleares',
+    'la rioja': 'la_rioja',
+    madrid: 'madrid',
+    murcia: 'murcia',
+    navarra: 'navarra',
+    'pais vasco': 'pais_vasco',
+    'terra alta': 'cataluna',
+    penedes: 'cataluna',
+    montsant: 'cataluna',
+    tarragona: 'cataluna',
+    priorat: 'cataluna',
+    'conca de barbera': 'cataluna',
+    'pla de bages': 'cataluna',
+    alella: 'cataluna',
+    emporda: 'cataluna',
+    'costers del segre': 'cataluna',
+    rioja: 'la_rioja',
+    'ribera del duero': 'castilla_y_leon',
+    toro: 'castilla_y_leon',
+    cigales: 'castilla_y_leon',
+    arlanza: 'castilla_y_leon',
+    somontano: 'aragon',
+    carinena: 'aragon',
+    calatayud: 'aragon',
+    'rias baixas': 'galicia',
+  }
+
+  const slug = regionToCommunitySlug[normalizeRegionKey(region)]
+  if (!slug) {
+    return null
+  }
+
+  return {
+    name: slugToCommunityName[slug],
+    slug,
+  }
+}
+
+function autonomousCommunityFlagPathForRegion(region: string): string | null {
+  const community = spanishAutonomousCommunity(region)
+  if (!community) return null
+  return `/images/flags/ccaa/${community.slug}.png`
 }
 
 function autonomousCommunityNameForRegion(region: string): string | null {
-  const map: Record<string, string> = {
-    'Terra Alta': 'Catalunya',
-    'Penedès': 'Catalunya',
-    Montsant: 'Catalunya',
-    Tarragona: 'Catalunya',
-    Priorat: 'Catalunya',
-    'Conca de Barberà': 'Catalunya',
-    'Pla de Bages': 'Catalunya',
-    Alella: 'Catalunya',
-    Empordà: 'Catalunya',
-    'Costers del Segre': 'Catalunya',
-    Rioja: 'La Rioja',
-    'Ribera del Duero': 'Castilla y Leon',
-    Toro: 'Castilla y Leon',
-    Cigales: 'Castilla y Leon',
-    Arlanza: 'Castilla y Leon',
-    Somontano: 'Aragon',
-    Cariñena: 'Aragon',
-    Calatayud: 'Aragon',
-    Navarra: 'Navarra',
-    'Rías Baixas': 'Galicia',
-  }
-  return map[region] ?? null
+  const community = spanishAutonomousCommunity(region)
+  return community?.name ?? null
 }
 
 function resolveApiAssetUrl(path: string): string {
@@ -566,6 +624,19 @@ function mapAgingTypeLabel(value: WineListApiItem['aging_type'], locale: Locale)
   if (value === 'reserve') return locale === 'ca' ? 'Reserva' : 'Reserva'
   if (value === 'grand_reserve') return locale === 'ca' ? 'Gran reserva' : 'Gran reserva'
   return 'n/d'
+}
+
+function mapWineGrapesLabel(payload: WineDetailsApiResponse): string {
+  const grapes = payload.wine?.grapes
+  if (!Array.isArray(grapes) || grapes.length === 0) {
+    return '-'
+  }
+
+  const names = grapes
+    .map((grape) => (typeof grape?.name === 'string' ? grape.name.trim() : ''))
+    .filter((name) => name !== '')
+
+  return names.length > 0 ? names.join(', ') : '-'
 }
 
 function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineCard {
@@ -703,8 +774,11 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
+  const [isDoDropdownOpen, setIsDoDropdownOpen] = useState(false)
+  const [doSearchText, setDoSearchText] = useState('')
   const [doLogoPreview, setDoLogoPreview] = useState<{ src: string; label: string } | null>(null)
   const [wines, setWines] = useState<WineCard[]>([])
+  const [doOptions, setDoOptions] = useState<DoApiItem[]>([])
 
   const t = DICT[locale]
   const isDark = theme === 'dark'
@@ -758,7 +832,36 @@ export default function App() {
         page += 1
       }
 
-      setWines(items.map((item) => mapWineListItemToWineCard(item, locale)))
+      const mappedItems = items.map((item) => mapWineListItemToWineCard(item, locale))
+      setWines(mappedItems)
+
+      const grapeEntries = await Promise.all(
+        items.map(async (item) => {
+          try {
+            const response = await fetch(`${base}/api/wines/${item.id}`, {
+              signal: controller.signal,
+              headers: { Accept: 'application/json' },
+            })
+            if (!response.ok) {
+              return [item.id, '-'] as const
+            }
+            const payload = await response.json() as WineDetailsApiResponse
+            return [item.id, mapWineGrapesLabel(payload)] as const
+          } catch {
+            return [item.id, '-'] as const
+          }
+        }),
+      )
+
+      if (controller.signal.aborted) {
+        return
+      }
+
+      const grapesByWineId = new Map<number, string>(grapeEntries)
+      setWines((current) => current.map((wine) => ({
+        ...wine,
+        grapes: grapesByWineId.get(wine.id) ?? wine.grapes,
+      })))
     }
 
     void loadWines().catch(() => {
@@ -769,6 +872,30 @@ export default function App() {
       controller.abort()
     }
   }, [locale])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const base = resolveApiBaseUrl()
+
+    void fetch(`${base}/api/dos`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+        const payload = await response.json() as DoApiResponse
+        setDoOptions(Array.isArray(payload.items) ? payload.items : [])
+      })
+      .catch(() => {
+        setDoOptions([])
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [])
 
   useEffect(() => {
     const shouldLockScroll = isMobileMenuOpen || isMobileFiltersOpen || isMobileSortOpen
@@ -789,6 +916,10 @@ export default function App() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        if (isDoDropdownOpen) {
+          setIsDoDropdownOpen(false)
+          return
+        }
         if (doLogoPreview) {
           setDoLogoPreview(null)
           return
@@ -806,7 +937,25 @@ export default function App() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [doLogoPreview, isMobileFiltersOpen, isMobileSortOpen])
+  }, [doLogoPreview, isDoDropdownOpen, isMobileFiltersOpen, isMobileSortOpen])
+
+  useEffect(() => {
+    if (!isDoDropdownOpen) {
+      return
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest('.do-combobox')) {
+        return
+      }
+      if (event.target instanceof Node) {
+        setIsDoDropdownOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', onPointerDown)
+    return () => window.removeEventListener('pointerdown', onPointerDown)
+  }, [isDoDropdownOpen])
 
   useEffect(() => {
     const onPopState = () => {
@@ -826,12 +975,88 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  const countries = useMemo(() => ['all', ...Array.from(new Set(wines.map((wine) => wine.country)))], [wines])
-  const regions = useMemo(() => ['all', ...Array.from(new Set(wines.map((wine) => wine.region)))], [wines])
+  const countries = useMemo(() => {
+    if (doOptions.length > 0) {
+      const labels = Array.from(new Set(doOptions.map((item) => countryCodeToLabel(item.country))))
+      labels.sort((a, b) => a.localeCompare(b))
+      return ['all', ...labels]
+    }
+    return ['all', ...Array.from(new Set(wines.map((wine) => wine.country)))]
+  }, [doOptions, wines])
+  const doFilterOptions = useMemo(() => {
+    if (doOptions.length > 0) {
+      return doOptions
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          region: item.region,
+          countryCode: item.country,
+          countryLabel: countryCodeToLabel(item.country),
+          doLogoImage: doLogoPathFromImageName(item.logo_image),
+        }))
+        .sort((a, b) => {
+          const byRegion = a.region.localeCompare(b.region)
+          if (byRegion !== 0) return byRegion
+          return a.name.localeCompare(b.name)
+        })
+    }
+
+    const entries = new Map<string, DoFilterOption>()
+    wines.forEach((wine, index) => {
+      const name = wine.region.trim()
+      if (name === '' || name === '-') return
+      const key = `${wine.country}::${name}`
+      if (!entries.has(key)) {
+        entries.set(key, {
+          id: index + 1,
+          name,
+          region: name,
+          countryCode: 'spain',
+          countryLabel: wine.country,
+          doLogoImage: wine.doLogoImage,
+        })
+      }
+    })
+
+    return Array.from(entries.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [doOptions, wines])
+  const doOptionsByCountry = useMemo(
+    () => (countryFilter === 'all' ? doFilterOptions : doFilterOptions.filter((item) => item.countryLabel === countryFilter)),
+    [countryFilter, doFilterOptions],
+  )
+  const filteredDoOptions = useMemo(() => {
+    const query = normalizeSearchText(doSearchText)
+    if (query === '') {
+      return doOptionsByCountry
+    }
+    return doOptionsByCountry.filter((item) => {
+      const name = normalizeSearchText(item.name)
+      const region = normalizeSearchText(item.region)
+      return name.includes(query) || region.includes(query)
+    })
+  }, [doOptionsByCountry, doSearchText])
+  const selectedDoOption = useMemo(
+    () => doFilterOptions.find((item) => item.name === regionFilter && (countryFilter === 'all' || item.countryLabel === countryFilter)) ?? null,
+    [countryFilter, doFilterOptions, regionFilter],
+  )
+  const selectedDoCommunityFlagPath = selectedDoOption?.countryCode === 'spain'
+    ? autonomousCommunityFlagPathForRegion(selectedDoOption.region)
+    : null
   const grapeOptions = useMemo(
     () => ['all', ...Array.from(new Set(wines.map((wine) => wine.grapes.split(/[,/]/)[0]?.trim()).filter(Boolean)))],
     [wines],
   )
+
+  useEffect(() => {
+    if (regionFilter === 'all') {
+      return
+    }
+
+    const exists = doOptionsByCountry.some((item) => item.name === regionFilter)
+    if (!exists) {
+      setRegionFilter('all')
+    }
+  }, [doOptionsByCountry, regionFilter])
 
   const filteredWines = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -909,6 +1134,8 @@ export default function App() {
     setTypeFilter('all')
     setCountryFilter('all')
     setRegionFilter('all')
+    setDoSearchText('')
+    setIsDoDropdownOpen(false)
     setGrapeFilter('all')
     setMinScoreFilter('all')
     setSortKey(DEFAULT_SORT)
@@ -1004,7 +1231,14 @@ export default function App() {
 
       <label>
         <span>{t.icons.country} {t.filters.country}</span>
-        <select value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)}>
+        <select
+          value={countryFilter}
+          onChange={(event) => {
+            setCountryFilter(event.target.value)
+            setDoSearchText('')
+            setIsDoDropdownOpen(false)
+          }}
+        >
           {countries.map((country) => (
             <option key={country} value={country}>
               {country === 'all' ? t.filters.allCountries : country}
@@ -1015,13 +1249,78 @@ export default function App() {
 
       <label>
         <span>{t.icons.region} {t.filters.region}</span>
-        <select value={regionFilter} onChange={(event) => setRegionFilter(event.target.value)}>
-          {regions.map((region) => (
-            <option key={region} value={region}>
-              {region === 'all' ? t.filters.allRegions : region}
-            </option>
-          ))}
-        </select>
+        <div className={`do-combobox${countryFilter === 'all' ? ' is-disabled' : ''}`}>
+          <button
+            type="button"
+            className="do-combobox-trigger"
+            aria-expanded={isDoDropdownOpen}
+            aria-haspopup="listbox"
+            onClick={() => {
+              if (countryFilter === 'all') {
+                return
+              }
+              setIsDoDropdownOpen((current) => !current)
+            }}
+            disabled={countryFilter === 'all'}
+          >
+            <span className="do-combobox-trigger-main">
+              {selectedDoOption ? (
+                <>
+                  {selectedDoCommunityFlagPath ? <img src={selectedDoCommunityFlagPath} alt="" className="do-combobox-flag" aria-hidden="true" /> : null}
+                  {selectedDoOption.doLogoImage ? <img src={selectedDoOption.doLogoImage} alt="" className="do-combobox-flag" aria-hidden="true" /> : null}
+                  <span>{selectedDoOption.countryCode === 'spain' ? selectedDoOption.name : `${selectedDoOption.region} · ${selectedDoOption.name}`}</span>
+                </>
+              ) : (
+                <span>{countryFilter === 'all' ? t.filters.allCountries : t.filters.allRegions}</span>
+              )}
+            </span>
+            <span className="do-combobox-caret" aria-hidden="true">▾</span>
+          </button>
+
+          {isDoDropdownOpen && countryFilter !== 'all' ? (
+            <div className="do-combobox-menu" role="listbox" aria-label={t.filters.region}>
+              <input
+                type="search"
+                className="do-combobox-search"
+                value={doSearchText}
+                onChange={(event) => setDoSearchText(event.target.value)}
+                placeholder={locale === 'ca' ? 'Filtrar D.O.' : 'Filtrar D.O.'}
+              />
+              <button
+                type="button"
+                role="option"
+                aria-selected={regionFilter === 'all'}
+                className={`do-combobox-option${regionFilter === 'all' ? ' is-selected' : ''}`}
+                onClick={() => {
+                  setRegionFilter('all')
+                  setIsDoDropdownOpen(false)
+                }}
+              >
+                <span>{t.filters.allRegions}</span>
+              </button>
+              {filteredDoOptions.map((item) => {
+                const communityFlag = item.countryCode === 'spain' ? autonomousCommunityFlagPathForRegion(item.region) : null
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="option"
+                    aria-selected={regionFilter === item.name}
+                    className={`do-combobox-option${regionFilter === item.name ? ' is-selected' : ''}`}
+                    onClick={() => {
+                      setRegionFilter(item.name)
+                      setIsDoDropdownOpen(false)
+                    }}
+                  >
+                    {communityFlag ? <img src={communityFlag} alt="" className="do-combobox-flag" aria-hidden="true" /> : null}
+                    {item.doLogoImage ? <img src={item.doLogoImage} alt="" className="do-combobox-flag" aria-hidden="true" /> : null}
+                    <span>{item.countryCode === 'spain' ? item.name : `${item.region} · ${item.name}`}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : null}
+        </div>
       </label>
 
       <label>

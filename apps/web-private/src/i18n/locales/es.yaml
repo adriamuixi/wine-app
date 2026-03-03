@@ -1,6 +1,5 @@
 common:
   appName: Els nostres vins
-  mockMode: Modo demo. Esta pantalla no llama a la API.
   menu: Menú
   logout: Cerrar sesión
   expandSidebar: Expandir barra lateral
@@ -131,7 +130,6 @@ admin:
       favoriteStyle: Vinos tintos
       lastLogin: Hoy · 21:45
 topbar:
-  mockDashboard: Dashboard
   overview: Resumen
   wines: Herramientas de vinos
   reviews: Mis reseñas
@@ -159,7 +157,6 @@ user:
 wineProfile:
   pageTitle: Perfil del vino
   backToDashboard: Volver al Dashboard
-  editWineMock: Editar vino
   photosEyebrow: Fotos
   photoRecordPreview: Vista previa PhotoRecord
   filesSuffix: archivos
@@ -185,84 +182,6 @@ wineProfile:
     front: Etiqueta frontal
     back: Etiqueta trasera
     situation: Situación
-  mock:
-    sectionTitles:
-      wineRecord: WineRecord · Identificación
-      regionDo: RegionDoRecord · Origen
-      grapes: WineGrapeRecord + GrapeRecord
-      placePurchase: PlaceRecord + compra
-      mediaAwardsReview: PhotoRecord + AwardRecord + resumen de reseña
-    fieldLabels:
-      id: ID
-      name: Nombre del vino
-      winery: Bodega
-      wineTypeEnum: Tipo de vino
-      agingTypeEnum: Crianza
-      vintageYear: Añada
-      alcoholPercentage: Alcohol (%)
-      pricePaid: Precio pagado
-      createdAt: Creado el
-      updatedAt: Actualizado el
-      countryEnum: País
-      regionDoName: Región / D.O.
-      regionDoCountry: País de la región
-      regionDoId: ID región / D.O.
-      grapeRows: Composición de uvas
-      purchasePlaceId: ID lugar de compra
-      placeTypeEnum: Tipo de lugar
-      placeName: Nombre del lugar
-      placeAddress: Dirección
-      placeCity: Ciudad
-      photoRecordsEnum: Tipos de foto
-      photoUrls: Archivos de fotos
-      awardNameEnum: Premio / fuente
-      awardScore: Puntuación del premio
-      awardYear: Año del premio
-      reviewBulletsEnum: Etiquetas de reseña
-    labels:
-      mockFk: FK
-      mockExtraHarvest: Vendimia (extra)
-      reviewSummaryMock: Resumen de reseña
-    templates:
-      mockFkValue: "{{id}} ({{mockFk}})"
-      recordsCount: "{{count}} registros"
-      grapeRowLabel: "uva_{{index}}"
-      grapeRowValue: "{{name}} · color: {{color}} · porcentaje: {{percentage}}"
-      harvestRange: "{{year}}-09-18 → {{year}}-10-02"
-      priceEur: "{{price}} EUR"
-      reviewSummary: "avg_score={{score}} · intensity_aroma=4 · acidity=3 · body=4 · persistence=4"
-    values:
-      photoUrlsMock: Botella / etiqueta frontal / etiqueta trasera (archivos en public/photos/wines)
-      placeAddressMock: Calle Provença 123
-      placeCityMock: Barcelona
-      placeNameRestaurant: Restaurant Cellar Table
-      placeNameSupermarket: Mercat Gourmet Center
-      agingYoung: joven
-      agingReserve: reserva
-      reviewBullets: elegante, mineral, gastronómico
-      countrySpain: españa
-      countryFrance: francia
-      countryPortugal: portugal
-      placeTypeRestaurant: restaurante
-      placeTypeSupermarket: supermercado
-      colorRed: tinto
-      colorWhite: blanco
-      photoTypeBottle: botella
-      photoTypeFrontLabel: etiqueta frontal
-      photoTypeBackLabel: etiqueta trasera
-      photoTypeSituation: situación
-    profile:
-      summaryRed: Vino estructurado, tanino pulido y final largo. Perfil gastronómico.
-      summaryOther: Perfil fresco, aromático y buena acidez. Muy versátil en mesa.
-      tags:
-        - Elegante
-        - Gastronómico
-        - Mineral
-      pairing:
-        - Arroces
-        - Carne blanca
-        - Quesos curados
-      servingNotes: Decantar 20 minutos si es joven. Servir en copa de tamaño medio.
 wineType:
   red: Tinto
   white: Blanco
