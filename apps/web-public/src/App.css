@@ -1,7 +1,7 @@
 .public-shell {
   position: relative;
   min-height: 100vh;
-  padding: 1.25rem;
+  padding: 1rem;
   color: var(--text);
 }
 
@@ -43,12 +43,12 @@
 
 .public-topbar {
   border-radius: 1.25rem;
-  padding: 0.85rem 1rem;
+  padding: 0.3rem 0.2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.8rem;
+  margin-bottom: 0.35rem;
   position: relative;
   flex-wrap: wrap;
 }
@@ -200,12 +200,12 @@
 
 .hero-panel {
   border-radius: 1.25rem;
-  padding: 1.15rem;
+  padding: 0.95rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 1rem;
+  gap: 0.7rem;
   align-items: start;
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
 }
 
 .eyebrow {
@@ -224,7 +224,7 @@
 }
 
 .hero-subtitle {
-  margin: 0.6rem 0 0;
+  margin: 0.3rem 0 0;
   color: var(--muted-strong);
   max-width: 64ch;
 }
@@ -258,17 +258,17 @@
 .catalog-layout {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: start;
 }
 
 .filters-panel {
   border-radius: 1.15rem;
-  padding: 1rem;
+  padding: 0.85rem;
   position: sticky;
   top: 1rem;
   display: grid;
-  gap: 0.8rem;
+  gap: 0.65rem;
 }
 
 .filters-header {
@@ -441,7 +441,7 @@
 
 .cards-panel {
   border-radius: 1.15rem;
-  padding: 0.95rem;
+  padding: 0.75rem;
 }
 
 .wine-card-mobile-summary {
@@ -451,7 +451,7 @@
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 0.95rem;
+  gap: 0.75rem;
 }
 
 .wine-card {
@@ -1474,7 +1474,7 @@
 
 .public-wine-thumbs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.6rem;
 }
 
@@ -1497,6 +1497,19 @@
   object-fit: cover;
   display: block;
   border-radius: 0.65rem;
+}
+
+.public-wine-thumb-label {
+  display: block;
+  margin-top: 0.24rem;
+  font-size: 0.66rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--muted-strong);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .public-wine-details {
@@ -1745,13 +1758,13 @@
   }
 
   .public-shell {
-    padding: 0.8rem;
+    padding: 0.65rem;
   }
 
   .public-topbar {
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
+    gap: 0.6rem;
+    padding: 0.65rem;
   }
 
   .topbar-actions {
@@ -1761,7 +1774,8 @@
 
   .brand-wordmark {
     max-width: 100%;
-    height: 34px;
+    height: 44px;
+    padding-left: 10px ;
   }
 
   .brand-icon {
@@ -1787,8 +1801,11 @@
   }
 
   .select-wrap select {
-    min-width: 5.3rem;
-    padding: 0.55rem 0.6rem;
+    min-width: 0;
+    width: 3.2rem;
+    height: 2.65rem;
+    padding: 0 0.3rem;
+    font-size: 0.8rem;
   }
 
   .mobile-header-icon-button {
@@ -1880,34 +1897,34 @@
 
   .mobile-filter-dropdown {
     display: grid;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
     position: relative;
   }
 
   .mobile-filter-bar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.45rem;
+    gap: 0.25rem;
     align-items: stretch;
   }
 
   .mobile-filter-active-bar {
     display: grid;
-    gap: 0.45rem;
+    gap: 0.25rem;
     border: 1px solid var(--line);
     border-radius: 1rem;
     background:
       radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 58%),
       color-mix(in srgb, var(--panel) 95%, transparent);
-    padding: 0.55rem 0.6rem;
+    padding: 0.25rem 0.25rem;
   }
 
   .mobile-filter-active-bar-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.2rem;
   }
 
   .mobile-filter-active-bar-title {
@@ -1921,7 +1938,7 @@
   .mobile-filter-active-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 0.25rem;
   }
 
   .mobile-filter-active-chip {
@@ -1936,7 +1953,7 @@
     align-items: center;
     gap: 0.38rem;
     max-width: 100%;
-    padding: 0.34rem 0.5rem 0.34rem 0.42rem;
+    padding: 0.24rem 0.5rem 0.34rem 0.42rem;
     min-height: 2rem;
   }
 
@@ -1986,7 +2003,7 @@
 
   .mobile-filter-trigger {
     width: 100%;
-    padding: 0.75rem 0.85rem;
+    padding: 0.35rem 0.85rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2298,7 +2315,7 @@
   }
 
   .hero-panel {
-    padding: 0.95rem;
+    padding: 0.75rem;
   }
 
   .hero-panel h1 {
@@ -2627,7 +2644,7 @@
   }
 
   .public-wine-thumbs {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .do-logo-tooltip .do-logo-tooltip-panel {

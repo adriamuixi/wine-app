@@ -49,14 +49,37 @@ type WineCard = {
   gallery: string[]
 }
 
-type DoApiItem = {
+type WineListApiItem = {
   id: number
   name: string
-  logo_image: string | null
+  winery: string | null
+  wine_type: 'red' | 'white' | 'rose' | 'sparkling' | 'sweet' | 'fortified' | null
+  aging_type: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
+  country: 'spain' | 'france' | 'italy' | 'portugal' | 'germany' | 'argentina' | 'chile' | 'united_states' | 'south_africa' | 'australia' | null
+  do: {
+    id: number
+    name: string
+    logo_image: string | null
+  } | null
+  vintage_year: number | null
+  avg_score: number | null
+  updated_at: string
+  photos: Array<{
+    type: 'front_label' | 'back_label' | 'bottle' | 'situation'
+    url: string
+  }>
 }
 
-type DoApiResponse = {
-  items: DoApiItem[]
+type WineListApiResponse = {
+  items: WineListApiItem[]
+  pagination: {
+    page: number
+    limit: number
+    total_items: number
+    total_pages: number
+    has_next: boolean
+    has_prev: boolean
+  }
 }
 
 type Dictionary = {
@@ -372,67 +395,8 @@ const SHARED_GALLERY = [
   DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
   DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
   DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
 ]
-
-type JournalWineRow = {
-  date: string
-  month: string
-  wine: string
-  typeCa: string
-  grapes: string
-  aging: string
-  region: string
-  vintage: number | null
-  alcohol: string
-  techSheet: boolean
-  maria: string
-  adria: string
-  place: string
-  city: string
-}
-
-const CATALAN_JOURNAL_ROWS: JournalWineRow[] = [
-  { date: '26/9/2020', month: 'Setembre', wine: 'Lo cometa', typeCa: 'Blanc', grapes: 'Garnatxa', aging: 'jove', region: 'Terra Alta', vintage: 2019, alcohol: '13,5 %', techSheet: true, maria: '7', adria: '7,5', place: 'Celler del nou priorat', city: 'Barcelona (Sants)' },
-  { date: '27/9/2020', month: 'Setembre', wine: 'Compte ovelles', typeCa: 'Negre', grapes: 'Syrah / Cabernet sauvignon / Merlot', aging: 'jove', region: 'Penedès', vintage: 2020, alcohol: '13 %', techSheet: true, maria: '5', adria: '5,75', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '9/10/2020', month: 'Octubre', wine: 'Seré 2018', typeCa: 'Negre', grapes: 'Garnatxa / Carinyena', aging: 'criança', region: 'Montsant', vintage: 2018, alcohol: '14,5 %', techSheet: true, maria: '6,5', adria: '6,25', place: 'Taberna La Parra', city: 'Barcelona (Hostafrancs)' },
-  { date: '9/10/2020', month: 'Octubre', wine: 'Vega de Nava', typeCa: 'Negre', grapes: 'Tempranillo', aging: 'reserva', region: 'Ribera del Duero', vintage: 2018, alcohol: '14 %', techSheet: true, maria: '8', adria: '8', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '23/10/2020', month: 'Octubre', wine: 'Chateldon', typeCa: 'Negre', grapes: 'Cabernet sauvignon', aging: 'reserva', region: 'Penedès', vintage: 2019, alcohol: '13,5 %', techSheet: true, maria: '8.6', adria: '9.5', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '24/10/2020', month: 'Octubre', wine: 'Matsu - el pícaro', typeCa: 'Negre', grapes: 'Tinta de toro', aging: 'jove', region: 'Toro', vintage: 2020, alcohol: '14,5 %', techSheet: true, maria: '7,5', adria: '8', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '6/11/2020', month: 'Novembre', wine: 'Titella', typeCa: 'Negre', grapes: 'Garnatxa, carinyena, merlot, tempranillo', aging: 'jove', region: 'Montsant', vintage: 2017, alcohol: '13,5 %', techSheet: true, maria: '8', adria: '8,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '8/11/2020', month: 'Novembre', wine: 'Ulldemolins', typeCa: 'Negre', grapes: 'Garnatxa', aging: 'criança', region: 'Montsant', vintage: 2016, alcohol: '14,5%', techSheet: true, maria: '6,5', adria: '6,75', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '20/11/2020', month: 'Novembre', wine: 'Clot d’encís blanc de negres', typeCa: 'Blanc', grapes: 'Garnatxa', aging: 'jove', region: 'Terra Alta', vintage: 2019, alcohol: '14%', techSheet: true, maria: '7,5', adria: '7,15', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '21/11/2020', month: 'Novembre', wine: 'Ninín', typeCa: 'Negre', grapes: 'Tempranillo', aging: 'criança', region: 'Ribera del Duero', vintage: 2018, alcohol: '14%', techSheet: true, maria: '6,75', adria: '6,9', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '1/12/2020', month: 'Desembre', wine: 'Roca Blanca', typeCa: 'Negre', grapes: 'Garnatxa, mazuela, syrah', aging: 'criança', region: 'Montsant', vintage: 2016, alcohol: '13,5%', techSheet: true, maria: '6', adria: '4,25', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '4/12/2020', month: 'Desembre', wine: 'Enate', typeCa: 'Negre', grapes: 'Cabernet sauvignon, merlot', aging: 'jove', region: 'Somontano', vintage: 2017, alcohol: '15%', techSheet: true, maria: '7', adria: '8', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '6/12/2020', month: 'Desembre', wine: 'Fulget', typeCa: 'Blanc', grapes: 'Albariño', aging: '', region: 'Rías Baixas', vintage: 2019, alcohol: '12%', techSheet: true, maria: '6,5', adria: '5,5', place: "A'rogueira", city: 'Barcelona (Eixample)' },
-  { date: '15/12/2020', month: 'Desembre', wine: 'Roca blanca', typeCa: 'Negre', grapes: 'Garnatxa / carinyena / sirah', aging: 'criança', region: 'Montsant', vintage: 2016, alcohol: '13,5 %', techSheet: true, maria: '5,5', adria: '4,67', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '19/12/2020', month: 'Desembre', wine: 'Castillo de Albai', typeCa: 'Negre', grapes: 'Tempranillo', aging: 'reserva', region: 'Rioja', vintage: 2016, alcohol: '13.5 %', techSheet: true, maria: '7', adria: '7,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '24/12/2020', month: 'Desembre', wine: 'Acústic', typeCa: 'Negre', grapes: 'Garnatxa / carinyena', aging: 'criança', region: 'Montsant', vintage: 2018, alcohol: '15 %', techSheet: true, maria: '9,2', adria: '8,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '25/12/2020', month: 'Desembre', wine: 'Matsu - el recio', typeCa: 'Negre', grapes: 'Tinta de toro', aging: 'criança', region: 'Toro', vintage: null, alcohol: '', techSheet: false, maria: '9', adria: '7,8', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '26/12/2020', month: 'Desembre', wine: 'Roureda', typeCa: 'Negre', grapes: 'Tempranillo / Cabernet sauvignon / Merlot', aging: 'reserva', region: 'Tarragona', vintage: 2016, alcohol: '13 %', techSheet: true, maria: '', adria: '', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '15/1/2021', month: 'Gener', wine: 'Almodí', typeCa: 'Negre', grapes: 'Garnatxa', aging: 'jove', region: 'Terra Alta', vintage: 2019, alcohol: '14,5 %', techSheet: true, maria: '7,5', adria: '7,5', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '23/1/2021', month: 'Gener', wine: 'Muga', typeCa: 'Negre', grapes: 'Tempranillo / Garnatxa / Graciano', aging: 'criança', region: 'Rioja', vintage: 2017, alcohol: '14 %', techSheet: true, maria: '8', adria: '7', place: 'Casa Tat', city: 'Hospitalet del Llobregat' },
-  { date: '29/1/2012', month: 'Gener', wine: "L'isard", typeCa: 'Negre', grapes: 'Garnatxa', aging: 'jove', region: 'Penedès', vintage: 2019, alcohol: '13,5 %', techSheet: false, maria: '7,7', adria: '7,1', place: 'Casa Rosset', city: 'Barcelona (Eixample)' },
-  { date: '19/2/2021', month: 'Febrer', wine: 'Sumarroca classic', typeCa: 'Negre', grapes: 'Merlot / Cabernet sauvignon / Tempranillo', aging: 'jove', region: 'Penedès', vintage: 2019, alcohol: '', techSheet: false, maria: '7', adria: '8', place: 'Casa Rosset', city: '' },
-  { date: '12/3/2021', month: 'Març', wine: 'Condado de Teón', typeCa: 'Negre', grapes: 'Tinta del país', aging: 'criança', region: 'Ribera del Duero', vintage: 2018, alcohol: '14 %', techSheet: false, maria: '6,5', adria: '6,1', place: 'Casa Tat', city: '' },
-  { date: '23/4/2021', month: 'Abril', wine: 'Rosum', typeCa: 'Negre', grapes: 'Tempranillo', aging: 'criança', region: 'Toro', vintage: 2017, alcohol: '14,5 %', techSheet: false, maria: '8,5', adria: '7,1', place: 'Casa Tat', city: '' },
-]
-
-function parseJournalScore(value: string): number | null {
-  const normalized = value.trim().replace(',', '.')
-  if (!normalized) return null
-  const num = Number(normalized)
-  return Number.isFinite(num) ? num : null
-}
-
-function mapTypeFromCa(value: string, wineName: string): WineType {
-  const text = value.trim().toLowerCase()
-  if (text.includes('blanc')) return 'white'
-  if (text.includes('rosat')) return 'rose'
-  if (text.includes('escum')) return 'sparkling'
-  if (wineName.toLowerCase().includes('classic') || wineName.toLowerCase().includes('cava')) return 'sparkling'
-  return 'red'
-}
 
 function buildReward(avgScore: number, region: string): WineCard['reward'] | undefined {
   if (avgScore < 88) return undefined
@@ -560,63 +524,107 @@ function autonomousCommunityNameForRegion(region: string): string | null {
   return map[region] ?? null
 }
 
-const imageCycle = [
-  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
-  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
-  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
-] as const
+function resolveApiAssetUrl(path: string): string {
+  const trimmed = path.trim()
+  if (trimmed === '') {
+    return DEFAULT_PUBLIC_WINE_IMAGE_LIGHT
+  }
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed
+  }
+  const base = resolveApiBaseUrl()
+  return trimmed.startsWith('/') ? `${base}${trimmed}` : `${base}/${trimmed}`
+}
 
-const MOCK_WINES: WineCard[] = CATALAN_JOURNAL_ROWS.map((row, index) => {
-  const maria = parseJournalScore(row.maria)
-  const adria = parseJournalScore(row.adria)
-  const avgTen = maria != null && adria != null ? (maria + adria) / 2 : (maria ?? adria ?? 6.8)
-  const avgScore = Math.round(avgTen * 100) / 10
-  const type = mapTypeFromCa(row.typeCa, row.wine)
-  const priceFrom = Number((9 + (avgTen * 1.9) + ((index % 5) * 1.75)).toFixed(2))
-  const tags = [
-    row.region,
-    row.aging || 'sense criança',
-    row.grapes.split(/[,/]/)[0]?.trim() || 'vi',
-  ].filter(Boolean)
-  const image = imageCycle[index % imageCycle.length]
-  const gallery = index % 3 === 1 ? [...SHARED_GALLERY].reverse() : SHARED_GALLERY
-  const technicalLabel = row.techSheet ? 'Fitxa tècnica disponible' : 'Sense fitxa tècnica'
-  const scoreLabel = maria != null && adria != null ? `Maria ${maria.toFixed(2)} · Adrià ${adria.toFixed(2)}` : maria != null ? `Maria ${maria.toFixed(2)}` : adria != null ? `Adrià ${adria.toFixed(2)}` : 'Sense puntuacions'
+function mapApiWineType(value: WineListApiItem['wine_type']): WineType {
+  if (value === 'white' || value === 'rose' || value === 'sparkling') {
+    return value
+  }
+  return 'red'
+}
+
+function countryCodeToLabel(value: WineListApiItem['country']): string {
+  const map: Record<NonNullable<WineListApiItem['country']>, string> = {
+    spain: 'Spain',
+    france: 'France',
+    italy: 'Italy',
+    portugal: 'Portugal',
+    germany: 'Germany',
+    argentina: 'Argentina',
+    chile: 'Chile',
+    united_states: 'United States',
+    south_africa: 'South Africa',
+    australia: 'Australia',
+  }
+  if (!value) return 'Spain'
+  return map[value]
+}
+
+function mapAgingTypeLabel(value: WineListApiItem['aging_type'], locale: Locale): string {
+  if (value === 'young') return locale === 'ca' ? 'Jove' : 'Joven'
+  if (value === 'crianza') return locale === 'ca' ? 'Criança' : 'Crianza'
+  if (value === 'reserve') return locale === 'ca' ? 'Reserva' : 'Reserva'
+  if (value === 'grand_reserve') return locale === 'ca' ? 'Gran reserva' : 'Gran reserva'
+  return 'n/d'
+}
+
+function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineCard {
+  const byType: Record<'bottle' | 'front_label' | 'back_label' | 'situation', string> = {
+    bottle: DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+    front_label: DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+    back_label: DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+    situation: DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+  }
+
+  ;(item.photos ?? []).forEach((photo) => {
+    if (!photo?.url || !photo?.type) return
+    byType[photo.type] = resolveApiAssetUrl(photo.url)
+  })
+
+  const gallery = [byType.bottle, byType.front_label, byType.back_label, byType.situation]
+  const avgScore = typeof item.avg_score === 'number' && Number.isFinite(item.avg_score)
+    ? Math.round(item.avg_score * 10) / 10
+    : 0
+  const updatedAt = new Date(item.updated_at)
+  const dateLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
+  const tastedAt = Number.isNaN(updatedAt.getTime())
+    ? '-'
+    : new Intl.DateTimeFormat(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(updatedAt)
+  const month = Number.isNaN(updatedAt.getTime())
+    ? '-'
+    : new Intl.DateTimeFormat(dateLocale, { month: 'long' }).format(updatedAt)
+  const region = item.do?.name?.trim() || '-'
+  const type = mapApiWineType(item.wine_type)
 
   return {
-    id: index + 1,
-    name: row.wine,
-    winery: row.place,
-    country: 'Spain',
-    region: row.region,
+    id: item.id,
+    name: item.name?.trim() || '-',
+    winery: item.winery?.trim() || '-',
+    country: countryCodeToLabel(item.country),
+    region,
     type,
-    vintage: row.vintage ?? 2019,
+    vintage: item.vintage_year ?? new Date().getFullYear(),
     avgScore,
-    priceFrom,
-    tastedAt: row.date,
-    month: row.month,
-    grapes: row.grapes,
-    aging: row.aging || 'n/d',
-    alcohol: row.alcohol || 'n/d',
-    mariaScore: maria,
-    adriaScore: adria,
-    place: row.place,
-    city: row.city || 'n/d',
-    techSheet: row.techSheet,
-    reward: buildReward(avgScore, row.region),
-    doLogoImage: undefined,
-    rewardBadgeImage:
-      index === 0 ? '/images/icons/awards/penin/thumbs-80/penin-91.png'
-        : index === 1 ? '/images/icons/awards/penin/thumbs-80/penin-93.png'
-          : index === 2 ? '/images/icons/awards/penin/thumbs-80/penin-86.png'
-            : index === 3 ? '/images/icons/awards/penin/thumbs-80/penin-95.png'
-              : undefined,
-    notes: `${row.month} · ${row.region}. ${technicalLabel}. ${scoreLabel}.`,
-    tags,
-    image,
+    priceFrom: 0,
+    tastedAt,
+    month,
+    grapes: '-',
+    aging: mapAgingTypeLabel(item.aging_type, locale),
+    alcohol: 'n/d',
+    mariaScore: null,
+    adriaScore: null,
+    place: item.winery?.trim() || '-',
+    city: '-',
+    techSheet: false,
+    reward: buildReward(avgScore, region),
+    doLogoImage: doLogoPathFromImageName(item.do?.logo_image),
+    rewardBadgeImage: undefined,
+    notes: '',
+    tags: [region, type],
+    image: byType.bottle,
     gallery,
   }
-})
+}
 
 function getInitialTheme(): ThemeMode {
   if (typeof window === 'undefined') return 'light'
@@ -696,10 +704,13 @@ export default function App() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
   const [doLogoPreview, setDoLogoPreview] = useState<{ src: string; label: string } | null>(null)
-  const [wines, setWines] = useState<WineCard[]>(MOCK_WINES)
+  const [wines, setWines] = useState<WineCard[]>([])
 
   const t = DICT[locale]
   const isDark = theme === 'dark'
+  const galleryPhotoLabels = locale === 'ca'
+    ? ['Ampolla', 'Etiqueta frontal', 'Etiqueta posterior', 'Context']
+    : ['Botella', 'Etiqueta frontal', 'Etiqueta posterior', 'Contexto']
   const logoSrc = isDark ? 'images/brand/logo-wordmark-dark.png' : 'images/brand/logo-wordmark-light.png'
   const adminHref = useMemo(() => {
     const host = window.location.hostname
@@ -723,38 +734,41 @@ export default function App() {
   useEffect(() => {
     const controller = new AbortController()
 
-    fetch(`${resolveApiBaseUrl()}/api/dos`, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-    })
-      .then(async (response) => {
+    const loadWines = async () => {
+      const items: WineListApiItem[] = []
+      let page = 1
+      const limit = 100
+      const base = resolveApiBaseUrl()
+
+      while (true) {
+        const response = await fetch(`${base}/api/wines?page=${page}&limit=${limit}`, {
+          signal: controller.signal,
+          headers: { Accept: 'application/json' },
+        })
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`)
         }
 
-        const payload = await response.json() as DoApiResponse
-        const logoByName = new Map<string, string>()
+        const payload = await response.json() as WineListApiResponse
+        items.push(...payload.items)
 
-        payload.items.forEach((item) => {
-          const logoPath = doLogoPathFromImageName(item.logo_image)
-          if (!logoPath) {
-            return
-          }
-          logoByName.set(normalizeText(item.name), logoPath)
-        })
+        if (!payload.pagination.has_next) {
+          break
+        }
+        page += 1
+      }
 
-        setWines((current) => current.map((wine) => ({
-          ...wine,
-          doLogoImage: logoByName.get(normalizeText(wine.region)),
-        })))
-      })
-      .catch(() => {
-      })
+      setWines(items.map((item) => mapWineListItemToWineCard(item, locale)))
+    }
+
+    void loadWines().catch(() => {
+      setWines([])
+    })
 
     return () => {
       controller.abort()
     }
-  }, [])
+  }, [locale])
 
   useEffect(() => {
     const shouldLockScroll = isMobileMenuOpen || isMobileFiltersOpen || isMobileSortOpen
@@ -1071,7 +1085,6 @@ export default function App() {
 
       <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
         <div className="brand-block">
-          <img src="images/brand/icon-square-64.png" className="brand-icon" alt="" aria-hidden="true" />
           <div className="brand-copy">
             <img src={logoSrc} className="brand-wordmark" alt="Vins Tat & Rosset" />
             <p>{t.appName}</p>
@@ -1115,8 +1128,8 @@ export default function App() {
           <label className="select-wrap">
             <span className="sr-only">{t.topbar.language}</span>
             <select value={locale} onChange={(event) => setLocale(event.target.value as Locale)} aria-label={t.topbar.language}>
-              <option value="ca">Català</option>
-              <option value="es">Español</option>
+              <option value="ca">CA</option>
+              <option value="es">ES</option>
             </select>
           </label>
 
@@ -1164,8 +1177,8 @@ export default function App() {
 
       <section className="hero-panel" id="catalog">
         <div>
-          <p className="eyebrow">VINS · PUBLIC CATALOG</p>
-          <h1>{t.title}</h1>
+          <p className="eyebrow">ELS NOSTRES VINS</p>
+          <h1>Catàleg de vins</h1>
         </div>
       </section>
 
@@ -1390,21 +1403,13 @@ export default function App() {
                             </span>
                           ) : null}
                           {wine.doLogoImage ? (
-                            <button
-                              type="button"
-                              className="do-logo-tooltip do-logo-tooltip-clickable do-logo-inline-button"
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                setDoLogoPreview({ src: wine.doLogoImage!, label: wine.region })
-                              }}
-                              aria-label={`${wine.region} DO`}
-                            >
+                            <span className="do-logo-tooltip" aria-label={`${wine.region} DO`}>
                               <img className="do-logo-badge" src={wine.doLogoImage} alt={`${wine.region} DO`} loading="lazy" />
                               <span className="do-logo-tooltip-panel" role="tooltip" aria-hidden="true">
                                 <img src={wine.doLogoImage} alt="" loading="lazy" />
                                 <span>{wine.region}</span>
                               </span>
-                            </button>
+                            </span>
                           ) : null}
                           <span>{wine.region}</span>
                         </dd>
@@ -1533,23 +1538,29 @@ export default function App() {
                   />
                 </div>
                 <div className="public-wine-thumbs" aria-label={t.modal.gallery}>
-                  {selectedWine.gallery.map((src, index) => (
+                  {selectedWine.gallery.map((src, index) => {
+                    const photoLabel = galleryPhotoLabels[index] ?? `${t.modal.gallery} ${index + 1}`
+                    return (
                     <button
                       key={`${selectedWine.id}-${src}-${index}`}
                       type="button"
                       className={`public-wine-thumb ${activeModalImageIndex === index ? 'active' : ''}`}
                       onClick={() => setActiveModalImageIndex(index)}
+                      aria-label={photoLabel}
+                      title={photoLabel}
                     >
                       <img
                         src={resolvePublicWineImageForTheme(src, isDark)}
-                        alt={`${selectedWine.name} ${index + 1}`}
+                        alt={`${selectedWine.name} · ${photoLabel}`}
                         loading="lazy"
                         onError={(event) => {
                           event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
                         }}
                       />
+                      <span className="public-wine-thumb-label">{photoLabel}</span>
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
 

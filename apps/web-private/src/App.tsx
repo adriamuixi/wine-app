@@ -1548,17 +1548,17 @@ function App() {
 
   const metrics = useMemo(
     () => ({
-      totalWines: mockWines.length,
+      totalWines: wineItems.length,
       totalReviews: 124,
-      myReviews: mockReviews.length,
-      averageRed: averageScore(mockWines, 'red'),
-      averageWhite: averageScore(mockWines, 'white'),
+      myReviews: myReviewEntries.length,
+      averageRed: averageScore(wineItems, 'red'),
+      averageWhite: averageScore(wineItems, 'white'),
     }),
-    [],
+    [wineItems, myReviewEntries],
   )
 
   const dashboardAnalytics = useMemo(() => {
-    const scoredWines = mockWines.filter((wine) => wine.averageScore != null)
+    const scoredWines = wineItems.filter((wine) => wine.averageScore != null)
     const scoreValues = scoredWines.map((wine) => wine.averageScore as number)
     const scoreMedian = median(scoreValues)
     const scoreStdDev = standardDeviation(scoreValues)
@@ -1570,9 +1570,9 @@ function App() {
     const scoreSpread = scoredWines.length > 0
       ? Math.max(...scoredWines.map((wine) => wine.averageScore ?? 0)) - Math.min(...scoredWines.map((wine) => wine.averageScore ?? 0))
       : 0
-    const averagePrice = mockWines.reduce((sum, wine) => sum + wine.pricePaid, 0) / mockWines.length
-    const minPrice = Math.min(...mockWines.map((wine) => wine.pricePaid))
-    const maxPrice = Math.max(...mockWines.map((wine) => wine.pricePaid))
+    const averagePrice = wineItems.length ? (wineItems.reduce((sum, wine) => sum + wine.pricePaid, 0) / wineItems.length) : 0
+    const minPrice = wineItems.length ? Math.min(...wineItems.map((wine) => wine.pricePaid)) : 0
+    const maxPrice = wineItems.length ? Math.max(...wineItems.map((wine) => wine.pricePaid)) : 0
     const maxScore = Math.max(...scoreValues)
     const minScore = Math.min(...scoreValues)
     const approvedCount = scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 70).length
@@ -1635,7 +1635,7 @@ function App() {
       return { type, count: wines.length, avg }
     })
 
-    const awards = mockWines.map((wine) => ({
+    const awards = wineItems.map((wine) => ({
       hasAward: wine.id % 5 !== 0,
       awardName: wine.id % 2 === 0 ? 'decanter' : 'penin',
     }))
@@ -1725,22 +1725,7 @@ function App() {
       ? median(topValueWines.map((wine) => wine.pricePaid))
       : averagePrice
 
-    const coupleRows = journalWineRows
-      .map((row) => {
-        const maria = parseJournalScore(row.maria)
-        const adria = parseJournalScore(row.adria)
-        if (maria == null || adria == null) {
-          return null
-        }
-        return {
-          wine: row.wine,
-          region: row.region,
-          maria,
-          adria,
-          diff: Math.abs(maria - adria),
-        }
-      })
-      .filter((row): row is { wine: string; region: string; maria: number; adria: number; diff: number } => row !== null)
+    const coupleRows: Array<{ wine: string; region: string; maria: number; adria: number; diff: number }> = []
     const mariaAvg = coupleRows.length ? coupleRows.reduce((sum, row) => sum + row.maria, 0) / coupleRows.length : 0
     const adriaAvg = coupleRows.length ? coupleRows.reduce((sum, row) => sum + row.adria, 0) / coupleRows.length : 0
     const disagreementCount = coupleRows.filter((row) => row.diff > 2).length
@@ -3963,7 +3948,7 @@ function App() {
             {labels.reviews.create.wine}
             <select name="wine_id" defaultValue={preset.wineId}>
               <option value="" disabled>{labels.reviews.create.selectWine}</option>
-              {(wineItems.length > 0 ? wineItems : mockWines).map((wine) => (
+              {wineItems.map((wine) => (
                 <option
                   key={wine.id}
                   value={wine.id}
@@ -4538,7 +4523,7 @@ function App() {
                     <div
                       className="awards-donut-ring"
                       style={{
-                        background: `conic-gradient(#8f3851 0 ${(dashboardAnalytics.awardsWith / Math.max(1, mockWines.length)) * 360}deg, rgba(82,46,28,0.12) 0 360deg)`,
+                        background: `conic-gradient(#8f3851 0 ${(dashboardAnalytics.awardsWith / Math.max(1, wineItems.length)) * 360}deg, rgba(82,46,28,0.12) 0 360deg)`,
                       }}
                     />
                     <div className="awards-donut-center">
@@ -5700,7 +5685,7 @@ function App() {
                 </div>
                 <div>
                   <dt>{labels.admin.account.labels.myReviews}</dt>
-                  <dd>{mockReviews.length}</dd>
+                  <dd>{myReviewEntries.length}</dd>
                 </div>
                 <div>
                   <dt>{labels.admin.account.labels.favoriteStyle}</dt>
