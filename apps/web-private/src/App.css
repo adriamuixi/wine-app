@@ -3768,7 +3768,7 @@ code {
 
 @media (min-width: 1101px) {
   .review-card {
-    grid-template-columns: minmax(0, 40%) minmax(0, 30%) minmax(0, 20%);
+    grid-template-columns: minmax(0, 34%) minmax(0, 46%) minmax(0, 20%);
     align-items: center;
     column-gap: 0.8rem;
   }
@@ -3785,7 +3785,7 @@ code {
 
   .review-metrics-col .review-metrics-grid.review-metrics-grid-inline {
     justify-content: flex-start;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
 }
 
@@ -3876,6 +3876,28 @@ code {
   margin-top: 0.9rem;
   padding-top: 0.8rem;
   border-top: 1px solid rgba(82, 46, 28, 0.08);
+}
+
+.review-list-filter {
+  display: grid;
+  gap: 0.3rem;
+  min-width: min(320px, 100%);
+}
+
+.review-list-filter span {
+  color: #7b6a60;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.review-list-filter select {
+  min-height: 42px;
+  border-radius: 12px;
+  border: 1px solid #dbc8b5;
+  background: #fffdf9;
+  color: #241a14;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
 }
 
 .detail-grid {
@@ -4433,6 +4455,11 @@ code {
     white-space: nowrap;
   }
 
+  .review-list-filter {
+    width: 100%;
+    min-width: 0;
+  }
+
   .dashboard-content {
     gap: 0.75rem;
     padding: 0.85rem 0.75rem 5.7rem;
@@ -4517,18 +4544,20 @@ code {
   }
 
   .review-metrics-line {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    overflow-x: visible;
     padding-bottom: 0.2rem;
     -webkit-overflow-scrolling: touch;
   }
 
   .review-metrics-grid.review-metrics-grid-inline {
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
   }
 
   .review-metrics-grid div {
-    width: 78px;
+    width: 100%;
     height: 78px;
     padding: 0;
   }

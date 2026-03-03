@@ -976,6 +976,7 @@ function App() {
   const [myReviewSummaryError, setMyReviewSummaryError] = useState<string | null>(null)
   const [reviewTotalWines, setReviewTotalWines] = useState(0)
   const [reviewListReloadToken, setReviewListReloadToken] = useState(0)
+  const [reviewWineFilter, setReviewWineFilter] = useState<'all' | number>('all')
   const [reviewFormSubmitting, setReviewFormSubmitting] = useState(false)
   const [reviewFormError, setReviewFormError] = useState<string | null>(null)
   const [reviewSuccessToast, setReviewSuccessToast] = useState<string | null>(null)
@@ -2888,6 +2889,29 @@ function App() {
     () => new Set(myReviewEntries.map((entry) => entry.wine.id)),
     [myReviewEntries],
   )
+  const reviewWineFilterOptions = useMemo(
+    () => myReviewEntries
+      .map((entry) => ({ id: entry.wine.id, name: entry.wine.name }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [myReviewEntries],
+  )
+  const filteredMyReviewEntries = useMemo(
+    () => (reviewWineFilter === 'all'
+      ? myReviewEntries
+      : myReviewEntries.filter((entry) => entry.wine.id === reviewWineFilter)),
+    [myReviewEntries, reviewWineFilter],
+  )
+
+  useEffect(() => {
+    if (reviewWineFilter === 'all') {
+      return
+    }
+    const stillExists = myReviewEntries.some((entry) => entry.wine.id === reviewWineFilter)
+    if (!stillExists) {
+      setReviewWineFilter('all')
+    }
+  }, [myReviewEntries, reviewWineFilter])
+
   const createReviewPreset = (() => {
     return buildReviewFormPreset(null)
   })()
@@ -5150,10 +5174,25 @@ function App() {
                     <p className="eyebrow">{locale === 'ca' ? 'MEVES RESSENYES' : 'MIS RESEÑAS'}</p>
                     <h3>{locale === 'ca' ? 'Llistat de ressenyes de la teva compte' : 'Listado de reseñas de tu cuenta'}</h3>
                   </div>
+                  <label className="review-list-filter">
+                    <span>{locale === 'ca' ? 'Filtrar per vi' : 'Filtrar por vino'}</span>
+                    <select
+                      value={reviewWineFilter === 'all' ? 'all' : String(reviewWineFilter)}
+                      onChange={(event) => {
+                        const value = event.target.value
+                        setReviewWineFilter(value === 'all' ? 'all' : Number(value))
+                      }}
+                    >
+                      <option value="all">{locale === 'ca' ? 'Tots els vins' : 'Todos los vinos'}</option>
+                      {reviewWineFilterOptions.map((option) => (
+                        <option key={`review-filter-${option.id}`} value={option.id}>{option.name}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
 
                 <div className="list-stack">
-                  {myReviewEntries.length > 0 ? myReviewEntries.map((entry) => {
+                  {filteredMyReviewEntries.length > 0 ? filteredMyReviewEntries.map((entry) => {
                     const doRegion = entry.wine.doName ?? entry.wine.region
                     const doLabel = doRegion && doRegion !== '-'
                       ? doRegion
@@ -5265,7 +5304,11 @@ function App() {
                     </article>
                     )
                   }) : (
-                    <p className="muted">{locale === 'ca' ? 'Encara no has creat ressenyes.' : 'Todavía no has creado reseñas.'}</p>
+                    <p className="muted">
+                      {reviewWineFilter === 'all'
+                        ? (locale === 'ca' ? 'Encara no has creat ressenyes.' : 'Todavía no has creado reseñas.')
+                        : (locale === 'ca' ? 'No hi ha ressenyes per aquest vi.' : 'No hay reseñas para este vino.')}
+                    </p>
                   )}
                 </div>
               </section>
