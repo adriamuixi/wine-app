@@ -2248,6 +2248,11 @@ function App() {
     }
 
     const query = window.matchMedia('(max-width: 640px)')
+    type LegacyMediaQueryList = MediaQueryList & {
+      addListener?: (listener: (event: MediaQueryListEvent) => void) => void
+      removeListener?: (listener: (event: MediaQueryListEvent) => void) => void
+    }
+    const legacyQuery = query as LegacyMediaQueryList
     const onChange = (event: MediaQueryListEvent) => {
       setIsMobileViewport(event.matches)
     }
@@ -2255,14 +2260,14 @@ function App() {
     setIsMobileViewport(query.matches)
     if ('addEventListener' in query) {
       query.addEventListener('change', onChange)
-    } else {
-      query.addListener(onChange)
+    } else if (legacyQuery.addListener) {
+      legacyQuery.addListener(onChange)
     }
     return () => {
       if ('removeEventListener' in query) {
         query.removeEventListener('change', onChange)
-      } else {
-        query.removeListener(onChange)
+      } else if (legacyQuery.removeListener) {
+        legacyQuery.removeListener(onChange)
       }
     }
   }, [])
