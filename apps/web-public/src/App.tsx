@@ -49,6 +49,16 @@ type WineCard = {
   gallery: string[]
 }
 
+type DoApiItem = {
+  id: number
+  name: string
+  logo_image: string | null
+}
+
+type DoApiResponse = {
+  items: DoApiItem[]
+}
+
 type Dictionary = {
   appName: string
   title: string
@@ -425,30 +435,26 @@ function splitGrapeVarieties(grapes: string): string[] {
     .filter(Boolean)
 }
 
-function doLogoPathForRegion(region: string): string | undefined {
-  const map: Record<string, string> = {
-    'Penedès': '/images/icons/DO/penedes_DO.png',
-    Montsant: '/images/icons/DO/montanst_DO.png',
-    'Ribera del Duero': '/images/icons/DO/ribera_del_duero_DO.png',
-    Somontano: '/images/icons/DO/somontano_DO.jpg',
-    Toro: '/images/icons/DO/toro_DO.jpg',
-    Rioja: '/images/icons/DO/rioja_DO.png',
-    Tarragona: '/images/icons/DO/tarragona_DO.png',
-    'Terra Alta': '/images/icons/DO/terra_alta_DO.png',
-    Priorat: '/images/icons/DO/priorat_DO.png',
-    'Conca de Barberà': '/images/icons/DO/conca_de_barbera_DO.jpg',
-    'Pla de Bages': '/images/icons/DO/pla_de_bages_DO.png',
-    Alella: '/images/icons/DO/alella_DO.png',
-    Empordà: '/images/icons/DO/emporda_DO.png',
-    Navarra: '/images/icons/DO/navarra_DO.jpg',
-    Cariñena: '/images/icons/DO/cariñena_DO.png',
-    Calatayud: '/images/icons/DO/calatayud_DO.jpg',
-    Cigales: '/images/icons/DO/cigales_DO.png',
-    Arlanza: '/images/icons/DO/arlanza_DO.jpg',
-    'Costers del Segre': '/images/icons/DO/costers_del_segre_DO.png',
+function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+function doLogoPathFromImageName(logoImage: string | null | undefined): string | undefined {
+  if (!logoImage || logoImage.trim() === '') {
+    return undefined
   }
 
-  return map[region]
+  return `/images/icons/DO/${logoImage}`
+}
+
+function resolveApiBaseUrl(): string {
+  const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+  const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+  return configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
 }
 
 function countryFlagEmoji(country: string): string {
@@ -585,7 +591,7 @@ const MOCK_WINES: WineCard[] = CATALAN_JOURNAL_ROWS.map((row, index) => {
     city: row.city || 'n/d',
     techSheet: row.techSheet,
     reward: buildReward(avgScore, row.region),
-    doLogoImage: doLogoPathForRegion(row.region),
+    doLogoImage: undefined,
     rewardBadgeImage:
       index === 0 ? '/images/icons/awards/penin/thumbs-80/penin-91.png'
         : index === 1 ? '/images/icons/awards/penin/thumbs-80/penin-93.png'
@@ -677,6 +683,7 @@ export default function App() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
   const [doLogoPreview, setDoLogoPreview] = useState<{ src: string; label: string } | null>(null)
+  const [wines, setWines] = useState<WineCard[]>(MOCK_WINES)
 
   const t = DICT[locale]
   const isDark = theme === 'dark'
@@ -699,6 +706,42 @@ export default function App() {
     document.documentElement.lang = locale
     window.localStorage.setItem(LOCALE_KEY, locale)
   }, [locale])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    fetch(`${resolveApiBaseUrl()}/api/dos`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as DoApiResponse
+        const logoByName = new Map<string, string>()
+
+        payload.items.forEach((item) => {
+          const logoPath = doLogoPathFromImageName(item.logo_image)
+          if (!logoPath) {
+            return
+          }
+          logoByName.set(normalizeText(item.name), logoPath)
+        })
+
+        setWines((current) => current.map((wine) => ({
+          ...wine,
+          doLogoImage: logoByName.get(normalizeText(wine.region)),
+        })))
+      })
+      .catch(() => {
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [])
 
   useEffect(() => {
     const shouldLockScroll = isMobileMenuOpen || isMobileFiltersOpen || isMobileSortOpen
@@ -756,17 +799,17 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  const countries = useMemo(() => ['all', ...Array.from(new Set(MOCK_WINES.map((wine) => wine.country)))], [])
-  const regions = useMemo(() => ['all', ...Array.from(new Set(MOCK_WINES.map((wine) => wine.region)))], [])
+  const countries = useMemo(() => ['all', ...Array.from(new Set(wines.map((wine) => wine.country)))], [wines])
+  const regions = useMemo(() => ['all', ...Array.from(new Set(wines.map((wine) => wine.region)))], [wines])
   const grapeOptions = useMemo(
-    () => ['all', ...Array.from(new Set(MOCK_WINES.map((wine) => wine.grapes.split(/[,/]/)[0]?.trim()).filter(Boolean)))],
-    [],
+    () => ['all', ...Array.from(new Set(wines.map((wine) => wine.grapes.split(/[,/]/)[0]?.trim()).filter(Boolean)))],
+    [wines],
   )
 
   const filteredWines = useMemo(() => {
     const q = search.trim().toLowerCase()
 
-    const filtered = MOCK_WINES.filter((wine) => {
+    const filtered = wines.filter((wine) => {
       const matchesSearch =
         q === '' ||
         wine.name.toLowerCase().includes(q) ||
@@ -792,11 +835,11 @@ export default function App() {
       if (sortKey === 'latest') return b.vintage - a.vintage
       return b.avgScore - a.avgScore
     })
-  }, [search, typeFilter, countryFilter, regionFilter, grapeFilter, minScoreFilter, sortKey])
+  }, [search, typeFilter, countryFilter, regionFilter, grapeFilter, minScoreFilter, sortKey, wines])
 
   const selectedWine = useMemo(
-    () => (selectedWineId == null ? null : MOCK_WINES.find((wine) => wine.id === selectedWineId) ?? null),
-    [selectedWineId],
+    () => (selectedWineId == null ? null : wines.find((wine) => wine.id === selectedWineId) ?? null),
+    [selectedWineId, wines],
   )
 
   useEffect(() => {

@@ -26,6 +26,7 @@ final class DoControllerTest extends TestCase
         self::assertSame('Rioja', $payload['items'][0]['name']);
         self::assertSame('La Rioja', $payload['items'][0]['region']);
         self::assertSame('spain', $payload['items'][0]['country']);
+        self::assertSame('rioja_DO.png', $payload['items'][0]['logo_image']);
     }
 }
 
@@ -44,9 +45,8 @@ final class DoControllerInMemoryDoRepository implements DoRepository
     public function findAll(): array
     {
         return [
-            new DenominationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES'),
-            new DenominationOfOrigin(2, 'Priorat', 'Catalunya', Country::Spain, 'ES'),
+            new DenominationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES', 'rioja_DO.png'),
+            new DenominationOfOrigin(2, 'Priorat', 'Catalunya', Country::Spain, 'ES', 'priorat_DO.png'),
         ];
     }
 }
-

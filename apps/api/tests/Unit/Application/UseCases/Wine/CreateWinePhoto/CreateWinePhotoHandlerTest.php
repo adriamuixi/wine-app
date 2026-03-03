@@ -90,6 +90,22 @@ final class CreateWinePhotoHandlerTest extends TestCase
         self::assertSame('/images/wines/1/old.jpg', $photoStorage->deletedUrl);
         self::assertSame(77, $photoRepo->updatedId);
     }
+
+    public function testItCreatesSituationPhotoType(): void
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'wine-photo-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'situation-image');
+
+        $wineRepo = new SpyWineRepository(existingIds: [1]);
+        $photoRepo = new SpyWinePhotoRepository();
+        $photoStorage = new SpyWinePhotoStorage();
+        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage);
+        $result = $handler->handle(new CreateWinePhotoCommand(1, WinePhotoType::Situation, $tmp, 'situation.jpg', 15));
+
+        self::assertSame('situation', $result->type->value);
+        self::assertSame('/images/wines/1/hash123.jpg', $result->url);
+    }
 }
 
 final class SpyWineRepository implements WineRepository

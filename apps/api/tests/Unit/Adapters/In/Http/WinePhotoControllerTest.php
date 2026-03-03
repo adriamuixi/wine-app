@@ -64,6 +64,24 @@ final class WinePhotoControllerTest extends TestCase
         self::assertSame('front_label', $payload['photo']['type']);
     }
 
+    public function testCreateAcceptsSituationType(): void
+    {
+        $controller = $this->controller(existingWineIds: [1]);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'wine-photo-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'binary-data-situation');
+
+        $uploaded = new UploadedFile($tmp, 'situation.jpg', null, null, true);
+        $request = Request::create('/api/wines/1/photos', 'POST', ['type' => 'situation'], [], ['file' => $uploaded]);
+
+        $response = $controller->create(1, $request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+        self::assertSame('situation', $payload['photo']['type']);
+    }
+
     /**
      * @param list<int> $existingWineIds
      */

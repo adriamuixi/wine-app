@@ -118,7 +118,7 @@ final class SpyWineRepository implements WineRepository
         $this->received = $query;
 
         return new ListWinesResult(
-            items: [new WineListItemView(1, 'Wine', null, null, null, null, null, null, null, '2026-03-01T10:00:00+00:00')],
+            items: [new WineListItemView(1, 'Wine', null, null, null, null, null, null, null, null, null, '2026-03-01T10:00:00+00:00')],
             page: $query->page,
             limit: $query->limit,
             totalItems: 1,

@@ -28,10 +28,10 @@ final class DoController
                     'region' => $do->region,
                     'country' => $do->country->value,
                     'country_code' => $do->countryCode,
+                    'logo_image' => $do->logoImage,
                 ],
                 $items,
             ),
         ], Response::HTTP_OK);
     }
 }
-

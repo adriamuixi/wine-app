@@ -14,6 +14,7 @@ final readonly class DenominationOfOrigin
         public string $region,
         public Country $country,
         public string $countryCode,
+        public ?string $logoImage = null,
     ) {
         if ($this->id < 1) {
             throw new \InvalidArgumentException('do id must be >= 1.');
@@ -29,6 +30,10 @@ final readonly class DenominationOfOrigin
 
         if (2 !== strlen($this->countryCode)) {
             throw new \InvalidArgumentException('do country code must have 2 characters.');
+        }
+
+        if (null !== $this->logoImage && '' === trim($this->logoImage)) {
+            throw new \InvalidArgumentException('do logo image cannot be blank when provided.');
         }
     }
 }

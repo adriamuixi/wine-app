@@ -165,6 +165,7 @@ final class WineControllerTest extends TestCase
         self::assertSame(1, $payload['pagination']['page']);
         self::assertSame(20, $payload['pagination']['limit']);
         self::assertSame('List Wine 1', $payload['items'][0]['name']);
+        self::assertSame('crianza', $payload['items'][0]['aging_type']);
         self::assertSame('bottle', $payload['items'][0]['photos'][0]['type']);
         self::assertSame('/images/wines/1/bottle.jpg', $payload['items'][0]['photos'][0]['url']);
     }
@@ -189,6 +190,7 @@ final class WineControllerTest extends TestCase
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
         self::assertSame('Rioja', $payload['items'][0]['do']['name']);
+        self::assertSame('rioja_DO.png', $payload['items'][0]['do']['logo_image']);
         self::assertSame(91.5, $payload['items'][0]['avg_score']);
     }
 
@@ -318,6 +320,7 @@ final class WineControllerTest extends TestCase
         self::assertSame('fruity', $payload['wine']['reviews'][0]['bullets'][0]);
         self::assertSame('Madrid', $payload['wine']['purchases'][0]['place']['city']);
         self::assertSame('ribera', $payload['wine']['do']['name']);
+        self::assertSame('ribera_del_duero_DO.png', $payload['wine']['do']['logo_image']);
     }
 
     /**
@@ -401,7 +404,7 @@ final class SpyWineRepository implements WineRepository
             name: 'Wine Full',
             winery: 'Bodega Demo',
             wineType: WineType::Red,
-            do: new DenominationOfOrigin(1, 'ribera', 'Castilla y Leon', Country::Spain, 'ES'),
+            do: new DenominationOfOrigin(1, 'ribera', 'Castilla y Leon', Country::Spain, 'ES', 'ribera_del_duero_DO.png'),
             country: Country::Spain,
             agingType: AgingType::Reserve,
             vintageYear: 2020,
@@ -449,9 +452,11 @@ final class SpyWineRepository implements WineRepository
                     name: 'List Wine 1',
                     winery: 'Bodega 1',
                     wineType: 'red',
+                    agingType: 'crianza',
                     country: 'spain',
                     doId: 3,
                     doName: 'Rioja',
+                    doLogoImage: 'rioja_DO.png',
                     vintageYear: 2022,
                     avgScore: 91.5,
                     updatedAt: '2026-03-01T09:00:00+00:00',
@@ -537,6 +542,7 @@ final class InMemoryDoRepository implements DoRepository
             region: 'Region '.$id,
             country: $country,
             countryCode: 'ES',
+            logoImage: 'do_'.$id.'.png',
         );
     }
 

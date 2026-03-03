@@ -175,6 +175,7 @@ final class InMemoryDoRepository implements DoRepository
             region: 'Region '.$id,
             country: $country,
             countryCode: 'ES',
+            logoImage: 'do_'.$id.'.png',
         );
     }
 

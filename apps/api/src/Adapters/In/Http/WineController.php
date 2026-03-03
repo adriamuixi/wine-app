@@ -151,10 +151,12 @@ final class WineController
                         'name' => $item->name,
                         'winery' => $item->winery,
                         'wine_type' => $item->wineType,
+                        'aging_type' => $item->agingType,
                         'country' => $item->country,
                         'do' => null === $item->doId ? null : [
                             'id' => $item->doId,
                             'name' => $item->doName,
+                            'logo_image' => $item->doLogoImage,
                         ],
                         'vintage_year' => $item->vintageYear,
                         'avg_score' => $item->avgScore,
@@ -616,7 +618,7 @@ final class WineController
      *     name:string,
      *     winery:?string,
      *     wine_type:?string,
-     *     do:?array{id:int,name:string,region:string,country:string,country_code:string},
+     *     do:?array{id:int,name:string,region:string,country:string,country_code:string,logo_image:?string},
      *     country:?string,
      *     aging_type:?string,
      *     vintage_year:?int,
@@ -713,7 +715,7 @@ final class WineController
     }
 
     /**
-     * @return array{id:int,name:string,region:string,country:string,country_code:string}|null
+     * @return array{id:int,name:string,region:string,country:string,country_code:string,logo_image:?string}|null
      */
     private function doPayload(?DenominationOfOrigin $wineDo): ?array
     {
@@ -727,6 +729,7 @@ final class WineController
             'region' => $wineDo->region,
             'country' => $wineDo->country->value,
             'country_code' => $wineDo->countryCode,
+            'logo_image' => $wineDo->logoImage,
         ];
     }
 }

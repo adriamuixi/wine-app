@@ -184,6 +184,7 @@ wineProfile:
     bottle: Ampolla
     front: Etiqueta frontal
     back: Etiqueta posterior
+    situation: Situació
   mock:
     sectionTitles:
       wineRecord: WineRecord · Identificació
@@ -249,6 +250,7 @@ wineProfile:
       photoTypeBottle: ampolla
       photoTypeFrontLabel: etiqueta frontal
       photoTypeBackLabel: etiqueta posterior
+      photoTypeSituation: situació
     profile:
       summaryRed: Vi estructurat, taní polit i final llarg. Perfil gastronòmic.
       summaryOther: Perfil fresc, aromàtic i bona acidesa. Molt versàtil a taula.

@@ -558,7 +558,7 @@ paths:
               properties:
                 type:
                   type: string
-                  enum: [front_label, back_label, bottle]
+                  enum: [front_label, back_label, bottle, situation]
                 file:
                   type: string
                   format: binary
@@ -676,28 +676,28 @@ components:
         intensity_aroma:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         sweetness:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         acidity:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         tannin:
           type: integer
           nullable: true
           minimum: 0
-          maximum: 5
+          maximum: 10
         body:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         persistence:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         bullets:
           type: array
           items:
@@ -718,28 +718,28 @@ components:
         intensity_aroma:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         sweetness:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         acidity:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         tannin:
           type: integer
           nullable: true
           minimum: 0
-          maximum: 5
+          maximum: 10
         body:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         persistence:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         bullets:
           type: array
           items:
@@ -756,28 +756,28 @@ components:
         intensity_aroma:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         sweetness:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         acidity:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         tannin:
           type: integer
           nullable: true
           minimum: 0
-          maximum: 5
+          maximum: 10
         body:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         persistence:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         bullets:
           type: array
           items:
@@ -976,7 +976,7 @@ components:
               format: int64
             type:
               type: string
-              enum: [front_label, back_label, bottle]
+              enum: [front_label, back_label, bottle, situation]
             url:
               type: string
               example: /images/wines/1/abc123.jpg
@@ -993,7 +993,7 @@ components:
               example: jpg
     WineDo:
       type: object
-      required: [id, name, region, country, country_code]
+      required: [id, name, region, country, country_code, logo_image]
       properties:
         id:
           type: integer
@@ -1010,6 +1010,10 @@ components:
           minLength: 2
           maxLength: 2
           example: ES
+        logo_image:
+          type: string
+          nullable: true
+          example: rioja_DO.png
     WineDetailGrape:
       type: object
       required: [id, name, color, percentage]
@@ -1088,7 +1092,7 @@ components:
           format: int64
         type:
           type: string
-          enum: [front_label, back_label, bottle]
+          enum: [front_label, back_label, bottle, situation]
           nullable: true
         url:
           type: string
@@ -1125,28 +1129,28 @@ components:
         intensity_aroma:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         sweetness:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         acidity:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         tannin:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
           nullable: true
         body:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         persistence:
           type: integer
           minimum: 0
-          maximum: 5
+          maximum: 10
         bullets:
           type: array
           items:
@@ -1224,26 +1228,30 @@ components:
           $ref: '#/components/schemas/WineDetails'
     WineListDo:
       type: object
-      required: [id, name]
+      required: [id, name, logo_image]
       properties:
         id:
           type: integer
           format: int64
         name:
           type: string
+        logo_image:
+          type: string
+          nullable: true
+          example: rioja_DO.png
     WineListPhoto:
       type: object
       required: [type, url]
       properties:
         type:
           type: string
-          enum: [front_label, back_label, bottle]
+          enum: [front_label, back_label, bottle, situation]
         url:
           type: string
           example: /images/wines/42/abc123.jpg
     WineListItem:
       type: object
-      required: [id, name, winery, wine_type, country, do, vintage_year, avg_score, updated_at, photos]
+      required: [id, name, winery, wine_type, aging_type, country, do, vintage_year, avg_score, updated_at, photos]
       properties:
         id:
           type: integer
@@ -1256,6 +1264,10 @@ components:
         wine_type:
           type: string
           enum: [red, white, rose, sparkling, sweet, fortified]
+          nullable: true
+        aging_type:
+          type: string
+          enum: [young, crianza, reserve, grand_reserve]
           nullable: true
         country:
           type: string
@@ -1327,7 +1339,7 @@ components:
             $ref: '#/components/schemas/GrapeListItem'
     DoListItem:
       type: object
-      required: [id, name, region, country, country_code]
+      required: [id, name, region, country, country_code, logo_image]
       properties:
         id:
           type: integer
@@ -1343,6 +1355,10 @@ components:
           type: string
           minLength: 2
           maxLength: 2
+        logo_image:
+          type: string
+          nullable: true
+          example: rioja_DO.png
     DoListResponse:
       type: object
       required: [items]

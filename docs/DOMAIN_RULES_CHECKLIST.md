@@ -18,7 +18,7 @@ Use this checklist in design, implementation, and review.
 - Price required
 - Vintage is a variant, not a new wine
 
-## Review Axes (0..5)
+## Review Axes (0..10)
 
 - `intensity_aroma`
 - `sweetness`
@@ -30,7 +30,7 @@ Use this checklist in design, implementation, and review.
 Checks:
 
 - numeric integer semantics
-- range enforced (0..5)
+- range enforced (0..10)
 - missing required axes rejected
 
 ## Review Bullets (closed list)

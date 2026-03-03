@@ -9,4 +9,5 @@ enum WinePhotoType: string
     case FrontLabel = 'front_label';
     case BackLabel = 'back_label';
     case Bottle = 'bottle';
+    case Situation = 'situation';
 }

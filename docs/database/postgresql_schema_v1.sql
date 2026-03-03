@@ -19,7 +19,7 @@ CREATE TYPE country AS ENUM (
 
 CREATE TYPE place_type AS ENUM ('supermarket', 'restaurant');
 
-CREATE TYPE photo_type AS ENUM ('front_label', 'back_label', 'bottle');
+CREATE TYPE photo_type AS ENUM ('front_label', 'back_label', 'bottle', 'situation');
 
 CREATE TYPE award_name AS ENUM (
   'penin', 'parker', 'wine_spectator', 'decanter', 'james_suckling', 'guia_proensa'
@@ -50,6 +50,7 @@ CREATE TABLE "do" (
   region        VARCHAR(255) NOT NULL,
   country       country NOT NULL,
   country_code  VARCHAR(2) NOT NULL,
+  logo_image    VARCHAR(255),
   UNIQUE (country, name),
   CONSTRAINT do_country_code_upper_chk CHECK (country_code = upper(country_code)),
   CONSTRAINT do_country_code_len_chk CHECK (char_length(country_code) = 2)
@@ -136,12 +137,12 @@ CREATE TABLE review (
   user_id            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   wine_id            BIGINT NOT NULL REFERENCES wine(id) ON DELETE CASCADE,
   score              INT CHECK (score IS NULL OR (score >= 0 AND score <= 100)),
-  intensity_aroma    SMALLINT NOT NULL CHECK (intensity_aroma BETWEEN 0 AND 5),
-  sweetness          SMALLINT NOT NULL CHECK (sweetness BETWEEN 0 AND 5),
-  acidity            SMALLINT NOT NULL CHECK (acidity BETWEEN 0 AND 5),
-  tannin             SMALLINT CHECK (tannin IS NULL OR tannin BETWEEN 0 AND 5),
-  body               SMALLINT NOT NULL CHECK (body BETWEEN 0 AND 5),
-  persistence        SMALLINT NOT NULL CHECK (persistence BETWEEN 0 AND 5),
+  intensity_aroma    SMALLINT NOT NULL CHECK (intensity_aroma BETWEEN 0 AND 10),
+  sweetness          SMALLINT NOT NULL CHECK (sweetness BETWEEN 0 AND 10),
+  acidity            SMALLINT NOT NULL CHECK (acidity BETWEEN 0 AND 10),
+  tannin             SMALLINT CHECK (tannin IS NULL OR tannin BETWEEN 0 AND 10),
+  body               SMALLINT NOT NULL CHECK (body BETWEEN 0 AND 10),
+  persistence        SMALLINT NOT NULL CHECK (persistence BETWEEN 0 AND 10),
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (user_id, wine_id)
 );

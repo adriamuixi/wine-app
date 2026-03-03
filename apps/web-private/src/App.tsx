@@ -29,13 +29,16 @@ type WineItem = {
   country: string
   region: string
   doName: string | null
+  doLogoImage: string | null
   thumbnailSrc: string
   galleryPreview: {
     bottle: string
     front: string
     back: string
+    situation: string
   }
   vintageYear: number | null
+  agingType: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
   pricePaid: number
   averageScore: number | null
 }
@@ -67,11 +70,12 @@ type WineListApiItem = {
   winery: string | null
   wine_type: WineType | null
   country: Exclude<CountryFilterValue, 'all'> | null
-  do: { id: number; name: string } | null
+  do: { id: number; name: string; logo_image: string | null } | null
+  aging_type?: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
   vintage_year: number | null
   avg_score: number | null
   photos?: Array<{
-    type: 'front_label' | 'back_label' | 'bottle'
+    type: 'front_label' | 'back_label' | 'bottle' | 'situation'
     url: string
   }>
 }
@@ -106,6 +110,7 @@ type DoApiItem = {
   region: string
   country: Exclude<CountryFilterValue, 'all'>
   country_code: string
+  logo_image: string | null
 }
 
 type DoApiResponse = {
@@ -142,7 +147,7 @@ type WineDetailsApiAward = {
 
 type WineDetailsApiPhoto = {
   id: number
-  type: 'front_label' | 'back_label' | 'bottle' | null
+  type: 'front_label' | 'back_label' | 'bottle' | 'situation' | null
   url: string
   hash: string
   size: number
@@ -172,7 +177,14 @@ type WineDetailsApiWine = {
   name: string
   winery: string | null
   wine_type: WineType | null
-  do: { id: number; name: string; region: string; country: Exclude<CountryFilterValue, 'all'>; country_code: string } | null
+  do: {
+    id: number
+    name: string
+    region: string
+    country: Exclude<CountryFilterValue, 'all'>
+    country_code: string
+    logo_image: string | null
+  } | null
   country: Exclude<CountryFilterValue, 'all'> | null
   aging_type: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
   vintage_year: number | null
@@ -204,7 +216,7 @@ type WineProfileSection = {
 type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
 type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
-type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label'
+type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label' | 'situation'
 
 type MockUser = {
   id: number
@@ -259,6 +271,7 @@ const SAMPLE_WINE_GALLERY = [
   { key: 'bottle', src: SAMPLE_WINE_THUMBNAIL_SRC },
   { key: 'front', src: SAMPLE_WINE_THUMBNAIL_SRC },
   { key: 'back', src: SAMPLE_WINE_THUMBNAIL_SRC },
+  { key: 'situation', src: SAMPLE_WINE_THUMBNAIL_SRC },
 ] as const
 
 const mockUser: MockUser = {
@@ -339,13 +352,16 @@ const mockWines: WineItem[] = journalWineRows.map((row, index) => {
     country: 'Spain',
     region: row.region,
     doName: row.region,
+    doLogoImage: null,
     thumbnailSrc: SAMPLE_WINE_THUMBNAIL_SRC,
     galleryPreview: {
       bottle: SAMPLE_WINE_THUMBNAIL_SRC,
       front: SAMPLE_WINE_THUMBNAIL_SRC,
       back: SAMPLE_WINE_THUMBNAIL_SRC,
+      situation: SAMPLE_WINE_THUMBNAIL_SRC,
     },
     vintageYear: row.vintage,
+    agingType: null,
     pricePaid,
     averageScore,
   }
@@ -433,12 +449,12 @@ function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
     wineId: String(review.wineId),
     tastingDate: review.createdAt,
     overallScore: review.score,
-    aroma: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.intensityAroma ?? 0) * 2))) : boosted,
-    sweetness: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.sweetness ?? 0) * 2))) : Math.max(0, base - 1),
-    acidity: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.acidity ?? 0) * 2))) : base,
-    tannin: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.tannin ?? 0) * 2))) : boosted,
-    body: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.body ?? 0) * 2))) : boosted,
-    persistence: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round((review.persistence ?? 0) * 2))) : base,
+    aroma: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.intensityAroma ?? 0))) : boosted,
+    sweetness: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.sweetness ?? 0))) : Math.max(0, base - 1),
+    acidity: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.acidity ?? 0))) : base,
+    tannin: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.tannin ?? 0))) : boosted,
+    body: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.body ?? 0))) : boosted,
+    persistence: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.persistence ?? 0))) : base,
     tags,
     notes: review.notes,
   }
@@ -524,41 +540,52 @@ function createSeededRandom(seed: number): () => number {
 }
 
 function countryFlagEmoji(country: string): string {
-  const map: Record<string, string> = {
-    Spain: '🇪🇸',
-    France: '🇫🇷',
-    Portugal: '🇵🇹',
-    Italy: '🇮🇹',
-    Germany: '🇩🇪',
-    Argentina: '🇦🇷',
-    Chile: '🇨🇱',
-    USA: '🇺🇸',
-    'United States': '🇺🇸',
+  const code = countryCodeFromAny(country)
+  if (code == null) {
+    return '🏳️'
   }
 
-  return map[country] ?? '🏳️'
+  const map: Record<Exclude<CountryFilterValue, 'all'>, string> = {
+    spain: '🇪🇸',
+    france: '🇫🇷',
+    italy: '🇮🇹',
+    portugal: '🇵🇹',
+    germany: '🇩🇪',
+    argentina: '🇦🇷',
+    chile: '🇨🇱',
+    united_states: '🇺🇸',
+    south_africa: '🇿🇦',
+    australia: '🇦🇺',
+  }
+
+  return map[code]
 }
 
 function countryFlagPath(country: string): string | null {
-  const map: Record<string, string> = {
-    Spain: '/images/flags/country/spain.png',
-    France: '/images/flags/country/france.png',
-    Italy: '/images/flags/country/italy.png',
-    Portugal: '/images/flags/country/portugal.png',
-    Germany: '/images/flags/country/germany.png',
-    Argentina: '/images/flags/country/argentina.png',
-    Chile: '/images/flags/country/chile.png',
-    USA: '/images/flags/country/united_states.png',
-    'United States': '/images/flags/country/united_states.png',
-    'South Africa': '/images/flags/country/south_africa.png',
-    Australia: '/images/flags/country/australia.png',
+  const code = countryCodeFromAny(country)
+  if (code == null) {
+    return null
   }
-  return map[country] ?? null
+
+  const map: Record<Exclude<CountryFilterValue, 'all'>, string> = {
+    spain: '/images/flags/country/spain.png',
+    france: '/images/flags/country/france.png',
+    italy: '/images/flags/country/italy.png',
+    portugal: '/images/flags/country/portugal.png',
+    germany: '/images/flags/country/germany.png',
+    argentina: '/images/flags/country/argentina.png',
+    chile: '/images/flags/country/chile.png',
+    united_states: '/images/flags/country/united_states.png',
+    south_africa: '/images/flags/country/south_africa.png',
+    australia: '/images/flags/country/australia.png',
+  }
+
+  return map[code]
 }
 
 function localizedCountryName(country: string, locale: string): string {
-  if (country === 'Spain') return locale === 'ca' ? 'Espanya' : 'España'
-  return country
+  const code = countryCodeFromAny(country)
+  return code == null ? country : countryCodeToLabel(code, locale)
 }
 
 function countryCodeToLabel(countryCode: Exclude<CountryFilterValue, 'all'> | null, locale: string): string {
@@ -624,6 +651,11 @@ function countryLabelToFilterValue(country: string): CountryFilterValue {
   return map[normalized] ?? 'all'
 }
 
+function countryCodeFromAny(country: string): Exclude<CountryFilterValue, 'all'> | null {
+  const mapped = countryLabelToFilterValue(country)
+  return mapped === 'all' ? null : mapped
+}
+
 function normalizeSearchText(value: string): string {
   return value
     .normalize('NFD')
@@ -632,32 +664,12 @@ function normalizeSearchText(value: string): string {
     .trim()
 }
 
-function doLogoPathForRegion(region: string): string | null {
-  const map: Record<string, string> = {
-    'Penedès': '/images/icons/DO/penedes_DO.png',
-    Montsant: '/images/icons/DO/montanst_DO.png',
-    'Ribera del Duero': '/images/icons/DO/ribera_del_duero_DO.png',
-    Somontano: '/images/icons/DO/somontano_DO.jpg',
-    Toro: '/images/icons/DO/toro_DO.jpg',
-    Rioja: '/images/icons/DO/rioja_DO.png',
-    Tarragona: '/images/icons/DO/tarragona_DO.png',
-    'Terra Alta': '/images/icons/DO/terra_alta_DO.png',
-    Priorat: '/images/icons/DO/priorat_DO.png',
-    'Conca de Barberà': '/images/icons/DO/conca_de_barbera_DO.jpg',
-    'Pla de Bages': '/images/icons/DO/pla_de_bages_DO.png',
-    Alella: '/images/icons/DO/alella_DO.png',
-    Empordà: '/images/icons/DO/emporda_DO.png',
-    Navarra: '/images/icons/DO/navarra_DO.jpg',
-    Cariñena: '/images/icons/DO/cariñena_DO.png',
-    Calatayud: '/images/icons/DO/calatayud_DO.jpg',
-    Cigales: '/images/icons/DO/cigales_DO.png',
-    Arlanza: '/images/icons/DO/arlanza_DO.jpg',
-    'Costers del Segre': '/images/icons/DO/costers_del_segre_DO.png',
-    'Rías Baixas': '/images/icons/DO/logo-rias_baixas_DO.png',
-    'Rias Baixas': '/images/icons/DO/logo-rias_baixas_DO.png',
+function doLogoPathFromImageName(logoImage: string | null | undefined): string | null {
+  if (!logoImage || logoImage.trim() === '') {
+    return null
   }
 
-  return map[region] ?? null
+  return `/images/icons/DO/${logoImage}`
 }
 
 function spanishAutonomousCommunity(region: string): { name: string; slug: string } | null {
@@ -757,6 +769,7 @@ type WineProfileLabels = {
     bottle: string
     front: string
     back: string
+    situation: string
   }
   mock: {
     sectionTitles: {
@@ -819,6 +832,7 @@ type WineProfileLabels = {
       photoTypeBottle: string
       photoTypeFrontLabel: string
       photoTypeBackLabel: string
+      photoTypeSituation: string
       colorRed: string
       colorWhite: string
       placeNameRestaurant: string
@@ -869,6 +883,7 @@ function buildMockWineProfile(
     wm.values.photoTypeBottle,
     wm.values.photoTypeFrontLabel,
     wm.values.photoTypeBackLabel,
+    wm.values.photoTypeSituation,
   ].join(', ')
   const awardName = wine.id % 2 === 0 ? 'decanter' : 'penin'
   const awardScore = (88 + (wine.id % 6)).toFixed(1)
@@ -987,6 +1002,7 @@ function buildMockWineProfile(
       bottle: wp.imageLabels.bottle,
       front: wp.imageLabels.front,
       back: wp.imageLabels.back,
+      situation: wp.imageLabels.situation,
       photosTitle: wp.galleryEyebrow,
     },
     heroAward: awardPresent
@@ -1059,10 +1075,11 @@ function resolveApiAssetUrl(path: string): string {
 
 function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineItem {
   const defaultSrc = DEFAULT_WINE_ICON_CANDIDATES[0]
-  const resolvedByType: Record<'bottle' | 'front' | 'back', string> = {
+  const resolvedByType: Record<'bottle' | 'front' | 'back' | 'situation', string> = {
     bottle: defaultSrc,
     front: defaultSrc,
     back: defaultSrc,
+    situation: defaultSrc,
   }
 
   item.photos?.forEach((photo) => {
@@ -1075,6 +1092,9 @@ function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineI
     }
     if (photo.type === 'back_label') {
       resolvedByType.back = resolvedUrl
+    }
+    if (photo.type === 'situation') {
+      resolvedByType.situation = resolvedUrl
     }
   })
 
@@ -1090,7 +1110,9 @@ function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineI
     country: countryCodeToLabel(item.country, locale),
     region: item.do?.name ?? '-',
     doName: item.do?.name ?? null,
+    doLogoImage: item.do?.logo_image ?? null,
     vintageYear: item.vintage_year,
+    agingType: item.aging_type ?? null,
     // List endpoint does not expose price in current API contract.
     pricePaid: 0,
     averageScore: item.avg_score == null ? null : Math.round(item.avg_score * 10) / 10,
@@ -1109,11 +1131,12 @@ function formatApiDate(dateIso: string, locale: string): string {
   }).format(date)
 }
 
-function labelForPhotoType(type: WineDetailsApiPhoto['type']): string {
-  if (type === 'bottle') return 'Wine'
-  if (type === 'front_label') return 'Front-label'
-  if (type === 'back_label') return 'Back-label'
-  return 'Photo'
+function labelForPhotoType(type: WineDetailsApiPhoto['type'], locale: string): string {
+  if (type === 'bottle') return locale === 'ca' ? 'Ampolla' : 'Botella'
+  if (type === 'front_label') return locale === 'ca' ? 'Etiqueta frontal' : 'Etiqueta frontal'
+  if (type === 'back_label') return locale === 'ca' ? 'Etiqueta posterior' : 'Etiqueta trasera'
+  if (type === 'situation') return locale === 'ca' ? 'Situació' : 'Situación'
+  return locale === 'ca' ? 'Foto' : 'Foto'
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -1134,6 +1157,12 @@ function medalToneFromHundred(value: number | null): 'gold' | 'silver' | 'bronze
   if (value >= 80) return 'silver'
   if (value >= 70) return 'bronze'
   return 'default'
+}
+
+function medalToneFromScore(value: number | null): 'gold' | 'silver' | 'bronze' | 'default' {
+  if (value == null) return 'default'
+  const normalized = value <= 10 ? value * 10 : value
+  return medalToneFromHundred(normalized)
 }
 
 function labelForAgingType(agingType: WineDetailsApiWine['aging_type'], locale: string): string {
@@ -1751,8 +1780,11 @@ function App() {
     return type
   }
   const galleryLabels = labels.wineProfile.imageLabels
+  const isPhotoOverlayOpen = selectedWineGallery != null || (photoEditorType != null && photoEditorSource != null)
   const isDarkMode = themeMode === 'dark'
   const brandWordmarkSrc = isDarkMode ? '/images/brand/logo-wordmark-dark.png' : '/images/brand/logo-wordmark-light.png'
+  const brandWordmarkSidebarSrc = '/images/brand/logo-wordmark-dark.png'
+  const brandWordmarkTopbarSrc = '/images/brand/logo-wordmark-dark.png'
   const brandIconSrc = '/images/brand/icon-square-64.png'
   const themeToggleLabel = isDarkMode ? labels.common.themeSwitchToLight : labels.common.themeSwitchToDark
   const displayedUser = currentUser ?? mockUser
@@ -1800,6 +1832,25 @@ function App() {
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [selectedWineGallery])
+
+  useEffect(() => {
+    if (!isPhotoOverlayOpen) {
+      return
+    }
+
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+    const previousBodyOverscroll = document.body.style.overscrollBehavior
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.body.style.overflow = previousBodyOverflow
+      document.body.style.overscrollBehavior = previousBodyOverscroll
+    }
+  }, [isPhotoOverlayOpen])
 
   useEffect(() => {
     const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
@@ -2543,13 +2594,18 @@ function App() {
           { key: 'bottle', src: selectedWineGallery.galleryPreview.bottle },
           { key: 'front', src: selectedWineGallery.galleryPreview.front },
           { key: 'back', src: selectedWineGallery.galleryPreview.back },
+          { key: 'situation', src: selectedWineGallery.galleryPreview.situation },
         ] as const
       : SAMPLE_WINE_GALLERY),
     [selectedWineGallery],
   )
   const selectedWineDoLogo = selectedWineSheetDetails?.do
-    ? (doLogoPathForRegion(selectedWineSheetDetails.do.name) ?? doLogoPathForRegion(selectedWineSheetDetails.do.region))
-    : (selectedWineSheet ? doLogoPathForRegion(selectedWineSheet.region) : null)
+    ? doLogoPathFromImageName(selectedWineSheetDetails.do.logo_image)
+    : (
+        selectedWineSheet
+          ? doLogoPathFromImageName(selectedWineSheet.doLogoImage)
+          : null
+      )
   const selectedWineCommunity = selectedWineSheetDetails?.do?.country === 'spain' && selectedWineSheetDetails.do != null
     ? spanishAutonomousCommunity(selectedWineSheetDetails.do.region)
     : (selectedWineSheet ? spanishAutonomousCommunity(selectedWineSheet.region) : null)
@@ -2612,7 +2668,7 @@ function App() {
   }, [selectedWineGrapeDistribution])
 
   const selectedWinePhotoSlots = useMemo(() => {
-    const types: WinePhotoSlotType[] = ['bottle', 'front_label', 'back_label']
+    const types: WinePhotoSlotType[] = ['bottle', 'front_label', 'back_label', 'situation']
     const photos = selectedWineSheetDetails?.photos ?? []
 
     return types.map((type) => {
@@ -2627,7 +2683,7 @@ function App() {
   }, [selectedWineSheetDetails])
 
   const wineEditPhotoSlots = useMemo(() => {
-    const types: WinePhotoSlotType[] = ['bottle', 'front_label', 'back_label']
+    const types: WinePhotoSlotType[] = ['bottle', 'front_label', 'back_label', 'situation']
     const photos = wineEditDetails?.photos ?? []
 
     return types.map((type) => {
@@ -2649,7 +2705,7 @@ function App() {
           <h3>{locale === 'ca' ? 'Galeria del vi' : 'Galería del vino'}</h3>
         </div>
         <div className="panel-header-actions">
-          <span className="pill">{slots.filter((slot) => slot.uploaded).length}/3 {locale === 'ca' ? 'pujades' : 'subidas'}</span>
+          <span className="pill">{slots.filter((slot) => slot.uploaded).length}/4 {locale === 'ca' ? 'pujades' : 'subidas'}</span>
         </div>
       </div>
       <div className="wine-sheet-thumbnail-row">
@@ -2657,11 +2713,11 @@ function App() {
           <div key={photo.type} className="wine-sheet-mini-photo">
             <img
               src={photo.src}
-              alt={`${labelForPhotoType(photo.type)}`}
+              alt={`${labelForPhotoType(photo.type, locale)}`}
               loading="lazy"
               onError={fallbackToDefaultWineIcon}
             />
-            <span>{labelForPhotoType(photo.type)}</span>
+            <span>{labelForPhotoType(photo.type, locale)}</span>
             <div className="wine-photo-actions">
               <button
                 type="button"
@@ -2772,8 +2828,15 @@ function App() {
     })
 
     const isBottlePhoto = photoEditorType === 'bottle'
-    const outputWidth = isBottlePhoto ? 576 : 768
-    const outputHeight = 1024
+    const isSituationPhoto = photoEditorType === 'situation'
+    const maxFreeSide = 2048
+    const freeScale = isSituationPhoto ? Math.min(1, maxFreeSide / Math.max(image.naturalWidth, image.naturalHeight)) : 1
+    const outputWidth = isSituationPhoto
+      ? Math.max(1, Math.round(image.naturalWidth * freeScale))
+      : (isBottlePhoto ? 576 : 768)
+    const outputHeight = isSituationPhoto
+      ? Math.max(1, Math.round(image.naturalHeight * freeScale))
+      : 1024
     canvas.width = outputWidth
     canvas.height = outputHeight
     const ctx = canvas.getContext('2d')
@@ -2781,13 +2844,13 @@ function App() {
       return null
     }
 
-    const baseScale = Math.max(outputWidth / image.naturalWidth, outputHeight / image.naturalHeight)
-    const effectiveScale = baseScale * photoEditorZoom
+    const baseScale = isSituationPhoto ? Math.min(outputWidth / image.naturalWidth, outputHeight / image.naturalHeight) : Math.max(outputWidth / image.naturalWidth, outputHeight / image.naturalHeight)
+    const effectiveScale = isSituationPhoto ? baseScale : (baseScale * photoEditorZoom)
     const drawWidth = image.naturalWidth * effectiveScale
     const drawHeight = image.naturalHeight * effectiveScale
 
-    const panMaxX = Math.max(0, (drawWidth - outputWidth) / 2)
-    const panMaxY = Math.max(0, (drawHeight - outputHeight) / 2)
+    const panMaxX = isSituationPhoto ? 0 : Math.max(0, (drawWidth - outputWidth) / 2)
+    const panMaxY = isSituationPhoto ? 0 : Math.max(0, (drawHeight - outputHeight) / 2)
     const offsetPxX = (photoEditorOffsetX / 100) * panMaxX
     const offsetPxY = (photoEditorOffsetY / 100) * panMaxY
 
@@ -2890,6 +2953,7 @@ function App() {
               ...(photoEditorType === 'bottle' ? { bottle: resolvedUploadedUrl } : {}),
               ...(photoEditorType === 'front_label' ? { front: resolvedUploadedUrl } : {}),
               ...(photoEditorType === 'back_label' ? { back: resolvedUploadedUrl } : {}),
+              ...(photoEditorType === 'situation' ? { situation: resolvedUploadedUrl } : {}),
             },
           }
         })
@@ -2929,6 +2993,7 @@ function App() {
               ...(type === 'bottle' ? { bottle: resolvedUploadedUrl } : {}),
               ...(type === 'front_label' ? { front: resolvedUploadedUrl } : {}),
               ...(type === 'back_label' ? { back: resolvedUploadedUrl } : {}),
+              ...(type === 'situation' ? { situation: resolvedUploadedUrl } : {}),
             },
           }
         })
@@ -3627,12 +3692,12 @@ function App() {
 
     const payload = {
       score: Math.max(0, Math.min(100, Math.round(score))),
-      intensity_aroma: Math.max(0, Math.min(5, Math.round(intensityAroma / 2))),
-      sweetness: Math.max(0, Math.min(5, Math.round(sweetness / 2))),
-      acidity: Math.max(0, Math.min(5, Math.round(acidity / 2))),
-      tannin: Math.max(0, Math.min(5, Math.round(tannin / 2))),
-      body: Math.max(0, Math.min(5, Math.round(body / 2))),
-      persistence: Math.max(0, Math.min(5, Math.round(persistence / 2))),
+      intensity_aroma: Math.max(0, Math.min(10, Math.round(intensityAroma))),
+      sweetness: Math.max(0, Math.min(10, Math.round(sweetness))),
+      acidity: Math.max(0, Math.min(10, Math.round(acidity))),
+      tannin: Math.max(0, Math.min(10, Math.round(tannin))),
+      body: Math.max(0, Math.min(10, Math.round(body))),
+      persistence: Math.max(0, Math.min(10, Math.round(persistence))),
       bullets: bulletsRaw.map((tag) => REVIEW_TAG_TO_ENUM[tag]),
     }
 
@@ -3936,7 +4001,7 @@ function App() {
         <div className="sidebar-header">
           <img src={brandIconSrc} className="brand-mark" alt="Tat & Rosset icon" />
           <div className="sidebar-brand-copy">
-            <img src={brandWordmarkSrc} className="brand-logo brand-logo-sidebar" alt="Vins Tat & Rosset" />
+            <img src={brandWordmarkSidebarSrc} className="brand-logo brand-logo-sidebar" alt="Vins Tat & Rosset" />
             <p className="eyebrow">{labels.common.appName}</p>
             <h1>{labels.user.backoffice}</h1>
           </div>
@@ -4013,7 +4078,7 @@ function App() {
         <header className="topbar">
           <div className="topbar-mobile-head" aria-label="Backoffice header">
             <div className="topbar-mobile-brand">
-              <img src={brandWordmarkSrc} className="topbar-mobile-wordmark" alt="Vins Tat & Rosset" />
+              <img src={brandWordmarkTopbarSrc} className="topbar-mobile-wordmark" alt="Vins Tat & Rosset" />
             </div>
 
             <div className="topbar-mobile-actions">
@@ -4585,16 +4650,20 @@ function App() {
                       <th aria-label="Photo" />
                       <th>{labels.dashboard.table.wine}</th>
                       <th>{labels.dashboard.table.type}</th>
-                      <th>{labels.dashboard.table.region}</th>
+                      <th className="wine-col-region-header">{locale === 'ca' ? 'País de fabricació' : 'País de fabricación'}</th>
                       <th>{locale === 'ca' ? 'Anyada' : 'Añada'}</th>
-                      <th>D.O.</th>
+                      <th className="wine-col-do-header">D.O.</th>
                       <th>{labels.dashboard.table.avg}</th>
                       <th>{locale === 'ca' ? 'Accions' : 'Acciones'}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {wineItems.map((wine) => (
-                      <tr
+                    {wineItems.map((wine) => {
+                      const doCommunityFlagPath = wine.doName ? autonomousCommunityFlagPathForRegion(wine.doName) : null
+                      const scoreTone = medalToneFromScore(wine.averageScore)
+
+                      return (
+                        <tr
                         key={wine.id}
                         className="wine-row-clickable"
                         tabIndex={0}
@@ -4627,13 +4696,21 @@ function App() {
                               }
                             }}
                           />
+                          {wine.averageScore == null ? null : (
+                            <span className={`wine-score-chip wine-thumb-score ${scoreTone}`}>
+                              <strong>{Number.isInteger(wine.averageScore) ? wine.averageScore.toFixed(0) : wine.averageScore.toFixed(1)}</strong>
+                              <small>/100</small>
+                            </span>
+                          )}
                         </td>
                         <td className="wine-col-main" data-label={labels.dashboard.table.wine}>
                           <strong>{wine.name}</strong>
                           <span>{wine.winery}</span>
                         </td>
-                        <td className="wine-col-type" data-label={labels.dashboard.table.type}>{wineTypeLabel(wine.type)}</td>
-                        <td className="wine-col-region" data-label={labels.dashboard.table.region}>
+                        <td className="wine-col-type" data-label={labels.dashboard.table.type}>
+                          <span className="wine-cell-value">{wineTypeLabel(wine.type)}</span>
+                        </td>
+                        <td className="wine-col-region" data-label={locale === 'ca' ? 'País de fabricació' : 'País de fabricación'}>
                           <span className="wine-country-chip">
                             {countryFlagPath(wine.country) ? (
                               <img
@@ -4648,17 +4725,29 @@ function App() {
                             )}
                             <span>{localizedCountryName(wine.country, locale)}</span>
                           </span>
-                          <span className="wine-region-text">{wine.region}</span>
                         </td>
                         <td className="wine-col-vintage" data-label={locale === 'ca' ? 'Anyada' : 'Añada'}>
-                          {wine.vintageYear ?? '-'}
+                          <span className="wine-cell-value">{wine.vintageYear ?? '-'}</span>
+                        </td>
+                        <td className="wine-col-aging" data-label={locale === 'ca' ? 'Criança' : 'Crianza'}>
+                          <span className="wine-cell-value">{labelForAgingType(wine.agingType, locale)}</span>
                         </td>
                         <td className="wine-col-do" data-label="D.O.">
                           {wine.doName ? (
                             <span className="wine-do-chip">
-                              {doLogoPathForRegion(wine.doName) ? (
+                              {doCommunityFlagPath ? (
                                 <img
-                                  src={doLogoPathForRegion(wine.doName) as string}
+                                  src={doCommunityFlagPath}
+                                  alt=""
+                                  className="wine-do-community-flag"
+                                  loading="lazy"
+                                  aria-hidden="true"
+                                  onError={fallbackToAdminAsset}
+                                />
+                              ) : null}
+                              {doLogoPathFromImageName(wine.doLogoImage) ? (
+                                <img
+                                  src={doLogoPathFromImageName(wine.doLogoImage) as string}
                                   alt=""
                                   className="wine-do-logo"
                                   loading="lazy"
@@ -4670,7 +4759,14 @@ function App() {
                             </span>
                           ) : '-'}
                         </td>
-                        <td className="wine-col-score" data-label={labels.dashboard.table.avg}>{wine.averageScore ?? '-'}</td>
+                        <td className="wine-col-score" data-label={labels.dashboard.table.avg}>
+                          {wine.averageScore == null ? '-' : (
+                            <span className={`wine-score-chip ${scoreTone}`}>
+                              <strong>{Number.isInteger(wine.averageScore) ? wine.averageScore.toFixed(0) : wine.averageScore.toFixed(1)}</strong>
+                              <small>/100</small>
+                            </span>
+                          )}
+                        </td>
                         <td className="wine-col-actions" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
                           <div className="wine-actions-wrap">
                             <button
@@ -4709,8 +4805,9 @@ function App() {
                             </button>
                           </div>
                         </td>
-                      </tr>
-                    ))}
+                        </tr>
+                      )
+                    })}
                     {wineListStatus === 'loading' ? (
                       <tr>
                         <td colSpan={8}>{locale === 'ca' ? 'Carregant vins...' : 'Cargando vinos...'}</td>
@@ -5259,7 +5356,7 @@ function App() {
                     const doLabel = doRegion && doRegion !== '-'
                       ? doRegion
                       : (locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.')
-                    const doLogoPath = doLogoPathForRegion(doLabel)
+                    const doLogoPath = doLogoPathFromImageName(entry.wine.doLogoImage)
                     const countryFlagPathValue = countryFlagPath(entry.wine.country)
 
                     return (
@@ -5306,27 +5403,27 @@ function App() {
                         <dl className="review-metrics-grid review-metrics-grid-inline">
                           <div>
                             <dt>{locale === 'ca' ? 'Aroma' : 'Aroma'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.intensity_aroma * 2)}`}>{entry.review.intensity_aroma * 2}/10</dd>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.intensity_aroma)}`}>{entry.review.intensity_aroma}/10</dd>
                           </div>
                           <div>
                             <dt>{locale === 'ca' ? 'Dolçor' : 'Dulzor'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.sweetness * 2)}`}>{entry.review.sweetness * 2}/10</dd>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.sweetness)}`}>{entry.review.sweetness}/10</dd>
                           </div>
                           <div>
                             <dt>{locale === 'ca' ? 'Acidesa' : 'Acidez'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.acidity * 2)}`}>{entry.review.acidity * 2}/10</dd>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.acidity)}`}>{entry.review.acidity}/10</dd>
                           </div>
                           <div>
                             <dt>{locale === 'ca' ? 'Taní' : 'Tanino'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.tannin == null ? null : entry.review.tannin * 2)}`}>{entry.review.tannin == null ? '-' : `${entry.review.tannin * 2}/10`}</dd>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.tannin)}`}>{entry.review.tannin == null ? '-' : `${entry.review.tannin}/10`}</dd>
                           </div>
                           <div>
                             <dt>{locale === 'ca' ? 'Cos' : 'Cuerpo'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.body * 2)}`}>{entry.review.body * 2}/10</dd>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.body)}`}>{entry.review.body}/10</dd>
                           </div>
                           <div>
                             <dt>{locale === 'ca' ? 'Persistència' : 'Persistencia'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.persistence * 2)}`}>{entry.review.persistence * 2}/10</dd>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.persistence)}`}>{entry.review.persistence}/10</dd>
                           </div>
                         </dl>
                       </div>
@@ -5556,7 +5653,6 @@ function App() {
                   <p className="eyebrow">{locale === 'ca' ? 'PREFERÈNCIES' : 'PREFERENCIAS'}</p>
                   <h3>{locale === 'ca' ? 'Configuració del backoffice' : 'Configuración del backoffice'}</h3>
                 </div>
-                <span className="pill muted">{locale === 'ca' ? 'Demo' : 'Demo'}</span>
               </div>
 
               <form className="stack-form settings-form" onSubmit={(event) => event.preventDefault()}>
@@ -6006,7 +6102,7 @@ function App() {
             <header className="photo-editor-header">
               <div>
                 <p className="eyebrow">{locale === 'ca' ? 'EDITOR FOTO' : 'EDITOR FOTO'}</p>
-                <h3 id="photo-editor-title">{labelForPhotoType(photoEditorType)}</h3>
+                <h3 id="photo-editor-title">{labelForPhotoType(photoEditorType, locale)}</h3>
               </div>
               <button type="button" className="ghost-button small" onClick={closePhotoEditor}>
                 {locale === 'ca' ? 'Tancar' : 'Cerrar'}
@@ -6015,7 +6111,13 @@ function App() {
 
             <div className="photo-editor-body">
               <div
-                className={`photo-editor-preview-wrap ${photoEditorType === 'bottle' ? 'ratio-9-16' : 'ratio-3-4'}`}
+                className={`photo-editor-preview-wrap ${
+                  photoEditorType === 'bottle'
+                    ? 'ratio-9-16'
+                    : photoEditorType === 'situation'
+                      ? 'ratio-free'
+                      : 'ratio-3-4'
+                }`}
                 onPointerDown={handlePhotoEditorPointerDown}
                 onPointerMove={handlePhotoEditorPointerMove}
                 onPointerUp={handlePhotoEditorPointerUp}
@@ -6043,41 +6145,47 @@ function App() {
               </div>
               <div className="photo-editor-controls">
                 <p className="muted">
-                  Format {photoEditorType === 'bottle' ? '9:16' : '3:4'} · {locale === 'ca' ? 'Arrossega la imatge per moure-la' : 'Arrastra la imagen para moverla'}
+                  {photoEditorType === 'situation'
+                    ? (locale === 'ca' ? 'Format lliure (sense retall obligatori)' : 'Formato libre (sin recorte obligatorio)')
+                    : `Format ${photoEditorType === 'bottle' ? '9:16' : '3:4'} · ${locale === 'ca' ? 'Arrossega la imatge per moure-la' : 'Arrastra la imagen para moverla'}`}
                 </p>
-                <label>
-                  {locale === 'ca' ? 'Zoom' : 'Zoom'}
-                  <input
-                    type="range"
-                    min="1"
-                    max="3"
-                    step="0.01"
-                    value={photoEditorZoom}
-                    onChange={(event) => setPhotoEditorZoom(Number(event.target.value))}
-                  />
-                </label>
-                <label>
-                  {locale === 'ca' ? 'Desplaçament X' : 'Desplazamiento X'}
-                  <input
-                    type="range"
-                    min="-100"
-                    max="100"
-                    step="1"
-                    value={photoEditorOffsetX}
-                    onChange={(event) => setPhotoEditorOffsetX(Number(event.target.value))}
-                  />
-                </label>
-                <label>
-                  {locale === 'ca' ? 'Desplaçament Y' : 'Desplazamiento Y'}
-                  <input
-                    type="range"
-                    min="-100"
-                    max="100"
-                    step="1"
-                    value={photoEditorOffsetY}
-                    onChange={(event) => setPhotoEditorOffsetY(Number(event.target.value))}
-                  />
-                </label>
+                {photoEditorType !== 'situation' ? (
+                  <>
+                    <label>
+                      {locale === 'ca' ? 'Zoom' : 'Zoom'}
+                      <input
+                        type="range"
+                        min="1"
+                        max="3"
+                        step="0.01"
+                        value={photoEditorZoom}
+                        onChange={(event) => setPhotoEditorZoom(Number(event.target.value))}
+                      />
+                    </label>
+                    <label>
+                      {locale === 'ca' ? 'Desplaçament X' : 'Desplazamiento X'}
+                      <input
+                        type="range"
+                        min="-100"
+                        max="100"
+                        step="1"
+                        value={photoEditorOffsetX}
+                        onChange={(event) => setPhotoEditorOffsetX(Number(event.target.value))}
+                      />
+                    </label>
+                    <label>
+                      {locale === 'ca' ? 'Desplaçament Y' : 'Desplazamiento Y'}
+                      <input
+                        type="range"
+                        min="-100"
+                        max="100"
+                        step="1"
+                        value={photoEditorOffsetY}
+                        onChange={(event) => setPhotoEditorOffsetY(Number(event.target.value))}
+                      />
+                    </label>
+                  </>
+                ) : null}
                 {photoEditorError ? <p className="error-message">{photoEditorError}</p> : null}
               </div>
             </div>
@@ -6127,6 +6235,8 @@ function App() {
                             ? 'front_label'
                             : activeGalleryImageKey === 'back'
                               ? 'back_label'
+                              : activeGalleryImageKey === 'situation'
+                                ? 'situation'
                               : 'bottle'
                         startPhotoPick(selectedWineGallery.id, activePhotoType)
                       }}
@@ -6149,6 +6259,8 @@ function App() {
                             ? 'front_label'
                             : activeGalleryImageKey === 'back'
                               ? 'back_label'
+                              : activeGalleryImageKey === 'situation'
+                                ? 'situation'
                               : 'bottle'
                         void resetWinePhotoToDefault(selectedWineGallery.id, activePhotoType)
                       }}
@@ -6158,6 +6270,8 @@ function App() {
                             ? 'front_label'
                             : activeGalleryImageKey === 'back'
                               ? 'back_label'
+                              : activeGalleryImageKey === 'situation'
+                                ? 'situation'
                               : 'bottle'
                         )
                       }
@@ -6166,13 +6280,19 @@ function App() {
                     >
                       🗑
                     </button>
+                    <button
+                      type="button"
+                      className="ghost-button small image-modal-icon-button image-modal-close-button"
+                      onClick={closeWineGallery}
+                      title={locale === 'ca' ? 'Tancar galeria' : 'Cerrar galería'}
+                      aria-label={t('wineProfile.closeGalleryAria')}
+                    >
+                      ✕
+                    </button>
                   </div>
                 </div>
                 <p className="muted">{selectedWineGallery.winery}</p>
               </div>
-              <button type="button" className="ghost-button small" onClick={closeWineGallery} aria-label={t('wineProfile.closeGalleryAria')}>
-                {t('wineProfile.closeGallery')}
-              </button>
             </header>
 
             <div className="image-modal-stage">

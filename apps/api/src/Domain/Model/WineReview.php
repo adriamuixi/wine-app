@@ -72,8 +72,8 @@ final readonly class WineReview
 
     private static function assertAxisInRange(string $axis, int $value): void
     {
-        if ($value < 0 || $value > 5) {
-            throw new \InvalidArgumentException(sprintf('%s must be between 0 and 5.', $axis));
+        if ($value < 0 || $value > 10) {
+            throw new \InvalidArgumentException(sprintf('%s must be between 0 and 10.', $axis));
         }
     }
 }

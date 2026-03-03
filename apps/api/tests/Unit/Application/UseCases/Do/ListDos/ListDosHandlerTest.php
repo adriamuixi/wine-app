@@ -21,6 +21,7 @@ final class ListDosHandlerTest extends TestCase
         self::assertSame('Rioja', $items[0]->name);
         self::assertSame('La Rioja', $items[0]->region);
         self::assertSame(Country::Spain, $items[0]->country);
+        self::assertSame('rioja_DO.png', $items[0]->logoImage);
     }
 }
 
@@ -39,9 +40,8 @@ final class InMemoryDoRepository implements DoRepository
     public function findAll(): array
     {
         return [
-            new DenominationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES'),
-            new DenominationOfOrigin(2, 'Bordeaux', 'Bordeaux', Country::France, 'FR'),
+            new DenominationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES', 'rioja_DO.png'),
+            new DenominationOfOrigin(2, 'Bordeaux', 'Bordeaux', Country::France, 'FR', 'bordeaux_DO.png'),
         ];
     }
 }
-

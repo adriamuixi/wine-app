@@ -47,7 +47,7 @@ final class CreateReviewHandlerTest extends TestCase
         $handler->handle(new CreateReviewCommand(
             userId: 1,
             wineId: 10,
-            intensityAroma: 6,
+            intensityAroma: 11,
             sweetness: 2,
             acidity: 3,
             tannin: 2,
