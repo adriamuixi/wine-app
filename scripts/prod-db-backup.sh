@@ -21,10 +21,27 @@ if ! flock -n 9; then
 fi
 
 if [[ -f "${PROJECT_ROOT}/.env" ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  source "${PROJECT_ROOT}/.env"
-  set +a
+  while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
+    line="${raw_line%$'\r'}"
+    [[ -z "${line}" ]] && continue
+    [[ "${line}" =~ ^[[:space:]]*# ]] && continue
+    [[ "${line}" != *=* ]] && continue
+
+    key="${line%%=*}"
+    value="${line#*=}"
+
+    key="$(printf '%s' "${key}" | xargs)"
+    [[ -z "${key}" ]] && continue
+
+    # Preserve .env values literally (no shell expansion).
+    if [[ "${value}" =~ ^\".*\"$ ]]; then
+      value="${value:1:${#value}-2}"
+    elif [[ "${value}" =~ ^\'.*\'$ ]]; then
+      value="${value:1:${#value}-2}"
+    fi
+
+    export "${key}=${value}"
+  done < "${PROJECT_ROOT}/.env"
 fi
 
 POSTGRES_DB="${POSTGRES_DB:-wine}"
