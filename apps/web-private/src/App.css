@@ -6609,6 +6609,14 @@ body {
 }
 
 @media (max-width: 640px) {
+  :root[data-theme='dark'] .panel {
+    backdrop-filter: none;
+  }
+
+  :root[data-theme='dark'] .wine-table tr {
+    box-shadow: none;
+  }
+
   .wine-delete-backdrop {
     align-items: flex-end;
     padding: 0;
