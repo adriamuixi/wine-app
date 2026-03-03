@@ -4774,7 +4774,7 @@ code {
     font-size: 1.32rem;
     line-height: 1;
     letter-spacing: -0.02em;
-    font-family: 'Reem Kufi Fun', 'Vina Sans', 'Concert One', 'Knewave', 'Permanent Marker', 'Caveat', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     font-weight: 700;
   }
 
