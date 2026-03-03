@@ -263,9 +263,9 @@ type ReviewFormPreset = {
   notes: string
 }
 
-const DEFAULT_NO_PHOTO_SRC = '/images/photos/wines/no-photo.png'
-const SAMPLE_WINE_THUMBNAIL_SRC = DEFAULT_NO_PHOTO_SRC
-const DEFAULT_WINE_ICON_CANDIDATES = [DEFAULT_NO_PHOTO_SRC, `/admin${DEFAULT_NO_PHOTO_SRC}`] as const
+const DEFAULT_NO_PHOTO_LIGHT_SRC = '/images/photos/wines/no-photo.png'
+const DEFAULT_NO_PHOTO_DARK_SRC = '/images/photos/wines/no-photo-dark.png'
+const SAMPLE_WINE_THUMBNAIL_SRC = DEFAULT_NO_PHOTO_LIGHT_SRC
 const DEFAULT_WINE_ICON_DATA_URI = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="240" viewBox="0 0 160 240"><rect width="160" height="240" rx="14" fill="%23f3ece3"/><path d="M55 36h50c0 36-10 56-25 71v51h22v18H58v-18h22v-51C65 92 55 72 55 36Z" fill="%238f3851"/><circle cx="80" cy="73" r="24" fill="%23c9657f"/></svg>'
 const SAMPLE_WINE_GALLERY = [
   { key: 'bottle', src: SAMPLE_WINE_THUMBNAIL_SRC },
@@ -1017,19 +1017,32 @@ function buildMockWineProfile(
   }
 }
 
+function getDefaultNoPhotoSrc(): string {
+  if (typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark') {
+    return DEFAULT_NO_PHOTO_DARK_SRC
+  }
+  return DEFAULT_NO_PHOTO_LIGHT_SRC
+}
+
+function getDefaultWineIconCandidates(): [string, string] {
+  const src = getDefaultNoPhotoSrc()
+  return [src, `/admin${src}`]
+}
+
 function fallbackToDefaultWineIcon(event: SyntheticEvent<HTMLImageElement, Event>): void {
   const image = event.currentTarget
+  const candidates = getDefaultWineIconCandidates()
   const attemptRaw = image.dataset.fallbackAttempt ?? '0'
   const attempt = Number.parseInt(attemptRaw, 10)
   if (Number.isNaN(attempt) || attempt < 0) {
     image.dataset.fallbackAttempt = '0'
-    image.src = DEFAULT_WINE_ICON_CANDIDATES[0]
+    image.src = candidates[0]
     return
   }
 
-  if (attempt < DEFAULT_WINE_ICON_CANDIDATES.length) {
+  if (attempt < candidates.length) {
     image.dataset.fallbackAttempt = String(attempt + 1)
-    image.src = DEFAULT_WINE_ICON_CANDIDATES[attempt]
+    image.src = candidates[attempt]
     return
   }
 
@@ -1106,7 +1119,7 @@ function normalizeCountryCode(value: unknown): Exclude<CountryFilterValue, 'all'
 }
 
 function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineItem {
-  const defaultSrc = DEFAULT_WINE_ICON_CANDIDATES[0]
+  const defaultSrc = getDefaultNoPhotoSrc()
   const resolvedByType: Record<'bottle' | 'front' | 'back' | 'situation', string> = {
     bottle: defaultSrc,
     front: defaultSrc,
@@ -2746,7 +2759,7 @@ function App() {
 
     return types.map((type) => {
       const uploaded = photos.find((photo) => photo.type === type)
-      const src = uploaded ? resolveApiAssetUrl(uploaded.url) : DEFAULT_WINE_ICON_CANDIDATES[0]
+      const src = uploaded ? resolveApiAssetUrl(uploaded.url) : getDefaultNoPhotoSrc()
       return {
         type,
         src,
@@ -2761,7 +2774,7 @@ function App() {
 
     return types.map((type) => {
       const uploaded = photos.find((photo) => photo.type === type)
-      const src = uploaded ? resolveApiAssetUrl(uploaded.url) : DEFAULT_WINE_ICON_CANDIDATES[0]
+      const src = uploaded ? resolveApiAssetUrl(uploaded.url) : getDefaultNoPhotoSrc()
       return {
         type,
         src,
@@ -3132,7 +3145,7 @@ function App() {
   const resetWinePhotoToDefault = async (wineId: number, type: WinePhotoSlotType) => {
     setPhotoDeleteBusyType(type)
     try {
-      const defaultResponse = await fetch(DEFAULT_WINE_ICON_CANDIDATES[0], { credentials: 'include' })
+      const defaultResponse = await fetch(getDefaultNoPhotoSrc(), { credentials: 'include' })
       if (!defaultResponse.ok) {
         throw new Error(`HTTP ${defaultResponse.status}`)
       }
@@ -4887,7 +4900,7 @@ function App() {
                             ) : (
                               <span className="wine-country-emoji" aria-hidden="true">{countryFlagEmoji(wine.country)}</span>
                             )}
-                            <span>{localizedCountryName(wine.country, locale)}</span>
+                            <span className="wine-country-name">{localizedCountryName(wine.country, locale)}</span>
                           </span>
                         </td>
                         <td className="wine-col-vintage" data-label={locale === 'ca' ? 'Anyada' : 'Añada'}>
@@ -4899,6 +4912,8 @@ function App() {
                         <td className="wine-col-do" data-label="D.O.">
                           {wine.doName ? (
                             <span className="wine-do-chip">
+                              <span className="wine-do-value">{wine.doName}</span>
+                              <span className="wine-do-icons" aria-hidden="true">
                               {doCommunityFlagPath ? (
                                 <img
                                   src={doCommunityFlagPath}
@@ -4919,9 +4934,9 @@ function App() {
                                   onError={fallbackToAdminAsset}
                                 />
                               ) : null}
-                              <span>{wine.doName}</span>
+                              </span>
                             </span>
-                          ) : '-'}
+                          ) : <span className="wine-do-value">-</span>}
                         </td>
                         <td className="wine-col-score" data-label={labels.dashboard.table.avg}>
                           {wine.averageScore == null ? '-' : (
@@ -6376,7 +6391,6 @@ function App() {
         ref={photoPickerInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="sr-only"
         onChange={handlePhotoPickerChange}
       />

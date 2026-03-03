@@ -911,10 +911,11 @@
   display: block;
   font-size: 2.05rem;
   line-height: 0.96;
-  font-weight: 900;
+  font-weight: 200 !important;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: 'tnum' 1, 'lnum' 1;
+  font-family: 'Vina Sans', 'Concert One', sans-serif;
   color: var(--text);
 }
 
@@ -2463,6 +2464,14 @@
     gap: 0.08rem;
   }
 
+  .wine-card-mobile-do-logos {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    min-height: 0;
+  }
+
   .wine-card-mobile-region-name {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2496,8 +2505,7 @@
   }
 
   .wine-card-footer {
-    padding-top: 0;
-    gap: 0.5rem;
+    display: none;
   }
 
   .wine-card-mobile-grapes {
@@ -2509,16 +2517,6 @@
 
   .wine-card-mobile-grapes .grape-filter-chip {
     max-width: 100%;
-  }
-
-  .card-link {
-    width: 100%;
-    text-align: center;
-    padding: 0.56rem 0.6rem;
-    font-size: 0.84rem;
-    font-weight: 800;
-    color: #ff2f98;
-    border-top: 1px solid rgba(255, 56, 163, 0.12);
   }
 
   .wine-card-meta {

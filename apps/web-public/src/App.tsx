@@ -354,11 +354,24 @@ const DICT: Record<Locale, Dictionary> = {
   },
 }
 
-const DEFAULT_PUBLIC_WINE_IMAGE = '/images/photos/wines/no-photo.png'
+const DEFAULT_PUBLIC_WINE_IMAGE_LIGHT = '/images/photos/wines/no-photo.png'
+const DEFAULT_PUBLIC_WINE_IMAGE_DARK = '/images/photos/wines/no-photo-dark.png'
+
+function defaultPublicWineImageForTheme(isDark: boolean): string {
+  return isDark ? DEFAULT_PUBLIC_WINE_IMAGE_DARK : DEFAULT_PUBLIC_WINE_IMAGE_LIGHT
+}
+
+function resolvePublicWineImageForTheme(src: string, isDark: boolean): string {
+  if (src === DEFAULT_PUBLIC_WINE_IMAGE_LIGHT || src === DEFAULT_PUBLIC_WINE_IMAGE_DARK) {
+    return defaultPublicWineImageForTheme(isDark)
+  }
+  return src
+}
+
 const SHARED_GALLERY = [
-  DEFAULT_PUBLIC_WINE_IMAGE,
-  DEFAULT_PUBLIC_WINE_IMAGE,
-  DEFAULT_PUBLIC_WINE_IMAGE,
+  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
 ]
 
 type JournalWineRow = {
@@ -548,9 +561,9 @@ function autonomousCommunityNameForRegion(region: string): string | null {
 }
 
 const imageCycle = [
-  DEFAULT_PUBLIC_WINE_IMAGE,
-  DEFAULT_PUBLIC_WINE_IMAGE,
-  DEFAULT_PUBLIC_WINE_IMAGE,
+  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+  DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
 ] as const
 
 const MOCK_WINES: WineCard[] = CATALAN_JOURNAL_ROWS.map((row, index) => {
@@ -1327,11 +1340,11 @@ export default function App() {
                 >
                   <div className="wine-card-media">
                     <img
-                      src={wine.image}
+                      src={resolvePublicWineImageForTheme(wine.image, isDark)}
                       alt={wine.name}
                       loading="lazy"
                       onError={(event) => {
-                        event.currentTarget.src = DEFAULT_PUBLIC_WINE_IMAGE
+                        event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
                       }}
                     />
                     <div className="wine-card-overlay" />
@@ -1426,34 +1439,22 @@ export default function App() {
                     </section>
 
                     <div className="wine-card-mobile-summary" aria-label="mobile summary">
+                      <div className="wine-card-mobile-region-text">
+                        <span className="wine-card-mobile-region-name">{wine.region}</span>
+                        <span className="wine-card-mobile-region-vintage">{wine.vintage}</span>
+                      </div>
+                      <div className="wine-card-mobile-do-logos">
+                        {communityFlagImage && communityName ? (
+                          <img className="do-logo-badge" src={communityFlagImage} alt={communityName} loading="lazy" />
+                        ) : null}
+                        {wine.doLogoImage ? (
+                          <img className="do-logo-badge" src={wine.doLogoImage} alt="" loading="lazy" />
+                        ) : null}
+                      </div>
                       <div className="wine-card-mobile-summary-region">
                         <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>
                           {countryFlagImage ? <img className="flag-badge-image" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" /> : countryFlagEmoji(wine.country)}
                         </span>
-                        {communityFlagImage && communityName ? (
-                          <span className="country-flag-badge" aria-label={`Comunidad autonoma ${communityName}`} title={communityName}>
-                            <img className="flag-badge-image" src={communityFlagImage} alt={communityName} loading="lazy" />
-                          </span>
-                        ) : null}
-                        <span className="wine-card-mobile-region-text">
-                          <span className="wine-card-mobile-region-name">{wine.region}</span>
-                          <span className="wine-card-mobile-region-vintage">{wine.vintage}</span>
-                        </span>
-                        {wine.doLogoImage ? (
-                          <button
-                            type="button"
-                            className="do-logo-inline-button"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              setSelectedWineId(wine.id)
-                              setActiveModalImageIndex(0)
-                              setDoLogoPreview({ src: wine.doLogoImage!, label: wine.region })
-                            }}
-                            aria-label={`${wine.region} DO`}
-                          >
-                            <img className="do-logo-badge" src={wine.doLogoImage} alt="" loading="lazy" />
-                          </button>
-                        ) : null}
                       </div>
                     </div>
 
@@ -1524,10 +1525,10 @@ export default function App() {
               <div className="public-wine-gallery">
                 <div className="public-wine-main-image">
                   <img
-                    src={selectedWine.gallery[activeModalImageIndex] ?? selectedWine.image}
+                    src={resolvePublicWineImageForTheme(selectedWine.gallery[activeModalImageIndex] ?? selectedWine.image, isDark)}
                     alt={selectedWine.name}
                     onError={(event) => {
-                      event.currentTarget.src = DEFAULT_PUBLIC_WINE_IMAGE
+                      event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
                     }}
                   />
                 </div>
@@ -1540,11 +1541,11 @@ export default function App() {
                       onClick={() => setActiveModalImageIndex(index)}
                     >
                       <img
-                        src={src}
+                        src={resolvePublicWineImageForTheme(src, isDark)}
                         alt={`${selectedWine.name} ${index + 1}`}
                         loading="lazy"
                         onError={(event) => {
-                          event.currentTarget.src = DEFAULT_PUBLIC_WINE_IMAGE
+                          event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
                         }}
                       />
                     </button>
