@@ -1073,6 +1073,38 @@ function resolveApiAssetUrl(path: string): string {
   return `${resolveApiBaseUrl()}${path}`
 }
 
+function normalizeWineType(value: unknown): WineType {
+  if (value === 'red' || value === 'white' || value === 'rose' || value === 'sparkling' || value === 'sweet' || value === 'fortified') {
+    return value
+  }
+  return 'red'
+}
+
+function normalizeAgingType(value: unknown): 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null {
+  if (value === 'young' || value === 'crianza' || value === 'reserve' || value === 'grand_reserve') {
+    return value
+  }
+  return null
+}
+
+function normalizeCountryCode(value: unknown): Exclude<CountryFilterValue, 'all'> | null {
+  if (
+    value === 'spain'
+    || value === 'france'
+    || value === 'italy'
+    || value === 'portugal'
+    || value === 'germany'
+    || value === 'argentina'
+    || value === 'chile'
+    || value === 'united_states'
+    || value === 'south_africa'
+    || value === 'australia'
+  ) {
+    return value
+  }
+  return null
+}
+
 function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineItem {
   const defaultSrc = DEFAULT_WINE_ICON_CANDIDATES[0]
   const resolvedByType: Record<'bottle' | 'front' | 'back' | 'situation', string> = {
@@ -1082,7 +1114,13 @@ function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineI
     situation: defaultSrc,
   }
 
-  item.photos?.forEach((photo) => {
+  const photos = Array.isArray(item.photos)
+    ? item.photos.filter((photo): photo is NonNullable<WineListApiItem['photos']>[number] => {
+        return photo != null && typeof photo.url === 'string' && photo.url.trim() !== ''
+      })
+    : []
+
+  photos.forEach((photo) => {
     const resolvedUrl = resolveApiAssetUrl(photo.url)
     if (photo.type === 'bottle') {
       resolvedByType.bottle = resolvedUrl
@@ -1098,24 +1136,27 @@ function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineI
     }
   })
 
-  const preferredPhoto = item.photos?.find((photo) => photo.type === 'bottle') ?? item.photos?.[0]
+  const preferredPhoto = photos.find((photo) => photo.type === 'bottle') ?? photos[0]
+  const countryCode = normalizeCountryCode(item.country)
 
   return {
     galleryPreview: resolvedByType,
     thumbnailSrc: preferredPhoto?.url ? resolveApiAssetUrl(preferredPhoto.url) : defaultSrc,
-    id: item.id,
-    name: item.name,
-    winery: item.winery ?? '-',
-    type: item.wine_type ?? 'red',
-    country: countryCodeToLabel(item.country, locale),
+    id: Number.isFinite(item.id) ? item.id : 0,
+    name: typeof item.name === 'string' && item.name.trim() !== '' ? item.name : '-',
+    winery: typeof item.winery === 'string' && item.winery.trim() !== '' ? item.winery : '-',
+    type: normalizeWineType(item.wine_type),
+    country: countryCodeToLabel(countryCode, locale),
     region: item.do?.name ?? '-',
     doName: item.do?.name ?? null,
     doLogoImage: item.do?.logo_image ?? null,
-    vintageYear: item.vintage_year,
-    agingType: item.aging_type ?? null,
+    vintageYear: Number.isInteger(item.vintage_year) ? item.vintage_year : null,
+    agingType: normalizeAgingType(item.aging_type),
     // List endpoint does not expose price in current API contract.
     pricePaid: 0,
-    averageScore: item.avg_score == null ? null : Math.round(item.avg_score * 10) / 10,
+    averageScore: typeof item.avg_score === 'number' && Number.isFinite(item.avg_score)
+      ? Math.round(item.avg_score * 10) / 10
+      : null,
   }
 }
 
@@ -2348,7 +2389,16 @@ function App() {
         }
 
         const payload = await response.json() as WineListApiResponse
-        const mappedItems = payload.items.map((item) => mapWineListItemToWineItem(item, locale))
+        const sourceItems = Array.isArray(payload.items) ? payload.items : []
+        const mappedItems = sourceItems
+          .map((item) => {
+            try {
+              return mapWineListItemToWineItem(item, locale)
+            } catch {
+              return null
+            }
+          })
+          .filter((item): item is WineItem => item !== null)
 
         setWineItems(mappedItems)
         setWinePage(payload.pagination.page)
