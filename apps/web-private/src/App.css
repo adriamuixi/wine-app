@@ -2936,6 +2936,14 @@ code {
   bottom: 0.9rem;
   display: flex;
   gap: 0.35rem;
+  z-index: 2;
+}
+
+.photo-editor-zoom-button {
+  background: rgba(17, 13, 15, 0.78);
+  border-color: rgba(255, 255, 255, 0.36);
+  color: #fff7f8;
+  font-weight: 800;
 }
 
 .photo-editor-controls {
@@ -6615,6 +6623,68 @@ body {
 
   :root[data-theme='dark'] .wine-table tr {
     box-shadow: none;
+  }
+
+  .modal-backdrop.modal-backdrop-top {
+    align-items: end;
+    padding: 0;
+  }
+
+  .photo-editor-modal {
+    width: 100%;
+    max-height: none;
+    height: min(92dvh, 920px);
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    padding: 0.72rem 0.72rem calc(0.72rem + env(safe-area-inset-bottom, 0px));
+    gap: 0.6rem;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .photo-editor-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: inherit;
+    padding-bottom: 0.35rem;
+  }
+
+  .photo-editor-header .ghost-button.small {
+    min-height: 42px;
+  }
+
+  .photo-editor-body {
+    overflow: auto;
+    align-content: start;
+    gap: 0.62rem;
+  }
+
+  .photo-editor-preview-wrap {
+    min-height: 320px;
+    padding: 0.45rem;
+  }
+
+  .photo-editor-controls {
+    gap: 0.42rem;
+  }
+
+  .photo-editor-controls label {
+    font-size: 0.8rem;
+  }
+
+  .photo-editor-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    background: inherit;
+    padding-top: 0.35rem;
+    border-top: 1px solid rgba(82, 46, 28, 0.16);
+  }
+
+  .photo-editor-footer .ghost-button,
+  .photo-editor-footer .secondary-button {
+    min-height: 46px;
   }
 
   .wine-delete-backdrop {

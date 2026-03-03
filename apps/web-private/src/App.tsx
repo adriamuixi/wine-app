@@ -1335,6 +1335,16 @@ function App() {
   const photoPickerInputRef = useRef<HTMLInputElement | null>(null)
   const photoEditorCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const photoEditorDragRef = useRef<{ active: boolean; pointerId: number; lastX: number; lastY: number } | null>(null)
+  const photoEditorPointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const photoEditorPinchRef = useRef<{
+    baseDistance: number
+    baseZoom: number
+    baseOffsetX: number
+    baseOffsetY: number
+    baseMidX: number
+    baseMidY: number
+    rect: DOMRect
+  } | null>(null)
   const [grapeBlendRows, setGrapeBlendRows] = useState<GrapeBlendRow[]>([
     { id: 1, grapeId: '', percentage: '' },
   ])
@@ -2872,6 +2882,9 @@ function App() {
     setPhotoEditorZoom(1)
     setPhotoEditorOffsetX(0)
     setPhotoEditorOffsetY(0)
+    photoEditorDragRef.current = null
+    photoEditorPinchRef.current = null
+    photoEditorPointersRef.current.clear()
   }
 
   const drawPhotoEditorPreview = async (): Promise<{ canvas: HTMLCanvasElement; outputFileName: string } | null> => {
@@ -2931,9 +2944,54 @@ function App() {
     }
   }
 
+  const photoEditorDistance = (a: { x: number; y: number }, b: { x: number; y: number }): number => {
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    return Math.hypot(dx, dy)
+  }
+
+  const photoEditorMidpoint = (a: { x: number; y: number }, b: { x: number; y: number }): { x: number; y: number } => ({
+    x: (a.x + b.x) / 2,
+    y: (a.y + b.y) / 2,
+  })
+
+  const beginPhotoEditorPinch = (rect: DOMRect) => {
+    const points = [...photoEditorPointersRef.current.values()]
+    if (points.length < 2 || photoEditorType === 'situation') {
+      photoEditorPinchRef.current = null
+      return
+    }
+
+    const [first, second] = points
+    const distance = photoEditorDistance(first, second)
+    if (distance <= 0) {
+      return
+    }
+
+    const midpoint = photoEditorMidpoint(first, second)
+    photoEditorPinchRef.current = {
+      baseDistance: distance,
+      baseZoom: photoEditorZoom,
+      baseOffsetX: photoEditorOffsetX,
+      baseOffsetY: photoEditorOffsetY,
+      baseMidX: midpoint.x,
+      baseMidY: midpoint.y,
+      rect,
+    }
+  }
+
   const handlePhotoEditorPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     const target = event.currentTarget
     target.setPointerCapture(event.pointerId)
+    photoEditorPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+
+    if (photoEditorPointersRef.current.size >= 2) {
+      photoEditorDragRef.current = null
+      beginPhotoEditorPinch(event.currentTarget.getBoundingClientRect())
+      return
+    }
+
+    photoEditorPinchRef.current = null
     photoEditorDragRef.current = {
       active: true,
       pointerId: event.pointerId,
@@ -2943,6 +3001,32 @@ function App() {
   }
 
   const handlePhotoEditorPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (photoEditorPointersRef.current.has(event.pointerId)) {
+      photoEditorPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    }
+
+    if (photoEditorPointersRef.current.size >= 2 && photoEditorType !== 'situation') {
+      const points = [...photoEditorPointersRef.current.values()]
+      const [first, second] = points
+      if (first && second) {
+        const pinchState = photoEditorPinchRef.current
+        if (pinchState != null && pinchState.baseDistance > 0) {
+          const distance = photoEditorDistance(first, second)
+          const midpoint = photoEditorMidpoint(first, second)
+          const scale = distance / pinchState.baseDistance
+          const nextZoom = clamp(pinchState.baseZoom * scale, 1, 3)
+          const deltaMidX = midpoint.x - pinchState.baseMidX
+          const deltaMidY = midpoint.y - pinchState.baseMidY
+          const nextOffsetX = clamp(pinchState.baseOffsetX + ((deltaMidX / pinchState.rect.width) * 100), -100, 100)
+          const nextOffsetY = clamp(pinchState.baseOffsetY + ((deltaMidY / pinchState.rect.height) * 100), -100, 100)
+          setPhotoEditorZoom(nextZoom)
+          setPhotoEditorOffsetX(nextOffsetX)
+          setPhotoEditorOffsetY(nextOffsetY)
+        }
+      }
+      return
+    }
+
     const drag = photoEditorDragRef.current
     if (!drag || !drag.active || drag.pointerId !== event.pointerId) {
       return
@@ -2963,8 +3047,25 @@ function App() {
   }
 
   const handlePhotoEditorPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (photoEditorDragRef.current?.pointerId === event.pointerId) {
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    photoEditorPointersRef.current.delete(event.pointerId)
+
+    if (photoEditorPointersRef.current.size < 2) {
+      photoEditorPinchRef.current = null
+    }
+
+    if (photoEditorDragRef.current?.pointerId === event.pointerId || photoEditorPointersRef.current.size === 0) {
       photoEditorDragRef.current = null
+    }
+
+    if (photoEditorPointersRef.current.size === 1) {
+      const [pointerId, point] = [...photoEditorPointersRef.current.entries()][0]
+      photoEditorDragRef.current = {
+        active: true,
+        pointerId,
+        lastX: point.x,
+        lastY: point.y,
+      }
     }
   }
 
@@ -6187,30 +6288,32 @@ function App() {
                 onPointerCancel={handlePhotoEditorPointerUp}
               >
                 <canvas ref={photoEditorCanvasRef} className="photo-editor-preview" />
-                <div className="photo-editor-zoom-buttons">
-                  <button
-                    type="button"
-                    className="ghost-button tiny"
-                    onClick={() => setPhotoEditorZoom((current) => clamp(current - 0.1, 1, 3))}
-                    aria-label={locale === 'ca' ? 'Disminuir zoom' : 'Disminuir zoom'}
-                  >
-                    -
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost-button tiny"
-                    onClick={() => setPhotoEditorZoom((current) => clamp(current + 0.1, 1, 3))}
-                    aria-label={locale === 'ca' ? 'Augmentar zoom' : 'Aumentar zoom'}
-                  >
-                    +
-                  </button>
-                </div>
+                {photoEditorType !== 'situation' ? (
+                  <div className="photo-editor-zoom-buttons">
+                    <button
+                      type="button"
+                      className="ghost-button tiny photo-editor-zoom-button"
+                      onClick={() => setPhotoEditorZoom((current) => clamp(current - 0.1, 1, 3))}
+                      aria-label={locale === 'ca' ? 'Disminuir zoom' : 'Disminuir zoom'}
+                    >
+                      -
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost-button tiny photo-editor-zoom-button"
+                      onClick={() => setPhotoEditorZoom((current) => clamp(current + 0.1, 1, 3))}
+                      aria-label={locale === 'ca' ? 'Augmentar zoom' : 'Aumentar zoom'}
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : null}
               </div>
               <div className="photo-editor-controls">
                 <p className="muted">
                   {photoEditorType === 'situation'
                     ? (locale === 'ca' ? 'Format lliure (sense retall obligatori)' : 'Formato libre (sin recorte obligatorio)')
-                    : `Format ${photoEditorType === 'bottle' ? '9:16' : '3:4'} · ${locale === 'ca' ? 'Arrossega la imatge per moure-la' : 'Arrastra la imagen para moverla'}`}
+                    : `Format ${photoEditorType === 'bottle' ? '9:16' : '3:4'} · ${locale === 'ca' ? 'Arrossega per moure i fes pinça per zoom' : 'Arrastra para mover y pellizca para zoom'}`}
                 </p>
                 {photoEditorType !== 'situation' ? (
                   <>
@@ -6225,28 +6328,32 @@ function App() {
                         onChange={(event) => setPhotoEditorZoom(Number(event.target.value))}
                       />
                     </label>
-                    <label>
-                      {locale === 'ca' ? 'Desplaçament X' : 'Desplazamiento X'}
-                      <input
-                        type="range"
-                        min="-100"
-                        max="100"
-                        step="1"
-                        value={photoEditorOffsetX}
-                        onChange={(event) => setPhotoEditorOffsetX(Number(event.target.value))}
-                      />
-                    </label>
-                    <label>
-                      {locale === 'ca' ? 'Desplaçament Y' : 'Desplazamiento Y'}
-                      <input
-                        type="range"
-                        min="-100"
-                        max="100"
-                        step="1"
-                        value={photoEditorOffsetY}
-                        onChange={(event) => setPhotoEditorOffsetY(Number(event.target.value))}
-                      />
-                    </label>
+                    {!isMobileViewport ? (
+                      <>
+                        <label>
+                          {locale === 'ca' ? 'Desplaçament X' : 'Desplazamiento X'}
+                          <input
+                            type="range"
+                            min="-100"
+                            max="100"
+                            step="1"
+                            value={photoEditorOffsetX}
+                            onChange={(event) => setPhotoEditorOffsetX(Number(event.target.value))}
+                          />
+                        </label>
+                        <label>
+                          {locale === 'ca' ? 'Desplaçament Y' : 'Desplazamiento Y'}
+                          <input
+                            type="range"
+                            min="-100"
+                            max="100"
+                            step="1"
+                            value={photoEditorOffsetY}
+                            onChange={(event) => setPhotoEditorOffsetY(Number(event.target.value))}
+                          />
+                        </label>
+                      </>
+                    ) : null}
                   </>
                 ) : null}
                 {photoEditorError ? <p className="error-message">{photoEditorError}</p> : null}
