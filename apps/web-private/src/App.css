@@ -4462,8 +4462,8 @@ code {
 
   .wine-table tr {
     display: grid;
-    grid-template-columns: 84px repeat(3, minmax(0, 1fr));
-    gap: 0.34rem 0.56rem;
+    grid-template-columns: 72px repeat(3, minmax(0, 1fr));
+    gap: 0.3rem 0.46rem;
     align-items: start;
     border: 1px solid rgba(82, 46, 28, 0.08);
     border-radius: 14px;
@@ -4499,8 +4499,8 @@ code {
   }
 
   .wine-thumb {
-    width: 84px;
-    height: 120px;
+    width: 72px;
+    height: 102px;
     border-radius: 10px;
     border: 1px solid rgba(82, 46, 28, 0.12);
     background: rgba(255, 255, 255, 0.8);
@@ -4753,17 +4753,17 @@ code {
   }
 
   .wine-thumb-score {
-    min-width: 58px;
-    padding: 0.14rem 0.42rem;
+    min-width: 46px;
+    padding: 0.1rem 0.32rem;
   }
 
   .wine-score-chip {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 68px;
+    min-width: 56px;
     border-radius: 12px;
-    padding: 0.18rem 0.5rem;
+    padding: 0.14rem 0.34rem;
     font-variant-numeric: tabular-nums;
     border: 1px solid rgba(82, 46, 28, 0.12);
     background: rgba(82, 46, 28, 0.06);
@@ -4771,7 +4771,7 @@ code {
   }
 
   .wine-score-chip strong {
-    font-size: 2.08rem;
+    font-size: 1.32rem;
     line-height: 1;
     letter-spacing: -0.02em;
     font-family: 'Reem Kufi Fun', 'Vina Sans', 'Concert One', 'Knewave', 'Permanent Marker', 'Caveat', cursive;
@@ -4779,7 +4779,7 @@ code {
   }
 
   .wine-score-chip small {
-    font-size: 0.78rem;
+    font-size: 0.66rem;
     line-height: 1;
     color: inherit;
     font-weight: 700;
@@ -4815,15 +4815,19 @@ code {
   }
 
   .table-icon-button {
-    width: 46px;
-    height: 46px;
-    min-width: 46px;
-    min-height: 46px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
   }
 
   .table-icon-svg {
-    width: 23px;
-    height: 23px;
+    width: 19px;
+    height: 19px;
+  }
+
+  .wine-thumb-score small {
+    display: none;
   }
 
   :root[data-theme='dark'] .wine-table tr {

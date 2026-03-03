@@ -23,9 +23,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '18.00', '2020-09-26 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 63, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 70, 6, 3, 6, NULL, 6, 8, '2020-09-26 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 70, 6, 3, 6, NULL, 6, 8, '2020-09-26 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 75, 10, 2, 7, NULL, 8, 8, '2020-09-26 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 75, 10, 2, 7, NULL, 8, 8, '2020-09-26 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 3: Compte ovelles
@@ -48,9 +48,9 @@ BEGIN
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 57, NULL);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 58, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 50, 4, 2, 4, 6, 5, 5, '2020-09-27 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 50, 4, 2, 4, 6, 5, 5, '2020-09-27 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 58, 6, 2, 4, 7, 7, 6, '2020-09-27 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 58, 6, 2, 4, 7, 7, 6, '2020-09-27 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 4: Seré 2018
@@ -72,9 +72,9 @@ BEGIN
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 63, NULL);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 76, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 65, 6, 1, 5, 8, 7, 7, '2020-10-09 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 65, 6, 1, 5, 8, 7, 7, '2020-10-09 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 63, 6, 2, 4, 7, 7, 6, '2020-10-09 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 63, 6, 2, 4, 7, 7, 6, '2020-10-09 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 5: Vega de Nava
@@ -95,9 +95,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '6.25', '2020-10-09 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 64, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 80, 7, 1, 5, 9, 8, 8, '2020-10-09 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 80, 7, 1, 5, 9, 8, 8, '2020-10-09 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 80, 10, 1, 6, 8, 9, 9, '2020-10-09 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 80, 10, 1, 6, 8, 9, 9, '2020-10-09 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 6: Chateldon
@@ -118,7 +118,7 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '10.45', '2020-10-23 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 57, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 80, 7, 1, 5, 9, 8, 8, '2020-10-23 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 80, 7, 1, 5, 9, 8, 8, '2020-10-23 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 7: Matsu - el pícaro
@@ -139,9 +139,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '7.90', '2020-10-24 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 64, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 75, 7, 1, 5, 9, 8, 8, '2020-10-24 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 75, 7, 1, 5, 9, 8, 8, '2020-10-24 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 80, 10, 1, 6, 8, 9, 9, '2020-10-24 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 80, 10, 1, 6, 8, 9, 9, '2020-10-24 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 8: Titella
@@ -165,9 +165,9 @@ BEGIN
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 58, NULL);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 64, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 80, 7, 1, 5, 9, 8, 8, '2020-11-06 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 80, 7, 1, 5, 9, 8, 8, '2020-11-06 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 81, 6, 1, 6, 9, 8, 9, '2020-11-06 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 81, 6, 1, 6, 9, 8, 9, '2020-11-06 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 9: Ulldemolins
@@ -188,9 +188,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '5.80', '2020-11-08 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 63, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 65, 6, 1, 5, 8, 7, 7, '2020-11-08 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 65, 6, 1, 5, 8, 7, 7, '2020-11-08 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 68, 7, 2, 5, 8, 8, 7, '2020-11-08 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 68, 7, 2, 5, 8, 8, 7, '2020-11-08 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 10: Clot d’encís
@@ -211,9 +211,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '4.10', '2020-11-20 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 63, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 75, 7, 3, 6, NULL, 7, 9, '2020-11-20 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 75, 7, 3, 6, NULL, 7, 9, '2020-11-20 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 72, 6, 3, 6, NULL, 6, 8, '2020-11-20 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 72, 6, 3, 6, NULL, 6, 8, '2020-11-20 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 11: Ninín
@@ -234,9 +234,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '7.80', '2020-11-21 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 64, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 68, 9, 1, 6, 7, 8, 8, '2020-11-21 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 68, 9, 1, 6, 7, 8, 8, '2020-11-21 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 69, 8, 1, 5, 7, 8, 8, '2020-11-21 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 69, 8, 1, 5, 7, 8, 8, '2020-11-21 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 12: Rocablanca
@@ -259,9 +259,9 @@ BEGIN
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 77, NULL);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 59, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 60, 5, 1, 4, 7, 6, 6, '2020-12-01 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 60, 5, 1, 4, 7, 6, 6, '2020-12-01 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 43, 4, 3, 4, 5, 5, 4, '2020-12-01 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 43, 4, 3, 4, 5, 5, 4, '2020-12-01 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 13: Enate
@@ -283,9 +283,9 @@ BEGIN
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 57, NULL);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 58, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 70, 6, 1, 5, 8, 7, 7, '2020-12-04 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 70, 6, 1, 5, 8, 7, 7, '2020-12-04 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 80, 10, 1, 6, 8, 9, 9, '2020-12-04 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 80, 10, 1, 6, 8, 9, 9, '2020-12-04 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 14: Fulget
@@ -306,9 +306,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '17.50', '2020-12-06 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 25, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 65, 6, 3, 6, NULL, 6, 8, '2020-12-06 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 65, 6, 3, 6, NULL, 6, 8, '2020-12-06 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 55, 8, 2, 6, NULL, 6, 6, '2020-12-06 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 55, 8, 2, 6, NULL, 6, 6, '2020-12-06 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 15: Castillo de Albai
@@ -329,9 +329,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '4.70', '2020-12-19 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 64, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 70, 6, 1, 5, 8, 7, 7, '2020-12-19 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 70, 6, 1, 5, 8, 7, 7, '2020-12-19 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 71, 5, 1, 6, 8, 7, 8, '2020-12-19 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 71, 5, 1, 6, 8, 7, 8, '2020-12-19 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 16: Acústic
@@ -353,9 +353,9 @@ BEGIN
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 63, NULL);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 76, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 92, 10, 1, 6, 9, 10, 10, '2020-12-24 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 92, 10, 1, 6, 9, 10, 10, '2020-12-24 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 81, 6, 1, 6, 9, 8, 9, '2020-12-24 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 81, 6, 1, 6, 9, 8, 9, '2020-12-24 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 17: Matsu - el recio
@@ -375,9 +375,9 @@ BEGIN
     INSERT INTO wine_purchase (wine_id, place_id, price_paid, purchased_at)
     VALUES (v_wine_id, v_place_id, '9.45', '2020-12-25 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 90, 8, 1, 6, 10, 9, 9, '2020-12-25 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 90, 8, 1, 6, 10, 9, 9, '2020-12-25 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 78, 8, 2, 5, 9, 9, 8, '2020-12-25 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 78, 8, 2, 5, 9, 9, 8, '2020-12-25 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 18: Roureda
@@ -419,9 +419,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '8.90', '2021-01-15 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 63, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 75, 7, 1, 5, 9, 8, 8, '2021-01-15 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 75, 7, 1, 5, 9, 8, 8, '2021-01-15 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 75, 10, 1, 6, 8, 9, 9, '2021-01-15 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 75, 10, 1, 6, 8, 9, 9, '2021-01-15 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 20: Muga
@@ -444,9 +444,9 @@ BEGIN
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 63, NULL);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 81, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 80, 7, 1, 5, 9, 8, 8, '2021-01-23 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 80, 7, 1, 5, 9, 8, 8, '2021-01-23 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 70, 9, 1, 6, 7, 8, 8, '2021-01-23 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 70, 9, 1, 6, 7, 8, 8, '2021-01-23 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 21: L'isard
@@ -467,9 +467,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '7.20', '2012-01-29 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 63, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 77, 9, 1, 5, 8, 9, 9, '2012-01-29 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 77, 9, 1, 5, 8, 9, 9, '2012-01-29 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 71, 5, 1, 6, 8, 7, 8, '2012-01-29 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 71, 5, 1, 6, 8, 7, 8, '2012-01-29 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 22: Sumarroca classic
@@ -492,9 +492,9 @@ BEGIN
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 57, NULL);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 64, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 70, 6, 1, 5, 8, 7, 7, '2021-02-19 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 70, 6, 1, 5, 8, 7, 7, '2021-02-19 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 80, 10, 1, 6, 8, 9, 9, '2021-02-19 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 80, 10, 1, 6, 8, 9, 9, '2021-02-19 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 23: Condado de Teón - Roble
@@ -515,9 +515,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '5.80', '2021-03-12 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 64, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 65, 6, 1, 5, 8, 7, 7, '2021-03-12 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 65, 6, 1, 5, 8, 7, 7, '2021-03-12 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 61, 4, 1, 5, 7, 6, 7, '2021-03-12 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 61, 4, 1, 5, 7, 6, 7, '2021-03-12 12:00:00+00'::timestamptz);
 END $$;
 
 -- CSV line 24: Rosum
@@ -538,9 +538,9 @@ BEGIN
     VALUES (v_wine_id, v_place_id, '8.20', '2021-04-23 12:00:00+00'::timestamptz);
     INSERT INTO wine_grape (wine_id, grape_id, percentage) VALUES (v_wine_id, 64, NULL);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (3, v_wine_id, 85, 8, 1, 6, 10, 9, 9, '2021-04-23 12:00:00+00'::timestamptz);
+    VALUES (2,v_wine_id, 85, 8, 1, 6, 10, 9, 9, '2021-04-23 12:00:00+00'::timestamptz);
     INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-    VALUES (2, v_wine_id, 71, 5, 1, 6, 8, 7, 8, '2021-04-23 12:00:00+00'::timestamptz);
+    VALUES (1,v_wine_id, 71, 5, 1, 6, 8, 7, 8, '2021-04-23 12:00:00+00'::timestamptz);
 END $$;
 
 COMMIT;

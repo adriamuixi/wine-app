@@ -2253,9 +2253,17 @@ function App() {
     }
 
     setIsMobileViewport(query.matches)
-    query.addEventListener('change', onChange)
+    if ('addEventListener' in query) {
+      query.addEventListener('change', onChange)
+    } else {
+      query.addListener(onChange)
+    }
     return () => {
-      query.removeEventListener('change', onChange)
+      if ('removeEventListener' in query) {
+        query.removeEventListener('change', onChange)
+      } else {
+        query.removeListener(onChange)
+      }
     }
   }, [])
 
