@@ -171,11 +171,36 @@ docker compose -f docker-compose.prod.yml exec api sh
 
 ## 7. Database backup / restore
 
-### Backup
+### Backup (one-shot)
 
 ```bash
 docker compose -f docker-compose.prod.yml exec -T db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > backup_$(date +%F_%H%M%S).sql
 ```
+
+### Daily backup cron (30 days / 30 files in `/backup`)
+
+Run on the production server (from repo root once):
+
+```bash
+mkdir -p /backup
+mkdir -p ./logs
+chmod +x ./scripts/prod-db-backup.sh
+./scripts/prod-db-backup.sh
+```
+
+Install cron for the current user (runs every day at 03:00):
+
+```bash
+(crontab -l 2>/dev/null; echo "0 3 * * * cd $(pwd) && ./scripts/prod-db-backup.sh >> ./logs/db-backup.log 2>&1") | crontab -
+crontab -l
+```
+
+Notes:
+- Script path: `scripts/prod-db-backup.sh`
+- Backup folder: `/backup`
+- Retention policy:
+  - removes files older than 30 days
+  - keeps at most 30 latest backups
 
 ### Restore
 
@@ -243,4 +268,3 @@ For VPS production, use:
 ```bash
 docker compose -f docker-compose.prod.yml ...
 ```
-
