@@ -12,6 +12,9 @@ use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\ListWines\ListWinesSort;
 use App\Application\UseCases\Wine\ListWines\ListWinesValidationException;
+use App\Application\UseCases\Wine\ListWines\WineListItemAwardView;
+use App\Application\UseCases\Wine\ListWines\WineListItemGrapeView;
+use App\Application\UseCases\Wine\ListWines\WineListItemPhotoView;
 use App\Application\UseCases\Wine\ListWines\WineListItemView;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
 use App\Domain\Enum\Country;
@@ -41,6 +44,9 @@ final class ListWinesHandlerTest extends TestCase
         self::assertSame(1, $result->page);
         self::assertSame(1, count($result->items));
         self::assertSame(1, $repo->received?->page);
+        self::assertSame('Tempranillo', $result->items[0]->grapes[0]->name);
+        self::assertSame('parker', $result->items[0]->awards[0]->name);
+        self::assertSame('bottle', $result->items[0]->photos[0]->type);
     }
 
     public function testItValidatesLimit(): void
@@ -118,7 +124,28 @@ final class SpyWineRepository implements WineRepository
         $this->received = $query;
 
         return new ListWinesResult(
-            items: [new WineListItemView(1, 'Wine', null, null, null, null, null, null, null, null, null, '2026-03-01T10:00:00+00:00')],
+            items: [new WineListItemView(
+                1,
+                'Wine',
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                '2026-03-01T10:00:00+00:00',
+                [new WineListItemGrapeView(2, 'Tempranillo', 'red', 90.0)],
+                [new WineListItemAwardView('parker', 95.5, 2025)],
+                [
+                    new WineListItemPhotoView('bottle', '/images/wines/1/bottle.jpg'),
+                    new WineListItemPhotoView('front_label', null),
+                    new WineListItemPhotoView('back_label', null),
+                    new WineListItemPhotoView('situation', null),
+                ],
+            )],
             page: $query->page,
             limit: $query->limit,
             totalItems: 1,

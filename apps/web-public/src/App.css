@@ -824,13 +824,6 @@
     0 18px 28px -24px rgba(0, 0, 0, 0.55);
 }
 
-.wine-card.featured .wine-card-media::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-top: 2px solid rgba(227, 181, 89, 0.65);
-}
-
 .wine-card-media {
   position: relative;
   background: #1a1216;
@@ -853,7 +846,7 @@
 
 .wine-card-badges {
   position: absolute;
-  inset: 0.65rem 0.65rem auto 0.65rem;
+  inset: 0.25rem 0.25rem auto 0.25rem;
   display: flex;
   gap: 0.45rem;
   align-items: flex-start;
@@ -885,8 +878,8 @@
 .type-chip,
 .gold-chip {
   border-radius: 999px;
-  padding: 0.28rem 0.55rem;
-  font-size: 0.72rem;
+  padding: 0.18rem 0.15rem;
+  font-size: 0.62rem;
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(5px);
@@ -1270,6 +1263,20 @@
   flex: 0 0 auto;
   position: relative;
   z-index: 2;
+}
+
+.country-flag-badge.wine-card-country-floating {
+  position: absolute;
+  left: 0.4rem;
+  bottom: 0.4rem;
+  z-index: 4;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.42rem;
+}
+
+.wine-card-score-floating {
+  display: none;
 }
 
 .flag-badge-image {
@@ -2455,13 +2462,14 @@
   }
 
   .wine-card {
-    grid-template-rows: 132px auto;
+    grid-template-rows: 132px minmax(0, 1fr);
     border-radius: 1rem;
     border-color: color-mix(in srgb, var(--line) 78%, #ff2a84 22%);
     background:
       radial-gradient(circle at 100% 0%, rgba(84, 26, 76, 0.22), transparent 58%),
       linear-gradient(180deg, rgba(48, 31, 41, 0.92), rgba(19, 16, 29, 0.96));
     box-shadow: 0 12px 28px -22px rgba(0, 0, 0, 0.75);
+    align-content: start;
   }
 
   :root[data-theme='light'] .wine-card {
@@ -2478,8 +2486,68 @@
 
   .wine-card-media .gold-chip {
     font-size: 0.62rem;
-    padding: 0.22rem 0.42rem;
+    padding: 0.22rem 0.22rem;
+    line-height: 8px;
   }
+
+  .wine-card-score-floating {
+    position: absolute;
+    right: 0.3rem;
+    bottom: 0.3rem;
+    z-index: 4;
+    width: 2.38rem;
+    height: 2.38rem;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    color: #ffffff;
+    border: 1px solid rgba(255, 234, 191, 0.5);
+    background:
+      radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.331), rgba(255, 143, 143, 0) 56%),
+      linear-gradient(145deg, rgba(109, 36, 82, 0.692), rgba(32, 4, 28, 0.86));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      0 8px 18px -10px rgba(0, 0, 0, 0.7);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wine-card-score-floating-bronze {
+    color: #ed926b;
+    border-color: rgba(199, 122, 63, 0.62);
+    background:
+      radial-gradient(circle at 34% 30%, rgba(232, 157, 136, 0.331), rgba(255, 143, 143, 0) 56%),
+      linear-gradient(145deg, rgba(110, 51, 30, 0.692), rgba(32, 16, 4, 0.86));
+    box-shadow:
+      inset 0 1px 0 rgba(80, 15, 15, 0.897),
+      0 8px 18px -10px rgba(0, 0, 0, 0.7);
+  }
+
+  .wine-card-score-floating-silver {
+    color: #bec7d3;
+    border-color: rgba(99, 101, 105, 0.62);
+    background:
+      radial-gradient(circle at 34% 30%, rgba(197, 197, 197, 0.463), rgba(255, 143, 143, 0) 56%),
+      linear-gradient(145deg, rgba(108, 108, 108, 0.692), rgba(41, 41, 41, 0.86));
+    box-shadow:
+      inset 0 1px 0 rgba(78, 78, 78, 0.897),
+      0 8px 18px -10px rgba(0, 0, 0, 0.7);
+  }
+
+  .wine-card-score-floating-gold {
+    color: #fbe072;
+    border-color: rgba(248, 214, 123, 0.68);
+    border: 1px solid rgb(176, 125, 23);
+     background:
+      radial-gradient(circle at 34% 30%, rgba(202, 172, 61, 0.463), rgba(255, 143, 143, 0) 56%),
+      linear-gradient(145deg, rgba(212, 172, 63, 0.692), rgba(54, 42, 11, 0.86));
+    box-shadow:
+      inset 0 1px 0 rgba(144, 80, 7, 0.24),
+      0 8px 18px -10px rgba(0, 0, 0, 0.7);
+    }
 
   .wine-card-award-corner-tag {
     width: 2.25rem;
@@ -2487,8 +2555,10 @@
   }
 
   .wine-card-body {
-    padding: 0.7rem 0.65rem 0.7rem;
+    padding: 0.3rem 0.45rem 0.3rem;
     gap: 0.7rem;
+    align-content: start;
+    height: 100%;
   }
 
   .wine-card-head {
@@ -2563,12 +2633,11 @@
 
   .wine-card-mobile-layout {
     display: grid;
-    border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
   }
 
   .wine-card-mobile-do-row
   {
-    padding: 0.28rem 0;
+    padding: 0.1rem 0;
   }
 
 
@@ -2620,22 +2689,32 @@
 
   .wine-card-mobile-title {
     color: #781787;
-    font-size: 1.26rem;
+    font-size: 1.1rem;
   }
 
   :root[data-theme='dark'] .wine-card-mobile-title {
-    color: #ca81d5;
+    color: #e6a2f0;
     font-size: 1.26rem;
-  }
-
-  .wine-card-mobile-year {
-    color: #5b0c67;
-    font-size: 1.16rem;
   }
 
   .wine-card-mobile-winery {
     color: #5b0c67;
-    font-size: 1.16rem;
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+   :root[data-theme='dark'] .wine-card-mobile-winery {
+    color: #cc85d7;
+    font-size: 0.9rem;
+       margin: 0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .wine-card-mobile-wine-type {
@@ -2709,6 +2788,12 @@
     color: #6e0c2f;
   }
 
+  :root[data-theme='dark'] .wine-card-mobile-do-text > .title {
+    font-weight: 900 !important;
+    color: #f27aa4;
+  }
+
+
   .wine-card-mobile-grapes-row {
     grid-template-columns: 1fr;
     align-items: start;
@@ -2733,9 +2818,9 @@
   .wine-card-mobile-grapes-list .grape-filter-chip {
     max-width: 100%;
     background: transparent;
-    border-color: color-mix(in srgb, var(--line) 80%, var(--accent));
+    border-color: color-mix(in srgb, var(--line) 90%, var(--accent));
     color: var(--text);
-    padding: 0.22rem 0.46rem;
+    padding: 0.12rem 0.20rem;
     font-size: 0.72rem;
   }
 
@@ -2889,7 +2974,7 @@
   }
 
   .wine-card {
-    grid-template-rows: 118px auto;
+    grid-template-rows: 118px minmax(0, 1fr);
   }
 
   .wine-card-head h3 {

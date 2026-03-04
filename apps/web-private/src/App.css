@@ -4657,7 +4657,7 @@ code {
   .wine-col-aging,
   .wine-col-region,
   .wine-col-do {
-    min-height: 3.2rem;
+    min-height: 2.2rem;
   }
 
   .wine-col-actions {
@@ -4705,7 +4705,7 @@ code {
   .wine-col-region::before {
     content: attr(data-label);
     color: var(--theme-muted);
-    font-size: 0.76rem;
+    font-size: 0.96rem;
     font-weight: 700;
     line-height: 1.15;
     display: block;
@@ -4824,7 +4824,7 @@ code {
   .wine-col-aging::before,
   .wine-col-do::before,
   .wine-col-score::before {
-    font-size: 0.82rem;
+    font-size: 1rem;
   }
 
   .wine-do-logo {
@@ -4840,14 +4840,14 @@ code {
   }
 
   .wine-country-flag {
-    width: 18px;
+    width: 28px;
     height: 18px;
   }
 
   .wine-col-do .wine-do-value {
-    font-size: 0.76rem !important;
+    font-size: 1rem !important;
     font-weight: 400;
-    line-height: 1.2;
+    line-height: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -4884,7 +4884,7 @@ code {
   .wine-col-type .wine-cell-value,
   .wine-col-vintage .wine-cell-value,
   .wine-col-aging .wine-cell-value {
-    font-size: 0.76rem;
+    font-size: 1rem;
     line-height: 1.08;
   }
 

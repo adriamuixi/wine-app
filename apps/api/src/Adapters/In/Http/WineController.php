@@ -32,7 +32,6 @@ use App\Domain\Enum\PlaceType;
 use App\Domain\Enum\WineType;
 use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Model\Wine;
-use App\Domain\Repository\WinePhotoRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,7 +45,6 @@ final class WineController
         private readonly DeleteWineHandler $deleteWineHandler,
         private readonly GetWineDetailsHandler $getWineDetailsHandler,
         private readonly ListWinesHandler $listWinesHandler,
-        private readonly WinePhotoRepository $winePhotos,
     ) {
     }
 
@@ -144,8 +142,6 @@ final class WineController
         return new JsonResponse([
             'items' => array_map(
                 function ($item): array {
-                    $photos = $this->winePhotos->findByWineId($item->id);
-
                     return [
                         'id' => $item->id,
                         'name' => $item->name,
@@ -161,12 +157,29 @@ final class WineController
                         'vintage_year' => $item->vintageYear,
                         'avg_score' => $item->avgScore,
                         'updated_at' => $item->updatedAt,
+                        'grapes' => array_map(
+                            static fn ($grape): array => [
+                                'id' => $grape->id,
+                                'name' => $grape->name,
+                                'color' => $grape->color,
+                                'percentage' => $grape->percentage,
+                            ],
+                            $item->grapes,
+                        ),
+                        'awards' => array_map(
+                            static fn ($award): array => [
+                                'name' => $award->name,
+                                'score' => $award->score,
+                                'year' => $award->year,
+                            ],
+                            $item->awards,
+                        ),
                         'photos' => array_map(
                             static fn ($photo): array => [
-                                'type' => $photo->type->value,
+                                'type' => $photo->type,
                                 'url' => $photo->url,
                             ],
-                            $photos,
+                            $item->photos,
                         ),
                     ];
                 },

@@ -8,6 +8,9 @@ use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\ListWines\ListWinesSort;
+use App\Application\UseCases\Wine\ListWines\WineListItemAwardView;
+use App\Application\UseCases\Wine\ListWines\WineListItemGrapeView;
+use App\Application\UseCases\Wine\ListWines\WineListItemPhotoView;
 use App\Application\UseCases\Wine\ListWines\WineListItemView;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
@@ -550,9 +553,119 @@ SQL,
             ],
         );
 
-        $items = array_map(
-            fn (array $row): WineListItemView => new WineListItemView(
-                id: (int) $row['id'],
+        $wineIds = array_map(static fn (array $row): int => (int) $row['id'], $rows);
+        $photoSlots = [
+            WinePhotoType::Bottle->value,
+            WinePhotoType::FrontLabel->value,
+            WinePhotoType::BackLabel->value,
+            WinePhotoType::Situation->value,
+        ];
+
+        /** @var array<int,list<WineListItemGrapeView>> $grapesByWineId */
+        $grapesByWineId = [];
+        /** @var array<int,list<WineListItemAwardView>> $awardsByWineId */
+        $awardsByWineId = [];
+        /** @var array<int,list<WineListItemPhotoView>> $photosByWineId */
+        $photosByWineId = [];
+
+        if ([] !== $wineIds) {
+            $grapeRows = $connection->fetchAllAssociative(
+                <<<'SQL'
+SELECT
+    wg.wine_id,
+    g.id AS grape_id,
+    g.name AS grape_name,
+    g.color AS grape_color,
+    wg.percentage
+FROM wine_grape wg
+INNER JOIN grape g ON g.id = wg.grape_id
+WHERE wg.wine_id IN (:wine_ids)
+ORDER BY wg.wine_id ASC, g.name ASC
+SQL,
+                ['wine_ids' => $wineIds],
+                ['wine_ids' => ArrayParameterType::INTEGER],
+            );
+
+            foreach ($grapeRows as $row) {
+                $wineId = (int) $row['wine_id'];
+                if (!array_key_exists($wineId, $grapesByWineId)) {
+                    $grapesByWineId[$wineId] = [];
+                }
+
+                $grapesByWineId[$wineId][] = new WineListItemGrapeView(
+                    id: (int) $row['grape_id'],
+                    name: (string) $row['grape_name'],
+                    color: null === $row['grape_color'] ? null : (string) $row['grape_color'],
+                    percentage: null === $row['percentage'] ? null : (float) $row['percentage'],
+                );
+            }
+
+            $awardRows = $connection->fetchAllAssociative(
+                <<<'SQL'
+SELECT wine_id, name, score, year
+FROM wine_award
+WHERE wine_id IN (:wine_ids)
+ORDER BY wine_id ASC, year DESC NULLS LAST, id ASC
+SQL,
+                ['wine_ids' => $wineIds],
+                ['wine_ids' => ArrayParameterType::INTEGER],
+            );
+
+            foreach ($awardRows as $row) {
+                $wineId = (int) $row['wine_id'];
+                if (!array_key_exists($wineId, $awardsByWineId)) {
+                    $awardsByWineId[$wineId] = [];
+                }
+
+                $awardsByWineId[$wineId][] = new WineListItemAwardView(
+                    name: (string) $row['name'],
+                    score: null === $row['score'] ? null : (float) $row['score'],
+                    year: null === $row['year'] ? null : (int) $row['year'],
+                );
+            }
+
+            /** @var array<int,array<string,string>> $photoUrlByWineAndType */
+            $photoUrlByWineAndType = [];
+            $photoRows = $connection->fetchAllAssociative(
+                <<<'SQL'
+SELECT wine_id, type, url
+FROM wine_photo
+WHERE wine_id IN (:wine_ids)
+ORDER BY wine_id ASC, id DESC
+SQL,
+                ['wine_ids' => $wineIds],
+                ['wine_ids' => ArrayParameterType::INTEGER],
+            );
+
+            foreach ($photoRows as $row) {
+                $wineId = (int) $row['wine_id'];
+                $type = (string) $row['type'];
+                if (!array_key_exists($wineId, $photoUrlByWineAndType)) {
+                    $photoUrlByWineAndType[$wineId] = [];
+                }
+
+                if (!array_key_exists($type, $photoUrlByWineAndType[$wineId])) {
+                    $photoUrlByWineAndType[$wineId][$type] = (string) $row['url'];
+                }
+            }
+
+            foreach ($wineIds as $wineId) {
+                $typedUrls = $photoUrlByWineAndType[$wineId] ?? [];
+                $photosByWineId[$wineId] = array_map(
+                    static fn (string $type): WineListItemPhotoView => new WineListItemPhotoView(
+                        type: $type,
+                        url: $typedUrls[$type] ?? null,
+                    ),
+                    $photoSlots,
+                );
+            }
+        }
+
+        $items = [];
+        foreach ($rows as $row) {
+            $wineId = (int) $row['id'];
+            $items[] = new WineListItemView(
+                id: $wineId,
                 name: (string) $row['name'],
                 winery: null === $row['winery'] ? null : (string) $row['winery'],
                 wineType: null === $row['wine_type'] ? null : (string) $row['wine_type'],
@@ -564,9 +677,11 @@ SQL,
                 vintageYear: null === $row['vintage_year'] ? null : (int) $row['vintage_year'],
                 avgScore: null === $row['avg_score'] ? null : (float) $row['avg_score'],
                 updatedAt: $this->toIso8601((string) $row['updated_at']),
-            ),
-            $rows,
-        );
+                grapes: $grapesByWineId[$wineId] ?? [],
+                awards: $awardsByWineId[$wineId] ?? [],
+                photos: $photosByWineId[$wineId] ?? [],
+            );
+        }
 
         $totalPages = 0 === $totalItems ? 0 : (int) ceil($totalItems / $query->limit);
 

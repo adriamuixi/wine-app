@@ -25,6 +25,9 @@ use App\Domain\Model\WineReview;
 use App\Application\UseCases\Wine\ListWines\ListWinesHandler;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
+use App\Application\UseCases\Wine\ListWines\WineListItemAwardView;
+use App\Application\UseCases\Wine\ListWines\WineListItemGrapeView;
+use App\Application\UseCases\Wine\ListWines\WineListItemPhotoView;
 use App\Application\UseCases\Wine\ListWines\WineListItemView;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineHandler;
@@ -166,8 +169,12 @@ final class WineControllerTest extends TestCase
         self::assertSame(20, $payload['pagination']['limit']);
         self::assertSame('List Wine 1', $payload['items'][0]['name']);
         self::assertSame('crianza', $payload['items'][0]['aging_type']);
+        self::assertSame('Tempranillo', $payload['items'][0]['grapes'][0]['name']);
+        self::assertSame('parker', $payload['items'][0]['awards'][0]['name']);
         self::assertSame('bottle', $payload['items'][0]['photos'][0]['type']);
         self::assertSame('/images/wines/1/bottle.jpg', $payload['items'][0]['photos'][0]['url']);
+        self::assertSame('front_label', $payload['items'][0]['photos'][1]['type']);
+        self::assertNull($payload['items'][0]['photos'][1]['url']);
     }
 
     public function testListReturnsBadRequestForInvalidQueryParam(): void
@@ -351,7 +358,6 @@ final class WineControllerTest extends TestCase
             new DeleteWineHandler($repo, new NoopWinePhotoRepository(), new NoopWinePhotoStorage()),
             new GetWineDetailsHandler($repo),
             new ListWinesHandler($repo),
-            new NoopWinePhotoRepository(),
         );
     }
 }
@@ -460,6 +466,14 @@ final class SpyWineRepository implements WineRepository
                     vintageYear: 2022,
                     avgScore: 91.5,
                     updatedAt: '2026-03-01T09:00:00+00:00',
+                    grapes: [new WineListItemGrapeView(2, 'Tempranillo', 'red', 90.0)],
+                    awards: [new WineListItemAwardView('parker', 93.5, 2025)],
+                    photos: [
+                        new WineListItemPhotoView('bottle', '/images/wines/1/bottle.jpg'),
+                        new WineListItemPhotoView('front_label', null),
+                        new WineListItemPhotoView('back_label', null),
+                        new WineListItemPhotoView('situation', null),
+                    ],
                 ),
             ],
             page: $query->page,

@@ -49,6 +49,13 @@ type WineCard = {
   gallery: string[]
 }
 
+type AwardApiName = 'penin' | 'parker' | 'wine_spectator' | 'decanter' | 'james_suckling' | 'guia_proensa'
+type AwardApiValue = {
+  name: AwardApiName
+  score: number | null
+  year: number | null
+}
+
 type WineListApiItem = {
   id: number
   name: string
@@ -64,9 +71,16 @@ type WineListApiItem = {
   vintage_year: number | null
   avg_score: number | null
   updated_at: string
+  grapes: Array<{
+    id: number
+    name: string
+    color: 'red' | 'white' | null
+    percentage: number | null
+  }>
+  awards: AwardApiValue[]
   photos: Array<{
     type: 'front_label' | 'back_label' | 'bottle' | 'situation'
-    url: string
+    url: string | null
   }>
 }
 
@@ -106,11 +120,45 @@ type DoFilterOption = {
 
 type WineDetailsApiResponse = {
   wine?: {
-    grapes?: Array<{
-      id?: number
-      name?: string
-      color?: 'red' | 'white'
-      percentage?: number | null
+    id: number
+    name: string
+    winery: string | null
+    wine_type: 'red' | 'white' | 'rose' | 'sparkling' | 'sweet' | 'fortified' | null
+    aging_type: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
+    country: 'spain' | 'france' | 'italy' | 'portugal' | 'germany' | 'argentina' | 'chile' | 'united_states' | 'south_africa' | 'australia' | null
+    do: {
+      id: number
+      name: string
+      logo_image: string | null
+    } | null
+    vintage_year: number | null
+    alcohol_percentage: number | null
+    grapes: Array<{
+      id: number
+      name: string
+      color: 'red' | 'white' | null
+      percentage: number | null
+    }>
+    awards: Array<{
+      id: number
+      name: AwardApiName
+      score: number | null
+      year: number | null
+    }>
+    photos: Array<{
+      id: number
+      type: 'front_label' | 'back_label' | 'bottle' | 'situation' | null
+      url: string
+    }>
+    purchases: Array<{
+      id: number
+      place: {
+        id: number
+        name: string
+        city: string | null
+      }
+      price_paid: number
+      purchased_at: string
     }>
   }
 }
@@ -424,11 +472,47 @@ function resolvePublicWineImageForTheme(src: string, isDark: boolean): string {
   return src
 }
 
-function buildReward(avgScore: number, region: string): WineCard['reward'] | undefined {
-  if (avgScore < 88) return undefined
-  if (avgScore >= 92) return { name: 'Peñín', score: Math.round(avgScore + 1) }
-  if (region.toLowerCase().includes('rioja') || region.toLowerCase().includes('ribera')) return { name: 'Decanter', score: Math.round(avgScore) }
-  return { name: 'Guía', score: Math.round(avgScore) }
+function awardLabel(name: AwardApiName): string {
+  if (name === 'penin') return 'Peñín'
+  if (name === 'wine_spectator') return 'Wine Spectator'
+  if (name === 'james_suckling') return 'James Suckling'
+  if (name === 'guia_proensa') return 'Guía Proensa'
+  if (name === 'decanter') return 'Decanter'
+  return 'Parker'
+}
+
+function peninBadgeImagePath(score: number | null | undefined): string | undefined {
+  if (typeof score !== 'number' || !Number.isFinite(score)) {
+    return undefined
+  }
+
+  const rounded = Math.round(score)
+  if (rounded < 86 || rounded > 99) {
+    return undefined
+  }
+
+  return `/images/icons/awards/penin/penin-${rounded}.png`
+}
+
+function mapPrimaryAwardToReward(
+  award: Pick<AwardApiValue, 'name' | 'score'> | undefined,
+): { reward?: WineCard['reward']; rewardBadgeImage?: string } {
+  if (!award) {
+    return {}
+  }
+
+  const rewardScore = typeof award.score === 'number' && Number.isFinite(award.score)
+    ? Math.round(award.score)
+    : undefined
+  const reward: WineCard['reward'] = {
+    name: awardLabel(award.name),
+    score: rewardScore,
+  }
+
+  return {
+    reward,
+    rewardBadgeImage: award.name === 'penin' ? peninBadgeImagePath(award.score) : undefined,
+  }
 }
 
 function splitGrapeVarieties(grapes: string): string[] {
@@ -626,14 +710,13 @@ function mapAgingTypeLabel(value: WineListApiItem['aging_type'], locale: Locale)
   return 'n/d'
 }
 
-function mapWineGrapesLabel(payload: WineDetailsApiResponse): string {
-  const grapes = payload.wine?.grapes
+function mapWineGrapesLabel(grapes: Array<{ name: string }> | undefined): string {
   if (!Array.isArray(grapes) || grapes.length === 0) {
     return '-'
   }
 
   const names = grapes
-    .map((grape) => (typeof grape?.name === 'string' ? grape.name.trim() : ''))
+    .map((grape) => grape.name.trim())
     .filter((name) => name !== '')
 
   return names.length > 0 ? names.join(', ') : '-'
@@ -666,6 +749,7 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
     : new Intl.DateTimeFormat(dateLocale, { month: 'long' }).format(updatedAt)
   const region = item.do?.name?.trim() || '-'
   const type = mapApiWineType(item.wine_type)
+  const { reward, rewardBadgeImage } = mapPrimaryAwardToReward(item.awards?.[0])
 
   return {
     id: item.id,
@@ -679,7 +763,7 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
     priceFrom: 0,
     tastedAt,
     month,
-    grapes: '-',
+    grapes: mapWineGrapesLabel(item.grapes),
     aging: mapAgingTypeLabel(item.aging_type, locale),
     alcohol: 'n/d',
     mariaScore: null,
@@ -687,11 +771,58 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
     place: item.winery?.trim() || '-',
     city: '-',
     techSheet: false,
-    reward: buildReward(avgScore, region),
+    reward,
     doLogoImage: doLogoPathFromImageName(item.do?.logo_image),
-    rewardBadgeImage: undefined,
+    rewardBadgeImage,
     notes: '',
     tags: [region, type],
+    image: byType.bottle,
+    gallery,
+  }
+}
+
+function mergeWineCardWithDetails(card: WineCard, details: NonNullable<WineDetailsApiResponse['wine']>, locale: Locale): WineCard {
+  const byType: Record<'bottle' | 'front_label' | 'back_label' | 'situation', string> = {
+    bottle: card.gallery[0] ?? DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+    front_label: card.gallery[1] ?? DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+    back_label: card.gallery[2] ?? DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+    situation: card.gallery[3] ?? DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
+  }
+
+  ;(details.photos ?? []).forEach((photo) => {
+    if (!photo?.type || !photo?.url) return
+    byType[photo.type] = resolveApiAssetUrl(photo.url)
+  })
+
+  const gallery = [byType.bottle, byType.front_label, byType.back_label, byType.situation]
+  const lastPurchase = Array.isArray(details.purchases) && details.purchases.length > 0 ? details.purchases[0] : null
+  const rewardMapping = mapPrimaryAwardToReward(Array.isArray(details.awards) ? details.awards[0] : undefined)
+  const tastedDate = lastPurchase?.purchased_at ? new Date(lastPurchase.purchased_at) : null
+  const dateLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
+
+  return {
+    ...card,
+    name: details.name?.trim() || card.name,
+    winery: details.winery?.trim() || card.winery,
+    country: countryCodeToLabel(details.country) || card.country,
+    region: details.do?.name?.trim() || card.region,
+    type: mapApiWineType(details.wine_type),
+    vintage: details.vintage_year ?? card.vintage,
+    grapes: mapWineGrapesLabel(details.grapes),
+    aging: mapAgingTypeLabel(details.aging_type, locale),
+    alcohol: typeof details.alcohol_percentage === 'number' ? `${details.alcohol_percentage}%` : card.alcohol,
+    priceFrom: typeof lastPurchase?.price_paid === 'number' ? lastPurchase.price_paid : card.priceFrom,
+    tastedAt: tastedDate && !Number.isNaN(tastedDate.getTime())
+      ? new Intl.DateTimeFormat(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(tastedDate)
+      : card.tastedAt,
+    month: tastedDate && !Number.isNaN(tastedDate.getTime())
+      ? new Intl.DateTimeFormat(dateLocale, { month: 'long' }).format(tastedDate)
+      : card.month,
+    place: lastPurchase?.place?.name || card.place,
+    city: lastPurchase?.place?.city || card.city,
+    reward: rewardMapping.reward ?? card.reward,
+    rewardBadgeImage: rewardMapping.rewardBadgeImage ?? card.rewardBadgeImage,
+    doLogoImage: doLogoPathFromImageName(details.do?.logo_image) ?? card.doLogoImage,
     image: byType.bottle,
     gallery,
   }
@@ -779,6 +910,7 @@ export default function App() {
   const [doLogoPreview, setDoLogoPreview] = useState<{ src: string; label: string } | null>(null)
   const [wines, setWines] = useState<WineCard[]>([])
   const [doOptions, setDoOptions] = useState<DoApiItem[]>([])
+  const [wineDetailsById, setWineDetailsById] = useState<Record<number, WineDetailsApiResponse['wine']>>({})
 
   const t = DICT[locale]
   const isDark = theme === 'dark'
@@ -834,34 +966,6 @@ export default function App() {
 
       const mappedItems = items.map((item) => mapWineListItemToWineCard(item, locale))
       setWines(mappedItems)
-
-      const grapeEntries = await Promise.all(
-        items.map(async (item) => {
-          try {
-            const response = await fetch(`${base}/api/wines/${item.id}`, {
-              signal: controller.signal,
-              headers: { Accept: 'application/json' },
-            })
-            if (!response.ok) {
-              return [item.id, '-'] as const
-            }
-            const payload = await response.json() as WineDetailsApiResponse
-            return [item.id, mapWineGrapesLabel(payload)] as const
-          } catch {
-            return [item.id, '-'] as const
-          }
-        }),
-      )
-
-      if (controller.signal.aborted) {
-        return
-      }
-
-      const grapesByWineId = new Map<number, string>(grapeEntries)
-      setWines((current) => current.map((wine) => ({
-        ...wine,
-        grapes: grapesByWineId.get(wine.id) ?? wine.grapes,
-      })))
     }
 
     void loadWines().catch(() => {
@@ -872,6 +976,40 @@ export default function App() {
       controller.abort()
     }
   }, [locale])
+
+  useEffect(() => {
+    if (selectedWineId == null || wineDetailsById[selectedWineId]) {
+      return
+    }
+
+    const controller = new AbortController()
+    const base = resolveApiBaseUrl()
+
+    void fetch(`${base}/api/wines/${selectedWineId}`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as WineDetailsApiResponse
+        if (controller.signal.aborted || !payload.wine) {
+          return
+        }
+
+        setWineDetailsById((current) => ({
+          ...current,
+          [selectedWineId]: payload.wine,
+        }))
+      })
+      .catch(() => {})
+
+    return () => {
+      controller.abort()
+    }
+  }, [selectedWineId, wineDetailsById])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -1089,10 +1227,19 @@ export default function App() {
     })
   }, [search, typeFilter, countryFilter, regionFilter, grapeFilter, minScoreFilter, sortKey, wines])
 
-  const selectedWine = useMemo(
-    () => (selectedWineId == null ? null : wines.find((wine) => wine.id === selectedWineId) ?? null),
-    [selectedWineId, wines],
-  )
+  const selectedWine = useMemo(() => {
+    if (selectedWineId == null) {
+      return null
+    }
+
+    const baseWine = wines.find((wine) => wine.id === selectedWineId) ?? null
+    if (!baseWine) {
+      return null
+    }
+
+    const details = wineDetailsById[selectedWineId]
+    return details ? mergeWineCardWithDetails(baseWine, details, locale) : baseWine
+  }, [selectedWineId, wines, wineDetailsById, locale])
 
   useEffect(() => {
     if (selectedWine && activeModalImageIndex >= selectedWine.gallery.length) {
@@ -1650,7 +1797,7 @@ export default function App() {
                     }
                   }}
                 >
-                  <div className="wine-card-media">
+                    <div className="wine-card-media">
                     <img
                       src={resolvePublicWineImageForTheme(wine.image, isDark)}
                       alt={wine.name}
@@ -1660,15 +1807,23 @@ export default function App() {
                       }}
                     />
                     <div className="wine-card-overlay" />
-                    <div className="wine-card-badges">
-                      {isFeatured ? <span className="gold-chip">{t.card.featured90}</span> : null}
-                      {wine.rewardBadgeImage ? (
-                        <span className="wine-card-award-corner-tag" aria-label={`${wine.reward?.name ?? 'Award'} ${wine.reward?.score ?? ''}`.trim()}>
-                          <img src={wine.rewardBadgeImage} alt="" loading="lazy" />
+                      <div className="wine-card-badges">
+                        {isFeatured ? <span className="gold-chip">{t.card.featured90}</span> : null}
+                        {wine.rewardBadgeImage ? (
+                          <span className="wine-card-award-corner-tag" aria-label={`${wine.reward?.name ?? 'Award'} ${wine.reward?.score ?? ''}`.trim()}>
+                            <img src={wine.rewardBadgeImage} alt="" loading="lazy" />
+                          </span>
+                        ) : null}
+                      </div>
+                      {wine.country !== 'Spain' ? (
+                        <span className="country-flag-badge wine-card-country-floating" aria-label={wine.country} title={wine.country}>
+                          {countryFlagImage ? <img className="flag-badge-image" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" /> : countryFlagEmoji(wine.country)}
                         </span>
                       ) : null}
+                      <span className={`wine-card-score-floating wine-card-score-floating-${scoreTier}`} aria-label={`${t.card.avgScore} ${wine.avgScore.toFixed(1)}`}>
+                        {wine.avgScore.toFixed(1)}
+                      </span>
                     </div>
-                  </div>
 
                   <div className="wine-card-body">
                     <div className="wine-card-head">
@@ -1693,9 +1848,6 @@ export default function App() {
                       <div className="wine-card-meta-box-do">
                         <dt>{t.icons.region} DO</dt>
                         <dd className="origin-with-do">
-                          <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>
-                            {countryFlagImage ? <img className="flag-badge-image" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" /> : countryFlagEmoji(wine.country)}
-                          </span>
                           {communityFlagImage && communityName ? (
                             <span className="country-flag-badge" aria-label={`Comunidad autonoma ${communityName}`} title={communityName}>
                               <img className="flag-badge-image" src={communityFlagImage} alt={communityName} loading="lazy" />
@@ -1747,16 +1899,11 @@ export default function App() {
                         <div className="wine-card-mobile-main-left">
                           <p className="wine-card-mobile-name-line">
                             <span className='wine-card-mobile-title '>{wine.name}</span>
-                            {/* <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>
-                              {countryFlagImage ? <img className="flag-badge-image" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" /> : countryFlagEmoji(wine.country)}
-                            </span> */}
                           </p>
                           <p className="wine-card-mobile-main-subline">{wine.vintage} • {wine.aging}</p>
-                          <p className="wine-card-mobile-wine-type">{wine.winery}</p>
+                          <p className="wine-card-mobile-winery">{wine.winery}</p>
                         </div>
                         </div>
-
-
                        {/* </div>
                                       <div className="wine-card-mobile-main-right">
                           <span className='title'>{wine.avgScore.toFixed(1)}</span>

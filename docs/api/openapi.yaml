@@ -1248,10 +1248,42 @@ components:
           enum: [front_label, back_label, bottle, situation]
         url:
           type: string
+          nullable: true
           example: /images/wines/42/abc123.jpg
+    WineListGrape:
+      type: object
+      required: [id, name, color, percentage]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        color:
+          type: string
+          enum: [red, white]
+          nullable: true
+        percentage:
+          type: number
+          format: float
+          nullable: true
+    WineListAward:
+      type: object
+      required: [name, score, year]
+      properties:
+        name:
+          type: string
+          enum: [penin, parker, wine_spectator, decanter, james_suckling, guia_proensa]
+        score:
+          type: number
+          format: float
+          nullable: true
+        year:
+          type: integer
+          nullable: true
     WineListItem:
       type: object
-      required: [id, name, winery, wine_type, aging_type, country, do, vintage_year, avg_score, updated_at, photos]
+      required: [id, name, winery, wine_type, aging_type, country, do, vintage_year, avg_score, updated_at, grapes, awards, photos]
       properties:
         id:
           type: integer
@@ -1287,8 +1319,18 @@ components:
         updated_at:
           type: string
           format: date-time
+        grapes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WineListGrape'
+        awards:
+          type: array
+          items:
+            $ref: '#/components/schemas/WineListAward'
         photos:
           type: array
+          minItems: 4
+          maxItems: 4
           items:
             $ref: '#/components/schemas/WineListPhoto'
     PaginationMeta:

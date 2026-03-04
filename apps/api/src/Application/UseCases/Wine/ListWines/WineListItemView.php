@@ -6,6 +6,11 @@ namespace App\Application\UseCases\Wine\ListWines;
 
 final readonly class WineListItemView
 {
+    /**
+     * @param list<WineListItemGrapeView> $grapes
+     * @param list<WineListItemAwardView> $awards
+     * @param list<WineListItemPhotoView> $photos
+     */
     public function __construct(
         public int $id,
         public string $name,
@@ -19,6 +24,9 @@ final readonly class WineListItemView
         public ?int $vintageYear,
         public ?float $avgScore,
         public string $updatedAt,
+        public array $grapes = [],
+        public array $awards = [],
+        public array $photos = [],
     ) {
     }
 }
