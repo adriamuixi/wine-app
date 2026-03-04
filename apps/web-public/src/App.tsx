@@ -1742,25 +1742,63 @@ export default function App() {
                       </dl>
                     </section>
 
-                    <div className="wine-card-mobile-summary" aria-label="mobile summary">
-                      <div className="wine-card-mobile-region-text">
-                        <span className="wine-card-mobile-region-name">{wine.region}</span>
-                        <span className="wine-card-mobile-region-vintage">{wine.vintage}</span>
+                    <section className="wine-card-mobile-layout" aria-label="mobile card layout">
+                      <div className="wine-card-mobile-main-row">
+                        <div className="wine-card-mobile-main-left">
+                          <p className="wine-card-mobile-name-line">
+                            <span className='wine-card-mobile-title '>{wine.name}</span>
+                            {/* <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>
+                              {countryFlagImage ? <img className="flag-badge-image" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" /> : countryFlagEmoji(wine.country)}
+                            </span> */}
+                          </p>
+                          <p className="wine-card-mobile-main-subline">{wine.vintage} • {wine.aging}</p>
+                          <p className="wine-card-mobile-wine-type">{wine.winery}</p>
+                        </div>
+                        </div>
+
+
+                       {/* </div>
+                                      <div className="wine-card-mobile-main-right">
+                          <span className='title'>{wine.avgScore.toFixed(1)}</span>
+                          <span>M: {wine.mariaScore != null ? wine.mariaScore.toFixed(1) : 'n/d'}</span>
+                          <span>A: {wine.adriaScore != null ? wine.adriaScore.toFixed(1) : 'n/d'}</span>
+                        </div> */}
+
+                      <div className="wine-card-mobile-do-row">
+                        <p className="wine-card-mobile-do-text">DO <span className='title'>{wine.region}</span> </p>
+
+                        <p className="wine-card-mobile-do-logos">
+                          {communityFlagImage && communityName ? (
+                            <img className="do-logo-badge" src={communityFlagImage} alt={communityName} loading="lazy" />
+                          ) : null}
+                          {wine.doLogoImage ? (
+                            <img className="do-logo-badge" src={wine.doLogoImage} alt={`${wine.region} DO`} loading="lazy" />
+                          ) : null}
+                        </p>
                       </div>
-                      <div className="wine-card-mobile-do-logos">
-                        {communityFlagImage && communityName ? (
-                          <img className="do-logo-badge" src={communityFlagImage} alt={communityName} loading="lazy" />
-                        ) : null}
-                        {wine.doLogoImage ? (
-                          <img className="do-logo-badge" src={wine.doLogoImage} alt="" loading="lazy" />
-                        ) : null}
+
+                      <div className="wine-card-mobile-grapes-row">
+                        <p>{t.filters.grape}</p>
+                        <div className="wine-card-mobile-grapes-list">
+                          {splitGrapeVarieties(wine.grapes).map((grape) => (
+                            <button
+                              key={`${wine.id}-mobile-grape-${grape}`}
+                              type="button"
+                              className="grape-filter-chip grape-filter-chip-secondary grape-filter-chip-compact"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setGrapeFilter(grape)
+                              }}
+                              aria-label={`${t.filters.grape}: ${grape}`}
+                              title={grape}
+                            >
+                              <span aria-hidden="true">{t.icons.grape}</span>
+                              <span>{grape}</span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <div className="wine-card-mobile-summary-region">
-                        <span className="country-flag-badge" aria-label={wine.country} title={wine.country}>
-                          {countryFlagImage ? <img className="flag-badge-image" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" /> : countryFlagEmoji(wine.country)}
-                        </span>
-                      </div>
-                    </div>
+                    </section>
 
                     <section className="wine-card-review-section" aria-label="review summary">
                       <p className="wine-card-review-title">Valoració</p>
