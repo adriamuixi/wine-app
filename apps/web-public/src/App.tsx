@@ -273,6 +273,7 @@ type Dictionary = {
 
 const THEME_KEY = 'wine-web-public-theme'
 const LOCALE_KEY = 'wine-web-public-locale'
+const MOBILE_VIEW_COOKIE_KEY = 'wine-web-public-mobile-view'
 const DEFAULT_SORT: SortKey = 'score_desc'
 
 const DICT: Record<Locale, Dictionary> = {
@@ -899,6 +900,25 @@ function getInitialLocale(): Locale {
   return stored === 'es' || stored === 'ca' ? stored : 'ca'
 }
 
+function getCookieValue(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const cookie = document.cookie
+    .split('; ')
+    .find((part) => part.startsWith(`${name}=`))
+  if (!cookie) return null
+  return decodeURIComponent(cookie.slice(name.length + 1))
+}
+
+function setCookieValue(name: string, value: string, maxAgeSeconds: number): void {
+  if (typeof document === 'undefined') return
+  document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax`
+}
+
+function clearCookieValue(name: string): void {
+  if (typeof document === 'undefined') return
+  document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax`
+}
+
 function parseUrlState(): UrlCatalogState {
   if (typeof window === 'undefined') {
     return {
@@ -968,6 +988,10 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
+  const [mobileViewMode, setMobileViewMode] = useState<'card' | 'list'>(() => {
+    const stored = getCookieValue(MOBILE_VIEW_COOKIE_KEY)
+    return stored === 'card' ? 'card' : 'list'
+  })
   const [isDoDropdownOpen, setIsDoDropdownOpen] = useState(false)
   const [doSearchText, setDoSearchText] = useState('')
   const [doLogoPreview, setDoLogoPreview] = useState<{ src: string; label: string } | null>(null)
@@ -999,6 +1023,14 @@ export default function App() {
     document.documentElement.lang = locale
     window.localStorage.setItem(LOCALE_KEY, locale)
   }, [locale])
+
+  useEffect(() => {
+    if (mobileViewMode === 'card') {
+      setCookieValue(MOBILE_VIEW_COOKIE_KEY, 'card', 60 * 60 * 24 * 365)
+      return
+    }
+    clearCookieValue(MOBILE_VIEW_COOKIE_KEY)
+  }, [mobileViewMode])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -1697,6 +1729,20 @@ export default function App() {
         <div className="mobile-filter-bar">
           <button
             type="button"
+            className={`mobile-view-trigger${mobileViewMode === 'card' ? ' active' : ''}`}
+            onClick={() => setMobileViewMode((mode) => (mode === 'card' ? 'list' : 'card'))}
+            aria-label={mobileViewMode === 'card'
+              ? (locale === 'ca' ? 'Canvia a vista de llista' : 'Cambiar a vista de lista')
+              : (locale === 'ca' ? 'Canvia a vista de targetes' : 'Cambiar a vista de tarjetas')}
+            title={mobileViewMode === 'card'
+              ? (locale === 'ca' ? 'Vista llista' : 'Vista lista')
+              : (locale === 'ca' ? 'Vista targetes' : 'Vista tarjetas')}
+          >
+            <span aria-hidden="true">◫</span>
+          </button>
+
+          <button
+            type="button"
             className={`mobile-filter-trigger${isMobileFiltersOpen ? ' active' : ''}`}
             onClick={() => {
               setIsMobileSortOpen(false)
@@ -1840,7 +1886,7 @@ export default function App() {
         </aside>
 
         <section className="cards-panel">
-          <div className="cards-grid">
+          <div className={`cards-grid mobile-layout-${mobileViewMode}`}>
             {filteredWines.map((wine) => {
               const isFeatured = wine.avgScore >= 90
               const scoreTier = wine.avgScore >= 90 ? 'gold' : wine.avgScore >= 80 ? 'silver' : wine.avgScore >= 70 ? 'bronze' : 'base'
@@ -1851,7 +1897,7 @@ export default function App() {
               return (
                 <article
                   key={wine.id}
-                  className={`wine-card ${isFeatured ? 'featured' : ''} score-tier-${scoreTier}`}
+                  className={`wine-card ${isFeatured ? 'featured' : ''} score-tier-${scoreTier} mobile-view-${mobileViewMode}`}
                   role="button"
                   tabIndex={0}
                   onClick={() => {
@@ -2013,6 +2059,72 @@ export default function App() {
                             </button>
                           ))}
                         </div>
+                      </div>
+                    </section>
+
+                    <section className="wine-card-mobile-list-layout" aria-label="mobile list layout">
+                      <div className="wine-card-mobile-list-image-wrap">
+                        <img
+                          src={resolvePublicWineImageForTheme(wine.image, isDark)}
+                          alt={wine.name}
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
+                          }}
+                        />
+                      </div>
+
+                      <div className="wine-card-mobile-list-main">
+                        <p className="wine-card-mobile-list-name">{wine.name}</p>
+                        <p className="wine-card-mobile-list-subline">{wine.vintage} • {t.wineType[wine.type]}</p>
+                        <p className="wine-card-mobile-list-do-row">
+                          <span className="wine-card-mobile-list-do-title">DO</span>
+                          {wine.doLogoImage ? (
+                            <img className="do-logo-badge" src={wine.doLogoImage} alt={`${wine.region} DO`} loading="lazy" />
+                          ) : null}
+                        </p>
+                        <p className="wine-card-mobile-list-do-name">{wine.region}</p>
+                        {wine.country !== 'Spain' ? (
+                          <p className="wine-card-mobile-list-origin-row">
+                            <span className="wine-card-mobile-list-origin-label">{locale === 'ca' ? 'Fabricació' : 'Fabricación'}</span>
+                            <span className="wine-card-mobile-list-country">
+                              {countryFlagImage
+                                ? <img className="flag-badge-image wine-card-mobile-list-country-flag" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" />
+                                : <span className="wine-card-mobile-list-country-emoji" aria-hidden="true">{countryFlagEmoji(wine.country)}</span>}
+                              <span>{localizedCountryName(wine.country, locale)}</span>
+                            </span>
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="wine-card-mobile-list-grapes-col" aria-label={t.filters.grape}>
+                        <p className="wine-card-mobile-list-grapes-title">
+                          {locale === 'ca' ? 'varietats de vi' : 'variedades de vino'}
+                        </p>
+                        <div className="wine-card-mobile-list-grapes-list">
+                          {splitGrapeVarieties(wine.grapes).map((grape) => (
+                            <button
+                              key={`${wine.id}-list-grape-${grape}`}
+                              type="button"
+                              className="grape-filter-chip grape-filter-chip-secondary grape-filter-chip-compact"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setGrapeFilter(grape)
+                              }}
+                              aria-label={`${t.filters.grape}: ${grape}`}
+                              title={grape}
+                            >
+                              <span aria-hidden="true">{t.icons.grape}</span>
+                              <span>{grape}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="wine-card-mobile-list-score-col">
+                        <span className={`wine-card-score-floating wine-card-score-floating-${scoreTier} wine-card-mobile-list-score-bullet`} aria-label={`${t.card.avgScore} ${wine.avgScore.toFixed(1)}`}>
+                          {wine.avgScore.toFixed(1)}
+                        </span>
                       </div>
                     </section>
 

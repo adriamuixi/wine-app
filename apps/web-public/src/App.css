@@ -553,6 +553,10 @@
   display: none;
 }
 
+.wine-card-mobile-list-layout {
+  display: none;
+}
+
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
@@ -2156,6 +2160,29 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     position: relative;
   }
 
+  .mobile-view-trigger {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 0.95rem;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    color: var(--text);
+    font: inherit;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .mobile-view-trigger.active {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+    background: color-mix(in srgb, var(--surface) 86%, var(--accent) 14%);
+  }
+
   .mobile-sort-trigger.has-value {
     border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
     background: color-mix(in srgb, var(--surface) 86%, var(--accent) 14%);
@@ -2464,6 +2491,11 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     gap: 0.75rem;
   }
 
+  .cards-grid.mobile-layout-list {
+    grid-template-columns: 1fr;
+    gap: 0.52rem;
+  }
+
   .cards-panel {
     padding: 0.55rem;
     border-radius: 1rem;
@@ -2641,6 +2673,214 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 
   .wine-card-mobile-layout {
     display: grid;
+  }
+
+  .cards-grid.mobile-layout-list .wine-card {
+    display: block;
+    grid-template-rows: none;
+  }
+
+  .cards-grid.mobile-layout-list .wine-card-media,
+  .cards-grid.mobile-layout-list .wine-card-mobile-layout {
+    display: none;
+  }
+
+  .cards-grid.mobile-layout-list .wine-card-body {
+    padding: 0.45rem 0.5rem;
+    gap: 0;
+  }
+
+  .cards-grid.mobile-layout-list .wine-card-mobile-list-layout {
+    display: grid;
+    grid-template-columns: 4.35rem minmax(0, 1fr) minmax(3.9rem, 5rem) auto;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .wine-card-mobile-list-image-wrap {
+    width: 4.35rem;
+    height: 4.35rem;
+    border-radius: 0.66rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+    background: var(--surface-soft);
+  }
+
+  .wine-card-mobile-list-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .wine-card-mobile-list-main {
+    min-width: 0;
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .wine-card-mobile-list-name,
+  .wine-card-mobile-list-subline,
+  .wine-card-mobile-list-do-row,
+  .wine-card-mobile-list-origin-row {
+    margin: 0;
+  }
+
+  .wine-card-mobile-list-name {
+    font-size: 1rem;
+    line-height: 1.12;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wine-card-mobile-list-subline {
+    color: var(--muted-strong);
+    font-size: 0.8rem;
+    line-height: 1.15;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wine-card-mobile-list-do-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    min-width: 0;
+  }
+
+  .wine-card-mobile-list-do-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .wine-card-mobile-list-do-name {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    margin: 0;
+  }
+
+  .wine-card-mobile-list-do-row .do-logo-badge {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 0.2rem;
+    padding: 0.04rem;
+    flex: 0 0 auto;
+  }
+
+  .wine-card-mobile-list-origin-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    min-width: 0;
+  }
+
+  .wine-card-mobile-list-origin-label {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex: 0 0 auto;
+  }
+
+  .wine-card-mobile-list-country {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    min-width: 0;
+    color: var(--muted-strong);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .wine-card-mobile-list-country > span:last-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wine-card-mobile-list-country-flag {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 0.18rem;
+    flex: 0 0 auto;
+  }
+
+  .wine-card-mobile-list-country-emoji {
+    font-size: 0.78rem;
+    line-height: 1;
+    flex: 0 0 auto;
+  }
+
+  .wine-card-mobile-list-score-col {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wine-card-mobile-list-grapes-col {
+    display: grid;
+    align-content: start;
+    justify-items: end;
+    gap: 0.1rem;
+    min-width: 0;
+    padding-left: 0.34rem;
+    position: relative;
+  }
+
+  .wine-card-mobile-list-grapes-col::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.08rem;
+    width: 1px;
+    height: 1.05rem;
+    background: color-mix(in srgb, var(--line) 78%, transparent);
+  }
+
+  .wine-card-mobile-list-grapes-title {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.52rem;
+    line-height: 1.05;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .wine-card-mobile-list-grapes-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .wine-card-mobile-list-grapes-list .grape-filter-chip {
+    max-width: 100%;
+    padding: 0.1rem 0.26rem;
+    font-size: 0.64rem;
+    gap: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wine-card-mobile-list-score-bullet {
+    position: static;
+    right: auto;
+    bottom: auto;
+    width: 2.28rem;
+    height: 2.28rem;
+    font-size: 0.94rem;
   }
 
   .wine-card-mobile-do-row
