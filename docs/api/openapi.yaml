@@ -1283,11 +1283,18 @@ components:
           nullable: true
     WineListReview:
       type: object
-      required: [user_id, score]
+      required: [user_id, name, lastname, created_at, score]
       properties:
         user_id:
           type: integer
           format: int64
+        name:
+          type: string
+        lastname:
+          type: string
+        created_at:
+          type: string
+          format: date-time
         score:
           type: integer
           nullable: true

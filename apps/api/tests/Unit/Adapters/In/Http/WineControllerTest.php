@@ -177,6 +177,9 @@ final class WineControllerTest extends TestCase
         self::assertSame('front_label', $payload['items'][0]['photos'][1]['type']);
         self::assertNull($payload['items'][0]['photos'][1]['url']);
         self::assertSame(8, $payload['items'][0]['reviews'][0]['user_id']);
+        self::assertSame('Ana', $payload['items'][0]['reviews'][0]['name']);
+        self::assertSame('Lopez', $payload['items'][0]['reviews'][0]['lastname']);
+        self::assertSame('2026-03-01T08:30:00+00:00', $payload['items'][0]['reviews'][0]['created_at']);
         self::assertSame(92, $payload['items'][0]['reviews'][0]['score']);
     }
 
@@ -478,8 +481,8 @@ final class SpyWineRepository implements WineRepository
                         new WineListItemPhotoView('situation', null),
                     ],
                     reviews: [
-                        new WineListItemReviewView(8, 92),
-                        new WineListItemReviewView(2, 88),
+                        new WineListItemReviewView(8, 'Ana', 'Lopez', '2026-03-01T08:30:00+00:00', 92),
+                        new WineListItemReviewView(2, 'Maria', 'Gascon', '2026-03-01T08:15:00+00:00', 88),
                     ],
                 ),
             ],

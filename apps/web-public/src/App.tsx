@@ -78,6 +78,13 @@ type WineListApiItem = {
     percentage: number | null
   }>
   awards: AwardApiValue[]
+  reviews: Array<{
+    user_id: number
+    name: string
+    lastname: string
+    created_at: string
+    score: number | null
+  }>
   photos: Array<{
     type: 'front_label' | 'back_label' | 'bottle' | 'situation'
     url: string | null
@@ -159,6 +166,16 @@ type WineDetailsApiResponse = {
       }
       price_paid: number
       purchased_at: string
+    }>
+    reviews: Array<{
+      id: number
+      user: {
+        id: number
+        name: string
+        lastname: string
+      }
+      score: number | null
+      created_at: string
     }>
   }
 }
@@ -722,6 +739,30 @@ function mapWineGrapesLabel(grapes: Array<{ name: string }> | undefined): string
   return names.length > 0 ? names.join(', ') : '-'
 }
 
+function mapUserScoresFromListReviews(
+  reviews: WineListApiItem['reviews'] | undefined,
+): { adriaScore: number | null; mariaScore: number | null } {
+  const adria = Array.isArray(reviews) ? reviews.find((review) => review.user_id === 1) : undefined
+  const maria = Array.isArray(reviews) ? reviews.find((review) => review.user_id === 2) : undefined
+
+  return {
+    adriaScore: typeof adria?.score === 'number' ? adria.score : null,
+    mariaScore: typeof maria?.score === 'number' ? maria.score : null,
+  }
+}
+
+function mapUserScoresFromDetailReviews(
+  reviews: NonNullable<WineDetailsApiResponse['wine']>['reviews'] | undefined,
+): { adriaScore: number | null; mariaScore: number | null } {
+  const adria = Array.isArray(reviews) ? reviews.find((review) => review.user?.id === 1) : undefined
+  const maria = Array.isArray(reviews) ? reviews.find((review) => review.user?.id === 2) : undefined
+
+  return {
+    adriaScore: typeof adria?.score === 'number' ? adria.score : null,
+    mariaScore: typeof maria?.score === 'number' ? maria.score : null,
+  }
+}
+
 function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineCard {
   const byType: Record<'bottle' | 'front_label' | 'back_label' | 'situation', string> = {
     bottle: DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
@@ -739,7 +780,13 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
   const avgScore = typeof item.avg_score === 'number' && Number.isFinite(item.avg_score)
     ? Math.round(item.avg_score * 10) / 10
     : 0
-  const updatedAt = new Date(item.updated_at)
+  const firstReviewCreatedAt = Array.isArray(item.reviews) && item.reviews.length > 0
+    ? item.reviews[0]?.created_at
+    : undefined
+  const tastingSourceDate = typeof firstReviewCreatedAt === 'string' && firstReviewCreatedAt.trim() !== ''
+    ? firstReviewCreatedAt
+    : item.updated_at
+  const updatedAt = new Date(tastingSourceDate)
   const dateLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
   const tastedAt = Number.isNaN(updatedAt.getTime())
     ? '-'
@@ -750,6 +797,7 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
   const region = item.do?.name?.trim() || '-'
   const type = mapApiWineType(item.wine_type)
   const { reward, rewardBadgeImage } = mapPrimaryAwardToReward(item.awards?.[0])
+  const userScores = mapUserScoresFromListReviews(item.reviews)
 
   return {
     id: item.id,
@@ -766,8 +814,8 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
     grapes: mapWineGrapesLabel(item.grapes),
     aging: mapAgingTypeLabel(item.aging_type, locale),
     alcohol: 'n/d',
-    mariaScore: null,
-    adriaScore: null,
+    mariaScore: userScores.mariaScore,
+    adriaScore: userScores.adriaScore,
     place: item.winery?.trim() || '-',
     city: '-',
     techSheet: false,
@@ -797,6 +845,7 @@ function mergeWineCardWithDetails(card: WineCard, details: NonNullable<WineDetai
   const gallery = [byType.bottle, byType.front_label, byType.back_label, byType.situation]
   const lastPurchase = Array.isArray(details.purchases) && details.purchases.length > 0 ? details.purchases[0] : null
   const rewardMapping = mapPrimaryAwardToReward(Array.isArray(details.awards) ? details.awards[0] : undefined)
+  const userScores = mapUserScoresFromDetailReviews(details.reviews)
   const tastedDate = lastPurchase?.purchased_at ? new Date(lastPurchase.purchased_at) : null
   const dateLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
 
@@ -810,6 +859,8 @@ function mergeWineCardWithDetails(card: WineCard, details: NonNullable<WineDetai
     vintage: details.vintage_year ?? card.vintage,
     grapes: mapWineGrapesLabel(details.grapes),
     aging: mapAgingTypeLabel(details.aging_type, locale),
+    mariaScore: userScores.mariaScore ?? card.mariaScore,
+    adriaScore: userScores.adriaScore ?? card.adriaScore,
     alcohol: typeof details.alcohol_percentage === 'number' ? `${details.alcohol_percentage}%` : card.alcohol,
     priceFrom: typeof lastPurchase?.price_paid === 'number' ? lastPurchase.price_paid : card.priceFrom,
     tastedAt: tastedDate && !Number.isNaN(tastedDate.getTime())

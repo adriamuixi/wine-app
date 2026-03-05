@@ -665,10 +665,17 @@ SQL,
 
             $reviewRows = $connection->fetchAllAssociative(
                 <<<'SQL'
-SELECT wine_id, user_id, score
-FROM review
-WHERE wine_id IN (:wine_ids)
-ORDER BY wine_id ASC, created_at DESC, id DESC
+SELECT
+    r.wine_id,
+    r.user_id,
+    u.name AS user_name,
+    u.lastname AS user_lastname,
+    r.created_at,
+    r.score
+FROM review r
+INNER JOIN users u ON u.id = r.user_id
+WHERE r.wine_id IN (:wine_ids)
+ORDER BY r.wine_id ASC, r.created_at DESC, r.id DESC
 SQL,
                 ['wine_ids' => $wineIds],
                 ['wine_ids' => ArrayParameterType::INTEGER],
@@ -682,6 +689,9 @@ SQL,
 
                 $reviewsByWineId[$wineId][] = new WineListItemReviewView(
                     userId: (int) $row['user_id'],
+                    name: (string) $row['user_name'],
+                    lastname: (string) $row['user_lastname'],
+                    createdAt: $this->toIso8601((string) $row['created_at']),
                     score: null === $row['score'] ? null : (int) $row['score'],
                 );
             }

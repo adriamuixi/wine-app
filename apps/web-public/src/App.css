@@ -562,11 +562,6 @@
 .wine-card {
   border-radius: 1rem;
   border: 1px solid var(--line);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-soft) 72%, #130d11),
-    color-mix(in srgb, var(--surface) 74%, #100b0f)
-  );
   overflow: hidden;
   display: grid;
   grid-template-rows: 180px auto;
@@ -599,6 +594,12 @@
   box-shadow: 0 0 0 1px rgba(170, 176, 191, 0.14), 0 18px 28px -24px rgba(0, 0, 0, 0.55);
 }
 
+:root[data-theme='light'] .wine-card.score-tier-silver {
+   background: linear-gradient(90deg, rgb(219, 219, 219) 20%, rgb(209, 209, 209, 0) 48%, rgba(255, 255, 255, 0) 60%, rgb(219, 219, 219) 100%);
+  box-shadow: 0 0 0 1px rgba(170, 176, 191, 0.14), 0 18px 28px -24px rgba(0, 0, 0, 0.55);
+}
+
+
 .wine-card.score-tier-gold {
   border-color: rgba(227, 181, 89, 0.66);
   background:
@@ -611,39 +612,18 @@
   box-shadow: 0 0 0 1px rgba(227, 181, 89, 0.14), 0 18px 28px -24px rgba(0, 0, 0, 0.55);
 }
 
-:root[data-theme='light'] .wine-card.score-tier-bronze {
-  background:
-    radial-gradient(circle at 88% 14%, rgba(191, 122, 77, 0.38), transparent 60%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-soft) 62%, #f0dece),
-      color-mix(in srgb, var(--surface) 58%, #e0c3ae)
-    );
-}
 
-:root[data-theme='light'] .wine-card.score-tier-silver {
-  background:
-    radial-gradient(circle at 86% 12%, rgba(176, 184, 199, 0.38), transparent 62%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-soft) 62%, #e8edf6),
-      color-mix(in srgb, var(--surface) 58%, #c8d3e4)
-    );
+:root[data-theme='light'] .wine-card.score-tier-bronze {
+   background: linear-gradient(90deg,rgba(155, 56, 3, 0.146) 10%, rgba(209, 209, 209, 0) 48%, rgba(255, 255, 255, 0) 60%, rgba(155, 56, 3, 0.146) 100%);
+  box-shadow: 0 0 0 1px rgba(170, 176, 191, 0.14), 0 18px 28px -24px rgba(0, 0, 0, 0.55);
+
 }
 
 :root[data-theme='light'] .wine-card.score-tier-gold {
-  background:
-    radial-gradient(circle at 86% 12%, rgba(227, 181, 89, 0.4), transparent 62%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-soft) 62%, #f3e7c6),
-      color-mix(in srgb, var(--surface) 58%, #dec882)
-    );
+   background: linear-gradient(90deg,rgba(206, 168, 15, 0.2) 10%, rgba(209, 209, 209, 0) 48%, rgba(255, 255, 255, 0) 60%, rgba(206, 168, 15, 0.2) 100%);
+  box-shadow: 0 0 0 1px rgba(170, 176, 191, 0.14), 0 18px 28px -24px rgba(0, 0, 0, 0.55);
 }
 
-:root[data-theme='light'] .wine-card-body {
-  background: linear-gradient(180deg, rgba(249, 247, 246, 0.9), rgba(244, 240, 239, 0.92));
-}
 
 :root[data-theme='light'] .wine-card-head h3 {
   color: #2d242b;
@@ -840,8 +820,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.5)),
-    linear-gradient(135deg, rgba(138, 10, 58, 0.18), transparent 55%);
+linear-gradient(309deg, rgba(0, 0, 0, 0), rgb(105 30 79 / 2%)),
+linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 }
 
 .wine-card-badges {
@@ -2819,7 +2799,7 @@
     max-width: 100%;
     background: transparent;
     border-color: color-mix(in srgb, var(--line) 90%, var(--accent));
-    color: var(--text);
+background: linear-gradient(12deg,rgba(237, 154, 234, 0.57) 0%, rgba(245, 171, 233, 0.43) 28%, rgba(255, 191, 247, 0.46) 73%, rgba(255, 224, 253, 0.85) 100%);
     padding: 0.12rem 0.20rem;
     font-size: 0.72rem;
   }

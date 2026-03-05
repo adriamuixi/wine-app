@@ -184,6 +184,9 @@ final class WineController
                         'reviews' => array_map(
                             static fn ($review): array => [
                                 'user_id' => $review->userId,
+                                'name' => $review->name,
+                                'lastname' => $review->lastname,
+                                'created_at' => $review->createdAt,
                                 'score' => $review->score,
                             ],
                             $item->reviews,

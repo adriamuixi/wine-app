@@ -49,6 +49,9 @@ final class ListWinesHandlerTest extends TestCase
         self::assertSame('parker', $result->items[0]->awards[0]->name);
         self::assertSame('bottle', $result->items[0]->photos[0]->type);
         self::assertSame(7, $result->items[0]->reviews[0]->userId);
+        self::assertSame('Adria', $result->items[0]->reviews[0]->name);
+        self::assertSame('Muixi', $result->items[0]->reviews[0]->lastname);
+        self::assertSame('2026-03-01T11:00:00+00:00', $result->items[0]->reviews[0]->createdAt);
         self::assertSame(91, $result->items[0]->reviews[0]->score);
     }
 
@@ -149,8 +152,8 @@ final class SpyWineRepository implements WineRepository
                     new WineListItemPhotoView('situation', null),
                 ],
                 [
-                    new WineListItemReviewView(7, 91),
-                    new WineListItemReviewView(3, 88),
+                    new WineListItemReviewView(7, 'Adria', 'Muixi', '2026-03-01T11:00:00+00:00', 91),
+                    new WineListItemReviewView(3, 'Maria', 'Gascon', '2026-03-01T10:45:00+00:00', 88),
                 ],
             )],
             page: $query->page,
