@@ -10,6 +10,7 @@ final readonly class WineListItemView
      * @param list<WineListItemGrapeView> $grapes
      * @param list<WineListItemAwardView> $awards
      * @param list<WineListItemPhotoView> $photos
+     * @param list<WineListItemReviewView> $reviews
      */
     public function __construct(
         public int $id,
@@ -27,6 +28,7 @@ final readonly class WineListItemView
         public array $grapes = [],
         public array $awards = [],
         public array $photos = [],
+        public array $reviews = [],
     ) {
     }
 }

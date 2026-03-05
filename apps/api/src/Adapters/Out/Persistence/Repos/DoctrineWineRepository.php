@@ -11,6 +11,7 @@ use App\Application\UseCases\Wine\ListWines\ListWinesSort;
 use App\Application\UseCases\Wine\ListWines\WineListItemAwardView;
 use App\Application\UseCases\Wine\ListWines\WineListItemGrapeView;
 use App\Application\UseCases\Wine\ListWines\WineListItemPhotoView;
+use App\Application\UseCases\Wine\ListWines\WineListItemReviewView;
 use App\Application\UseCases\Wine\ListWines\WineListItemView;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
@@ -567,6 +568,8 @@ SQL,
         $awardsByWineId = [];
         /** @var array<int,list<WineListItemPhotoView>> $photosByWineId */
         $photosByWineId = [];
+        /** @var array<int,list<WineListItemReviewView>> $reviewsByWineId */
+        $reviewsByWineId = [];
 
         if ([] !== $wineIds) {
             $grapeRows = $connection->fetchAllAssociative(
@@ -659,6 +662,29 @@ SQL,
                     $photoSlots,
                 );
             }
+
+            $reviewRows = $connection->fetchAllAssociative(
+                <<<'SQL'
+SELECT wine_id, user_id, score
+FROM review
+WHERE wine_id IN (:wine_ids)
+ORDER BY wine_id ASC, created_at DESC, id DESC
+SQL,
+                ['wine_ids' => $wineIds],
+                ['wine_ids' => ArrayParameterType::INTEGER],
+            );
+
+            foreach ($reviewRows as $row) {
+                $wineId = (int) $row['wine_id'];
+                if (!array_key_exists($wineId, $reviewsByWineId)) {
+                    $reviewsByWineId[$wineId] = [];
+                }
+
+                $reviewsByWineId[$wineId][] = new WineListItemReviewView(
+                    userId: (int) $row['user_id'],
+                    score: null === $row['score'] ? null : (int) $row['score'],
+                );
+            }
         }
 
         $items = [];
@@ -680,6 +706,7 @@ SQL,
                 grapes: $grapesByWineId[$wineId] ?? [],
                 awards: $awardsByWineId[$wineId] ?? [],
                 photos: $photosByWineId[$wineId] ?? [],
+                reviews: $reviewsByWineId[$wineId] ?? [],
             );
         }
 

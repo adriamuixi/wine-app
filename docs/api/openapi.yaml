@@ -1281,9 +1281,19 @@ components:
         year:
           type: integer
           nullable: true
+    WineListReview:
+      type: object
+      required: [user_id, score]
+      properties:
+        user_id:
+          type: integer
+          format: int64
+        score:
+          type: integer
+          nullable: true
     WineListItem:
       type: object
-      required: [id, name, winery, wine_type, aging_type, country, do, vintage_year, avg_score, updated_at, grapes, awards, photos]
+      required: [id, name, winery, wine_type, aging_type, country, do, vintage_year, avg_score, updated_at, grapes, awards, photos, reviews]
       properties:
         id:
           type: integer
@@ -1333,6 +1343,10 @@ components:
           maxItems: 4
           items:
             $ref: '#/components/schemas/WineListPhoto'
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/WineListReview'
     PaginationMeta:
       type: object
       required: [page, limit, total_items, total_pages, has_next, has_prev]

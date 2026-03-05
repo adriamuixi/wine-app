@@ -52,3 +52,7 @@ Read in this order:
 3. `docs/ARCHITECTURE_PLAYBOOK.md`
 4. `docs/BACKEND_FEATURE_WORKFLOW.md`
 5. `docs/DOMAIN_RULES_CHECKLIST.md`
+
+## Operational Scripts
+
+- `scripts/README.md`

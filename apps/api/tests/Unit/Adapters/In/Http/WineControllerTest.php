@@ -28,6 +28,7 @@ use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\ListWines\WineListItemAwardView;
 use App\Application\UseCases\Wine\ListWines\WineListItemGrapeView;
 use App\Application\UseCases\Wine\ListWines\WineListItemPhotoView;
+use App\Application\UseCases\Wine\ListWines\WineListItemReviewView;
 use App\Application\UseCases\Wine\ListWines\WineListItemView;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineHandler;
@@ -175,6 +176,8 @@ final class WineControllerTest extends TestCase
         self::assertSame('/images/wines/1/bottle.jpg', $payload['items'][0]['photos'][0]['url']);
         self::assertSame('front_label', $payload['items'][0]['photos'][1]['type']);
         self::assertNull($payload['items'][0]['photos'][1]['url']);
+        self::assertSame(8, $payload['items'][0]['reviews'][0]['user_id']);
+        self::assertSame(92, $payload['items'][0]['reviews'][0]['score']);
     }
 
     public function testListReturnsBadRequestForInvalidQueryParam(): void
@@ -473,6 +476,10 @@ final class SpyWineRepository implements WineRepository
                         new WineListItemPhotoView('front_label', null),
                         new WineListItemPhotoView('back_label', null),
                         new WineListItemPhotoView('situation', null),
+                    ],
+                    reviews: [
+                        new WineListItemReviewView(8, 92),
+                        new WineListItemReviewView(2, 88),
                     ],
                 ),
             ],

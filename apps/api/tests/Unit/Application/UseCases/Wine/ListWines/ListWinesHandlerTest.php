@@ -15,6 +15,7 @@ use App\Application\UseCases\Wine\ListWines\ListWinesValidationException;
 use App\Application\UseCases\Wine\ListWines\WineListItemAwardView;
 use App\Application\UseCases\Wine\ListWines\WineListItemGrapeView;
 use App\Application\UseCases\Wine\ListWines\WineListItemPhotoView;
+use App\Application\UseCases\Wine\ListWines\WineListItemReviewView;
 use App\Application\UseCases\Wine\ListWines\WineListItemView;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
 use App\Domain\Enum\Country;
@@ -47,6 +48,8 @@ final class ListWinesHandlerTest extends TestCase
         self::assertSame('Tempranillo', $result->items[0]->grapes[0]->name);
         self::assertSame('parker', $result->items[0]->awards[0]->name);
         self::assertSame('bottle', $result->items[0]->photos[0]->type);
+        self::assertSame(7, $result->items[0]->reviews[0]->userId);
+        self::assertSame(91, $result->items[0]->reviews[0]->score);
     }
 
     public function testItValidatesLimit(): void
@@ -144,6 +147,10 @@ final class SpyWineRepository implements WineRepository
                     new WineListItemPhotoView('front_label', null),
                     new WineListItemPhotoView('back_label', null),
                     new WineListItemPhotoView('situation', null),
+                ],
+                [
+                    new WineListItemReviewView(7, 91),
+                    new WineListItemReviewView(3, 88),
                 ],
             )],
             page: $query->page,

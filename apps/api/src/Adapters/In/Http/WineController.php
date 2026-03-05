@@ -181,6 +181,13 @@ final class WineController
                             ],
                             $item->photos,
                         ),
+                        'reviews' => array_map(
+                            static fn ($review): array => [
+                                'user_id' => $review->userId,
+                                'score' => $review->score,
+                            ],
+                            $item->reviews,
+                        ),
                     ];
                 },
                 $result->items,
