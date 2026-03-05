@@ -1990,15 +1990,18 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   .mobile-filter-dropdown {
     display: grid;
     gap: 0.25rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0;
     position: relative;
+    justify-self: end;
+    align-self: start;
+    width: auto;
   }
 
   .mobile-filter-bar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: inline-flex;
     gap: 0.25rem;
-    align-items: stretch;
+    align-items: center;
+    justify-content: flex-end;
   }
 
   .mobile-filter-active-bar {
@@ -2094,14 +2097,26 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   }
 
   .mobile-filter-trigger {
-    width: 100%;
-    padding: 0.35rem 0.85rem;
+    width: auto;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.35rem 0.55rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+    justify-content: center;
+    gap: 0.35rem;
     font-weight: 700;
     cursor: pointer;
+  }
+
+  .mobile-filter-trigger-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .mobile-filter-trigger-text {
+    display: none;
   }
 
   .mobile-filter-trigger.active {
@@ -2110,9 +2125,17 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   }
 
   .mobile-filter-trigger-meta {
-    color: var(--muted);
-    font-size: 0.82rem;
-    font-weight: 600;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    color: var(--text);
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
+    padding: 0 0.2rem;
   }
 
   .mobile-sort-trigger {
@@ -2167,9 +2190,11 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 
   .mobile-sort-panel {
     position: absolute;
-    left: 0;
+    left: auto;
     right: 0;
     top: calc(100% + 0.4rem);
+    width: min(92vw, 320px);
+    max-width: 320px;
     z-index: 97;
     border: 1px solid var(--line);
     border-radius: 1rem;
@@ -2408,6 +2433,9 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 
   .hero-panel {
     padding: 0.75rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.45rem;
   }
 
   .hero-panel h1 {

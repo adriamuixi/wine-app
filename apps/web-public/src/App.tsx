@@ -4,7 +4,7 @@ import './App.css'
 type Locale = 'ca' | 'es'
 type ThemeMode = 'light' | 'dark'
 type WineType = 'red' | 'white' | 'rose' | 'sparkling'
-type SortKey = 'score_desc' | 'price_asc' | 'price_desc' | 'latest'
+type SortKey = 'score_desc' | 'price_asc' | 'price_desc' | 'latest' | 'tasting_date_desc' | 'tasting_date_asc'
 type ScoreFilterBucket = 'all' | 'lt70' | '70_80' | '80_90' | 'gte90'
 type UrlCatalogState = {
   q: string
@@ -47,6 +47,7 @@ type WineCard = {
   tags: string[]
   image: string
   gallery: string[]
+  tastingDateSortTs: number | null
 }
 
 type AwardApiName = 'penin' | 'parker' | 'wine_spectator' | 'decanter' | 'james_suckling' | 'guia_proensa'
@@ -347,6 +348,8 @@ const DICT: Record<Locale, Dictionary> = {
       price_asc: 'Preu (menor a major)',
       price_desc: 'Preu (major a menor)',
       latest: 'Anyada més recent',
+      tasting_date_desc: 'Data de la cata (desc)',
+      tasting_date_asc: 'Data de la cata (asc)',
     },
     modal: {
       close: 'Tanca',
@@ -446,6 +449,8 @@ const DICT: Record<Locale, Dictionary> = {
       price_asc: 'Precio (menor a mayor)',
       price_desc: 'Precio (mayor a menor)',
       latest: 'Añada más reciente',
+      tasting_date_desc: 'Fecha de la cata (desc)',
+      tasting_date_asc: 'Fecha de la cata (asc)',
     },
     modal: {
       close: 'Cerrar',
@@ -786,14 +791,14 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
   const tastingSourceDate = typeof firstReviewCreatedAt === 'string' && firstReviewCreatedAt.trim() !== ''
     ? firstReviewCreatedAt
     : item.updated_at
-  const updatedAt = new Date(tastingSourceDate)
+  const tastingDate = new Date(tastingSourceDate)
   const dateLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
-  const tastedAt = Number.isNaN(updatedAt.getTime())
+  const tastedAt = Number.isNaN(tastingDate.getTime())
     ? '-'
-    : new Intl.DateTimeFormat(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(updatedAt)
-  const month = Number.isNaN(updatedAt.getTime())
+    : new Intl.DateTimeFormat(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(tastingDate)
+  const month = Number.isNaN(tastingDate.getTime())
     ? '-'
-    : new Intl.DateTimeFormat(dateLocale, { month: 'long' }).format(updatedAt)
+    : new Intl.DateTimeFormat(dateLocale, { month: 'long' }).format(tastingDate)
   const region = item.do?.name?.trim() || '-'
   const type = mapApiWineType(item.wine_type)
   const { reward, rewardBadgeImage } = mapPrimaryAwardToReward(item.awards?.[0])
@@ -826,6 +831,7 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
     tags: [region, type],
     image: byType.bottle,
     gallery,
+    tastingDateSortTs: Number.isNaN(tastingDate.getTime()) ? null : tastingDate.getTime(),
   }
 }
 
@@ -876,6 +882,7 @@ function mergeWineCardWithDetails(card: WineCard, details: NonNullable<WineDetai
     doLogoImage: doLogoPathFromImageName(details.do?.logo_image) ?? card.doLogoImage,
     image: byType.bottle,
     gallery,
+    tastingDateSortTs: card.tastingDateSortTs,
   }
 }
 
@@ -923,7 +930,12 @@ function parseUrlState(): UrlCatalogState {
           ? '80_90'
           : 'all'
   const validSort: SortKey =
-    sortParam === 'price_asc' || sortParam === 'price_desc' || sortParam === 'latest' || sortParam === 'score_desc'
+    sortParam === 'price_asc'
+      || sortParam === 'price_desc'
+      || sortParam === 'latest'
+      || sortParam === 'score_desc'
+      || sortParam === 'tasting_date_desc'
+      || sortParam === 'tasting_date_asc'
       ? sortParam
       : DEFAULT_SORT
   const wineId = wineParam && !Number.isNaN(Number(wineParam)) ? Number(wineParam) : null
@@ -1274,6 +1286,8 @@ export default function App() {
       if (sortKey === 'price_asc') return a.priceFrom - b.priceFrom
       if (sortKey === 'price_desc') return b.priceFrom - a.priceFrom
       if (sortKey === 'latest') return b.vintage - a.vintage
+      if (sortKey === 'tasting_date_desc') return (b.tastingDateSortTs ?? 0) - (a.tastingDateSortTs ?? 0)
+      if (sortKey === 'tasting_date_asc') return (a.tastingDateSortTs ?? 0) - (b.tastingDateSortTs ?? 0)
       return b.avgScore - a.avgScore
     })
   }, [search, typeFilter, countryFilter, regionFilter, grapeFilter, minScoreFilter, sortKey, wines])
@@ -1347,6 +1361,8 @@ export default function App() {
         <option value="price_asc">{t.sort.price_asc}</option>
         <option value="price_desc">{t.sort.price_desc}</option>
         <option value="latest">{t.sort.latest}</option>
+        <option value="tasting_date_desc">{t.sort.tasting_date_desc}</option>
+        <option value="tasting_date_asc">{t.sort.tasting_date_asc}</option>
       </select>
     </label>
   )
@@ -1677,9 +1693,7 @@ export default function App() {
           <p className="eyebrow">ELS NOSTRES VINS</p>
           <h1>Catàleg de vins</h1>
         </div>
-      </section>
-
-      <section className="mobile-filter-dropdown" aria-label={t.filters.title}>
+        <section className="mobile-filter-dropdown" aria-label={t.filters.title}>
         <div className="mobile-filter-bar">
           <button
             type="button"
@@ -1691,9 +1705,12 @@ export default function App() {
             aria-expanded={isMobileFiltersOpen}
             aria-controls="mobile-filters-panel"
           >
-            <span>{t.icons.filters} {t.filters.title}</span>
+            <span className="mobile-filter-trigger-label">
+              <span aria-hidden="true">{t.icons.filters}</span>
+              <span className="mobile-filter-trigger-text">{t.filters.title}</span>
+            </span>
             <span className="mobile-filter-trigger-meta">
-              {filteredWines.length} {t.topbar.resultCount}
+              {filteredWines.length}
             </span>
           </button>
 
@@ -1731,7 +1748,7 @@ export default function App() {
               </button>
             </div>
             <div className="mobile-sort-options" role="listbox" aria-label={t.filters.sort}>
-              {(['score_desc', 'price_asc', 'price_desc', 'latest'] as SortKey[]).map((key) => (
+              {(['score_desc', 'price_asc', 'price_desc', 'latest', 'tasting_date_desc', 'tasting_date_asc'] as SortKey[]).map((key) => (
                 <button
                   key={key}
                   type="button"
@@ -1814,6 +1831,7 @@ export default function App() {
             </button>
           </div>
         </div>
+      </section>
       </section>
 
       <section className="catalog-layout">
