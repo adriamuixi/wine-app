@@ -139,6 +139,27 @@ echo "==> Import remote data-only dump"
 ssh -p "${SSH_PORT}" "${REMOTE_USER}@${REMOTE_HOST}" \
   "set -euo pipefail; cd '${REMOTE_PROJECT_DIR}'; docker compose -f '${REMOTE_COMPOSE_FILE}' exec -T '${REMOTE_DB_SERVICE}' pg_dump -U '${REMOTE_POSTGRES_USER}' -d '${REMOTE_POSTGRES_DB}' --data-only --no-owner --no-privileges --disable-triggers --exclude-table=public.doctrine_migration_versions" \
   | docker compose -f "${LOCAL_COMPOSE_FILE}" exec -T "${LOCAL_DB_SERVICE}" \
-      psql -v ON_ERROR_STOP=1 -U "${LOCAL_POSTGRES_USER}" -d "${LOCAL_POSTGRES_DB}"
+      psql -v ON_ERROR_STOP=1 -1 -U "${LOCAL_POSTGRES_USER}" -d "${LOCAL_POSTGRES_DB}"
+
+echo "==> Verify FK triggers are enabled"
+disabled_fk_triggers="$(
+  docker compose -f "${LOCAL_COMPOSE_FILE}" exec -T "${LOCAL_DB_SERVICE}" \
+    psql -v ON_ERROR_STOP=1 -U "${LOCAL_POSTGRES_USER}" -d "${LOCAL_POSTGRES_DB}" -At \
+      -c "SELECT format('%I.%I:%s', n.nspname, c.relname, t.tgname)
+          FROM pg_trigger t
+          JOIN pg_class c ON c.oid = t.tgrelid
+          JOIN pg_namespace n ON n.oid = c.relnamespace
+          WHERE n.nspname = 'public'
+            AND t.tgisinternal
+            AND t.tgname LIKE 'RI_ConstraintTrigger_%'
+            AND t.tgenabled <> 'O'
+          ORDER BY n.nspname, c.relname, t.tgname;"
+)"
+
+if [[ -n "${disabled_fk_triggers}" ]]; then
+  echo "ERROR: some FK triggers are disabled after import:"
+  echo "${disabled_fk_triggers}"
+  exit 1
+fi
 
 echo "==> Done. Local database synced from server."
