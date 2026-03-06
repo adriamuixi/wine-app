@@ -1653,10 +1653,9 @@ export default function App() {
               xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true"
             >
-              <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M5 19.2C5.7 15.9 8.4 14 12 14C15.6 14 18.3 15.9 19 19.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M20.5 11.5H16.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M18.5 9.5L20.5 11.5L18.5 13.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M10 4.75H6.75A1.75 1.75 0 0 0 5 6.5v11A1.75 1.75 0 0 0 6.75 19.25H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 12h7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="m16.8 8.3 3.7 3.7-3.7 3.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </a>
 

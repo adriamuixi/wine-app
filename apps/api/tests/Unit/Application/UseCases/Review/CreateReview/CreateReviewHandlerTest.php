@@ -37,6 +37,29 @@ final class CreateReviewHandlerTest extends TestCase
         self::assertNotNull($repository->findById(1));
     }
 
+    public function testCreateStoresProvidedCreatedAt(): void
+    {
+        $repository = new InMemoryWineReviewRepository();
+        $handler = new CreateReviewHandler($repository);
+        $createdAt = new \DateTimeImmutable('2025-10-15T12:34:56+00:00');
+
+        $handler->handle(new CreateReviewCommand(
+            userId: 1,
+            wineId: 10,
+            intensityAroma: 4,
+            sweetness: 2,
+            acidity: 3,
+            tannin: 2,
+            body: 4,
+            persistence: 4,
+            createdAt: $createdAt,
+        ));
+
+        $saved = $repository->findById(1);
+        self::assertNotNull($saved);
+        self::assertSame($createdAt->format(DATE_ATOM), $saved->createdAt?->format(DATE_ATOM));
+    }
+
     public function testCreateThrowsValidationForInvalidData(): void
     {
         $repository = new InMemoryWineReviewRepository();
@@ -112,7 +135,7 @@ final class InMemoryWineReviewRepository implements WineReviewRepository
             persistence: $review->persistence,
             bullets: $review->bullets,
             score: $review->score,
-            createdAt: new \DateTimeImmutable('2026-03-01T10:00:00+00:00'),
+            createdAt: $review->createdAt ?? new \DateTimeImmutable('2026-03-01T10:00:00+00:00'),
         );
 
         return $id;

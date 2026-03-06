@@ -145,6 +145,7 @@ final class ReviewController
                 persistence: $this->parseRequiredInt($payload['persistence'] ?? null, 'persistence'),
                 bullets: $this->parseBullets($payload['bullets'] ?? []),
                 score: $this->parseNullableInt($payload['score'] ?? null, 'score'),
+                createdAt: $this->parseNullableDateTime($payload['created_at'] ?? null, 'created_at'),
             );
         } catch (\InvalidArgumentException $exception) {
             throw new CreateReviewValidationException($exception->getMessage(), 0, $exception);
@@ -167,6 +168,7 @@ final class ReviewController
                 persistence: $this->parseRequiredInt($payload['persistence'] ?? null, 'persistence'),
                 bullets: $this->parseBullets($payload['bullets'] ?? []),
                 score: $this->parseNullableInt($payload['score'] ?? null, 'score'),
+                createdAt: $this->parseNullableDateTime($payload['created_at'] ?? null, 'created_at'),
             );
         } catch (\InvalidArgumentException $exception) {
             throw new UpdateReviewValidationException($exception->getMessage(), 0, $exception);
@@ -199,6 +201,27 @@ final class ReviewController
         }
 
         return $value;
+    }
+
+    private function parseNullableDateTime(mixed $value, string $field): ?\DateTimeImmutable
+    {
+        if (null === $value || '' === $value) {
+            return null;
+        }
+
+        if (!is_string($value)) {
+            throw new \InvalidArgumentException(sprintf('%s must be a valid date string or null.', $field));
+        }
+
+        $normalizedValue = preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1
+            ? $value.'T00:00:00+00:00'
+            : $value;
+
+        try {
+            return new \DateTimeImmutable($normalizedValue);
+        } catch (\Exception) {
+            throw new \InvalidArgumentException(sprintf('%s must be a valid date string or null.', $field));
+        }
     }
 
     /**

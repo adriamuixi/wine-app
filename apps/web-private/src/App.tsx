@@ -117,6 +117,33 @@ type DoApiResponse = {
   items: DoApiItem[]
 }
 
+type ReviewsPerMonthStatsApiResponse = {
+  months: string[]
+  review_counts: number[]
+  median_scores: Array<number | null>
+}
+
+type GenericStatsApiResponse = {
+  total_wines: number
+  total_reviews: number
+  my_reviews: number
+  average_red: number
+  average_white: number
+}
+
+type ScoringGenericStatsApiResponse = {
+  items: Array<{
+    label: '<60' | '60-69' | '70-79' | '80-89' | '90+'
+    count: number
+  }>
+}
+
+type ReviewTimelinePoint = {
+  label: string
+  reviews: number
+  median: number | null
+}
+
 type WineDetailsApiGrape = {
   id: number
   name: string
@@ -889,6 +916,88 @@ function labelForAwardName(awardName: WineDetailsApiAward['name']): string {
   return map[awardName] ?? awardName
 }
 
+function formatReviewTimelineLabel(monthKey: string, locale: string): string {
+  if (!/^\d{4}-\d{2}$/.test(monthKey)) {
+    return monthKey
+  }
+
+  const monthDate = new Date(`${monthKey}-01T00:00:00Z`)
+  if (Number.isNaN(monthDate.getTime())) {
+    return monthKey
+  }
+
+  return new Intl.DateTimeFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', {
+    month: 'short',
+    year: '2-digit',
+    timeZone: 'UTC',
+  }).format(monthDate).replace('.', '')
+}
+
+function buildBiMonthlyReviewTimeline(
+  months: string[],
+  reviewCounts: number[],
+  medianScores: Array<number | null>,
+  locale: string,
+): ReviewTimelinePoint[] {
+  const grouped: ReviewTimelinePoint[] = []
+
+  for (let index = 0; index < months.length; index += 2) {
+    const firstMonth = months[index]
+    const secondMonth = months[index + 1] ?? null
+    const firstCount = reviewCounts[index] ?? 0
+    const secondCount = reviewCounts[index + 1] ?? 0
+    const firstMedian = medianScores[index] ?? null
+    const secondMedian = medianScores[index + 1] ?? null
+    const availableMedians = [firstMedian, secondMedian].filter((value): value is number => value != null)
+
+    const label = (() => {
+      if (secondMonth == null) {
+        return formatReviewTimelineLabel(firstMonth, locale)
+      }
+
+      const [firstYear, firstMonthNumber] = firstMonth.split('-')
+      const [secondYear, secondMonthNumber] = secondMonth.split('-')
+      const firstDate = new Date(`${firstMonth}-01T00:00:00Z`)
+      const secondDate = new Date(`${secondMonth}-01T00:00:00Z`)
+
+      if (
+        firstYear == null
+        || firstMonthNumber == null
+        || secondYear == null
+        || secondMonthNumber == null
+        || Number.isNaN(firstDate.getTime())
+        || Number.isNaN(secondDate.getTime())
+      ) {
+        return `${formatReviewTimelineLabel(firstMonth, locale)} · ${formatReviewTimelineLabel(secondMonth, locale)}`
+      }
+
+      const monthFormatter = new Intl.DateTimeFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', {
+        month: 'short',
+        timeZone: 'UTC',
+      })
+      const firstMonthLabel = monthFormatter.format(firstDate).replace('.', '')
+      const secondMonthLabel = monthFormatter.format(secondDate).replace('.', '')
+      const connector = locale === 'ca' ? 'del' : 'del'
+
+      if (firstYear === secondYear) {
+        return `${firstMonthLabel}-${secondMonthLabel} ${connector} ${firstYear}`
+      }
+
+      return `${firstMonthLabel} ${connector} ${firstYear} - ${secondMonthLabel} ${connector} ${secondYear}`
+    })()
+
+    grouped.push({
+      label,
+      reviews: firstCount + secondCount,
+      median: availableMedians.length === 0
+        ? null
+        : Math.round((availableMedians.reduce((sum, value) => sum + value, 0) / availableMedians.length) * 10) / 10,
+    })
+  }
+
+  return grouped
+}
+
 function App() {
   const { labels, locale, setLocale, t } = useI18n()
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
@@ -930,6 +1039,12 @@ function App() {
   const [defaultLandingPage, setDefaultLandingPage] = useState<'dashboard' | 'wines' | 'reviews'>('dashboard')
   const [showOnlySpainByDefault, setShowOnlySpainByDefault] = useState(true)
   const [compactCardsPreference, setCompactCardsPreference] = useState(false)
+  const [settingsName, setSettingsName] = useState('')
+  const [settingsLastname, setSettingsLastname] = useState('')
+  const [settingsPassword, setSettingsPassword] = useState('')
+  const [settingsProfileSubmitting, setSettingsProfileSubmitting] = useState(false)
+  const [settingsProfileError, setSettingsProfileError] = useState<string | null>(null)
+  const [settingsProfileSuccess, setSettingsProfileSuccess] = useState<string | null>(null)
   const [apiGuideMarkdown, setApiGuideMarkdown] = useState('')
   const [apiGuideStatus, setApiGuideStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [apiGuideError, setApiGuideError] = useState<string | null>(null)
@@ -982,6 +1097,15 @@ function App() {
   const [reviewSuccessToast, setReviewSuccessToast] = useState<string | null>(null)
   const [reviewActionError, setReviewActionError] = useState<string | null>(null)
   const [reviewDeleteBusyId, setReviewDeleteBusyId] = useState<number | null>(null)
+  const [genericStats, setGenericStats] = useState<GenericStatsApiResponse | null>(null)
+  const [genericStatsStatus, setGenericStatsStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [genericStatsError, setGenericStatsError] = useState<string | null>(null)
+  const [scoringGenericStats, setScoringGenericStats] = useState<ScoringGenericStatsApiResponse | null>(null)
+  const [scoringGenericStatsStatus, setScoringGenericStatsStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [scoringGenericStatsError, setScoringGenericStatsError] = useState<string | null>(null)
+  const [reviewsPerMonthStats, setReviewsPerMonthStats] = useState<ReviewsPerMonthStatsApiResponse | null>(null)
+  const [reviewsPerMonthStatus, setReviewsPerMonthStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [reviewsPerMonthError, setReviewsPerMonthError] = useState<string | null>(null)
   const [wineFormSubmitting, setWineFormSubmitting] = useState(false)
   const [wineFormError, setWineFormError] = useState<string | null>(null)
   const [wineSuccessToast, setWineSuccessToast] = useState<string | null>(null)
@@ -1190,13 +1314,13 @@ function App() {
 
   const metrics = useMemo(
     () => ({
-      totalWines: wineItems.length,
-      totalReviews: 124,
-      myReviews: myReviewEntries.length,
-      averageRed: averageScore(wineItems, 'red'),
-      averageWhite: averageScore(wineItems, 'white'),
+      totalWines: genericStats?.total_wines ?? wineItems.length,
+      totalReviews: genericStats?.total_reviews ?? reviewsPerMonthStats?.review_counts.reduce((sum, count) => sum + count, 0) ?? 0,
+      myReviews: genericStats?.my_reviews ?? myReviewEntries.length,
+      averageRed: genericStats?.average_red ?? averageScore(wineItems, 'red'),
+      averageWhite: genericStats?.average_white ?? averageScore(wineItems, 'white'),
     }),
-    [wineItems, myReviewEntries],
+    [genericStats, myReviewEntries.length, reviewsPerMonthStats, wineItems],
   )
 
   const dashboardAnalytics = useMemo(() => {
@@ -1221,28 +1345,15 @@ function App() {
     const approvedRate = scoredWines.length ? (approvedCount / scoredWines.length) * 100 : 0
     const qualityIndex = averagePrice > 0 ? ((metrics.averageRed + metrics.averageWhite) / 2) / averagePrice : 0
 
-    const timelineLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
-    const randTimeline = createSeededRandom(dashboardSeed + 17)
     const randCompare = createSeededRandom(dashboardSeed + 311)
-    const monthFormatter = new Intl.DateTimeFormat(timelineLocale, { month: 'short', year: '2-digit' })
-    const now = new Date()
-    let previousReviews = 2 + Math.floor(randTimeline() * 3)
-    let previousMedian = 74 + (randTimeline() * 6)
-    const reviewTimeline = Array.from({ length: 60 }, (_, index) => {
-      const monthDate = new Date(now.getFullYear(), now.getMonth() - (59 - index), 1)
-      const reviewsDelta = Math.floor((randTimeline() * 5) - 2) // -2..2
-      const reviewsNoise = randTimeline() < 0.15 ? Math.floor(randTimeline() * 3) : 0
-      const reviews = Math.max(0, Math.min(8, previousReviews + reviewsDelta + reviewsNoise))
-      const medianDelta = ((randTimeline() * 3.2) - 1.6)
-      const median = Math.max(68, Math.min(94, previousMedian + medianDelta))
-      previousReviews = reviews
-      previousMedian = median
-      return {
-        label: monthFormatter.format(monthDate).replace('.', ''),
-        reviews,
-        median: Math.round(median * 10) / 10,
-      }
-    })
+    const reviewTimeline: ReviewTimelinePoint[] = reviewsPerMonthStats == null
+      ? []
+      : buildBiMonthlyReviewTimeline(
+          reviewsPerMonthStats.months,
+          reviewsPerMonthStats.review_counts,
+          reviewsPerMonthStats.median_scores,
+          locale,
+        )
 
     const compareLabels = locale === 'ca'
       ? ['Gen', 'Feb', 'Mar', 'Abr', 'Mai', 'Jun']
@@ -1263,12 +1374,12 @@ function App() {
       return { index: index + 1, avg: Math.round(avg * 10) / 10 }
     })
 
-    const scoreBuckets = [
-      { label: '<60', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) < 60).length },
-      { label: '60-69', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 60 && (wine.averageScore ?? 0) < 70).length },
-      { label: '70-79', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 70 && (wine.averageScore ?? 0) < 80).length },
-      { label: '80-89', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 80 && (wine.averageScore ?? 0) < 90).length },
+    const scoreBuckets = scoringGenericStats?.items ?? [
       { label: '90+', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 90).length },
+      { label: '80-89', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 80 && (wine.averageScore ?? 0) < 90).length },
+      { label: '70-79', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 70 && (wine.averageScore ?? 0) < 80).length },
+      { label: '60-69', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 60 && (wine.averageScore ?? 0) < 70).length },
+      { label: '<60', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) < 60).length },
     ]
 
     const byType = (['red', 'white', 'rose', 'sparkling'] as WineType[]).map((type) => {
@@ -1439,7 +1550,7 @@ function App() {
       disagreementByDo,
       placeComparison,
     }
-  }, [dashboardSeed, locale, metrics.averageRed, metrics.averageWhite])
+  }, [dashboardSeed, locale, metrics.averageRed, metrics.averageWhite, reviewsPerMonthStats, scoringGenericStats, wineItems])
 
   const priceFormatter = useMemo(
     () => new Intl.NumberFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', { style: 'currency', currency: 'EUR' }),
@@ -1479,6 +1590,30 @@ function App() {
   const brandIconSrc = '/images/brand/icon-square-64.png'
   const themeToggleLabel = isDarkMode ? labels.common.themeSwitchToLight : labels.common.themeSwitchToDark
   const displayedUser = currentUser ?? DEFAULT_USER_PLACEHOLDER
+  const settingsReviewStats = useMemo(() => {
+    const scores = myReviewEntries
+      .map((entry) => entry.review.score)
+      .filter((score): score is number => score != null)
+    const sortedByDate = [...myReviewEntries].sort((a, b) => new Date(b.review.created_at).getTime() - new Date(a.review.created_at).getTime())
+
+    if (scores.length === 0 || sortedByDate.length === 0) {
+      return {
+        totalReviews: 18,
+        averageScore: 87.6,
+        lastReview: locale === 'ca' ? '2 de març de 2026' : '2 de marzo de 2026',
+        highestScore: 94,
+        lowestScore: 79,
+      }
+    }
+
+    return {
+      totalReviews: myReviewEntries.length,
+      averageScore: scores.reduce((sum, score) => sum + score, 0) / scores.length,
+      lastReview: formatApiDate(sortedByDate[0].review.created_at, locale),
+      highestScore: Math.max(...scores),
+      lowestScore: Math.min(...scores),
+    }
+  }, [locale, myReviewEntries])
 
   useEffect(() => {
     document.documentElement.dataset.theme = themeMode
@@ -1658,6 +1793,11 @@ function App() {
   }, [searchText])
 
   useEffect(() => {
+    setSettingsName(currentUser?.name ?? '')
+    setSettingsLastname(currentUser?.lastname ?? '')
+  }, [currentUser])
+
+  useEffect(() => {
     if (!['wines', 'wineCreate', 'wineEdit'].includes(menu)) {
       return
     }
@@ -1730,6 +1870,132 @@ function App() {
       controller.abort()
     }
   }, [menu, doOptions.length])
+
+  useEffect(() => {
+    if (!loggedIn || menu !== 'dashboard') {
+      return
+    }
+
+    const controller = new AbortController()
+    setReviewsPerMonthStatus('loading')
+    setReviewsPerMonthError(null)
+
+    fetch(`${resolveApiBaseUrl()}/api/stats/reviews-per-monh`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as ReviewsPerMonthStatsApiResponse
+        const seriesLength = Math.min(payload.months.length, payload.review_counts.length, payload.median_scores.length)
+
+        setReviewsPerMonthStats({
+          months: payload.months.slice(0, seriesLength),
+          review_counts: payload.review_counts.slice(0, seriesLength),
+          median_scores: payload.median_scores.slice(0, seriesLength),
+        })
+        setReviewsPerMonthStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setReviewsPerMonthStats(null)
+        setReviewsPerMonthStatus('error')
+        setReviewsPerMonthError(error instanceof Error ? error.message : 'Unknown error')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [loggedIn, menu])
+
+  useEffect(() => {
+    if (!loggedIn || menu !== 'dashboard') {
+      return
+    }
+
+    const controller = new AbortController()
+    setScoringGenericStatsStatus('loading')
+    setScoringGenericStatsError(null)
+
+    fetch(`${resolveApiBaseUrl()}/api/stats/socring-generic`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as ScoringGenericStatsApiResponse
+        setScoringGenericStats(payload)
+        setScoringGenericStatsStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setScoringGenericStats(null)
+        setScoringGenericStatsStatus('error')
+        setScoringGenericStatsError(error instanceof Error ? error.message : 'Unknown error')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [loggedIn, menu])
+
+  useEffect(() => {
+    if (!loggedIn || menu !== 'dashboard') {
+      return
+    }
+
+    const controller = new AbortController()
+    setGenericStatsStatus('loading')
+    setGenericStatsError(null)
+
+    fetch(`${resolveApiBaseUrl()}/api/stats/generic`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as GenericStatsApiResponse
+        setGenericStats(payload)
+        setGenericStatsStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setGenericStats(null)
+        setGenericStatsStatus('error')
+        setGenericStatsError(error instanceof Error ? error.message : 'Unknown error')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [loggedIn, menu])
 
   useEffect(() => {
     if (menu !== 'wineEdit' || !selectedWineForEdit) {
@@ -3498,6 +3764,7 @@ function App() {
     const bodyRaw = String(data.get('body') ?? '').trim()
     const persistenceRaw = String(data.get('persistence') ?? '').trim()
     const bulletsRaw = data.getAll('bullets').map((value) => String(value)) as Array<(typeof REVIEW_TAG_OPTIONS)[number]>
+    const createdAtRaw = String(data.get('created_at') ?? '').trim()
 
     const wineId = Number(wineIdRaw)
     const score = Number(scoreRaw)
@@ -3523,6 +3790,7 @@ function App() {
       body: Math.max(0, Math.min(10, Math.round(body))),
       persistence: Math.max(0, Math.min(10, Math.round(persistence))),
       bullets: bulletsRaw.map((tag) => REVIEW_TAG_TO_ENUM[tag]),
+      created_at: createdAtRaw === '' ? undefined : createdAtRaw,
     }
 
     const endpoint = mode === 'create'
@@ -3565,6 +3833,65 @@ function App() {
       setReviewFormError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut desar la ressenya.' : 'No se pudo guardar la reseña.'))
     } finally {
       setReviewFormSubmitting(false)
+    }
+  }
+
+  const handleSettingsProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setSettingsProfileError(null)
+    setSettingsProfileSuccess(null)
+
+    const trimmedName = settingsName.trim()
+    const trimmedLastname = settingsLastname.trim()
+
+    if (trimmedName === '' || trimmedLastname === '') {
+      setSettingsProfileError(locale === 'ca' ? 'Nom i cognom són obligatoris.' : 'Nombre y apellido son obligatorios.')
+      return
+    }
+
+    setSettingsProfileSubmitting(true)
+
+    try {
+      const response = await fetch(`${resolveApiBaseUrl()}/api/auth/me`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          lastname: trimmedLastname,
+          password: settingsPassword.trim() === '' ? null : settingsPassword,
+        }),
+      })
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`
+        try {
+          const errorPayload = await response.json() as { error?: string }
+          if (typeof errorPayload.error === 'string' && errorPayload.error.trim() !== '') {
+            errorMessage = errorPayload.error
+          }
+        } catch {
+          // Keep HTTP fallback error message when response is not JSON.
+        }
+        throw new Error(errorMessage)
+      }
+
+      const payload = await response.json() as AuthApiResponse
+      setCurrentUser({
+        id: payload.user.id,
+        email: payload.user.email,
+        name: payload.user.name,
+        lastname: payload.user.lastname,
+      })
+      setSettingsPassword('')
+      setSettingsProfileSuccess(locale === 'ca' ? 'Perfil actualitzat correctament.' : 'Perfil actualizado correctamente.')
+    } catch (error: unknown) {
+      setSettingsProfileError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut actualitzar el perfil.' : 'No se pudo actualizar el perfil.'))
+    } finally {
+      setSettingsProfileSubmitting(false)
     }
   }
 
@@ -3634,7 +3961,7 @@ function App() {
 
           <label>
             {locale === 'ca' ? 'Data de la ressenya' : 'Fecha de la reseña'}
-            <input type="date" defaultValue={preset.tastingDate} />
+            <input type="date" name="created_at" defaultValue={preset.tastingDate} />
           </label>
 
           <fieldset className="form-block">
@@ -4033,6 +4360,12 @@ function App() {
                 <span>{labels.dashboard.metrics.avgWhiteHint}</span>
               </article>
             </div>
+            {genericStatsStatus === 'error' ? (
+              <p className="panel-inline-error">
+                {locale === 'ca' ? 'No s’han pogut carregar els indicadors generals.' : 'No se han podido cargar los indicadores generales.'}
+                {genericStatsError ? ` (${genericStatsError})` : ''}
+              </p>
+            ) : null}
 
             <section className="dashboard-rich-grid">
               <section className="panel dashboard-hero-panel">
@@ -4050,8 +4383,17 @@ function App() {
                     <ComposedChart data={dashboardAnalytics.reviewTimeline} margin={{ top: 8, right: 10, left: -20, bottom: 2 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.18)" vertical={false} />
                       <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} minTickGap={18} />
-                      <YAxis yAxisId="reviews" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} width={28} domain={[0, 5]} allowDecimals={false} />
-                      <YAxis yAxisId="avg" orientation="right" hide domain={[70, 95]} />
+                      <YAxis yAxisId="reviews" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} width={28} domain={[0, 'dataMax + 1']} allowDecimals={false} />
+                      <YAxis
+                        yAxisId="avg"
+                        orientation="right"
+                        tick={{ fontSize: 11, fill: '#7a695f' }}
+                        axisLine={false}
+                        tickLine={false}
+                        width={34}
+                        domain={[0, 100]}
+                        ticks={[0, 20, 40, 60, 80, 100]}
+                      />
                       <Tooltip
                         cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }}
                         contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
@@ -4061,6 +4403,12 @@ function App() {
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
+                {reviewsPerMonthStatus === 'error' ? (
+                  <p className="panel-inline-error">
+                    {locale === 'ca' ? 'No s\'han pogut carregar les estadístiques del gràfic.' : 'No se han podido cargar las estadísticas del gráfico.'}
+                    {reviewsPerMonthError ? ` (${reviewsPerMonthError})` : ''}
+                  </p>
+                ) : null}
                 <div className="dashboard-hero-footnote">
                   <span>{locale === 'ca' ? 'Barra clara: ressenyes' : 'Barra clara: reseñas'}</span>
                   <span>{locale === 'ca' ? 'Línia vi: mediana de score' : 'Línea vino: mediana de score'}</span>
@@ -4078,17 +4426,30 @@ function App() {
                   {dashboardAnalytics.scoreBuckets.map((bucket) => {
                     const maxBucket = Math.max(...dashboardAnalytics.scoreBuckets.map((entry) => entry.count), 1)
                     const width = `${(bucket.count / maxBucket) * 100}%`
+                    const tone = bucket.label === '90+'
+                      ? 'gold'
+                      : bucket.label === '80-89'
+                        ? 'silver'
+                        : bucket.label === '70-79'
+                          ? 'bronze'
+                          : 'default'
                     return (
                       <div key={bucket.label} className="bucket-row">
                         <span>{bucket.label}</span>
                         <div className="bucket-track" aria-hidden="true">
-                          <div className="bucket-fill" style={{ width }} />
+                          <div className={`bucket-fill ${tone}`} style={{ width }} />
                         </div>
                         <strong>{bucket.count}</strong>
                       </div>
                     )
                   })}
                 </div>
+                {scoringGenericStatsStatus === 'error' ? (
+                  <p className="panel-inline-error">
+                    {locale === 'ca' ? 'No s’ha pogut carregar la distribució de score.' : 'No se ha podido cargar la distribución de score.'}
+                    {scoringGenericStatsError ? ` (${scoringGenericStatsError})` : ''}
+                  </p>
+                ) : null}
               </section>
 
               <section className="panel dashboard-frequency-panel">
@@ -4123,7 +4484,7 @@ function App() {
                 <div className="panel-header">
                   <div>
                     <p className="eyebrow">{locale === 'ca' ? 'INDICADORS' : 'INDICADORES'}</p>
-                    <h3>{locale === 'ca' ? 'Lectura ràpida' : 'Lectura rápida'}</h3>
+                    <h3>Qualifications</h3>
                   </div>
                 </div>
                 <div className="dashboard-kpi-list">
@@ -5361,20 +5722,24 @@ function App() {
                   <dd>{displayedUser.email}</dd>
                 </div>
                 <div>
-                  <dt>{labels.admin.account.labels.role}</dt>
-                  <dd>{labels.user.role}</dd>
-                </div>
-                <div>
                   <dt>{labels.admin.account.labels.myReviews}</dt>
-                  <dd>{myReviewEntries.length}</dd>
+                  <dd>{settingsReviewStats.totalReviews}</dd>
                 </div>
                 <div>
-                  <dt>{labels.admin.account.labels.favoriteStyle}</dt>
-                  <dd>{labels.admin.account.values.favoriteStyle}</dd>
+                  <dt>{labels.admin.account.labels.averageScore}</dt>
+                  <dd>{settingsReviewStats.averageScore.toFixed(1)}</dd>
                 </div>
                 <div>
-                  <dt>{labels.admin.account.labels.lastLogin}</dt>
-                  <dd>{labels.admin.account.values.lastLogin}</dd>
+                  <dt>{labels.admin.account.labels.lastReview}</dt>
+                  <dd>{settingsReviewStats.lastReview}</dd>
+                </div>
+                <div>
+                  <dt>{labels.admin.account.labels.highestScore}</dt>
+                  <dd>{settingsReviewStats.highestScore}</dd>
+                </div>
+                <div>
+                  <dt>{labels.admin.account.labels.lowestScore}</dt>
+                  <dd>{settingsReviewStats.lowestScore}</dd>
                 </div>
               </dl>
             </section>
@@ -5499,6 +5864,50 @@ function App() {
                   <h3>{locale === 'ca' ? 'Configuració del backoffice' : 'Configuración del backoffice'}</h3>
                 </div>
               </div>
+
+              <form className="stack-form settings-form" onSubmit={handleSettingsProfileSubmit}>
+                <label>
+                  {locale === 'ca' ? 'Nom' : 'Nombre'}
+                  <input
+                    type="text"
+                    value={settingsName}
+                    onChange={(event) => setSettingsName(event.target.value)}
+                    autoComplete="given-name"
+                  />
+                </label>
+
+                <label>
+                  {locale === 'ca' ? 'Cognom' : 'Apellido'}
+                  <input
+                    type="text"
+                    value={settingsLastname}
+                    onChange={(event) => setSettingsLastname(event.target.value)}
+                    autoComplete="family-name"
+                  />
+                </label>
+
+                <label>
+                  {locale === 'ca' ? 'Nova contrasenya' : 'Nueva contraseña'}
+                  <input
+                    type="password"
+                    value={settingsPassword}
+                    onChange={(event) => setSettingsPassword(event.target.value)}
+                    autoComplete="new-password"
+                    placeholder={locale === 'ca' ? 'Deixa-ho buit per conservar-la' : 'Déjalo vacío para conservarla'}
+                  />
+                </label>
+
+                {settingsProfileError ? <p className="error-message">{settingsProfileError}</p> : null}
+                {settingsProfileSuccess ? <p className="success-message">{settingsProfileSuccess}</p> : null}
+
+                <button type="submit" className="primary-button" disabled={settingsProfileSubmitting || !loggedIn}>
+                  {settingsProfileSubmitting
+                    ? (locale === 'ca' ? 'Desant...' : 'Guardando...')
+                    : (locale === 'ca' ? 'Desar perfil' : 'Guardar perfil')}
+                </button>
+              </form>
+
+              <div className="settings-divider" />
 
               <form className="stack-form settings-form" onSubmit={(event) => event.preventDefault()}>
                 <label>

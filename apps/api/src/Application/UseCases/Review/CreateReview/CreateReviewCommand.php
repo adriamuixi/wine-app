@@ -22,6 +22,7 @@ final readonly class CreateReviewCommand
         public int $persistence,
         public array $bullets = [],
         public ?int $score = null,
+        public ?\DateTimeImmutable $createdAt = null,
     ) {
     }
 }

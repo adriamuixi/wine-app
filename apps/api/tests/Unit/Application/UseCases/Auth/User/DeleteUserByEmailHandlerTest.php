@@ -64,6 +64,11 @@ final class SpyDeleteUserRepository implements UserRepository
         return new AuthUser(1, $email, $passwordHash, $name, $lastname);
     }
 
+    public function update(int $id, string $name, string $lastname, ?string $passwordHash): ?AuthUser
+    {
+        return null;
+    }
+
     public function deleteByEmail(string $email): bool
     {
         $normalized = strtolower($email);

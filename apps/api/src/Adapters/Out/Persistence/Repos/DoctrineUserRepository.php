@@ -75,6 +75,49 @@ SQL,
         );
     }
 
+    public function update(int $id, string $name, string $lastname, ?string $passwordHash): ?AuthUser
+    {
+        $existing = $this->entityManager->getConnection()->fetchAssociative(
+            'SELECT email, password_hash FROM users WHERE id = :id LIMIT 1',
+            ['id' => $id],
+        );
+        if (!is_array($existing)) {
+            return null;
+        }
+
+        $params = [
+            'id' => $id,
+            'name' => $name,
+            'lastname' => $lastname,
+        ];
+
+        $sql = <<<'SQL'
+UPDATE users
+SET name = :name,
+    lastname = :lastname
+SQL;
+
+        if (null !== $passwordHash) {
+            $sql .= ",\n    password_hash = :password_hash";
+            $params['password_hash'] = $passwordHash;
+        }
+
+        $sql .= "\nWHERE id = :id";
+
+        $affected = $this->entityManager->getConnection()->executeStatement($sql, $params);
+        if ($affected < 1) {
+            return null;
+        }
+
+        return new AuthUser(
+            $id,
+            (string) $existing['email'],
+            null,
+            $name,
+            $lastname,
+        );
+    }
+
     public function deleteByEmail(string $email): bool
     {
         $affected = $this->entityManager->getConnection()->executeStatement(

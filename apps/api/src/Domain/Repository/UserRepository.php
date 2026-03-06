@@ -14,5 +14,7 @@ interface UserRepository
 
     public function create(string $email, string $name, string $lastname, string $passwordHash): AuthUser;
 
+    public function update(int $id, string $name, string $lastname, ?string $passwordHash): ?AuthUser;
+
     public function deleteByEmail(string $email): bool;
 }

@@ -45,7 +45,7 @@ final class ReviewControllerTest extends TestCase
 
     public function testCreateReturnsCreated(): void
     {
-        $controller = $this->controller();
+        [$controller, $repository] = $this->controllerWithRepository();
         $request = Request::create(
             '/api/wines/2/reviews',
             'POST',
@@ -59,12 +59,16 @@ final class ReviewControllerTest extends TestCase
                 'persistence' => 4,
                 'bullets' => ['floral'],
                 'score' => 88,
+                'created_at' => '2025-12-24',
             ], JSON_THROW_ON_ERROR),
         );
 
         $response = $controller->create(2, $request);
 
         self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+        $createdReview = $repository->findById(2);
+        self::assertNotNull($createdReview);
+        self::assertSame('2025-12-24T00:00:00+00:00', $createdReview->createdAt?->format(DATE_ATOM));
     }
 
     public function testCreateReturnsConflictWhenReviewAlreadyExists(): void
@@ -102,6 +106,34 @@ final class ReviewControllerTest extends TestCase
 
     public function testUpdateReturnsNoContent(): void
     {
+        [$controller, $repository] = $this->controllerWithRepository();
+        $request = Request::create(
+            '/api/wines/2/reviews/1',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'intensity_aroma' => 5,
+                'sweetness' => 2,
+                'acidity' => 2,
+                'tannin' => 1,
+                'body' => 4,
+                'persistence' => 4,
+                'bullets' => ['elegant'],
+                'score' => 88,
+                'created_at' => '2025-11-03',
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(2, 1, $request);
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+        $updatedReview = $repository->findById(1);
+        self::assertNotNull($updatedReview);
+        self::assertSame('2025-11-03T00:00:00+00:00', $updatedReview->createdAt?->format(DATE_ATOM));
+    }
+
+    public function testUpdateReturnsBadRequestForInvalidCreatedAt(): void
+    {
         $controller = $this->controller();
         $request = Request::create(
             '/api/wines/2/reviews/1',
@@ -116,12 +148,13 @@ final class ReviewControllerTest extends TestCase
                 'persistence' => 4,
                 'bullets' => ['elegant'],
                 'score' => 88,
+                'created_at' => 'not-a-date',
             ], JSON_THROW_ON_ERROR),
         );
 
         $response = $controller->update(2, 1, $request);
 
-        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
     }
 
     public function testUpdateReturnsForbiddenWhenOwnerMismatch(): void
@@ -177,17 +210,25 @@ final class ReviewControllerTest extends TestCase
 
     private function controller(?int $authenticatedUserId = 1, bool $throwAlreadyExists = false): ReviewController
     {
+        return $this->controllerWithRepository($authenticatedUserId, $throwAlreadyExists)[0];
+    }
+
+    /**
+     * @return array{0:ReviewController,1:InMemoryWineReviewRepository}
+     */
+    private function controllerWithRepository(?int $authenticatedUserId = 1, bool $throwAlreadyExists = false): array
+    {
         $repository = new InMemoryWineReviewRepository($throwAlreadyExists);
         $authSession = new SpyAuthSessionManager();
         $authSession->authenticatedUserId = $authenticatedUserId;
 
-        return new ReviewController(
+        return [new ReviewController(
             $authSession,
             new CreateReviewHandler($repository),
             new UpdateReviewHandler($repository),
             new DeleteReviewHandler($repository),
             new GetReviewHandler($repository),
-        );
+        ), $repository];
     }
 }
 
@@ -242,7 +283,7 @@ final class InMemoryWineReviewRepository implements WineReviewRepository
             persistence: $review->persistence,
             bullets: $review->bullets,
             score: $review->score,
-            createdAt: new \DateTimeImmutable('2026-03-01T10:00:00+00:00'),
+            createdAt: $review->createdAt ?? new \DateTimeImmutable('2026-03-01T10:00:00+00:00'),
         );
 
         return $id;

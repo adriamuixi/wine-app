@@ -71,6 +71,11 @@ final class SpyCreateUserRepository implements UserRepository
         return new AuthUser(11, strtolower($email), $passwordHash, $name, $lastname);
     }
 
+    public function update(int $id, string $name, string $lastname, ?string $passwordHash): ?AuthUser
+    {
+        return null;
+    }
+
     public function deleteByEmail(string $email): bool
     {
         return false;

@@ -31,6 +31,7 @@ final readonly class CreateReviewHandler
                 persistence: $command->persistence,
                 bullets: $command->bullets,
                 score: $command->score,
+                createdAt: $command->createdAt,
             );
         } catch (\InvalidArgumentException $exception) {
             throw new CreateReviewValidationException($exception->getMessage(), 0, $exception);

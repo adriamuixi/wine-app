@@ -39,6 +39,28 @@ final class UpdateReviewHandlerTest extends TestCase
         self::assertSame(['elegant'], $saved->bulletsAsValues());
     }
 
+    public function testUpdateAllowsCreatedAtChanges(): void
+    {
+        $repository = new InMemoryWineReviewRepository();
+        $handler = new UpdateReviewHandler($repository);
+        $updatedCreatedAt = new \DateTimeImmutable('2025-12-24T08:15:00+00:00');
+
+        $handler->handle(new UpdateReviewCommand(
+            id: 1,
+            intensityAroma: 5,
+            sweetness: 2,
+            acidity: 2,
+            tannin: 1,
+            body: 5,
+            persistence: 4,
+            createdAt: $updatedCreatedAt,
+        ));
+
+        $saved = $repository->findById(1);
+        self::assertNotNull($saved);
+        self::assertSame($updatedCreatedAt->format(DATE_ATOM), $saved->createdAt?->format(DATE_ATOM));
+    }
+
     public function testUpdateThrowsWhenReviewMissing(): void
     {
         $repository = new InMemoryWineReviewRepository();

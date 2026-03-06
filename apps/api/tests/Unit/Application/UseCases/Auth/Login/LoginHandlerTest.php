@@ -58,33 +58,35 @@ final class LoginHandlerTest extends TestCase
 final class InMemoryUserRepository implements UserRepository
 {
     private int $lastId = 1;
+    private ?AuthUser $currentUser;
 
     public function __construct(
         private readonly ?AuthUser $user = new AuthUser(1, 'demo@example.com', 'hashed', 'Demo', 'User'),
     ) {
+        $this->currentUser = $user;
     }
 
     public function findByEmail(string $email): ?AuthUser
     {
-        if (null === $this->user) {
+        if (null === $this->currentUser) {
             return null;
         }
 
-        return strtolower($email) === $this->user->email ? $this->user : null;
+        return strtolower($email) === $this->currentUser->email ? $this->currentUser : null;
     }
 
     public function findById(int $id): ?AuthUser
     {
-        if (null === $this->user || $this->user->id !== $id) {
+        if (null === $this->currentUser || $this->currentUser->id !== $id) {
             return null;
         }
 
         return new AuthUser(
-            $this->user->id,
-            $this->user->email,
+            $this->currentUser->id,
+            $this->currentUser->email,
             null,
-            $this->user->name,
-            $this->user->lastname,
+            $this->currentUser->name,
+            $this->currentUser->lastname,
         );
     }
 
@@ -92,12 +94,37 @@ final class InMemoryUserRepository implements UserRepository
     {
         $this->lastId += 1;
 
-        return new AuthUser($this->lastId, strtolower($email), $passwordHash, $name, $lastname);
+        $this->currentUser = new AuthUser($this->lastId, strtolower($email), $passwordHash, $name, $lastname);
+
+        return $this->currentUser;
+    }
+
+    public function update(int $id, string $name, string $lastname, ?string $passwordHash): ?AuthUser
+    {
+        if (null === $this->currentUser || $this->currentUser->id !== $id) {
+            return null;
+        }
+
+        $this->currentUser = new AuthUser(
+            $id,
+            $this->currentUser->email,
+            $passwordHash ?? $this->currentUser->passwordHash,
+            $name,
+            $lastname,
+        );
+
+        return new AuthUser(
+            $this->currentUser->id,
+            $this->currentUser->email,
+            null,
+            $this->currentUser->name,
+            $this->currentUser->lastname,
+        );
     }
 
     public function deleteByEmail(string $email): bool
     {
-        return null !== $this->user && strtolower($email) === $this->user->email;
+        return null !== $this->currentUser && strtolower($email) === $this->currentUser->email;
     }
 }
 

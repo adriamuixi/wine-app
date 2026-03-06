@@ -33,7 +33,7 @@ final readonly class UpdateReviewHandler
                 persistence: $command->persistence,
                 bullets: $command->bullets,
                 score: $command->score ?? $existing->score,
-                createdAt: $existing->createdAt,
+                createdAt: $command->createdAt ?? $existing->createdAt,
                 userName: $existing->userName,
                 userLastname: $existing->userLastname,
             );

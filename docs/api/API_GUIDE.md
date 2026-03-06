@@ -12,6 +12,7 @@ Base URL (local): `http://localhost:8080`
 - [Auth](#auth)
   - [`POST /api/auth/login`](#post-apiauthlogin)
   - [`GET /api/auth/me`](#get-apiauthme)
+  - [`PUT /api/auth/me`](#put-apiauthme)
   - [`POST /api/auth/logout`](#post-apiauthlogout)
   - [`POST /api/auth/users`](#post-apiauthusers)
   - [`DELETE /api/auth/users`](#delete-apiauthusers)
@@ -20,6 +21,10 @@ Base URL (local): `http://localhost:8080`
   - [`POST /api/wines/{wineId}/reviews`](#post-apiwineswineidreviews)
   - [`PUT /api/wines/{wineId}/reviews/{id}`](#put-apiwineswineidreviewsid)
   - [`DELETE /api/wines/{wineId}/reviews/{id}`](#delete-apiwineswineidreviewsid)
+- [Stats](#stats)
+  - [`GET /api/stats/generic`](#get-apistatsgeneric)
+  - [`GET /api/stats/socring-generic`](#get-apistatssocring-generic)
+  - [`GET /api/stats/reviews-per-monh`](#get-apistatsreviews-per-monh)
 - [Wines](#wines)
   - [`GET /api/grapes`](#get-apigrapes)
   - [`GET /api/dos`](#get-apidos)
@@ -106,6 +111,30 @@ Example 2 (without session):
 ```bash
 curl -s http://localhost:8080/api/auth/me | jq
 ```
+
+---
+
+### `PUT /api/auth/me`
+
+Updates the current authenticated user profile.
+
+Expected:
+- `200` updated
+- `400` invalid input
+- `401` unauthenticated
+
+Example:
+
+```bash
+curl -s -b cookies.txt -X PUT http://localhost:8080/api/auth/me \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Adria","lastname":"Muixi","password":"newSecret123"}' | jq
+```
+
+Notes:
+- `name` and `lastname` are required
+- `password` is optional
+- when `password` is omitted or `null`, the existing password is preserved
 
 ---
 
@@ -235,8 +264,12 @@ Example:
 ```bash
 curl -s -b cookies.txt -X POST http://localhost:8080/api/wines/2/reviews \
   -H 'Content-Type: application/json' \
-  -d '{"score":88,"intensity_aroma":4,"sweetness":2,"acidity":3,"tannin":2,"body":4,"persistence":4,"bullets":["floral"]}' | jq
+  -d '{"created_at":"2025-12-24","score":88,"intensity_aroma":4,"sweetness":2,"acidity":3,"tannin":2,"body":4,"persistence":4,"bullets":["floral"]}' | jq
 ```
+
+Notes:
+- `created_at` is optional
+- it accepts either `YYYY-MM-DD` or a full ISO-8601 timestamp
 
 ---
 
@@ -256,8 +289,12 @@ Example:
 ```bash
 curl -i -b cookies.txt -X PUT http://localhost:8080/api/wines/2/reviews/1 \
   -H 'Content-Type: application/json' \
-  -d '{"intensity_aroma":5,"sweetness":2,"acidity":2,"tannin":1,"body":4,"persistence":4,"bullets":["elegant"],"score":88}'
+  -d '{"created_at":"2025-12-24","intensity_aroma":5,"sweetness":2,"acidity":2,"tannin":1,"body":4,"persistence":4,"bullets":["elegant"],"score":88}'
 ```
+
+Notes:
+- `created_at` is optional
+- if omitted on update, the existing review date is preserved
 
 ---
 
@@ -275,6 +312,95 @@ Example:
 
 ```bash
 curl -i -b cookies.txt -X DELETE http://localhost:8080/api/wines/2/reviews/1
+```
+
+---
+
+## Stats
+
+### `GET /api/stats/generic`
+
+Returns the generic KPI cards for the private dashboard.
+
+Expected:
+- `200` success
+- `401` unauthenticated
+
+Example:
+
+```bash
+curl -s -b cookies.txt "http://localhost:8080/api/stats/generic" | jq
+```
+
+Response shape:
+
+```json
+{
+  "total_wines": 120,
+  "total_reviews": 44,
+  "my_reviews": 7,
+  "average_red": 86.4,
+  "average_white": 84.1
+}
+```
+
+---
+
+### `GET /api/stats/socring-generic`
+
+Returns the score bucket distribution for the catalog quality panel.
+
+Expected:
+- `200` success
+
+Example:
+
+```bash
+curl -s "http://localhost:8080/api/stats/socring-generic" | jq
+```
+
+Response shape:
+
+```json
+{
+  "items": [
+    { "label": "<60", "count": 0 },
+    { "label": "60-69", "count": 0 },
+    { "label": "70-79", "count": 2 },
+    { "label": "80-89", "count": 4 },
+    { "label": "90+", "count": 3 }
+  ]
+}
+```
+
+---
+
+### `GET /api/stats/reviews-per-monh`
+
+Returns chart-ready monthly review statistics ordered chronologically.
+
+Expected:
+- `200` success
+
+Notes:
+- `review_counts` is the number of reviews created in each month
+- `median_scores` is the median of review `score` for that month
+- Months without reviews between the first and last recorded review are included with `0` and `null`
+
+Example:
+
+```bash
+curl -s "http://localhost:8080/api/stats/reviews-per-monh" | jq
+```
+
+Response shape:
+
+```json
+{
+  "months": ["2025-11", "2025-12", "2026-01"],
+  "review_counts": [3, 0, 5],
+  "median_scores": [91, null, 88.5]
+}
 ```
 
 ---

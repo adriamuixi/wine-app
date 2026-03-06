@@ -32,7 +32,7 @@ menu:
   dashboard: Tauler
   wines: Vins
   reviews: Ressenyes
-  admin: Eines Admin
+  admin: Configuració
   apiDoc: API Doc
 dashboard:
   title: Visió general
@@ -102,16 +102,16 @@ reviews:
     editAction: Editar ressenya
     viewWineAction: Veure vi
 admin:
-  title: Eines Admin
+  title: Configuració
   shortcuts:
     eyebrow: Admin Tools
     title: Accessos operatius
     items:
-      - title: Cua de moderació de ressenyes
-        description: 12 elements pendents
-        action: Obrir
-      - title: Importar vins CSV
-        description: "Darrera importació: fa 2 dies"
+      - title: Importar vins en CSV
+        description: Pujar fitxer CSV per donar d'alta vins en bloc
+        action: Iniciar
+      - title: Importar ressenyes en CSV
+        description: Pujar fitxer CSV per carregar ressenyes en bloc
         action: Iniciar
       - title: Auditoria d’etiquetes
         description: Detectar etiquetes inconsistents
@@ -122,18 +122,16 @@ admin:
     labels:
       name: Nom
       email: Correu
-      role: Rol
       myReviews: Les meves ressenyes
-      favoriteStyle: Estil preferit
-      lastLogin: Darrer accés
-    values:
-      favoriteStyle: Vins negres
-      lastLogin: Avui · 21:45
+      averageScore: Mitjana total de les ressenyes
+      lastReview: Última ressenya
+      highestScore: Nota més alta
+      lowestScore: Nota més baixa
 topbar:
   overview: Visió general
   wines: Eines de vins
   reviews: Les meves ressenyes
-  admin: Eines Admin
+  admin: Configuració
   apiDoc: Documentació API
   welcome: Benvingut
   signedInAs: Sessió iniciada com a

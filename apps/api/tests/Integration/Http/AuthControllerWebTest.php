@@ -92,6 +92,36 @@ final class AuthControllerWebTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
 
+    public function testUpdateCurrentUserUpdatesNameLastnameAndPassword(): void
+    {
+        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+
+        $client->jsonRequest('POST', '/api/auth/login', [
+            'email' => 'demo@example.com',
+            'password' => 'demo1234',
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $client->jsonRequest('PUT', '/api/auth/me', [
+            'name' => 'Adria',
+            'lastname' => 'Muixi',
+            'password' => 'newpass1234',
+        ]);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+        $payload = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('Adria', $payload['user']['name']);
+        self::assertSame('Muixi', $payload['user']['lastname']);
+
+        $row = $this->connection->fetchAssociative('SELECT name, lastname, password_hash FROM users WHERE email = :email', [
+            'email' => 'demo@example.com',
+        ]);
+        self::assertIsArray($row);
+        self::assertSame('Adria', $row['name']);
+        self::assertSame('Muixi', $row['lastname']);
+        self::assertTrue(password_verify('newpass1234', (string) $row['password_hash']));
+    }
+
     private static function prepareTestDatabase(): void
     {
         if (self::$databasePrepared) {

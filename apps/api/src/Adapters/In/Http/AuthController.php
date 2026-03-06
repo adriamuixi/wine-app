@@ -17,6 +17,11 @@ use App\Application\UseCases\Auth\User\DeleteUser\DeleteUserByEmailHandler;
 use App\Application\UseCases\Auth\User\DeleteUser\DeleteUserNotFound;
 use App\Application\UseCases\Auth\User\DeleteUser\DeleteUserValidationException;
 use App\Application\UseCases\Auth\User\GetCurrentUserHandler;
+use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserCommand;
+use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserHandler;
+use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserNotFound;
+use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserUnauthenticated;
+use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserValidationException;
 use App\Domain\Model\AuthUser;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,6 +36,7 @@ final class AuthController
         private readonly LogoutHandler $logoutHandler,
         private readonly CreateUserHandler $createUserHandler,
         private readonly DeleteUserByEmailHandler $deleteUserByEmailHandler,
+        private readonly UpdateCurrentUserHandler $updateCurrentUserHandler,
     ) {
     }
 
@@ -64,6 +70,39 @@ final class AuthController
         $user = $this->getCurrentUserHandler->handle();
         if (null === $user) {
             return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return new JsonResponse(['user' => $this->userPayload($user)], Response::HTTP_OK);
+    }
+
+    #[Route('/api/auth/me', name: 'api_auth_me_update', methods: ['PUT'])]
+    public function updateCurrentUser(Request $request): JsonResponse
+    {
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $name = $payload['name'] ?? null;
+        $lastname = $payload['lastname'] ?? null;
+        $password = $payload['password'] ?? null;
+
+        if (!is_string($name) || !is_string($lastname) || (null !== $password && !is_string($password))) {
+            return new JsonResponse(['error' => 'name and lastname are required, password must be a string when provided.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $user = $this->updateCurrentUserHandler->handle(new UpdateCurrentUserCommand(
+                name: $name,
+                lastname: $lastname,
+                password: $password,
+            ));
+        } catch (UpdateCurrentUserUnauthenticated $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_UNAUTHORIZED);
+        } catch (UpdateCurrentUserValidationException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (UpdateCurrentUserNotFound $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
 
         return new JsonResponse(['user' => $this->userPayload($user)], Response::HTTP_OK);

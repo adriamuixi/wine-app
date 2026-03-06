@@ -77,7 +77,7 @@ SQL,
             $id = $this->entityManager->getConnection()->fetchOne(
                 <<<'SQL'
 INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-VALUES (:user_id, :wine_id, :score, :intensity_aroma, :sweetness, :acidity, :tannin, :body, :persistence, NOW())
+VALUES (:user_id, :wine_id, :score, :intensity_aroma, :sweetness, :acidity, :tannin, :body, :persistence, :created_at)
 RETURNING id
 SQL,
                 [
@@ -90,6 +90,7 @@ SQL,
                     'tannin' => $review->tannin,
                     'body' => $review->body,
                     'persistence' => $review->persistence,
+                    'created_at' => ($review->createdAt ?? new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
                 ],
             );
 
@@ -125,7 +126,8 @@ SET intensity_aroma = :intensity_aroma,
     tannin = :tannin,
     score = :score,
     body = :body,
-    persistence = :persistence
+    persistence = :persistence,
+    created_at = :created_at
 WHERE id = :id
 SQL,
                 [
@@ -137,6 +139,7 @@ SQL,
                     'score' => $review->score,
                     'body' => $review->body,
                     'persistence' => $review->persistence,
+                    'created_at' => ($review->createdAt ?? new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
                 ],
             );
 
