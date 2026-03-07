@@ -46,6 +46,18 @@ for i in {1..30}; do
   sleep 2
 done
 
+echo "==> Start API for migrations"
+docker compose -f "$COMPOSE_FILE" up -d api
+
+echo "==> Wait for API container"
+for i in {1..30}; do
+  api_status="$(docker inspect -f '{{.State.Status}}' wine_api_prod 2>/dev/null || true)"
+  if [[ "$api_status" == "running" ]]; then
+    break
+  fi
+  sleep 2
+done
+
 echo "==> Run DB migrations"
 docker compose -f "$COMPOSE_FILE" exec -T api php bin/console doctrine:migrations:migrate --no-interaction
 
