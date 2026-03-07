@@ -50,7 +50,8 @@ CREATE TABLE "do" (
   region        VARCHAR(255) NOT NULL,
   country       country NOT NULL,
   country_code  VARCHAR(2) NOT NULL,
-  logo_image    VARCHAR(255),
+  do_logo       VARCHAR(255),
+  region_logo   VARCHAR(255),
   UNIQUE (country, name),
   CONSTRAINT do_country_code_upper_chk CHECK (country_code = upper(country_code)),
   CONSTRAINT do_country_code_len_chk CHECK (char_length(country_code) = 2)

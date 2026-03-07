@@ -299,7 +299,8 @@ SELECT
     d.region AS do_region,
     d.country AS do_country,
     d.country_code AS do_country_code,
-    d.logo_image AS do_logo_image
+    d.do_logo AS do_logo,
+    d.region_logo AS do_region_logo
 FROM wine w
 LEFT JOIN "do" d ON d.id = w.do_id
 WHERE w.id = :id
@@ -440,7 +441,8 @@ SQL,
                 region: (string) $wineRow['do_region'],
                 country: Country::from((string) $wineRow['do_country']),
                 countryCode: (string) $wineRow['do_country_code'],
-                logoImage: null === $wineRow['do_logo_image'] ? null : (string) $wineRow['do_logo_image'],
+                doLogo: null === $wineRow['do_logo'] ? null : (string) $wineRow['do_logo'],
+                regionLogo: null === $wineRow['do_region_logo'] ? null : (string) $wineRow['do_region_logo'],
             ),
             country: null === $wineRow['country'] ? null : Country::from((string) $wineRow['country']),
             agingType: null === $wineRow['aging_type'] ? null : AgingType::from((string) $wineRow['aging_type']),
@@ -527,7 +529,8 @@ SELECT
     w.country,
     d.id AS do_id,
     d.name AS do_name,
-    d.logo_image AS do_logo_image,
+    d.do_logo AS do_logo,
+    d.region_logo AS do_region_logo,
     w.vintage_year,
     %s AS avg_score,
     w.updated_at
@@ -709,7 +712,8 @@ SQL,
                 country: null === $row['country'] ? null : (string) $row['country'],
                 doId: null === $row['do_id'] ? null : (int) $row['do_id'],
                 doName: null === $row['do_name'] ? null : (string) $row['do_name'],
-                doLogoImage: null === $row['do_logo_image'] ? null : (string) $row['do_logo_image'],
+                doLogo: null === $row['do_logo'] ? null : (string) $row['do_logo'],
+                regionLogo: null === $row['do_region_logo'] ? null : (string) $row['do_region_logo'],
                 vintageYear: null === $row['vintage_year'] ? null : (int) $row['vintage_year'],
                 avgScore: null === $row['avg_score'] ? null : (float) $row['avg_score'],
                 updatedAt: $this->toIso8601((string) $row['updated_at']),

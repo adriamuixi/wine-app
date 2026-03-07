@@ -411,6 +411,28 @@ paths:
       summary: List all denominations of origin
       operationId: getDosList
       tags: [DO]
+      parameters:
+        - in: query
+          name: sort_by_1
+          description: Primary sort field. Allowed values are `country`, `region`, `name`.
+          schema:
+            type: string
+            enum: [country, region, name]
+            default: country
+        - in: query
+          name: sort_by_2
+          description: Secondary sort field. Allowed values are `country`, `region`, `name`.
+          schema:
+            type: string
+            enum: [country, region, name]
+            default: region
+        - in: query
+          name: sort_by_3
+          description: Tertiary sort field. Allowed values are `country`, `region`, `name`.
+          schema:
+            type: string
+            enum: [country, region, name]
+            default: name
       responses:
         '200':
           description: Denominations of origin list
@@ -418,6 +440,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DoListResponse'
+        '400':
+          description: Invalid sort parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/wines:
     get:
       summary: List wines (paginated)
@@ -1169,7 +1197,7 @@ components:
               example: jpg
     WineDo:
       type: object
-      required: [id, name, region, country, country_code, logo_image]
+      required: [id, name, region, country, country_code, do_logo, region_logo]
       properties:
         id:
           type: integer
@@ -1186,10 +1214,14 @@ components:
           minLength: 2
           maxLength: 2
           example: ES
-        logo_image:
+        do_logo:
           type: string
           nullable: true
           example: rioja_DO.png
+        region_logo:
+          type: string
+          nullable: true
+          example: la_rioja.png
     WineDetailGrape:
       type: object
       required: [id, name, color, percentage]
@@ -1404,17 +1436,21 @@ components:
           $ref: '#/components/schemas/WineDetails'
     WineListDo:
       type: object
-      required: [id, name, logo_image]
+      required: [id, name, do_logo, region_logo]
       properties:
         id:
           type: integer
           format: int64
         name:
           type: string
-        logo_image:
+        do_logo:
           type: string
           nullable: true
           example: rioja_DO.png
+        region_logo:
+          type: string
+          nullable: true
+          example: la_rioja.png
     WineListPhoto:
       type: object
       required: [type, url]
@@ -1578,7 +1614,7 @@ components:
             $ref: '#/components/schemas/GrapeListItem'
     DoListItem:
       type: object
-      required: [id, name, region, country, country_code, logo_image]
+      required: [id, name, region, country, country_code, do_logo, region_logo]
       properties:
         id:
           type: integer
@@ -1594,10 +1630,14 @@ components:
           type: string
           minLength: 2
           maxLength: 2
-        logo_image:
+        do_logo:
           type: string
           nullable: true
           example: rioja_DO.png
+        region_logo:
+          type: string
+          nullable: true
+          example: la_rioja.png
     DoListResponse:
       type: object
       required: [items]

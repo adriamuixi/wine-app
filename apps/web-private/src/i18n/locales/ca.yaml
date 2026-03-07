@@ -31,6 +31,7 @@ login:
 menu:
   dashboard: Tauler
   wines: Vins
+  dos: DO
   reviews: Ressenyes
   admin: Configuració
   apiDoc: API Doc
@@ -81,6 +82,13 @@ wines:
     title: Editar vi existent
     countSuffix: vins
     action: Editar
+dos:
+  title: Denominacions d'Origen
+  list:
+    eyebrow: Catàleg DO
+    title: Llistat de denominacions d'origen
+    results: elements
+    createAction: Crear DO
 reviews:
   title: Les meves ressenyes
   create:
@@ -130,6 +138,7 @@ admin:
 topbar:
   overview: Visió general
   wines: Eines de vins
+  dos: Denominacions d'origen
   reviews: Les meves ressenyes
   admin: Configuració
   apiDoc: Documentació API

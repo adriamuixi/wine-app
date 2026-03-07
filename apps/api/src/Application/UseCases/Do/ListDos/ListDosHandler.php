@@ -14,9 +14,8 @@ final readonly class ListDosHandler
     }
 
     /** @return list<DenominationOfOrigin> */
-    public function handle(): array
+    public function handle(ListDosQuery $query = new ListDosQuery()): array
     {
-        return $this->dos->findAll();
+        return $this->dos->findAll($query->sortFields);
     }
 }
-

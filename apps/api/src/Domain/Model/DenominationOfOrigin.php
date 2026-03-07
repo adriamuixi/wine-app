@@ -14,7 +14,8 @@ final readonly class DenominationOfOrigin
         public string $region,
         public Country $country,
         public string $countryCode,
-        public ?string $logoImage = null,
+        public ?string $doLogo = null,
+        public ?string $regionLogo = null,
     ) {
         if ($this->id < 1) {
             throw new \InvalidArgumentException('do id must be >= 1.');
@@ -32,8 +33,12 @@ final readonly class DenominationOfOrigin
             throw new \InvalidArgumentException('do country code must have 2 characters.');
         }
 
-        if (null !== $this->logoImage && '' === trim($this->logoImage)) {
-            throw new \InvalidArgumentException('do logo image cannot be blank when provided.');
+        if (null !== $this->doLogo && '' === trim($this->doLogo)) {
+            throw new \InvalidArgumentException('do logo cannot be blank when provided.');
+        }
+
+        if (null !== $this->regionLogo && '' === trim($this->regionLogo)) {
+            throw new \InvalidArgumentException('do region logo cannot be blank when provided.');
         }
     }
 }

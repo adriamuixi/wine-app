@@ -12,7 +12,7 @@ Currently shared and synced:
 Includes:
 
 - `public/images/flags/country`
-- `public/images/flags/ccaa`
+- `public/images/flags/regions`
 
 ## How sync works
 

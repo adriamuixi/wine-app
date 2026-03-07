@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\Out\Persistence\Repos;
 
+use App\Application\UseCases\Do\ListDos\ListDosSort;
 use App\Domain\Repository\DoRepository;
 use App\Domain\Enum\Country;
 use App\Domain\Model\DenominationOfOrigin;
@@ -28,7 +29,7 @@ final readonly class DoctrineDoRepository implements DoRepository
     public function findById(int $id): ?DenominationOfOrigin
     {
         $row = $this->entityManager->getConnection()->fetchAssociative(
-            'SELECT id, name, region, country, country_code, logo_image FROM "do" WHERE id = :id',
+            'SELECT id, name, region, country, country_code, do_logo, region_logo FROM "do" WHERE id = :id',
             ['id' => $id],
         );
 
@@ -42,14 +43,26 @@ final readonly class DoctrineDoRepository implements DoRepository
             region: (string) $row['region'],
             country: Country::from((string) $row['country']),
             countryCode: (string) $row['country_code'],
-            logoImage: null === $row['logo_image'] ? null : (string) $row['logo_image'],
+            doLogo: null === $row['do_logo'] ? null : (string) $row['do_logo'],
+            regionLogo: null === $row['region_logo'] ? null : (string) $row['region_logo'],
         );
     }
 
-    public function findAll(): array
+    public function findAll(array $sortFields = []): array
     {
+        $resolvedSortFields = [] === $sortFields ? ListDosSort::DEFAULT_ORDER : $sortFields;
+        $columnMap = [
+            ListDosSort::COUNTRY => 'country',
+            ListDosSort::REGION => 'region',
+            ListDosSort::NAME => 'name',
+        ];
+        $orderBy = implode(', ', array_map(
+            static fn (string $field): string => sprintf('%s ASC', $columnMap[$field] ?? 'name'),
+            $resolvedSortFields,
+        ));
+
         $rows = $this->entityManager->getConnection()->fetchAllAssociative(
-            'SELECT id, name, region, country, country_code, logo_image FROM "do" ORDER BY country ASC, region ASC, name ASC',
+            sprintf('SELECT id, name, region, country, country_code, do_logo, region_logo FROM "do" ORDER BY %s', $orderBy),
         );
 
         return array_map(
@@ -59,7 +72,8 @@ final readonly class DoctrineDoRepository implements DoRepository
                 region: (string) $row['region'],
                 country: Country::from((string) $row['country']),
                 countryCode: (string) $row['country_code'],
-                logoImage: null === $row['logo_image'] ? null : (string) $row['logo_image'],
+                doLogo: null === $row['do_logo'] ? null : (string) $row['do_logo'],
+                regionLogo: null === $row['region_logo'] ? null : (string) $row['region_logo'],
             ),
             $rows,
         );

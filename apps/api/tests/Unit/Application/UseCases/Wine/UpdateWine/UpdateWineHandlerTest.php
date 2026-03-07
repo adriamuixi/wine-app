@@ -175,11 +175,12 @@ final class InMemoryDoRepository implements DoRepository
             region: 'Region '.$id,
             country: $country,
             countryCode: 'ES',
-            logoImage: 'do_'.$id.'.png',
+            doLogo: 'do_'.$id.'.png',
+            regionLogo: 'region_'.$id.'.png',
         );
     }
 
-    public function findAll(): array
+    public function findAll(array $sortFields = []): array
     {
         return [];
     }

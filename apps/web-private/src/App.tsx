@@ -29,7 +29,8 @@ type WineItem = {
   country: string
   region: string
   doName: string | null
-  doLogoImage: string | null
+  doLogo: string | null
+  regionLogo: string | null
   thumbnailSrc: string
   galleryPreview: {
     bottle: string
@@ -70,7 +71,7 @@ type WineListApiItem = {
   winery: string | null
   wine_type: WineType | null
   country: Exclude<CountryFilterValue, 'all'> | null
-  do: { id: number; name: string; logo_image: string | null } | null
+  do: { id: number; name: string; do_logo: string | null; region_logo: string | null } | null
   aging_type?: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
   vintage_year: number | null
   avg_score: number | null
@@ -110,12 +111,28 @@ type DoApiItem = {
   region: string
   country: Exclude<CountryFilterValue, 'all'>
   country_code: string
-  logo_image: string | null
+  do_logo: string | null
+  region_logo: string | null
 }
 
 type DoApiResponse = {
   items: DoApiItem[]
 }
+
+type DoSortField = 'country' | 'region' | 'name'
+type DoSortPresetKey = 'country_region_name' | 'name_country_region' | 'region_name_country'
+
+const SAMPLE_DO_DIRECTORY: DoApiItem[] = [
+  { id: 101, name: 'Alella', region: 'Cataluña', country: 'spain', country_code: 'ES', do_logo: 'alella_DO.png', region_logo: 'cataluna.png' },
+  { id: 102, name: 'Jerez-Xérès-Sherry', region: 'Andalucía', country: 'spain', country_code: 'ES', do_logo: 'jerez_xerez_sherry_DO.jpg', region_logo: 'andalucia.png' },
+  { id: 103, name: 'Jumilla', region: 'Murcia', country: 'spain', country_code: 'ES', do_logo: 'jumilla_DO.jpg', region_logo: 'murcia.png' },
+  { id: 104, name: 'Penedès', region: 'Cataluña', country: 'spain', country_code: 'ES', do_logo: 'penedes_DO.png', region_logo: 'cataluna.png' },
+  { id: 105, name: 'Priorat', region: 'Cataluña', country: 'spain', country_code: 'ES', do_logo: 'priorat_DO.png', region_logo: 'cataluna.png' },
+  { id: 106, name: 'Rías Baixas', region: 'Galicia', country: 'spain', country_code: 'ES', do_logo: 'rias_baixas_DO.png', region_logo: 'galicia.png' },
+  { id: 107, name: 'Somontano', region: 'Aragón', country: 'spain', country_code: 'ES', do_logo: 'somontano_DO.jpg', region_logo: 'aragon.png' },
+  { id: 108, name: 'Toro', region: 'Castilla y León', country: 'spain', country_code: 'ES', do_logo: 'toro_DO.jpg', region_logo: 'castilla_y_leon.png' },
+  { id: 109, name: 'Napa Valley', region: 'California', country: 'united_states', country_code: 'US', do_logo: 'hunter_valley_DO.png', region_logo: 'united_states.png' },
+]
 
 type ReviewsPerMonthStatsApiResponse = {
   months: string[]
@@ -210,7 +227,8 @@ type WineDetailsApiWine = {
     region: string
     country: Exclude<CountryFilterValue, 'all'>
     country_code: string
-    logo_image: string | null
+    do_logo: string | null
+    region_logo: string | null
   } | null
   country: Exclude<CountryFilterValue, 'all'> | null
   aging_type: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
@@ -229,7 +247,7 @@ type WineDetailsApiResponse = {
   wine: WineDetailsApiWine
 }
 
-type MenuKey = 'dashboard' | 'wines' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
+type MenuKey = 'dashboard' | 'wines' | 'dos' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
 type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
 type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label' | 'situation'
@@ -338,6 +356,12 @@ const WINE_COUNTRY_FILTER_VALUES: Exclude<CountryFilterValue, 'all'>[] = [
   'south_africa',
   'australia',
 ]
+
+const DO_SORT_PRESET_FIELDS: Record<DoSortPresetKey, [DoSortField, DoSortField, DoSortField]> = {
+  country_region_name: ['country', 'region', 'name'],
+  name_country_region: ['name', 'country', 'region'],
+  region_name_country: ['region', 'name', 'country'],
+}
 
 function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
   if (review == null) {
@@ -595,85 +619,16 @@ function doLogoPathFromImageName(logoImage: string | null | undefined): string |
   return `/images/icons/DO/${logoImage}`
 }
 
-function spanishAutonomousCommunity(region: string): { name: string; slug: string } | null {
-  const normalizeRegionKey = (value: string): string => normalizeSearchText(value).replace(/[^a-z0-9]+/g, ' ').trim()
-
-  const slugToCommunityName: Record<string, string> = {
-    andalucia: 'Andalucía',
-    aragon: 'Aragón',
-    asturias: 'Asturias',
-    canarias: 'Canarias',
-    castilla_y_leon: 'Castilla y León',
-    castilla_la_mancha: 'Castilla-La Mancha',
-    cataluna: 'Cataluña',
-    comunidad_valenciana: 'Comunidad Valenciana',
-    extremadura: 'Extremadura',
-    galicia: 'Galicia',
-    baleares: 'Islas Baleares',
-    la_rioja: 'La Rioja',
-    madrid: 'Madrid',
-    murcia: 'Murcia',
-    navarra: 'Navarra',
-    pais_vasco: 'País Vasco',
-  }
-
-  const regionToCommunitySlug: Record<string, keyof typeof slugToCommunityName> = {
-    // CCAA names from DB
-    andalucia: 'andalucia',
-    aragon: 'aragon',
-    asturias: 'asturias',
-    canarias: 'canarias',
-    'castilla y leon': 'castilla_y_leon',
-    'castilla leon': 'castilla_y_leon',
-    'castilla la mancha': 'castilla_la_mancha',
-    cataluna: 'cataluna',
-    'comunidad valenciana': 'comunidad_valenciana',
-    extremadura: 'extremadura',
-    galicia: 'galicia',
-    'islas baleares': 'baleares',
-    baleares: 'baleares',
-    'la rioja': 'la_rioja',
-    madrid: 'madrid',
-    murcia: 'murcia',
-    navarra: 'navarra',
-    'pais vasco': 'pais_vasco',
-    // Legacy DO region names to keep compatibility in other views
-    'terra alta': 'cataluna',
-    penedes: 'cataluna',
-    montsant: 'cataluna',
-    tarragona: 'cataluna',
-    priorat: 'cataluna',
-    'conca de barbera': 'cataluna',
-    'pla de bages': 'cataluna',
-    alella: 'cataluna',
-    emporda: 'cataluna',
-    'costers del segre': 'cataluna',
-    rioja: 'la_rioja',
-    'ribera del duero': 'castilla_y_leon',
-    toro: 'castilla_y_leon',
-    cigales: 'castilla_y_leon',
-    arlanza: 'castilla_y_leon',
-    somontano: 'aragon',
-    carinena: 'aragon',
-    calatayud: 'aragon',
-    'rias baixas': 'galicia',
-  }
-
-  const slug = regionToCommunitySlug[normalizeRegionKey(region)]
-  if (!slug) {
+function regionLogoPathFromImageName(regionLogo: string | null | undefined): string | null {
+  if (!regionLogo || regionLogo.trim() === '') {
     return null
   }
 
-  return {
-    name: slugToCommunityName[slug],
-    slug,
+  if (regionLogo === 'united_states.png') {
+    return `/images/flags/country/${regionLogo}`
   }
-}
 
-function autonomousCommunityFlagPathForRegion(region: string): string | null {
-  const community = spanishAutonomousCommunity(region)
-  if (!community) return null
-  return `/images/flags/ccaa/${community.slug}.png`
+  return `/images/flags/regions/${regionLogo}`
 }
 
 function escapeHtml(value: string): string {
@@ -830,7 +785,8 @@ function mapWineListItemToWineItem(item: WineListApiItem, locale: string): WineI
     country: countryCodeToLabel(countryCode, locale),
     region: item.do?.name ?? '-',
     doName: item.do?.name ?? null,
-    doLogoImage: item.do?.logo_image ?? null,
+    doLogo: item.do?.do_logo ?? null,
+    regionLogo: item.do?.region_logo ?? null,
     vintageYear: Number.isInteger(item.vintage_year) ? item.vintage_year : null,
     agingType: normalizeAgingType(item.aging_type),
     // List endpoint does not expose price in current API contract.
@@ -1036,7 +992,7 @@ function App() {
   const [activeGalleryImageKey, setActiveGalleryImageKey] = useState<(typeof SAMPLE_WINE_GALLERY)[number]['key']>('bottle')
   const [dashboardSeed] = useState(() => Math.floor(Math.random() * 2_147_483_647))
   const [defaultSortPreference, setDefaultSortPreference] = useState<'score_desc' | 'recent' | 'price_asc'>('score_desc')
-  const [defaultLandingPage, setDefaultLandingPage] = useState<'dashboard' | 'wines' | 'reviews'>('dashboard')
+  const [defaultLandingPage, setDefaultLandingPage] = useState<'dashboard' | 'wines' | 'dos' | 'reviews'>('dashboard')
   const [showOnlySpainByDefault, setShowOnlySpainByDefault] = useState(true)
   const [compactCardsPreference, setCompactCardsPreference] = useState(false)
   const [settingsName, setSettingsName] = useState('')
@@ -1056,6 +1012,7 @@ function App() {
   const [debouncedSearchText, setDebouncedSearchText] = useState('')
   const [wineCountryFilter, setWineCountryFilter] = useState<CountryFilterValue>('all')
   const [doCountryFilter, setDoCountryFilter] = useState<CountryFilterValue>('all')
+  const [doSortPreset, setDoSortPreset] = useState<DoSortPresetKey>('country_region_name')
   const [typeFilter, setTypeFilter] = useState<'all' | WineType>('all')
   const [minScoreFilter, setMinScoreFilter] = useState<'all' | number>('all')
   const [grapeFilter, setGrapeFilter] = useState<'all' | number>('all')
@@ -1097,6 +1054,7 @@ function App() {
   const [reviewSuccessToast, setReviewSuccessToast] = useState<string | null>(null)
   const [reviewActionError, setReviewActionError] = useState<string | null>(null)
   const [reviewDeleteBusyId, setReviewDeleteBusyId] = useState<number | null>(null)
+  const [doSuccessToast, setDoSuccessToast] = useState<string | null>(null)
   const [genericStats, setGenericStats] = useState<GenericStatsApiResponse | null>(null)
   const [genericStatsStatus, setGenericStatsStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [genericStatsError, setGenericStatsError] = useState<string | null>(null)
@@ -1203,13 +1161,14 @@ function App() {
       ),
     },
     {
-      key: 'admin',
-      label: labels.menu.admin,
-      short: 'A',
+      key: 'dos',
+      label: labels.menu.dos,
+      short: 'DO',
       icon: (
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
-          <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.3-1.8-3.1-2.3.5a7.8 7.8 0 0 0-.8-.6l-.3-2.3h-3.6l-.3 2.3c-.3.2-.6.4-.8.6l-2.3-.5-1.8 3.1 2 1.3a7.8 7.8 0 0 0 .1 1l-2 1.3 1.8 3.1 2.3-.5c.2.2.5.4.8.6l.3 2.3h3.6l.3-2.3c.3-.2.6-.4.8-.6l2.3.5 1.8-3.1-2-1.3Z" />
+          <path d="M6 5.5h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8.8L4 21V7.5a2 2 0 0 1 2-2Z" />
+          <path d="M8 10h8" />
+          <path d="M8 13.5h5.5" />
         </svg>
       ),
     },
@@ -1222,6 +1181,17 @@ function App() {
           <circle cx="12" cy="12" r="8.5" />
           <path d="m15.5 8.5-2.2 5.2-5.3 2.2 2.2-5.2 5.3-2.2Z" />
           <circle cx="12" cy="12" r="1" />
+        </svg>
+      ),
+    },
+    {
+      key: 'admin',
+      label: labels.menu.admin,
+      short: 'A',
+      icon: (
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
+          <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.3-1.8-3.1-2.3.5a7.8 7.8 0 0 0-.8-.6l-.3-2.3h-3.6l-.3 2.3c-.3.2-.6.4-.8.6l-2.3-.5-1.8 3.1 2 1.3a7.8 7.8 0 0 0 .1 1l-2 1.3 1.8 3.1 2.3-.5c.2.2.5.4.8.6l.3 2.3h3.6l.3-2.3c.3-.2.6-.4.8-.6l2.3.5 1.8-3.1-2-1.3Z" />
         </svg>
       ),
     },
@@ -1304,13 +1274,59 @@ function App() {
     () => (doFilter === 'all' ? null : doOptions.find((item) => item.id === doFilter) ?? null),
     [doFilter, doOptions],
   )
-  const selectedDoCommunityFlagPath = selectedDoOption ? autonomousCommunityFlagPathForRegion(selectedDoOption.region) : null
+  const selectedDoCommunityFlagPath = selectedDoOption
+    ? regionLogoPathFromImageName(selectedDoOption.region_logo)
+    : null
   const selectedCreateDoOption = useMemo(
     () => (createDoId === 'all' ? null : doOptions.find((item) => item.id === createDoId) ?? null),
     [createDoId, doOptions],
   )
-  const selectedCreateDoCommunityFlagPath = selectedCreateDoOption ? autonomousCommunityFlagPathForRegion(selectedCreateDoOption.region) : null
+  const selectedCreateDoCommunityFlagPath = selectedCreateDoOption
+    ? regionLogoPathFromImageName(selectedCreateDoOption.region_logo)
+    : null
   const primaryEditPurchase = wineEditDetails?.purchases[0] ?? null
+  const doSortFields = DO_SORT_PRESET_FIELDS[doSortPreset]
+  const doSortPresetOptions = useMemo<Array<{ key: DoSortPresetKey; label: string }>>(
+    () => [
+      {
+        key: 'country_region_name',
+        label: locale === 'ca' ? 'País, regió, nom' : 'País, región, nombre',
+      },
+      {
+        key: 'name_country_region',
+        label: locale === 'ca' ? 'Nom, país, regió' : 'Nombre, país, región',
+      },
+      {
+        key: 'region_name_country',
+        label: locale === 'ca' ? 'Regió, nom, país' : 'Región, nombre, país',
+      },
+    ],
+    [locale],
+  )
+  const doDirectoryItems = useMemo(() => {
+    const items = doOptions.length > 0 ? [...doOptions] : [...SAMPLE_DO_DIRECTORY]
+    const collator = new Intl.Collator(locale === 'ca' ? 'ca-ES' : 'es-ES', { sensitivity: 'base' })
+
+    return items.sort((left, right) => {
+      for (const field of doSortFields) {
+        const comparison = (() => {
+          if (field === 'country') {
+            return collator.compare(countryCodeToLabel(left.country, locale), countryCodeToLabel(right.country, locale))
+          }
+          if (field === 'region') {
+            return collator.compare(left.region, right.region)
+          }
+          return collator.compare(left.name, right.name)
+        })()
+
+        if (comparison !== 0) {
+          return comparison
+        }
+      }
+
+      return left.id - right.id
+    })
+  }, [doOptions, doSortFields, locale])
 
   const metrics = useMemo(
     () => ({
@@ -1560,6 +1576,7 @@ function App() {
   const menuTitle = {
     dashboard: labels.topbar.overview,
     wines: labels.topbar.wines,
+    dos: labels.topbar.dos,
     wineCreate: locale === 'ca' ? 'Crear vi' : 'Crear vino',
     wineEdit: locale === 'ca' ? 'Editar vi' : 'Editar vino',
     reviews: labels.topbar.reviews,
@@ -1798,7 +1815,7 @@ function App() {
   }, [currentUser])
 
   useEffect(() => {
-    if (!['wines', 'wineCreate', 'wineEdit'].includes(menu)) {
+    if (!['wines', 'wineCreate', 'wineEdit', 'dos'].includes(menu)) {
       return
     }
 
@@ -1835,11 +1852,7 @@ function App() {
   }, [menu, grapeOptions.length])
 
   useEffect(() => {
-    if (!['wines', 'wineCreate', 'wineEdit'].includes(menu)) {
-      return
-    }
-
-    if (doOptions.length > 0) {
+    if (!['wines', 'wineCreate', 'wineEdit', 'dos'].includes(menu)) {
       return
     }
 
@@ -1847,8 +1860,13 @@ function App() {
     const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
     const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
     const controller = new AbortController()
+    const searchParams = new URLSearchParams({
+      sort_by_1: doSortFields[0],
+      sort_by_2: doSortFields[1],
+      sort_by_3: doSortFields[2],
+    })
 
-    fetch(`${apiBaseUrl}/api/dos`, {
+    fetch(`${apiBaseUrl}/api/dos?${searchParams.toString()}`, {
       signal: controller.signal,
       credentials: 'include',
       headers: {
@@ -1869,7 +1887,22 @@ function App() {
     return () => {
       controller.abort()
     }
-  }, [menu, doOptions.length])
+  }, [doSortFields, menu])
+
+  const announceDoAction = (action: 'create' | 'edit' | 'delete', item?: DoApiItem) => {
+    const baseLabel = action === 'create'
+      ? (locale === 'ca' ? 'Crear D.O.' : 'Crear DO')
+      : action === 'edit'
+        ? (locale === 'ca' ? 'Editar D.O.' : 'Editar DO')
+        : (locale === 'ca' ? 'Eliminar D.O.' : 'Borrar DO')
+
+    const targetLabel = item ? ` · ${item.name}` : ''
+    setDoSuccessToast(
+      locale === 'ca'
+        ? `${baseLabel}${targetLabel} disponible aviat. Aquesta pantalla és només de visualització per ara.`
+        : `${baseLabel}${targetLabel} disponible próximamente. Esta pantalla es solo de visualización por ahora.`,
+    )
+  }
 
   useEffect(() => {
     if (!loggedIn || menu !== 'dashboard') {
@@ -2576,18 +2609,15 @@ function App() {
     [selectedWineGallery],
   )
   const selectedWineDoLogo = selectedWineSheetDetails?.do
-    ? doLogoPathFromImageName(selectedWineSheetDetails.do.logo_image)
+    ? doLogoPathFromImageName(selectedWineSheetDetails.do.do_logo)
     : (
         selectedWineSheet
-          ? doLogoPathFromImageName(selectedWineSheet.doLogoImage)
+          ? doLogoPathFromImageName(selectedWineSheet.doLogo)
           : null
       )
-  const selectedWineCommunity = selectedWineSheetDetails?.do?.country === 'spain' && selectedWineSheetDetails.do != null
-    ? spanishAutonomousCommunity(selectedWineSheetDetails.do.region)
-    : (selectedWineSheet ? spanishAutonomousCommunity(selectedWineSheet.region) : null)
-  const selectedWineCommunityFlagPath = selectedWineCommunity
-    ? autonomousCommunityFlagPathForRegion(selectedWineCommunity.name)
-    : null
+  const selectedWineCommunityFlagPath = selectedWineSheetDetails?.do?.region_logo
+    ? regionLogoPathFromImageName(selectedWineSheetDetails.do.region_logo)
+    : (selectedWineSheet?.regionLogo ? regionLogoPathFromImageName(selectedWineSheet.regionLogo) : null)
 
   const selectedWineAverageScore = useMemo(() => {
     if (!selectedWineSheetDetails) {
@@ -3477,7 +3507,7 @@ function App() {
                 </button>
                 {filteredDosBySearch.map((item) => {
                   const isSpanishDo = item.country === 'spain'
-                  const communityFlagPath = isSpanishDo ? autonomousCommunityFlagPathForRegion(item.region) : null
+                  const communityFlagPath = isSpanishDo ? regionLogoPathFromImageName(item.region_logo) : null
                   return (
                     <button
                       key={item.id}
@@ -3727,6 +3757,20 @@ function App() {
       window.clearTimeout(timeoutId)
     }
   }, [reviewSuccessToast])
+
+  useEffect(() => {
+    if (doSuccessToast == null) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDoSuccessToast(null)
+    }, 2600)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [doSuccessToast])
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -4844,7 +4888,7 @@ function App() {
                   </thead>
                   <tbody>
                     {wineItems.map((wine) => {
-                      const doCommunityFlagPath = wine.doName ? autonomousCommunityFlagPathForRegion(wine.doName) : null
+                      const doCommunityFlagPath = wine.regionLogo ? regionLogoPathFromImageName(wine.regionLogo) : null
                       const scoreTone = medalToneFromScore(wine.averageScore)
 
                       return (
@@ -4932,9 +4976,9 @@ function App() {
                                   onError={fallbackToAdminAsset}
                                 />
                               ) : null}
-                              {doLogoPathFromImageName(wine.doLogoImage) ? (
+                              {doLogoPathFromImageName(wine.doLogo) ? (
                                 <img
-                                  src={doLogoPathFromImageName(wine.doLogoImage) as string}
+                                  src={doLogoPathFromImageName(wine.doLogo) as string}
                                   alt=""
                                   className="wine-do-logo"
                                   loading="lazy"
@@ -5048,6 +5092,137 @@ function App() {
                     {locale === 'ca' ? 'Següent' : 'Siguiente'}
                   </button>
                 </div>
+              </div>
+            </section>
+          </section>
+        ) : null}
+
+        {menu === 'dos' ? (
+          <section className="screen-grid">
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <p className="eyebrow">{labels.dos.list.eyebrow}</p>
+                  <h3>{labels.dos.list.title}</h3>
+                </div>
+                <div className="panel-header-actions">
+                  <span className="pill">
+                    {doDirectoryItems.length} {labels.dos.list.results}
+                  </span>
+                  <label className="do-sort-select">
+                    <span className="do-sort-label">{locale === 'ca' ? 'Ordre' : 'Orden'}</span>
+                    <span className="do-sort-field" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M7 6h10" />
+                        <path d="M7 12h7" />
+                        <path d="M7 18h4" />
+                        <path d="m16 15 2.5 3 2.5-3" />
+                      </svg>
+                    </span>
+                    <div className="do-sort-select-wrap">
+                      <select
+                        value={doSortPreset}
+                        onChange={(event) => setDoSortPreset(event.target.value as DoSortPresetKey)}
+                      >
+                        {doSortPresetOptions.map((option) => (
+                          <option key={option.key} value={option.key}>{option.label}</option>
+                        ))}
+                      </select>
+                      <span className="do-sort-caret" aria-hidden="true">▾</span>
+                    </div>
+                  </label>
+                  <button type="button" className="primary-button" onClick={() => announceDoAction('create')}>
+                    {labels.dos.list.createAction}
+                  </button>
+                </div>
+              </div>
+
+              <div className="table-wrap">
+                <table className="wine-table do-directory-table">
+                  <thead>
+                    <tr>
+                      <th>{locale === 'ca' ? 'Logo' : 'Logo'}</th>
+                      <th>{locale === 'ca' ? 'Nom' : 'Nombre'}</th>
+                      <th>{labels.dashboard.table.region}</th>
+                      <th>{locale === 'ca' ? 'País' : 'País'}</th>
+                      <th>{locale === 'ca' ? 'Accions' : 'Acciones'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {doDirectoryItems.map((item) => {
+                      const logoPath = doLogoPathFromImageName(item.do_logo)
+                      const regionLogoPath = regionLogoPathFromImageName(item.region_logo)
+                      const communityFlagPath = regionLogoPath
+
+                      return (
+                        <tr key={item.id}>
+                          <td className="do-directory-logo-cell" data-label="Logo">
+                            <div className="do-directory-logo-stack">
+                              {logoPath ? (
+                                <img
+                                  src={logoPath}
+                                  alt={`${item.name} logo`}
+                                  className="do-directory-logo"
+                                  loading="lazy"
+                                  onError={fallbackToAdminAsset}
+                                />
+                              ) : (
+                                <span className="do-directory-logo-fallback" aria-hidden="true">D.O.</span>
+                              )}
+                              {communityFlagPath ? (
+                                <img
+                                  src={communityFlagPath}
+                                  alt=""
+                                  className="do-directory-community-flag"
+                                  loading="lazy"
+                                  aria-hidden="true"
+                                  onError={fallbackToAdminAsset}
+                                />
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="do-directory-name-cell" data-label={locale === 'ca' ? 'Nom' : 'Nombre'}>
+                            <strong>{item.name}</strong>
+                          </td>
+                          <td data-label={labels.dashboard.table.region}>
+                            <span className="wine-cell-value">{item.region}</span>
+                          </td>
+                          <td data-label={locale === 'ca' ? 'País' : 'País'}>
+                            <span className="wine-country-chip">
+                              {countryFlagPath(item.country) ? (
+                                <img
+                                  className="wine-country-flag"
+                                  src={countryFlagPath(item.country) as string}
+                                  alt={countryCodeToLabel(item.country, locale)}
+                                  loading="lazy"
+                                  onError={fallbackToAdminAsset}
+                                />
+                              ) : (
+                                <span className="wine-country-emoji" aria-hidden="true">{countryFlagEmoji(item.country)}</span>
+                              )}
+                              <span className="wine-country-name">{countryCodeToLabel(item.country, locale)}</span>
+                            </span>
+                          </td>
+                          <td className="wine-col-actions" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
+                            <div className="do-directory-actions">
+                              <button type="button" className="ghost-button small" onClick={() => announceDoAction('edit', item)}>
+                                {locale === 'ca' ? 'Editar' : 'Editar'}
+                              </button>
+                              <button type="button" className="ghost-button small danger-text-button" onClick={() => announceDoAction('delete', item)}>
+                                {locale === 'ca' ? 'Eliminar' : 'Borrar'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                    {doDirectoryItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={5}>{locale === 'ca' ? 'Cap D.O. disponible.' : 'No hay DO disponibles.'}</td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
               </div>
             </section>
           </section>
@@ -5260,7 +5435,7 @@ function App() {
                             </button>
                             {createFilteredDosBySearch.map((item) => {
                               const isSpanishDo = item.country === 'spain'
-                              const communityFlagPath = isSpanishDo ? autonomousCommunityFlagPathForRegion(item.region) : null
+                              const communityFlagPath = isSpanishDo ? regionLogoPathFromImageName(item.region_logo) : null
                               return (
                                 <button
                                   key={item.id}
@@ -5558,7 +5733,7 @@ function App() {
                     const doLabel = doRegion && doRegion !== '-'
                       ? doRegion
                       : (locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.')
-                    const doLogoPath = doLogoPathFromImageName(entry.wine.doLogoImage)
+                    const doLogoPath = doLogoPathFromImageName(entry.wine.doLogo)
                     const countryFlagPathValue = countryFlagPath(entry.wine.country)
 
                     return (
@@ -5966,10 +6141,11 @@ function App() {
                   {locale === 'ca' ? 'Pantalla inicial per defecte' : 'Pantalla inicial por defecto'}
                   <select
                     value={defaultLandingPage}
-                    onChange={(event) => setDefaultLandingPage(event.target.value as 'dashboard' | 'wines' | 'reviews')}
+                    onChange={(event) => setDefaultLandingPage(event.target.value as 'dashboard' | 'wines' | 'dos' | 'reviews')}
                   >
                     <option value="dashboard">{labels.menu.dashboard}</option>
                     <option value="wines">{labels.menu.wines}</option>
+                    <option value="dos">{labels.menu.dos}</option>
                     <option value="reviews">{labels.menu.reviews}</option>
                   </select>
                 </label>
@@ -6154,15 +6330,15 @@ function App() {
                             <span className="wine-profile-do-badge">
                               {countryCodeToLabel(selectedWineSheetDetails.do.country, locale)}
                             </span>
-                            {selectedWineSheetDetails.do.country === 'spain' && selectedWineCommunity && selectedWineCommunityFlagPath ? (
+                            {selectedWineSheetDetails.do.country === 'spain' && selectedWineCommunityFlagPath ? (
                               <span className="wine-profile-community-showcase">
                                 <img
                                   src={selectedWineCommunityFlagPath}
-                                  alt={selectedWineCommunity.name}
+                                  alt={selectedWineSheetDetails.do.region}
                                   loading="lazy"
                                   onError={fallbackToAdminAsset}
                                 />
-                                <span>{selectedWineCommunity.name}</span>
+                                <span>{selectedWineSheetDetails.do.region}</span>
                               </span>
                             ) : null}
                           </div>
@@ -6602,6 +6778,12 @@ function App() {
       {reviewSuccessToast ? (
         <div className="floating-toast floating-toast-success" role="status" aria-live="polite">
           {reviewSuccessToast}
+        </div>
+      ) : null}
+
+      {doSuccessToast ? (
+        <div className="floating-toast floating-toast-success" role="status" aria-live="polite">
+          {doSuccessToast}
         </div>
       ) : null}
     </main>

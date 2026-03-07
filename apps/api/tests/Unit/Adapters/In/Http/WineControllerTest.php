@@ -203,7 +203,8 @@ final class WineControllerTest extends TestCase
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
         self::assertSame('Rioja', $payload['items'][0]['do']['name']);
-        self::assertSame('rioja_DO.png', $payload['items'][0]['do']['logo_image']);
+        self::assertSame('rioja_DO.png', $payload['items'][0]['do']['do_logo']);
+        self::assertSame('la_rioja.png', $payload['items'][0]['do']['region_logo']);
         self::assertSame(91.5, $payload['items'][0]['avg_score']);
     }
 
@@ -333,7 +334,8 @@ final class WineControllerTest extends TestCase
         self::assertSame('fruity', $payload['wine']['reviews'][0]['bullets'][0]);
         self::assertSame('Madrid', $payload['wine']['purchases'][0]['place']['city']);
         self::assertSame('ribera', $payload['wine']['do']['name']);
-        self::assertSame('ribera_del_duero_DO.png', $payload['wine']['do']['logo_image']);
+        self::assertSame('ribera_del_duero_DO.png', $payload['wine']['do']['do_logo']);
+        self::assertSame('castilla_y_leon.png', $payload['wine']['do']['region_logo']);
     }
 
     /**
@@ -416,7 +418,7 @@ final class SpyWineRepository implements WineRepository
             name: 'Wine Full',
             winery: 'Bodega Demo',
             wineType: WineType::Red,
-            do: new DenominationOfOrigin(1, 'ribera', 'Castilla y Leon', Country::Spain, 'ES', 'ribera_del_duero_DO.png'),
+            do: new DenominationOfOrigin(1, 'ribera', 'Castilla y Leon', Country::Spain, 'ES', 'ribera_del_duero_DO.png', 'castilla_y_leon.png'),
             country: Country::Spain,
             agingType: AgingType::Reserve,
             vintageYear: 2020,
@@ -468,7 +470,8 @@ final class SpyWineRepository implements WineRepository
                     country: 'spain',
                     doId: 3,
                     doName: 'Rioja',
-                    doLogoImage: 'rioja_DO.png',
+                    doLogo: 'rioja_DO.png',
+                    regionLogo: 'la_rioja.png',
                     vintageYear: 2022,
                     avgScore: 91.5,
                     updatedAt: '2026-03-01T09:00:00+00:00',
@@ -566,11 +569,12 @@ final class InMemoryDoRepository implements DoRepository
             region: 'Region '.$id,
             country: $country,
             countryCode: 'ES',
-            logoImage: 'do_'.$id.'.png',
+            doLogo: 'do_'.$id.'.png',
+            regionLogo: 'region_'.$id.'.png',
         );
     }
 
-    public function findAll(): array
+    public function findAll(array $sortFields = []): array
     {
         return [];
     }

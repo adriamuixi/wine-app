@@ -29,6 +29,9 @@ class DoRecord
     #[ORM\Column(name: 'country_code', length: 2)]
     private string $countryCode;
 
-    #[ORM\Column(name: 'logo_image', length: 255, nullable: true)]
-    private ?string $logoImage = null;
+    #[ORM\Column(name: 'do_logo', length: 255, nullable: true)]
+    private ?string $doLogo = null;
+
+    #[ORM\Column(name: 'region_logo', length: 255, nullable: true)]
+    private ?string $regionLogo = null;
 }

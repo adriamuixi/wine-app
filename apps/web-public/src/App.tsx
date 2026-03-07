@@ -43,6 +43,7 @@ type WineCard = {
   }
   rewardBadgeImage?: string
   doLogoImage?: string
+  regionLogoImage?: string
   notes: string
   tags: string[]
   image: string
@@ -67,7 +68,8 @@ type WineListApiItem = {
   do: {
     id: number
     name: string
-    logo_image: string | null
+    do_logo: string | null
+    region_logo: string | null
   } | null
   vintage_year: number | null
   avg_score: number | null
@@ -110,7 +112,8 @@ type DoApiItem = {
   region: string
   country: NonNullable<WineListApiItem['country']>
   country_code: string
-  logo_image: string | null
+  do_logo: string | null
+  region_logo: string | null
 }
 
 type DoApiResponse = {
@@ -124,6 +127,7 @@ type DoFilterOption = {
   countryCode: NonNullable<WineListApiItem['country']>
   countryLabel: string
   doLogoImage?: string
+  regionLogoImage?: string
 }
 
 type WineDetailsApiResponse = {
@@ -137,7 +141,8 @@ type WineDetailsApiResponse = {
     do: {
       id: number
       name: string
-      logo_image: string | null
+      do_logo: string | null
+      region_logo: string | null
     } | null
     vintage_year: number | null
     alcohol_percentage: number | null
@@ -561,6 +566,18 @@ function doLogoPathFromImageName(logoImage: string | null | undefined): string |
   return `/images/icons/DO/${logoImage}`
 }
 
+function regionLogoPathFromImageName(regionLogo: string | null | undefined): string | undefined {
+  if (!regionLogo || regionLogo.trim() === '') {
+    return undefined
+  }
+
+  if (regionLogo === 'united_states.png') {
+    return `/images/flags/country/${regionLogo}`
+  }
+
+  return `/images/flags/regions/${regionLogo}`
+}
+
 function resolveApiBaseUrl(): string {
   const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
   const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
@@ -676,12 +693,6 @@ function spanishAutonomousCommunity(region: string): { name: string; slug: strin
     name: slugToCommunityName[slug],
     slug,
   }
-}
-
-function autonomousCommunityFlagPathForRegion(region: string): string | null {
-  const community = spanishAutonomousCommunity(region)
-  if (!community) return null
-  return `/images/flags/ccaa/${community.slug}.png`
 }
 
 function autonomousCommunityNameForRegion(region: string): string | null {
@@ -826,7 +837,8 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
     city: '-',
     techSheet: false,
     reward,
-    doLogoImage: doLogoPathFromImageName(item.do?.logo_image),
+    doLogoImage: doLogoPathFromImageName(item.do?.do_logo),
+    regionLogoImage: regionLogoPathFromImageName(item.do?.region_logo),
     rewardBadgeImage,
     notes: '',
     tags: [region, type],
@@ -880,7 +892,8 @@ function mergeWineCardWithDetails(card: WineCard, details: NonNullable<WineDetai
     city: lastPurchase?.place?.city || card.city,
     reward: rewardMapping.reward ?? card.reward,
     rewardBadgeImage: rewardMapping.rewardBadgeImage ?? card.rewardBadgeImage,
-    doLogoImage: doLogoPathFromImageName(details.do?.logo_image) ?? card.doLogoImage,
+    doLogoImage: doLogoPathFromImageName(details.do?.do_logo) ?? card.doLogoImage,
+    regionLogoImage: regionLogoPathFromImageName(details.do?.region_logo) ?? card.regionLogoImage,
     image: byType.bottle,
     gallery,
     tastingDateSortTs: card.tastingDateSortTs,
@@ -1225,7 +1238,8 @@ export default function App() {
           region: item.region,
           countryCode: item.country,
           countryLabel: countryCodeToLabel(item.country),
-          doLogoImage: doLogoPathFromImageName(item.logo_image),
+          doLogoImage: doLogoPathFromImageName(item.do_logo),
+          regionLogoImage: regionLogoPathFromImageName(item.region_logo),
         }))
         .sort((a, b) => {
           const byRegion = a.region.localeCompare(b.region)
@@ -1247,6 +1261,7 @@ export default function App() {
           countryCode: 'spain',
           countryLabel: wine.country,
           doLogoImage: wine.doLogoImage,
+          regionLogoImage: wine.regionLogoImage,
         })
       }
     })
@@ -1273,7 +1288,7 @@ export default function App() {
     [countryFilter, doFilterOptions, regionFilter],
   )
   const selectedDoCommunityFlagPath = selectedDoOption?.countryCode === 'spain'
-    ? autonomousCommunityFlagPathForRegion(selectedDoOption.region)
+    ? selectedDoOption.regionLogoImage
     : null
   const grapeOptions = useMemo(
     () => ['all', ...Array.from(new Set(wines.map((wine) => wine.grapes.split(/[,/]/)[0]?.trim()).filter(Boolean)))],
@@ -1545,7 +1560,7 @@ export default function App() {
                 <span>{t.filters.allRegions}</span>
               </button>
               {filteredDoOptions.map((item) => {
-                const communityFlag = item.countryCode === 'spain' ? autonomousCommunityFlagPathForRegion(item.region) : null
+                const communityFlag = item.countryCode === 'spain' ? item.regionLogoImage : null
                 return (
                   <button
                     key={item.id}
@@ -1890,7 +1905,7 @@ export default function App() {
               const isFeatured = wine.avgScore >= 90
               const scoreTier = wine.avgScore >= 90 ? 'gold' : wine.avgScore >= 80 ? 'silver' : wine.avgScore >= 70 ? 'bronze' : 'base'
               const countryFlagImage = countryFlagPath(wine.country)
-              const communityFlagImage = wine.country === 'Spain' ? autonomousCommunityFlagPathForRegion(wine.region) : null
+              const communityFlagImage = wine.country === 'Spain' ? wine.regionLogoImage ?? null : null
               const communityName = wine.country === 'Spain' ? autonomousCommunityNameForRegion(wine.region) : null
 
               return (
@@ -2231,7 +2246,7 @@ export default function App() {
               <div className="public-wine-details">
                 {(() => {
                   const selectedCountryFlagImage = countryFlagPath(selectedWine.country)
-                  const selectedCommunityFlagImage = selectedWine.country === 'Spain' ? autonomousCommunityFlagPathForRegion(selectedWine.region) : null
+                  const selectedCommunityFlagImage = selectedWine.country === 'Spain' ? selectedWine.regionLogoImage ?? null : null
                   const selectedCommunityName = selectedWine.country === 'Spain' ? autonomousCommunityNameForRegion(selectedWine.region) : null
                   return (
                 <section className="detail-card">

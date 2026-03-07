@@ -13,6 +13,10 @@ interface DoRepository
 
     public function findCountryById(int $id): ?Country;
 
-    /** @return list<DenominationOfOrigin> */
-    public function findAll(): array;
+    /**
+     * @param list<string> $sortFields
+     *
+     * @return list<DenominationOfOrigin>
+     */
+    public function findAll(array $sortFields = []): array;
 }

@@ -31,6 +31,7 @@ login:
 menu:
   dashboard: Dashboard
   wines: Vinos
+  dos: DO
   reviews: Reseñas
   admin: Herramientas Admin
   apiDoc: API Doc
@@ -81,6 +82,13 @@ wines:
     title: Editar vino existente
     countSuffix: vinos
     action: Editar
+dos:
+  title: Denominaciones de Origen
+  list:
+    eyebrow: Catálogo DO
+    title: Listado de denominaciones de origen
+    results: elementos
+    createAction: Crear DO
 reviews:
   title: Mis reseñas
   create:
@@ -130,6 +138,7 @@ admin:
 topbar:
   overview: Resumen
   wines: Herramientas de vinos
+  dos: Denominaciones de origen
   reviews: Mis reseñas
   admin: Herramientas Admin
   apiDoc: Documentación API
