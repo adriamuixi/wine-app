@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\DoController;
+use App\Application\UseCases\Do\CreateDo\CreateDoHandler;
 use App\Application\UseCases\Do\DeleteDo\DeleteDoHandler;
 use App\Application\UseCases\Do\ListDos\ListDosHandler;
 use App\Application\UseCases\Do\ListDos\ListDosSort;
@@ -22,6 +23,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository();
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -44,6 +46,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository();
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -62,6 +65,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository();
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -78,6 +82,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(updatableIds: [20]);
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -101,6 +106,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(updatableIds: [20]);
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -123,6 +129,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(updatableIds: [20]);
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -145,6 +152,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(updatableIds: []);
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -165,6 +173,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(deletableIds: [33]);
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -179,6 +188,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(deletableIds: [33], associatedWineIds: [33]);
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -195,6 +205,7 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(deletableIds: []);
         $controller = new DoController(
+            new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
             new DeleteDoHandler($repository),
@@ -204,12 +215,74 @@ final class DoControllerTest extends TestCase
 
         self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
     }
+
+    public function testCreateReturnsCreatedWhenPayloadIsValid(): void
+    {
+        $repository = new DoControllerInMemoryDoRepository();
+        $controller = new DoController(
+            new CreateDoHandler($repository),
+            new ListDosHandler($repository),
+            new UpdateDoHandler($repository),
+            new DeleteDoHandler($repository),
+        );
+        $request = Request::create(
+            '/api/dos',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Montsant',
+                'region' => 'Catalunya',
+                'country' => 'spain',
+                'country_code' => 'es',
+                'do_logo' => 'montsant_DO.png',
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+        self::assertSame(150, $payload['do']['id']);
+        self::assertSame('Montsant', $repository->lastCreatedDo?->name);
+        self::assertSame('ES', $repository->lastCreatedDo?->countryCode);
+        self::assertNull($repository->lastCreatedDo?->regionLogo);
+    }
+
+    public function testCreateReturnsBadRequestWhenRegionLogoIsProvided(): void
+    {
+        $repository = new DoControllerInMemoryDoRepository();
+        $controller = new DoController(
+            new CreateDoHandler($repository),
+            new ListDosHandler($repository),
+            new UpdateDoHandler($repository),
+            new DeleteDoHandler($repository),
+        );
+        $request = Request::create(
+            '/api/dos',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Montsant',
+                'region' => 'Catalunya',
+                'country' => 'spain',
+                'country_code' => 'ES',
+                'region_logo' => 'catalunya.png',
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertSame('region_logo cannot be created via this endpoint.', $payload['error']);
+    }
 }
 
 final class DoControllerInMemoryDoRepository implements DoRepository
 {
     /** @var list<string> */
     public array $lastSortFields = [];
+    public ?DenominationOfOrigin $lastCreatedDo = null;
     public ?DenominationOfOrigin $lastUpdatedDo = null;
     /** @var list<int> */
     public array $deletedIds = [];
@@ -224,6 +297,13 @@ final class DoControllerInMemoryDoRepository implements DoRepository
         private readonly array $deletableIds = [],
         private readonly array $associatedWineIds = [],
     ) {
+    }
+
+    public function create(DenominationOfOrigin $do): int
+    {
+        $this->lastCreatedDo = $do;
+
+        return 150;
     }
 
     public function findById(int $id): ?DenominationOfOrigin

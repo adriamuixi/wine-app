@@ -26,6 +26,25 @@ final readonly class DoctrineDoRepository implements DoRepository
         return $do->country;
     }
 
+    public function create(DenominationOfOrigin $do): int
+    {
+        $id = $this->entityManager->getConnection()->fetchOne(
+            'INSERT INTO "do" (name, region, country, country_code, do_logo, region_logo)
+             VALUES (:name, :region, :country, :country_code, :do_logo, :region_logo)
+             RETURNING id',
+            [
+                'name' => $do->name,
+                'region' => $do->region,
+                'country' => $do->country->value,
+                'country_code' => $do->countryCode,
+                'do_logo' => $do->doLogo,
+                'region_logo' => $do->regionLogo,
+            ],
+        );
+
+        return (int) $id;
+    }
+
     public function findById(int $id): ?DenominationOfOrigin
     {
         $row = $this->entityManager->getConnection()->fetchAssociative(

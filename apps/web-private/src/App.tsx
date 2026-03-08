@@ -2613,7 +2613,7 @@ function App() {
   }, [menu, debouncedSearchText, wineCountryFilter, typeFilter, minScoreFilter, grapeFilter, doFilter, winePage, wineLimit, locale, wineListReloadToken])
 
   useEffect(() => {
-    if (menu !== 'reviews' || currentUserId == null) {
+    if ((menu !== 'reviews' && menu !== 'reviewCreate' && menu !== 'reviewEdit') || currentUserId == null) {
       return
     }
 
@@ -3425,6 +3425,10 @@ function App() {
     () => new Set(myReviewEntries.map((entry) => entry.wine.id)),
     [myReviewEntries],
   )
+  const creatableWineItems = useMemo(
+    () => wineItems.filter((wine) => !reviewedWineIdSet.has(wine.id)),
+    [wineItems, reviewedWineIdSet],
+  )
   const reviewWineFilterOptions = useMemo(
     () => myReviewEntries
       .map((entry) => ({ id: entry.wine.id, name: entry.wine.name }))
@@ -4065,6 +4069,12 @@ function App() {
       return
     }
 
+    if (mode === 'create' && reviewedWineIdSet.has(wineId)) {
+      setReviewFormError(locale === 'ca' ? 'Aquest vi ja està ressenyat i no es pot tornar a seleccionar.' : 'Este vino ya está reseñado y no se puede volver a seleccionar.')
+      setReviewFormSubmitting(false)
+      return
+    }
+
     const payload = {
       score: Math.max(0, Math.min(100, Math.round(score))),
       intensity_aroma: Math.max(0, Math.min(10, Math.round(intensityAroma))),
@@ -4205,7 +4215,12 @@ function App() {
               </svg>
               <span className="review-editor-back-text">{locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}</span>
             </button>
-            <button type="submit" className="primary-button small" form={reviewFormId} disabled={reviewFormSubmitting}>
+            <button
+              type="submit"
+              className="primary-button small"
+              form={reviewFormId}
+              disabled={reviewFormSubmitting || (mode === 'create' && creatableWineItems.length === 0)}
+            >
               {reviewSubmitLabel}
             </button>
           </div>
@@ -4219,9 +4234,9 @@ function App() {
           >
           <label>
             {labels.reviews.create.wine}
-            <select name="wine_id" defaultValue={preset.wineId}>
+            <select name="wine_id" defaultValue={preset.wineId} disabled={mode === 'create' && creatableWineItems.length === 0}>
               <option value="" disabled>{labels.reviews.create.selectWine}</option>
-              {wineItems.map((wine) => (
+              {(mode === 'create' ? creatableWineItems : wineItems).map((wine) => (
                 <option
                   key={wine.id}
                   value={wine.id}
@@ -4239,6 +4254,13 @@ function App() {
                 {locale === 'ca'
                   ? 'Els vins ja ressenyats apareixen en gris i no es poden seleccionar.'
                   : 'Los vinos ya reseñados aparecen en gris y no se pueden seleccionar.'}
+              </small>
+            ) : null}
+            {mode === 'create' && creatableWineItems.length === 0 ? (
+              <small className="muted">
+                {locale === 'ca'
+                  ? 'Ja has ressenyat tots els vins disponibles.'
+                  : 'Ya has reseñado todos los vinos disponibles.'}
               </small>
             ) : null}
           </label>

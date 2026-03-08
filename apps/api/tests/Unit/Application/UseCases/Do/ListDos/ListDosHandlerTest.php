@@ -51,6 +51,11 @@ final class InMemoryDoRepository implements DoRepository
     /** @var list<string> */
     public array $lastSortFields = [];
 
+    public function create(DenominationOfOrigin $do): int
+    {
+        return 0;
+    }
+
     public function findById(int $id): ?DenominationOfOrigin
     {
         return null;

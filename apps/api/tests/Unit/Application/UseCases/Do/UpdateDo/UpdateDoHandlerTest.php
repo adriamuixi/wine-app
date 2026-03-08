@@ -118,6 +118,11 @@ final class SpyDoRepository implements DoRepository
     {
     }
 
+    public function create(DenominationOfOrigin $do): int
+    {
+        return 0;
+    }
+
     public function findById(int $id): ?DenominationOfOrigin
     {
         return new DenominationOfOrigin($id, 'DO '.$id, 'Region '.$id, Country::Spain, 'ES', null, null);

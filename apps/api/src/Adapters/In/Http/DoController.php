@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapters\In\Http;
 
+use App\Application\UseCases\Do\CreateDo\CreateDoCommand;
+use App\Application\UseCases\Do\CreateDo\CreateDoHandler;
+use App\Application\UseCases\Do\CreateDo\CreateDoValidationException;
 use App\Application\UseCases\Do\DeleteDo\DeleteDoHandler;
 use App\Application\UseCases\Do\DeleteDo\DeleteDoHasAssociatedWines;
 use App\Application\UseCases\Do\DeleteDo\DeleteDoNotFound;
@@ -23,10 +26,29 @@ use Symfony\Component\Routing\Attribute\Route;
 final class DoController
 {
     public function __construct(
+        private readonly CreateDoHandler $createDoHandler,
         private readonly ListDosHandler $listDosHandler,
         private readonly UpdateDoHandler $updateDoHandler,
         private readonly DeleteDoHandler $deleteDoHandler,
     ) {
+    }
+
+    #[Route('/api/dos', name: 'api_dos_create', methods: ['POST'])]
+    public function create(Request $request): JsonResponse
+    {
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $command = $this->buildCreateCommand($payload);
+            $result = $this->createDoHandler->handle($command);
+        } catch (CreateDoValidationException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse(['do' => ['id' => $result->id]], Response::HTTP_CREATED);
     }
 
     #[Route('/api/dos', name: 'api_dos_list', methods: ['GET'])]
@@ -130,6 +152,55 @@ final class DoController
         }
 
         return array_slice($sortFields, 0, 3);
+    }
+
+    /**
+     * @param array<string,mixed> $payload
+     */
+    private function buildCreateCommand(array $payload): CreateDoCommand
+    {
+        $name = $payload['name'] ?? null;
+        if (!is_string($name)) {
+            throw new CreateDoValidationException('name is required.');
+        }
+
+        $region = $payload['region'] ?? null;
+        if (!is_string($region)) {
+            throw new CreateDoValidationException('region is required.');
+        }
+
+        $countryRaw = $payload['country'] ?? null;
+        if (!is_string($countryRaw)) {
+            throw new CreateDoValidationException('country is required.');
+        }
+
+        try {
+            $country = Country::from($countryRaw);
+        } catch (\ValueError) {
+            throw new CreateDoValidationException('Invalid country value.');
+        }
+
+        $countryCode = $payload['country_code'] ?? null;
+        if (!is_string($countryCode)) {
+            throw new CreateDoValidationException('country_code is required.');
+        }
+
+        $doLogo = $payload['do_logo'] ?? null;
+        if (null !== $doLogo && !is_string($doLogo)) {
+            throw new CreateDoValidationException('do_logo must be a string or null.');
+        }
+
+        if (array_key_exists('region_logo', $payload)) {
+            throw new CreateDoValidationException('region_logo cannot be created via this endpoint.');
+        }
+
+        return new CreateDoCommand(
+            name: $name,
+            region: $region,
+            country: $country,
+            countryCode: strtoupper($countryCode),
+            doLogo: $doLogo,
+        );
     }
 
     /**

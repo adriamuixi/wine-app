@@ -157,6 +157,11 @@ final class InMemoryDoRepository implements DoRepository
     {
     }
 
+    public function create(DenominationOfOrigin $do): int
+    {
+        return 0;
+    }
+
     public function findCountryById(int $id): ?Country
     {
         return $this->items[$id] ?? null;

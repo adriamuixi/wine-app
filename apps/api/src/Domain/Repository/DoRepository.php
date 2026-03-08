@@ -9,6 +9,8 @@ use App\Domain\Model\DenominationOfOrigin;
 
 interface DoRepository
 {
+    public function create(DenominationOfOrigin $do): int;
+
     public function findById(int $id): ?DenominationOfOrigin;
 
     public function findCountryById(int $id): ?Country;

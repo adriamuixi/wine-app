@@ -81,6 +81,11 @@ final class InMemoryDoRepository implements DoRepository
     {
     }
 
+    public function create(DenominationOfOrigin $do): int
+    {
+        return 0;
+    }
+
     public function findById(int $id): ?DenominationOfOrigin
     {
         if (!in_array($id, $this->existingIds, true)) {
