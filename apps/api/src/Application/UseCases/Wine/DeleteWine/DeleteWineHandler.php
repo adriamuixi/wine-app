@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\UseCases\Wine\DeleteWine;
 
-use App\Application\Ports\WinePhotoStoragePort;
+use App\Application\Ports\PhotoStoragePort;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
 
@@ -13,7 +13,7 @@ final readonly class DeleteWineHandler
     public function __construct(
         private WineRepository $wines,
         private WinePhotoRepository $photos,
-        private WinePhotoStoragePort $photoStorage,
+        private PhotoStoragePort $photoStorage,
     )
     {
     }
@@ -27,9 +27,9 @@ final readonly class DeleteWineHandler
         }
 
         foreach ($photoEntities as $photo) {
-            $this->photoStorage->deleteByUrl($photo->url);
+            $this->photoStorage->deleteByUrl('wine', $photo->url);
         }
 
-        $this->photoStorage->deleteWineDirectory($wineId);
+        $this->photoStorage->deleteDirectory('wine', $wineId);
     }
 }

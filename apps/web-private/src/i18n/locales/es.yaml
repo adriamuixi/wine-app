@@ -89,6 +89,10 @@ dos:
     title: Listado de denominaciones de origen
     results: elementos
     createAction: Crear DO
+  create:
+    eyebrow: Denominaciones de origen
+    title: Crear nueva denominación de origen
+    submit: Guardar DO
 reviews:
   title: Mis reseñas
   create:

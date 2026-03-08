@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Application\UseCases\Wine\CreateWinePhoto;
 
-use App\Application\Ports\WinePhotoStoragePort;
+use App\Application\Ports\PhotoStoragePort;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoCommand;
@@ -174,7 +174,7 @@ final class SpyWinePhotoRepository implements WinePhotoRepository
     }
 }
 
-final class SpyWinePhotoStorage implements WinePhotoStoragePort
+final class SpyWinePhotoStorage implements PhotoStoragePort
 {
     public ?string $savedUrl = null;
     public ?string $deletedUrl = null;
@@ -186,12 +186,12 @@ final class SpyWinePhotoStorage implements WinePhotoStoragePort
         return $this->savedUrl;
     }
 
-    public function deleteByUrl(string $url): void
+    public function deleteByUrl(string $entity, string $url): void
     {
         $this->deletedUrl = $url;
     }
 
-    public function deleteWineDirectory(int $wineId): void
+    public function deleteDirectory(string $entity, int $wineId): void
     {
     }
 }

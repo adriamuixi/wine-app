@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\UseCases\Wine\CreateWinePhoto;
 
-use App\Application\Ports\WinePhotoStoragePort;
+use App\Application\Ports\PhotoStoragePort;
 use App\Domain\Model\WinePhoto;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
@@ -14,7 +14,7 @@ final readonly class CreateWinePhotoHandler
     public function __construct(
         private WineRepository $wines,
         private WinePhotoRepository $photos,
-        private WinePhotoStoragePort $photoStorage,
+        private PhotoStoragePort $photoStorage,
     ) {
     }
 
@@ -62,7 +62,7 @@ final readonly class CreateWinePhotoHandler
                 size: $command->size,
                 extension: $extension,
             ));
-            $this->photoStorage->deleteByUrl($existing->url);
+            $this->photoStorage->deleteByUrl('wine', $existing->url);
         }
 
         return new CreateWinePhotoResult(

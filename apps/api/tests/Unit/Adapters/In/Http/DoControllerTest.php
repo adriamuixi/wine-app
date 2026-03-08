@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\DoController;
+use App\Application\Ports\PhotoStoragePort;
 use App\Application\UseCases\Do\CreateDo\CreateDoHandler;
 use App\Application\UseCases\Do\DeleteDo\DeleteDoHandler;
 use App\Application\UseCases\Do\ListDos\ListDosHandler;
 use App\Application\UseCases\Do\ListDos\ListDosSort;
 use App\Application\UseCases\Do\UpdateDo\UpdateDoHandler;
 use App\Domain\Enum\Country;
+use App\Domain\Enum\DoAssetType;
 use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Repository\DoRepository;
 use PHPUnit\Framework\TestCase;
@@ -26,7 +28,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
         $response = $controller->list(Request::create('/api/dos', 'GET'));
@@ -49,7 +51,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
         $response = $controller->list(Request::create('/api/dos?sort_by_1=name&sort_by_2=country&sort_by_3=region', 'GET'));
@@ -68,7 +70,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
         $response = $controller->list(Request::create('/api/dos?sort_by_1=country&sort_by_2=country', 'GET'));
@@ -85,7 +87,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
             '/api/dos/20',
@@ -109,7 +111,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
             '/api/dos/20',
@@ -132,7 +134,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
             '/api/dos/20',
@@ -155,7 +157,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
             '/api/dos/999',
@@ -176,7 +178,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
         $response = $controller->delete(33);
@@ -191,7 +193,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
         $response = $controller->delete(33);
@@ -208,7 +210,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
         $response = $controller->delete(999);
@@ -223,7 +225,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
             '/api/dos',
@@ -255,7 +257,7 @@ final class DoControllerTest extends TestCase
             new CreateDoHandler($repository),
             new ListDosHandler($repository),
             new UpdateDoHandler($repository),
-            new DeleteDoHandler($repository),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
             '/api/dos',
@@ -343,5 +345,21 @@ final class DoControllerInMemoryDoRepository implements DoRepository
     public function hasAssociatedWines(int $id): bool
     {
         return in_array($id, $this->associatedWineIds, true);
+    }
+}
+
+final class DoControllerNullDoAssetStorage implements PhotoStoragePort
+{
+    public function save(string $sourcePath, int $wineId, string $hash, string $extension): string
+    {
+        return 'saved_asset.png';
+    }
+
+    public function deleteByUrl(string $entity, string $url): void
+    {
+    }
+
+    public function deleteDirectory(string $entity, int $wineId): void
+    {
     }
 }

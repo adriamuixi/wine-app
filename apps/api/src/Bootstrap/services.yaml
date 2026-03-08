@@ -25,17 +25,24 @@ services:
     App\Domain\Repository\WineReviewRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineWineReviewRepository'
     App\Domain\Repository\WineRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineWineRepository'
     App\Domain\Repository\WinePhotoRepository: '@App\Adapters\Out\Persistence\Repos\DoctrinePhotoRepository'
-    App\Application\Ports\WinePhotoStoragePort: '@App\Adapters\Out\Storage\LocalWinePhotoStorage'
-    App\Application\Ports\DoAssetStoragePort: '@App\Adapters\Out\Storage\LocalDoAssetStorage'
+    App\Application\Ports\PhotoStoragePort: '@App\Adapters\Out\Storage\LocalWinePhotoStorage'
 
     App\Adapters\Out\Storage\LocalWinePhotoStorage:
         arguments:
             $baseDir: '/shared/public/images/wines'
 
-    App\Adapters\Out\Storage\LocalDoAssetStorage:
+    App\Adapters\Out\Storage\LocalDoPhotoStorage:
         arguments:
             $doLogoDir: '/shared/public/images/icons/DO'
             $regionLogoDir: '/shared/public/images/flags/regions'
+
+    App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetHandler:
+        arguments:
+            $assetStorage: '@App\Adapters\Out\Storage\LocalDoPhotoStorage'
+
+    App\Application\UseCases\Do\DeleteDo\DeleteDoHandler:
+        arguments:
+            $assets: '@App\Adapters\Out\Storage\LocalDoPhotoStorage'
 
     # Domain objects are pure PHP and should not be container services by default.
     App\Domain\:

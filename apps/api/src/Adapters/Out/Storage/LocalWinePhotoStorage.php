@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapters\Out\Storage;
 
-use App\Application\Ports\WinePhotoStoragePort;
+use App\Application\Ports\PhotoStoragePort;
 
-final readonly class LocalWinePhotoStorage implements WinePhotoStoragePort
+final readonly class LocalWinePhotoStorage implements PhotoStoragePort
 {
     public function __construct(private string $baseDir)
     {
@@ -30,8 +30,12 @@ final readonly class LocalWinePhotoStorage implements WinePhotoStoragePort
         return '/images/wines/'.$wineId.'/'.$filename;
     }
 
-    public function deleteByUrl(string $url): void
+    public function deleteByUrl(string $entity, string $url): void
     {
+        if ('wine' !== $entity) {
+            return;
+        }
+
         if (!str_starts_with($url, '/images/wines/')) {
             throw new \RuntimeException('Invalid stored image url.');
         }
@@ -46,8 +50,12 @@ final readonly class LocalWinePhotoStorage implements WinePhotoStoragePort
         }
     }
 
-    public function deleteWineDirectory(int $wineId): void
+    public function deleteDirectory(string $entity, int $wineId): void
     {
+        if ('wine' !== $entity) {
+            return;
+        }
+
         $wineDir = rtrim($this->baseDir, '/').'/'.$wineId;
         if (!is_dir($wineDir)) {
             return;

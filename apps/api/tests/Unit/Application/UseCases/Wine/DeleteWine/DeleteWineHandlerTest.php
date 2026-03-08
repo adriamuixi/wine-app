@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Application\UseCases\Wine\DeleteWine;
 
-use App\Application\Ports\WinePhotoStoragePort;
+use App\Application\Ports\PhotoStoragePort;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
@@ -144,7 +144,7 @@ final class SpyWinePhotoRepository implements WinePhotoRepository
     }
 }
 
-final class SpyWinePhotoStorage implements WinePhotoStoragePort
+final class SpyWinePhotoStorage implements PhotoStoragePort
 {
     /** @var list<string> */
     public array $deletedUrls = [];
@@ -158,7 +158,7 @@ final class SpyWinePhotoStorage implements WinePhotoStoragePort
         return '/images/wines/'.$wineId.'/'.$hash.'.'.$extension;
     }
 
-    public function deleteByUrl(string $url): void
+    public function deleteByUrl(string $entity, string $url): void
     {
         if ($this->failOnDeleteUrl === $url) {
             throw new RuntimeException('delete failed');
@@ -166,7 +166,7 @@ final class SpyWinePhotoStorage implements WinePhotoStoragePort
         $this->deletedUrls[] = $url;
     }
 
-    public function deleteWineDirectory(int $wineId): void
+    public function deleteDirectory(string $entity, int $wineId): void
     {
         $this->deletedDirectories[] = $wineId;
     }

@@ -89,6 +89,10 @@ dos:
     title: Llistat de denominacions d'origen
     results: elements
     createAction: Crear DO
+  create:
+    eyebrow: Denominacions d'origen
+    title: Crear nova denominació d'origen
+    submit: Desar DO
 reviews:
   title: Les meves ressenyes
   create:

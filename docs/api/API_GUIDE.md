@@ -27,6 +27,7 @@ Base URL (local): `http://localhost:8080`
   - [`GET /api/stats/reviews-per-monh`](#get-apistatsreviews-per-monh)
 - [Wines](#wines)
   - [`GET /api/grapes`](#get-apigrapes)
+  - [`POST /api/dos`](#post-apidos)
   - [`GET /api/dos`](#get-apidos)
   - [`GET /api/wines`](#get-apiwines)
   - [`POST /api/wines`](#post-apiwines)
@@ -428,6 +429,40 @@ Response shape:
       "color": "red"
     }
   ]
+}
+```
+
+---
+
+### `POST /api/dos`
+
+Creates a denomination of origin.
+
+Expected:
+- `201` created
+- `400` invalid body
+
+Example:
+
+```bash
+curl -s -X POST "http://localhost:8080/api/dos" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Campo de Borja",
+    "region": "Aragón",
+    "country": "spain",
+    "country_code": "ES",
+    "do_logo": "campo_borja_DO.png"
+  }' | jq
+```
+
+Response shape:
+
+```json
+{
+  "do": {
+    "id": 123
+  }
 }
 ```
 

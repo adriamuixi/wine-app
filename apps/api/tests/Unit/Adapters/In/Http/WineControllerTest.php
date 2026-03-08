@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\WineController;
-use App\Application\Ports\WinePhotoStoragePort;
+use App\Application\Ports\PhotoStoragePort;
 use App\Domain\Repository\DoRepository;
 use App\Domain\Repository\GrapeRepository;
 use App\Domain\Repository\WineRepository;
@@ -525,18 +525,18 @@ final class NoopWinePhotoRepository implements WinePhotoRepository
     }
 }
 
-final class NoopWinePhotoStorage implements WinePhotoStoragePort
+final class NoopWinePhotoStorage implements PhotoStoragePort
 {
     public function save(string $sourcePath, int $wineId, string $hash, string $extension): string
     {
         return '/images/wines/'.$wineId.'/'.$hash.'.'.$extension;
     }
 
-    public function deleteByUrl(string $url): void
+    public function deleteByUrl(string $entity, string $url): void
     {
     }
 
-    public function deleteWineDirectory(int $wineId): void
+    public function deleteDirectory(string $entity, int $wineId): void
     {
     }
 

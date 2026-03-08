@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\WinePhotoController;
-use App\Application\Ports\WinePhotoStoragePort;
+use App\Application\Ports\PhotoStoragePort;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoCommand;
@@ -159,18 +159,18 @@ final class PhotoControllerSpyWinePhotoRepository implements WinePhotoRepository
     }
 }
 
-final class PhotoControllerSpyWinePhotoStorage implements WinePhotoStoragePort
+final class PhotoControllerSpyWinePhotoStorage implements PhotoStoragePort
 {
     public function save(string $sourcePath, int $wineId, string $hash, string $extension): string
     {
         return '/images/wines/'.$wineId.'/hash.'.$extension;
     }
 
-    public function deleteByUrl(string $url): void
+    public function deleteByUrl(string $entity, string $url): void
     {
     }
 
-    public function deleteWineDirectory(int $wineId): void
+    public function deleteDirectory(string $entity, int $wineId): void
     {
     }
 }

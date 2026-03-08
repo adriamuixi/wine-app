@@ -31,6 +31,10 @@ services:
     volumes:
       - ./docs:/docs:ro
       - ./shared/public/images:/shared/public/images
+    command: >
+      sh -lc "mkdir -p /shared/public/images/wines /shared/public/images/icons/DO &&
+      chmod -R 0777 /shared/public/images/wines /shared/public/images/icons/DO &&
+      php-fpm"
     depends_on:
       db:
         condition: service_healthy

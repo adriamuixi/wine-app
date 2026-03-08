@@ -29,8 +29,8 @@ services:
       - ./docs:/docs:ro
       - ./shared:/shared
     command: >
-      sh -lc "mkdir -p /shared/public/images/wines &&
-      chmod -R 0777 /shared/public/images/wines &&
+      sh -lc "mkdir -p /shared/public/images/wines /shared/public/images/icons/DO &&
+      chmod -R 0777 /shared/public/images/wines /shared/public/images/icons/DO &&
       php-fpm"
     extra_hosts:
       - "host.docker.internal:host-gateway"

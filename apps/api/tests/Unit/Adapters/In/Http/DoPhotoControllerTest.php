@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\DoPhotoController;
-use App\Application\Ports\DoAssetStoragePort;
+use App\Application\Ports\PhotoStoragePort;
 use App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetCommand;
 use App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetHandler;
 use App\Domain\Enum\Country;
@@ -119,10 +119,18 @@ final class DoPhotoControllerInMemoryDoRepository implements DoRepository
     }
 }
 
-final class DoPhotoControllerSpyStorage implements DoAssetStoragePort
+final class DoPhotoControllerSpyStorage implements PhotoStoragePort
 {
-    public function save(string $sourcePath, int $doId, DoAssetType $type, string $originalFilename, string $doName, string $regionName): string
+    public function save(string $sourcePath, int $wineId, string $hash, string $extension): string
     {
         return 'saved_asset.png';
+    }
+
+    public function deleteByUrl(string $entity, string $url): void
+    {
+    }
+
+    public function deleteDirectory(string $entity, int $wineId): void
+    {
     }
 }
