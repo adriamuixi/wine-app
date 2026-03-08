@@ -446,6 +446,110 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/dos/{id}:
+    put:
+      summary: Partially update denomination of origin by id
+      operationId: putDoById
+      tags: [DO]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDoRequest'
+      responses:
+        '204':
+          description: DO updated successfully
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: DO not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete denomination of origin by id
+      operationId: deleteDoById
+      tags: [DO]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: DO deleted successfully
+        '404':
+          description: DO not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: DO has associated wines
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/dos/{id}/assets:
+    post:
+      summary: Upload DO asset
+      operationId: postDoAssetById
+      tags: [DO]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [type, file]
+              properties:
+                type:
+                  type: string
+                  enum: [do_logo, region_logo]
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: DO asset uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDoAssetResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: DO not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/wines:
     get:
       summary: List wines (paginated)
@@ -1164,6 +1268,47 @@ components:
           minimum: 0
           maximum: 100
           nullable: true
+    UpdateDoRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        region:
+          type: string
+        country:
+          type: string
+          enum: [spain, france, italy, portugal, germany, argentina, chile, united_states, south_africa, australia]
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+        do_logo:
+          type: string
+          nullable: true
+        region_logo:
+          type: string
+          nullable: true
+    CreateDoAssetResponse:
+      type: object
+      required: [asset]
+      properties:
+        asset:
+          type: object
+          required: [do_id, type, filename, url]
+          properties:
+            do_id:
+              type: integer
+              format: int64
+            type:
+              type: string
+              enum: [do_logo, region_logo]
+            filename:
+              type: string
+              example: rioja_12_a1b2c3d4e5f6.png
+            url:
+              type: string
+              example: /images/icons/DO/rioja_12_a1b2c3d4e5f6.png
     CreateWinePhotoResponse:
       type: object
       required: [photo]

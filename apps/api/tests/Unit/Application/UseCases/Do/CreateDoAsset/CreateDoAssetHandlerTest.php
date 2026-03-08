@@ -1,0 +1,125 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Application\UseCases\Do\CreateDoAsset;
+
+use App\Application\Ports\DoAssetStoragePort;
+use App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetCommand;
+use App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetHandler;
+use App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetNotFound;
+use App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetValidationException;
+use App\Domain\Enum\Country;
+use App\Domain\Enum\DoAssetType;
+use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Repository\DoRepository;
+use PHPUnit\Framework\TestCase;
+
+final class CreateDoAssetHandlerTest extends TestCase
+{
+    public function testItCreatesDoLogoAsset(): void
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'do-asset-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'image-content');
+
+        $repository = new InMemoryDoRepository([1]);
+        $storage = new SpyDoAssetStorage();
+        $handler = new CreateDoAssetHandler($repository, $storage);
+
+        $result = $handler->handle(new CreateDoAssetCommand(1, DoAssetType::DoLogo, $tmp, 'rioja.png', 12));
+
+        self::assertSame(1, $result->doId);
+        self::assertSame('saved_asset.png', $result->filename);
+        self::assertSame('/images/icons/DO/saved_asset.png', $result->url);
+    }
+
+    public function testItCreatesRegionLogoAsset(): void
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'do-asset-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'image-content');
+
+        $repository = new InMemoryDoRepository([1]);
+        $storage = new SpyDoAssetStorage();
+        $handler = new CreateDoAssetHandler($repository, $storage);
+
+        $result = $handler->handle(new CreateDoAssetCommand(1, DoAssetType::RegionLogo, $tmp, 'murcia.png', 12));
+
+        self::assertSame('/images/flags/regions/saved_asset.png', $result->url);
+    }
+
+    public function testItThrowsWhenDoDoesNotExist(): void
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'do-asset-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'image-content');
+
+        $handler = new CreateDoAssetHandler(new InMemoryDoRepository([]), new SpyDoAssetStorage());
+
+        $this->expectException(CreateDoAssetNotFound::class);
+        $handler->handle(new CreateDoAssetCommand(99, DoAssetType::DoLogo, $tmp, 'rioja.png', 12));
+    }
+
+    public function testItThrowsForEmptyFile(): void
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'do-asset-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, '');
+
+        $handler = new CreateDoAssetHandler(new InMemoryDoRepository([1]), new SpyDoAssetStorage());
+
+        $this->expectException(CreateDoAssetValidationException::class);
+        $handler->handle(new CreateDoAssetCommand(1, DoAssetType::DoLogo, $tmp, 'rioja.png', 0));
+    }
+}
+
+final class InMemoryDoRepository implements DoRepository
+{
+    /** @param list<int> $existingIds */
+    public function __construct(private readonly array $existingIds)
+    {
+    }
+
+    public function findById(int $id): ?DenominationOfOrigin
+    {
+        if (!in_array($id, $this->existingIds, true)) {
+            return null;
+        }
+
+        return new DenominationOfOrigin($id, 'Rioja', 'La Rioja', Country::Spain, 'ES', 'rioja_DO.png', 'la_rioja.png');
+    }
+
+    public function findCountryById(int $id): ?Country
+    {
+        return null;
+    }
+
+    public function findAll(array $sortFields = []): array
+    {
+        return [];
+    }
+
+    public function update(DenominationOfOrigin $do): bool
+    {
+        return false;
+    }
+
+    public function deleteById(int $id): bool
+    {
+        return false;
+    }
+
+    public function hasAssociatedWines(int $id): bool
+    {
+        return false;
+    }
+}
+
+final class SpyDoAssetStorage implements DoAssetStoragePort
+{
+    public function save(string $sourcePath, int $doId, DoAssetType $type, string $originalFilename, string $doName, string $regionName): string
+    {
+        return 'saved_asset.png';
+    }
+}

@@ -70,4 +70,19 @@ final class InMemoryDoRepository implements DoRepository
             new DenominationOfOrigin(2, 'Bordeaux', 'Bordeaux', Country::France, 'FR', 'bordeaux_DO.png', 'bordeaux.png'),
         ];
     }
+
+    public function update(DenominationOfOrigin $do): bool
+    {
+        return false;
+    }
+
+    public function deleteById(int $id): bool
+    {
+        return false;
+    }
+
+    public function hasAssociatedWines(int $id): bool
+    {
+        return false;
+    }
 }

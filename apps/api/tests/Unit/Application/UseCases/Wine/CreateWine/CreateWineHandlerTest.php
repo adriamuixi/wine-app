@@ -262,6 +262,21 @@ final class InMemoryDoRepository implements DoRepository
     {
         return [];
     }
+
+    public function update(DenominationOfOrigin $do): bool
+    {
+        return false;
+    }
+
+    public function deleteById(int $id): bool
+    {
+        return false;
+    }
+
+    public function hasAssociatedWines(int $id): bool
+    {
+        return false;
+    }
 }
 
 final class InMemoryGrapeRepository implements GrapeRepository

@@ -119,6 +119,24 @@ type DoApiResponse = {
   items: DoApiItem[]
 }
 
+type DoAssetUploadResponse = {
+  asset: {
+    do_id: number
+    type: 'do_logo' | 'region_logo'
+    filename: string
+    url: string
+  }
+}
+
+type DoEditDraft = {
+  name: string
+  region: string
+  country: Exclude<CountryFilterValue, 'all'>
+  country_code: string
+  do_logo: string
+  region_logo: string
+}
+
 type DoSortField = 'country' | 'region' | 'name'
 type DoSortPresetKey = 'country_region_name' | 'name_country_region' | 'region_name_country'
 
@@ -586,9 +604,14 @@ function countryLabelToFilterValue(country: string): CountryFilterValue {
     argentina: 'argentina',
     chile: 'chile',
     usa: 'united_states',
+    us: 'united_states',
+    united_states: 'united_states',
+    'united-states': 'united_states',
     'united states': 'united_states',
     'estados unidos': 'united_states',
     'estats units': 'united_states',
+    south_africa: 'south_africa',
+    'south-africa': 'south_africa',
     'south africa': 'south_africa',
     'sudáfrica': 'south_africa',
     'sud-àfrica': 'south_africa',
@@ -1026,6 +1049,7 @@ function App() {
   const [manufacturingCountry, setManufacturingCountry] = useState<Exclude<CountryFilterValue, 'all'>>('spain')
   const [grapeOptions, setGrapeOptions] = useState<GrapeApiItem[]>([])
   const [doOptions, setDoOptions] = useState<DoApiItem[]>([])
+  const [doListReloadToken, setDoListReloadToken] = useState(0)
   const [wineItems, setWineItems] = useState<WineItem[]>([])
   const [wineListStatus, setWineListStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [wineListError, setWineListError] = useState<string | null>(null)
@@ -1055,6 +1079,14 @@ function App() {
   const [reviewActionError, setReviewActionError] = useState<string | null>(null)
   const [reviewDeleteBusyId, setReviewDeleteBusyId] = useState<number | null>(null)
   const [doSuccessToast, setDoSuccessToast] = useState<string | null>(null)
+  const [doEditTarget, setDoEditTarget] = useState<DoApiItem | null>(null)
+  const [doEditDraft, setDoEditDraft] = useState<DoEditDraft | null>(null)
+  const [doAssetUploadingType, setDoAssetUploadingType] = useState<'do_logo' | 'region_logo' | null>(null)
+  const [doEditSubmitting, setDoEditSubmitting] = useState(false)
+  const [doEditError, setDoEditError] = useState<string | null>(null)
+  const [doDeleteTarget, setDoDeleteTarget] = useState<DoApiItem | null>(null)
+  const [doDeleteSubmitting, setDoDeleteSubmitting] = useState(false)
+  const [doDeleteError, setDoDeleteError] = useState<string | null>(null)
   const [genericStats, setGenericStats] = useState<GenericStatsApiResponse | null>(null)
   const [genericStatsStatus, setGenericStatsStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [genericStatsError, setGenericStatsError] = useState<string | null>(null)
@@ -1069,6 +1101,8 @@ function App() {
   const [wineSuccessToast, setWineSuccessToast] = useState<string | null>(null)
   const doDropdownRef = useRef<HTMLDivElement | null>(null)
   const createDoDropdownRef = useRef<HTMLDivElement | null>(null)
+  const doLogoInputRef = useRef<HTMLInputElement | null>(null)
+  const regionLogoInputRef = useRef<HTMLInputElement | null>(null)
   const photoPickerInputRef = useRef<HTMLInputElement | null>(null)
   const photoEditorCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const photoEditorDragRef = useRef<{ active: boolean; pointerId: number; lastX: number; lastY: number } | null>(null)
@@ -1587,6 +1621,8 @@ function App() {
     settings: locale === 'ca' ? 'Configuració' : 'Configuración',
     wineProfile: selectedWineSheet ? `${t('wineProfile.pageTitle')} · ${selectedWineSheet.name}` : t('wineProfile.pageTitle'),
   }[menu]
+  const doEditDoLogoPath = doLogoPathFromImageName(doEditDraft?.do_logo ?? null)
+  const doEditRegionLogoPath = regionLogoPathFromImageName(doEditDraft?.region_logo ?? null)
 
   const wineTypeLabel = (type: WineType) => {
     const localized = labels.wineType[type]
@@ -1887,21 +1923,234 @@ function App() {
     return () => {
       controller.abort()
     }
-  }, [doSortFields, menu])
+  }, [doListReloadToken, doSortFields, menu])
 
-  const announceDoAction = (action: 'create' | 'edit' | 'delete', item?: DoApiItem) => {
-    const baseLabel = action === 'create'
-      ? (locale === 'ca' ? 'Crear D.O.' : 'Crear DO')
-      : action === 'edit'
-        ? (locale === 'ca' ? 'Editar D.O.' : 'Editar DO')
-        : (locale === 'ca' ? 'Eliminar D.O.' : 'Borrar DO')
-
-    const targetLabel = item ? ` · ${item.name}` : ''
+  const announceDoAction = () => {
     setDoSuccessToast(
       locale === 'ca'
-        ? `${baseLabel}${targetLabel} disponible aviat. Aquesta pantalla és només de visualització per ara.`
-        : `${baseLabel}${targetLabel} disponible próximamente. Esta pantalla es solo de visualización por ahora.`,
+        ? 'Crear D.O. disponible aviat. Aquesta pantalla encara no té alta connectada.'
+        : 'Crear DO disponible próximamente. Esta pantalla todavía no tiene alta conectada.',
     )
+  }
+
+  const openDoEdit = (item: DoApiItem) => {
+    setDoEditTarget(item)
+    setDoEditDraft({
+      name: item.name,
+      region: item.region,
+      country: item.country,
+      country_code: item.country_code,
+      do_logo: item.do_logo ?? '',
+      region_logo: item.region_logo ?? '',
+    })
+    setDoAssetUploadingType(null)
+    setDoEditError(null)
+    setDoEditSubmitting(false)
+  }
+
+  const closeDoEdit = () => {
+    setDoEditTarget(null)
+    setDoEditDraft(null)
+    setDoAssetUploadingType(null)
+    setDoEditError(null)
+    setDoEditSubmitting(false)
+  }
+
+  const openDoDeleteConfirm = (item: DoApiItem) => {
+    setDoDeleteTarget(item)
+    setDoDeleteError(null)
+    setDoDeleteSubmitting(false)
+  }
+
+  const closeDoDeleteConfirm = () => {
+    setDoDeleteTarget(null)
+    setDoDeleteError(null)
+    setDoDeleteSubmitting(false)
+  }
+
+  const handleDoEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (!doEditTarget || !doEditDraft) {
+      return
+    }
+
+    const name = doEditDraft.name.trim()
+    const region = doEditDraft.region.trim()
+    const country = doEditDraft.country
+    const countryCode = doEditDraft.country_code.trim().toUpperCase()
+    const doLogoRaw = doEditDraft.do_logo.trim()
+    const regionLogoRaw = doEditDraft.region_logo.trim()
+
+    if (name === '' || region === '' || countryCode.length !== 2) {
+      setDoEditError(
+        locale === 'ca'
+          ? 'Nom, regió, país i codi de país (2 caràcters) són obligatoris.'
+          : 'Nombre, región, país y código de país (2 caracteres) son obligatorios.',
+      )
+      return
+    }
+
+    setDoEditSubmitting(true)
+    setDoEditError(null)
+
+    try {
+      const response = await fetch(`${resolveApiBaseUrl()}/api/dos/${doEditTarget.id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          region,
+          country,
+          country_code: countryCode,
+          do_logo: doLogoRaw === '' ? null : doLogoRaw,
+          region_logo: regionLogoRaw === '' ? null : regionLogoRaw,
+        }),
+      })
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`
+        try {
+          const errorPayload = await response.json() as { error?: string }
+          if (typeof errorPayload.error === 'string' && errorPayload.error.trim() !== '') {
+            errorMessage = errorPayload.error
+          }
+        } catch {
+          // Keep HTTP fallback.
+        }
+        throw new Error(errorMessage)
+      }
+
+      const updatedItem: DoApiItem = {
+        ...doEditTarget,
+        name,
+        region,
+        country,
+        country_code: countryCode,
+        do_logo: doLogoRaw === '' ? null : doLogoRaw,
+        region_logo: regionLogoRaw === '' ? null : regionLogoRaw,
+      }
+
+      setDoOptions((current) => current.map((item) => (item.id === updatedItem.id ? updatedItem : item)))
+      setDoListReloadToken((current) => current + 1)
+      setDoSuccessToast(
+        locale === 'ca'
+          ? `La D.O. "${name}" s'ha actualitzat correctament.`
+          : `La DO "${name}" se ha actualizado correctamente.`,
+      )
+      closeDoEdit()
+    } catch (error: unknown) {
+      setDoEditError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut actualitzar la D.O.' : 'No se pudo actualizar la DO.'))
+      setDoEditSubmitting(false)
+    }
+  }
+
+  const handleDoAssetUpload = async (type: 'do_logo' | 'region_logo', fileList: FileList | null) => {
+    if (!doEditTarget || !doEditDraft || !fileList || fileList.length === 0) {
+      return
+    }
+
+    const file = fileList[0]
+    const formData = new FormData()
+    formData.set('type', type)
+    formData.set('file', file)
+
+    setDoAssetUploadingType(type)
+    setDoEditError(null)
+
+    try {
+      const response = await fetch(`${resolveApiBaseUrl()}/api/dos/${doEditTarget.id}/assets`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`
+        try {
+          const errorPayload = await response.json() as { error?: string }
+          if (typeof errorPayload.error === 'string' && errorPayload.error.trim() !== '') {
+            errorMessage = errorPayload.error
+          }
+        } catch {
+          // Keep HTTP fallback.
+        }
+        throw new Error(errorMessage)
+      }
+
+      const payload = await response.json() as DoAssetUploadResponse
+      const filename = payload.asset.filename
+      setDoEditDraft((current) => {
+        if (current == null) {
+          return current
+        }
+
+        return type === 'do_logo'
+          ? { ...current, do_logo: filename }
+          : { ...current, region_logo: filename }
+      })
+    } catch (error: unknown) {
+      setDoEditError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut pujar la imatge.' : 'No se pudo subir la imagen.'))
+    } finally {
+      setDoAssetUploadingType(null)
+      if (type === 'do_logo' && doLogoInputRef.current) {
+        doLogoInputRef.current.value = ''
+      }
+      if (type === 'region_logo' && regionLogoInputRef.current) {
+        regionLogoInputRef.current.value = ''
+      }
+    }
+  }
+
+  const confirmDeleteDo = async () => {
+    if (!doDeleteTarget) {
+      return
+    }
+
+    setDoDeleteSubmitting(true)
+    setDoDeleteError(null)
+
+    try {
+      const response = await fetch(`${resolveApiBaseUrl()}/api/dos/${doDeleteTarget.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+
+      if (!response.ok && response.status !== 204) {
+        let errorMessage = `HTTP ${response.status}`
+        try {
+          const errorPayload = await response.json() as { error?: string }
+          if (typeof errorPayload.error === 'string' && errorPayload.error.trim() !== '') {
+            errorMessage = errorPayload.error
+          }
+        } catch {
+          // Keep HTTP fallback.
+        }
+        throw new Error(errorMessage)
+      }
+
+      setDoOptions((current) => current.filter((item) => item.id !== doDeleteTarget.id))
+      setDoListReloadToken((current) => current + 1)
+      setDoSuccessToast(
+        locale === 'ca'
+          ? `La D.O. "${doDeleteTarget.name}" s'ha eliminat correctament.`
+          : `La DO "${doDeleteTarget.name}" se ha eliminado correctamente.`,
+      )
+      closeDoDeleteConfirm()
+    } catch (error: unknown) {
+      setDoDeleteError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut eliminar la D.O.' : 'No se pudo eliminar la DO.'))
+      setDoDeleteSubmitting(false)
+    }
   }
 
   useEffect(() => {
@@ -5131,7 +5380,7 @@ function App() {
                       <span className="do-sort-caret" aria-hidden="true">▾</span>
                     </div>
                   </label>
-                  <button type="button" className="primary-button" onClick={() => announceDoAction('create')}>
+                  <button type="button" className="primary-button" onClick={() => announceDoAction()}>
                     {labels.dos.list.createAction}
                   </button>
                 </div>
@@ -5184,10 +5433,10 @@ function App() {
                           <td className="do-directory-name-cell" data-label={locale === 'ca' ? 'Nom' : 'Nombre'}>
                             <strong>{item.name}</strong>
                           </td>
-                          <td data-label={labels.dashboard.table.region}>
+                          <td className="do-directory-region-cell" data-label={labels.dashboard.table.region}>
                             <span className="wine-cell-value">{item.region}</span>
                           </td>
-                          <td data-label={locale === 'ca' ? 'País' : 'País'}>
+                          <td className="do-directory-country-cell" data-label={locale === 'ca' ? 'País' : 'País'}>
                             <span className="wine-country-chip">
                               {countryFlagPath(item.country) ? (
                                 <img
@@ -5203,12 +5452,12 @@ function App() {
                               <span className="wine-country-name">{countryCodeToLabel(item.country, locale)}</span>
                             </span>
                           </td>
-                          <td className="wine-col-actions" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
+                          <td className="wine-col-actions do-directory-actions-cell" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
                             <div className="do-directory-actions">
-                              <button type="button" className="ghost-button small" onClick={() => announceDoAction('edit', item)}>
+                              <button type="button" className="ghost-button small" onClick={() => openDoEdit(item)}>
                                 {locale === 'ca' ? 'Editar' : 'Editar'}
                               </button>
-                              <button type="button" className="ghost-button small danger-text-button" onClick={() => announceDoAction('delete', item)}>
+                              <button type="button" className="ghost-button small danger-text-button" onClick={() => openDoDeleteConfirm(item)}>
                                 {locale === 'ca' ? 'Eliminar' : 'Borrar'}
                               </button>
                             </div>
@@ -6485,6 +6734,242 @@ function App() {
             <div className="wine-mobile-filters-content">
               {renderWineFilters('mobile')}
             </div>
+          </section>
+        </div>
+      ) : null}
+      {doEditTarget ? (
+        <div className="modal-backdrop wine-delete-backdrop" role="presentation" onClick={closeDoEdit}>
+          <section
+            className="confirm-modal do-edit-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-do-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="confirm-modal-header">
+              <p className="eyebrow">{locale === 'ca' ? 'EDITAR D.O.' : 'EDITAR DO'}</p>
+              <h3 id="edit-do-title">{doEditTarget.name}</h3>
+            </header>
+            <form className="stack-form do-edit-form" onSubmit={(event) => { void handleDoEditSubmit(event) }}>
+              <div className="do-edit-image-grid">
+                <section className="do-edit-image-card">
+                  <header className="do-edit-image-head">
+                    <div>
+                      <p className="eyebrow">{locale === 'ca' ? 'LOGO D.O.' : 'LOGO DO'}</p>
+                      <h4>{locale === 'ca' ? 'Imatge principal' : 'Imagen principal'}</h4>
+                    </div>
+                    <div className="wine-photo-actions">
+                      <input
+                        ref={doLogoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(event) => { void handleDoAssetUpload('do_logo', event.target.files) }}
+                      />
+                      <button
+                        type="button"
+                        className="ghost-button tiny photo-icon-button"
+                        aria-label={locale === 'ca' ? 'Editar logo D.O.' : 'Editar logo DO'}
+                        disabled={doAssetUploadingType != null || doEditSubmitting}
+                        onClick={() => {
+                          doLogoInputRef.current?.click()
+                        }}
+                      >
+                        <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M4 20h4l10-10-4-4L4 16v4Z" fill="currentColor" />
+                          <path d="m13 7 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost-button tiny danger photo-icon-button"
+                        aria-label={locale === 'ca' ? 'Eliminar logo D.O.' : 'Eliminar logo DO'}
+                        disabled={doAssetUploadingType != null || doEditSubmitting}
+                        onClick={() => {
+                          setDoEditDraft((current) => (current == null ? current : { ...current, do_logo: '' }))
+                        }}
+                      >
+                        <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M9 4h6l1 2h4v2H4V6h4l1-2Z" fill="currentColor" />
+                          <path d="M7 9h10l-.8 10.2a2 2 0 0 1-2 1.8H9.8a2 2 0 0 1-2-1.8L7 9Z" fill="currentColor" opacity="0.78" />
+                        </svg>
+                      </button>
+                    </div>
+                  </header>
+                  <div className="do-edit-image-preview">
+                    {doEditDoLogoPath ? (
+                      <img src={doEditDoLogoPath} alt="" loading="lazy" onError={fallbackToAdminAsset} />
+                    ) : (
+                      <span className="do-edit-image-fallback">D.O.</span>
+                    )}
+                  </div>
+                  <p className="muted do-edit-image-caption">
+                    {doAssetUploadingType === 'do_logo'
+                      ? (locale === 'ca' ? 'Pujant imatge…' : 'Subiendo imagen…')
+                      : (doEditDraft?.do_logo?.trim() !== '' ? doEditDraft?.do_logo : (locale === 'ca' ? 'Sense logo assignat' : 'Sin logo asignado'))}
+                  </p>
+                </section>
+
+                <section className="do-edit-image-card">
+                  <header className="do-edit-image-head">
+                    <div>
+                      <p className="eyebrow">{locale === 'ca' ? 'LOGO REGIÓ' : 'LOGO REGIÓN'}</p>
+                      <h4>{locale === 'ca' ? 'Imatge territorial' : 'Imagen territorial'}</h4>
+                    </div>
+                    <div className="wine-photo-actions">
+                      <input
+                        ref={regionLogoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(event) => { void handleDoAssetUpload('region_logo', event.target.files) }}
+                      />
+                      <button
+                        type="button"
+                        className="ghost-button tiny photo-icon-button"
+                        aria-label={locale === 'ca' ? 'Editar logo regió' : 'Editar logo región'}
+                        disabled={doAssetUploadingType != null || doEditSubmitting}
+                        onClick={() => {
+                          regionLogoInputRef.current?.click()
+                        }}
+                      >
+                        <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M4 20h4l10-10-4-4L4 16v4Z" fill="currentColor" />
+                          <path d="m13 7 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost-button tiny danger photo-icon-button"
+                        aria-label={locale === 'ca' ? 'Eliminar logo regió' : 'Eliminar logo región'}
+                        disabled={doAssetUploadingType != null || doEditSubmitting}
+                        onClick={() => {
+                          setDoEditDraft((current) => (current == null ? current : { ...current, region_logo: '' }))
+                        }}
+                      >
+                        <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M9 4h6l1 2h4v2H4V6h4l1-2Z" fill="currentColor" />
+                          <path d="M7 9h10l-.8 10.2a2 2 0 0 1-2 1.8H9.8a2 2 0 0 1-2-1.8L7 9Z" fill="currentColor" opacity="0.78" />
+                        </svg>
+                      </button>
+                    </div>
+                  </header>
+                  <div className="do-edit-image-preview do-edit-image-preview-region">
+                    {doEditRegionLogoPath ? (
+                      <img src={doEditRegionLogoPath} alt="" loading="lazy" onError={fallbackToAdminAsset} />
+                    ) : (
+                      <span className="do-edit-image-fallback">REG</span>
+                    )}
+                  </div>
+                  <p className="muted do-edit-image-caption">
+                    {doAssetUploadingType === 'region_logo'
+                      ? (locale === 'ca' ? 'Pujant imatge…' : 'Subiendo imagen…')
+                      : (doEditDraft?.region_logo?.trim() !== '' ? doEditDraft?.region_logo : (locale === 'ca' ? 'Sense logo assignat' : 'Sin logo asignado'))}
+                  </p>
+                </section>
+              </div>
+
+              <div className="inline-grid triple">
+                <label>
+                  {locale === 'ca' ? 'Nom' : 'Nombre'}
+                  <input
+                    name="name"
+                    type="text"
+                    value={doEditDraft?.name ?? ''}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      setDoEditDraft((current) => (current == null ? current : { ...current, name: value }))
+                    }}
+                    required
+                  />
+                </label>
+                <label>
+                  {locale === 'ca' ? 'Regió' : 'Región'}
+                  <input
+                    name="region"
+                    type="text"
+                    value={doEditDraft?.region ?? ''}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      setDoEditDraft((current) => (current == null ? current : { ...current, region: value }))
+                    }}
+                    required
+                  />
+                </label>
+                <label>
+                  {locale === 'ca' ? 'País' : 'País'}
+                  <select
+                    name="country"
+                    value={doEditDraft?.country ?? 'spain'}
+                    onChange={(event) => {
+                      const value = event.target.value as Exclude<CountryFilterValue, 'all'>
+                      setDoEditDraft((current) => (current == null ? current : { ...current, country: value }))
+                    }}
+                  >
+                    {WINE_COUNTRY_FILTER_VALUES.map((countryCode) => (
+                      <option key={countryCode} value={countryCode}>{countryCodeToLabel(countryCode, locale)}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div className="inline-grid triple do-edit-meta-grid">
+                <label>
+                  {locale === 'ca' ? 'Codi país' : 'Código país'}
+                  <input
+                    name="country_code"
+                    type="text"
+                    minLength={2}
+                    maxLength={2}
+                    value={doEditDraft?.country_code ?? ''}
+                    onChange={(event) => {
+                      const value = event.target.value.toUpperCase()
+                      setDoEditDraft((current) => (current == null ? current : { ...current, country_code: value }))
+                    }}
+                    required
+                  />
+                </label>
+              </div>
+              {doEditError ? <p className="error-message">{doEditError}</p> : null}
+              <footer className="confirm-modal-actions">
+                <button type="button" className="ghost-button" onClick={closeDoEdit} disabled={doEditSubmitting}>
+                  {locale === 'ca' ? 'Cancel·lar' : 'Cancelar'}
+                </button>
+                <button type="submit" className="primary-button" disabled={doEditSubmitting}>
+                  {doEditSubmitting ? (locale === 'ca' ? 'Desant…' : 'Guardando…') : (locale === 'ca' ? 'Desar canvis' : 'Guardar cambios')}
+                </button>
+              </footer>
+            </form>
+          </section>
+        </div>
+      ) : null}
+
+      {doDeleteTarget ? (
+        <div className="modal-backdrop wine-delete-backdrop" role="presentation" onClick={closeDoDeleteConfirm}>
+          <section
+            className="confirm-modal wine-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-do-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="confirm-modal-header">
+              <p className="eyebrow">{locale === 'ca' ? 'ELIMINAR D.O.' : 'ELIMINAR DO'}</p>
+              <h3 id="delete-do-title">{doDeleteTarget.name}</h3>
+              <p className="muted">
+                {locale === 'ca'
+                  ? 'Aquesta acció eliminarà la D.O. si no té vins associats. Vols continuar?'
+                  : 'Esta acción eliminará la DO si no tiene vinos asociados. ¿Quieres continuar?'}
+              </p>
+            </header>
+            {doDeleteError ? <p className="error-message">{doDeleteError}</p> : null}
+            <footer className="confirm-modal-actions">
+              <button type="button" className="ghost-button" onClick={closeDoDeleteConfirm} disabled={doDeleteSubmitting}>
+                {locale === 'ca' ? 'Cancel·lar' : 'Cancelar'}
+              </button>
+              <button type="button" className="secondary-button" onClick={() => { void confirmDeleteDo() }} disabled={doDeleteSubmitting}>
+                {doDeleteSubmitting ? (locale === 'ca' ? 'Eliminant…' : 'Eliminando…') : (locale === 'ca' ? 'Eliminar' : 'Eliminar')}
+              </button>
+            </footer>
           </section>
         </div>
       ) : null}

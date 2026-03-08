@@ -78,4 +78,38 @@ final readonly class DoctrineDoRepository implements DoRepository
             $rows,
         );
     }
+
+    public function update(DenominationOfOrigin $do): bool
+    {
+        return $this->entityManager->getConnection()->executeStatement(
+            'UPDATE "do" SET name = :name, region = :region, country = :country, country_code = :country_code, do_logo = :do_logo, region_logo = :region_logo WHERE id = :id',
+            [
+                'id' => $do->id,
+                'name' => $do->name,
+                'region' => $do->region,
+                'country' => $do->country->value,
+                'country_code' => $do->countryCode,
+                'do_logo' => $do->doLogo,
+                'region_logo' => $do->regionLogo,
+            ],
+        ) > 0;
+    }
+
+    public function deleteById(int $id): bool
+    {
+        return $this->entityManager->getConnection()->executeStatement(
+            'DELETE FROM "do" WHERE id = :id',
+            ['id' => $id],
+        ) > 0;
+    }
+
+    public function hasAssociatedWines(int $id): bool
+    {
+        $result = $this->entityManager->getConnection()->fetchOne(
+            'SELECT 1 FROM wine WHERE do_id = :id LIMIT 1',
+            ['id' => $id],
+        );
+
+        return false !== $result;
+    }
 }
