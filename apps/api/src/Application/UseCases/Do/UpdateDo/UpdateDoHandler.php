@@ -69,8 +69,8 @@ final readonly class UpdateDoHandler
             throw new \InvalidArgumentException('do_logo cannot be empty when provided.');
         }
 
-        if ($command->isProvided('region_logo') && null !== $command->regionLogo && '' === trim($command->regionLogo)) {
-            throw new \InvalidArgumentException('region_logo cannot be empty when provided.');
+        if ($command->isProvided('region_logo')) {
+            throw new \InvalidArgumentException('region_logo cannot be updated via this endpoint.');
         }
     }
 
@@ -83,7 +83,7 @@ final readonly class UpdateDoHandler
             country: $command->isProvided('country') ? $command->country : $existing->country,
             countryCode: $command->isProvided('country_code') ? (string) $command->countryCode : $existing->countryCode,
             doLogo: $command->isProvided('do_logo') ? $command->doLogo : $existing->doLogo,
-            regionLogo: $command->isProvided('region_logo') ? $command->regionLogo : $existing->regionLogo,
+            regionLogo: $existing->regionLogo,
         );
     }
 }

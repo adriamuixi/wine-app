@@ -27,14 +27,32 @@ final class UpdateDoHandlerTest extends TestCase
             country: null,
             countryCode: null,
             doLogo: null,
-            regionLogo: 'updated_region.png',
-            provided: ['name' => true, 'region_logo' => true],
+            regionLogo: null,
+            provided: ['name' => true],
         ));
 
         self::assertSame(10, $repository->lastDo?->id);
         self::assertSame('Updated DO', $repository->lastDo?->name);
         self::assertSame('Region 10', $repository->lastDo?->region);
-        self::assertSame('updated_region.png', $repository->lastDo?->regionLogo);
+        self::assertNull($repository->lastDo?->regionLogo);
+    }
+
+    public function testItRejectsRegionLogoUpdate(): void
+    {
+        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: [10]));
+
+        $this->expectException(UpdateDoValidationException::class);
+        $this->expectExceptionMessage('region_logo cannot be updated via this endpoint.');
+        $handler->handle(new UpdateDoCommand(
+            doId: 10,
+            name: null,
+            region: null,
+            country: null,
+            countryCode: null,
+            doLogo: null,
+            regionLogo: 'updated_region.png',
+            provided: ['region_logo' => true],
+        ));
     }
 
     public function testItRejectsWhenNoFieldsProvided(): void

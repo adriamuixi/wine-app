@@ -1286,9 +1286,6 @@ components:
         do_logo:
           type: string
           nullable: true
-        region_logo:
-          type: string
-          nullable: true
     CreateDoAssetResponse:
       type: object
       required: [asset]

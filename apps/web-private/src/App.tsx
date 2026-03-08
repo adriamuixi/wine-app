@@ -1081,7 +1081,7 @@ function App() {
   const [doSuccessToast, setDoSuccessToast] = useState<string | null>(null)
   const [doEditTarget, setDoEditTarget] = useState<DoApiItem | null>(null)
   const [doEditDraft, setDoEditDraft] = useState<DoEditDraft | null>(null)
-  const [doAssetUploadingType, setDoAssetUploadingType] = useState<'do_logo' | 'region_logo' | null>(null)
+  const [doAssetUploadingType, setDoAssetUploadingType] = useState<'do_logo' | null>(null)
   const [doEditSubmitting, setDoEditSubmitting] = useState(false)
   const [doEditError, setDoEditError] = useState<string | null>(null)
   const [doDeleteTarget, setDoDeleteTarget] = useState<DoApiItem | null>(null)
@@ -1102,7 +1102,6 @@ function App() {
   const doDropdownRef = useRef<HTMLDivElement | null>(null)
   const createDoDropdownRef = useRef<HTMLDivElement | null>(null)
   const doLogoInputRef = useRef<HTMLInputElement | null>(null)
-  const regionLogoInputRef = useRef<HTMLInputElement | null>(null)
   const photoPickerInputRef = useRef<HTMLInputElement | null>(null)
   const photoEditorCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const photoEditorDragRef = useRef<{ active: boolean; pointerId: number; lastX: number; lastY: number } | null>(null)
@@ -1980,8 +1979,6 @@ function App() {
     const country = doEditDraft.country
     const countryCode = doEditDraft.country_code.trim().toUpperCase()
     const doLogoRaw = doEditDraft.do_logo.trim()
-    const regionLogoRaw = doEditDraft.region_logo.trim()
-
     if (name === '' || region === '' || countryCode.length !== 2) {
       setDoEditError(
         locale === 'ca'
@@ -2008,7 +2005,6 @@ function App() {
           country,
           country_code: countryCode,
           do_logo: doLogoRaw === '' ? null : doLogoRaw,
-          region_logo: regionLogoRaw === '' ? null : regionLogoRaw,
         }),
       })
 
@@ -2032,7 +2028,7 @@ function App() {
         country,
         country_code: countryCode,
         do_logo: doLogoRaw === '' ? null : doLogoRaw,
-        region_logo: regionLogoRaw === '' ? null : regionLogoRaw,
+        region_logo: doEditTarget.region_logo,
       }
 
       setDoOptions((current) => current.map((item) => (item.id === updatedItem.id ? updatedItem : item)))
@@ -2049,7 +2045,7 @@ function App() {
     }
   }
 
-  const handleDoAssetUpload = async (type: 'do_logo' | 'region_logo', fileList: FileList | null) => {
+  const handleDoAssetUpload = async (type: 'do_logo', fileList: FileList | null) => {
     if (!doEditTarget || !doEditDraft || !fileList || fileList.length === 0) {
       return
     }
@@ -2092,9 +2088,7 @@ function App() {
           return current
         }
 
-        return type === 'do_logo'
-          ? { ...current, do_logo: filename }
-          : { ...current, region_logo: filename }
+        return { ...current, do_logo: filename }
       })
     } catch (error: unknown) {
       setDoEditError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut pujar la imatge.' : 'No se pudo subir la imagen.'))
@@ -2102,9 +2096,6 @@ function App() {
       setDoAssetUploadingType(null)
       if (type === 'do_logo' && doLogoInputRef.current) {
         doLogoInputRef.current.value = ''
-      }
-      if (type === 'region_logo' && regionLogoInputRef.current) {
-        regionLogoInputRef.current.value = ''
       }
     }
   }
@@ -6816,43 +6807,7 @@ function App() {
                       <p className="eyebrow">{locale === 'ca' ? 'LOGO REGIÓ' : 'LOGO REGIÓN'}</p>
                       <h4>{locale === 'ca' ? 'Imatge territorial' : 'Imagen territorial'}</h4>
                     </div>
-                    <div className="wine-photo-actions">
-                      <input
-                        ref={regionLogoInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={(event) => { void handleDoAssetUpload('region_logo', event.target.files) }}
-                      />
-                      <button
-                        type="button"
-                        className="ghost-button tiny photo-icon-button"
-                        aria-label={locale === 'ca' ? 'Editar logo regió' : 'Editar logo región'}
-                        disabled={doAssetUploadingType != null || doEditSubmitting}
-                        onClick={() => {
-                          regionLogoInputRef.current?.click()
-                        }}
-                      >
-                        <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M4 20h4l10-10-4-4L4 16v4Z" fill="currentColor" />
-                          <path d="m13 7 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        className="ghost-button tiny danger photo-icon-button"
-                        aria-label={locale === 'ca' ? 'Eliminar logo regió' : 'Eliminar logo región'}
-                        disabled={doAssetUploadingType != null || doEditSubmitting}
-                        onClick={() => {
-                          setDoEditDraft((current) => (current == null ? current : { ...current, region_logo: '' }))
-                        }}
-                      >
-                        <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M9 4h6l1 2h4v2H4V6h4l1-2Z" fill="currentColor" />
-                          <path d="M7 9h10l-.8 10.2a2 2 0 0 1-2 1.8H9.8a2 2 0 0 1-2-1.8L7 9Z" fill="currentColor" opacity="0.78" />
-                        </svg>
-                      </button>
-                    </div>
+                    <span className="muted">{locale === 'ca' ? 'No editable' : 'No editable'}</span>
                   </header>
                   <div className="do-edit-image-preview do-edit-image-preview-region">
                     {doEditRegionLogoPath ? (
@@ -6862,9 +6817,7 @@ function App() {
                     )}
                   </div>
                   <p className="muted do-edit-image-caption">
-                    {doAssetUploadingType === 'region_logo'
-                      ? (locale === 'ca' ? 'Pujant imatge…' : 'Subiendo imagen…')
-                      : (doEditDraft?.region_logo?.trim() !== '' ? doEditDraft?.region_logo : (locale === 'ca' ? 'Sense logo assignat' : 'Sin logo asignado'))}
+                    {doEditDraft?.region_logo?.trim() !== '' ? doEditDraft?.region_logo : (locale === 'ca' ? 'Sense logo assignat' : 'Sin logo asignado')}
                   </p>
                 </section>
               </div>

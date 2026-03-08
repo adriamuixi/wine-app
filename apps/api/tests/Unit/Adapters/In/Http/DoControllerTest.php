@@ -86,7 +86,7 @@ final class DoControllerTest extends TestCase
             '/api/dos/20',
             'PUT',
             server: ['CONTENT_TYPE' => 'application/json'],
-            content: json_encode(['name' => 'Updated Name', 'region_logo' => 'murcia.png'], JSON_THROW_ON_ERROR),
+            content: json_encode(['name' => 'Updated Name'], JSON_THROW_ON_ERROR),
         );
 
         $response = $controller->update(20, $request);
@@ -94,7 +94,29 @@ final class DoControllerTest extends TestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
         self::assertSame('Updated Name', $repository->lastUpdatedDo?->name);
         self::assertSame('La Rioja', $repository->lastUpdatedDo?->region);
-        self::assertSame('murcia.png', $repository->lastUpdatedDo?->regionLogo);
+        self::assertSame('la_rioja.png', $repository->lastUpdatedDo?->regionLogo);
+    }
+
+    public function testUpdateReturnsBadRequestWhenRegionLogoIsProvided(): void
+    {
+        $repository = new DoControllerInMemoryDoRepository(updatableIds: [20]);
+        $controller = new DoController(
+            new ListDosHandler($repository),
+            new UpdateDoHandler($repository),
+            new DeleteDoHandler($repository),
+        );
+        $request = Request::create(
+            '/api/dos/20',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['region_logo' => 'murcia.png'], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(20, $request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertSame('region_logo cannot be updated via this endpoint.', $payload['error']);
     }
 
     public function testUpdateReturnsBadRequestForInvalidCountry(): void
