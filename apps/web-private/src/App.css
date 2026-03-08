@@ -343,6 +343,7 @@ code {
 .filter-grid label {
   display: grid;
   gap: 0.35rem;
+  min-width: 0;
   font-size: 0.9rem;
   font-weight: 600;
   color: #3a2d25;
@@ -366,6 +367,16 @@ code {
 .stack-form select,
 .stack-form textarea {
   min-height: 44px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.stack-form select[name='wine_id'] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .login-form input:focus-visible,
@@ -3619,7 +3630,7 @@ code {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.55rem 0.65rem 0.55rem 1rem;
+  padding: 0.55rem 0.65rem 0.55rem 2rem;
   min-height: 44px;
   width: 100%;
   min-width: 0;
@@ -3639,7 +3650,7 @@ code {
 
 .tag-checkbox-item input {
   position: absolute;
-  left: -0.58rem;
+  left: 0.55rem;
   top: 50%;
   transform: translateY(-50%);
   margin: 0;
@@ -6796,9 +6807,16 @@ body {
   }
 
   .wine-create-header .panel-header-actions {
-    width: auto;
-    justify-content: flex-end;
-    margin-left: auto;
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .wine-create-header .panel-header-actions .primary-button {
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
   .tag-checkbox-grid {
@@ -6810,13 +6828,13 @@ body {
   .tag-checkbox-item {
     width: 100%;
     min-height: 48px;
-    padding: 0.65rem 0.7rem;
+    padding: 0.65rem 0.7rem 0.65rem 2.1rem;
   }
 
   .tag-checkbox-item input {
     width: 1.45rem;
     height: 1.45rem;
-    left: -0.62rem;
+    left: 0.58rem;
   }
 
   .tag-checkbox-item span {
