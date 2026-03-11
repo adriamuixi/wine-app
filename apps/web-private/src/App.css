@@ -2283,6 +2283,11 @@ code {
   z-index: 340;
 }
 
+.do-edit-backdrop {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .image-modal {
   width: min(1100px, 100%);
   max-height: min(88vh, 920px);

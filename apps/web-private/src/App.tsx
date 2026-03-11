@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent, HTMLAttributes, PointerEvent as ReactPointerEvent, ReactNode, SyntheticEvent } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import hljs from 'highlight.js/lib/common'
 import { Bar, BarChart, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts'
 import ReactMarkdown from 'react-markdown'
@@ -1038,9 +1038,10 @@ function App() {
   const [doCountryFilter, setDoCountryFilter] = useState<CountryFilterValue>('all')
   const [doSortPreset, setDoSortPreset] = useState<DoSortPresetKey>('country_region_name')
   const [doListNameFilter, setDoListNameFilter] = useState('')
+  const [doListNameFilterDebounced, setDoListNameFilterDebounced] = useState('')
   const [doListCountryFilter, setDoListCountryFilter] = useState<CountryFilterValue>('all')
   const [doListRegionFilter, setDoListRegionFilter] = useState('')
-  const [doRegionFilterOptions, setDoRegionFilterOptions] = useState<string[]>([])
+  const [doListRegionFilterDebounced, setDoListRegionFilterDebounced] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | WineType>('all')
   const [minScoreFilter, setMinScoreFilter] = useState<'all' | number>('all')
   const [grapeFilter, setGrapeFilter] = useState<'all' | number>('all')
@@ -1377,10 +1378,14 @@ function App() {
   }, [doOptions, doSortFields, locale])
   const sortedDoRegionFilterOptions = useMemo(() => {
     const collator = new Intl.Collator(locale === 'ca' ? 'ca-ES' : 'es-ES', { sensitivity: 'base' })
+    const regionOptions = [...new Set(
+      doOptions
+        .map((item) => item.region.trim())
+        .filter((value) => value !== ''),
+    )]
 
-    return [...doRegionFilterOptions].sort((left, right) => collator.compare(left, right))
-  }, [doRegionFilterOptions, locale])
-
+    return regionOptions.sort((left, right) => collator.compare(left, right))
+  }, [doOptions, locale])
   const metrics = useMemo(
     () => ({
       totalWines: genericStats?.total_wines ?? wineItems.length,
@@ -1867,6 +1872,26 @@ function App() {
   }, [searchText])
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDoListNameFilterDebounced(doListNameFilter.trim())
+    }, 260)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [doListNameFilter])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDoListRegionFilterDebounced(doListRegionFilter.trim())
+    }, 260)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [doListRegionFilter])
+
+  useEffect(() => {
     setSettingsName(currentUser?.name ?? '')
     setSettingsLastname(currentUser?.lastname ?? '')
   }, [currentUser])
@@ -1923,16 +1948,14 @@ function App() {
       sort_by_3: doSortFields[2],
     })
     if (menu === 'dos') {
-      const normalizedName = doListNameFilter.trim()
-      const normalizedRegion = doListRegionFilter.trim()
-      if (normalizedName !== '') {
-        searchParams.set('name', normalizedName)
+      if (doListNameFilterDebounced !== '') {
+        searchParams.set('name', doListNameFilterDebounced)
       }
       if (doListCountryFilter !== 'all') {
         searchParams.set('country', doListCountryFilter)
       }
-      if (normalizedRegion !== '') {
-        searchParams.set('region', normalizedRegion)
+      if (doListRegionFilterDebounced !== '') {
+        searchParams.set('region', doListRegionFilterDebounced)
       }
     }
 
@@ -1957,50 +1980,7 @@ function App() {
     return () => {
       controller.abort()
     }
-  }, [doListCountryFilter, doListNameFilter, doListRegionFilter, doListReloadToken, doSortFields, menu])
-
-  useEffect(() => {
-    if (menu !== 'dos') {
-      return
-    }
-
-    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
-    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
-    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
-    const controller = new AbortController()
-    const searchParams = new URLSearchParams({
-      sort_by_1: 'region',
-      sort_by_2: 'name',
-      sort_by_3: 'country',
-    })
-
-    fetch(`${apiBaseUrl}/api/dos?${searchParams.toString()}`, {
-      signal: controller.signal,
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-      },
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-
-        const payload = await response.json() as DoApiResponse
-        const regions = [...new Set(
-          payload.items
-            .map((item) => item.region.trim())
-            .filter((value) => value !== ''),
-        )]
-        setDoRegionFilterOptions(regions)
-      })
-      .catch(() => {
-      })
-
-    return () => {
-      controller.abort()
-    }
-  }, [doListReloadToken, menu])
+  }, [doListCountryFilter, doListNameFilterDebounced, doListRegionFilterDebounced, doListReloadToken, doSortFields, menu])
 
   const openDoCreate = () => {
     if (doCreateLogoPreviewSrc != null) {
@@ -2131,7 +2111,7 @@ function App() {
     }
   }
 
-  const openDoEdit = (item: DoApiItem) => {
+  const openDoEdit = useCallback((item: DoApiItem) => {
     setDoEditTarget(item)
     setDoEditDraft({
       name: item.name,
@@ -2144,7 +2124,7 @@ function App() {
     setDoAssetUploadingType(null)
     setDoEditError(null)
     setDoEditSubmitting(false)
-  }
+  }, [])
 
   const closeDoEdit = () => {
     setDoEditTarget(null)
@@ -2154,17 +2134,87 @@ function App() {
     setDoEditSubmitting(false)
   }
 
-  const openDoDeleteConfirm = (item: DoApiItem) => {
+  const openDoDeleteConfirm = useCallback((item: DoApiItem) => {
     setDoDeleteTarget(item)
     setDoDeleteError(null)
     setDoDeleteSubmitting(false)
-  }
+  }, [])
 
   const closeDoDeleteConfirm = () => {
     setDoDeleteTarget(null)
     setDoDeleteError(null)
     setDoDeleteSubmitting(false)
   }
+
+  const doDirectoryRows = useMemo(() => (
+    doDirectoryItems.map((item) => {
+      const logoPath = doLogoPathFromImageName(item.do_logo)
+      const regionLogoPath = regionLogoPathFromImageName(item.region_logo)
+      const communityFlagPath = regionLogoPath
+
+      return (
+        <tr key={item.id}>
+          <td className="do-directory-logo-cell" data-label="Logo">
+            <div className="do-directory-logo-stack">
+              {logoPath ? (
+                <img
+                  src={logoPath}
+                  alt={`${item.name} logo`}
+                  className="do-directory-logo"
+                  loading="lazy"
+                  onError={fallbackToAdminAsset}
+                />
+              ) : (
+                <span className="do-directory-logo-fallback" aria-hidden="true">D.O.</span>
+              )}
+              {communityFlagPath ? (
+                <img
+                  src={communityFlagPath}
+                  alt=""
+                  className="do-directory-community-flag"
+                  loading="lazy"
+                  aria-hidden="true"
+                  onError={fallbackToAdminAsset}
+                />
+              ) : null}
+            </div>
+          </td>
+          <td className="do-directory-name-cell" data-label={locale === 'ca' ? 'Nom' : 'Nombre'}>
+            <strong>{item.name}</strong>
+          </td>
+          <td className="do-directory-region-cell" data-label={labels.dashboard.table.region}>
+            <span className="wine-cell-value">{item.region}</span>
+          </td>
+          <td className="do-directory-country-cell" data-label={locale === 'ca' ? 'País' : 'País'}>
+            <span className="wine-country-chip">
+              {countryFlagPath(item.country) ? (
+                <img
+                  className="wine-country-flag"
+                  src={countryFlagPath(item.country) as string}
+                  alt={countryCodeToLabel(item.country, locale)}
+                  loading="lazy"
+                  onError={fallbackToAdminAsset}
+                />
+              ) : (
+                <span className="wine-country-emoji" aria-hidden="true">{countryFlagEmoji(item.country)}</span>
+              )}
+              <span className="wine-country-name">{countryCodeToLabel(item.country, locale)}</span>
+            </span>
+          </td>
+          <td className="wine-col-actions do-directory-actions-cell" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
+            <div className="do-directory-actions">
+              <button type="button" className="ghost-button small" onClick={() => openDoEdit(item)}>
+                {locale === 'ca' ? 'Editar' : 'Editar'}
+              </button>
+              <button type="button" className="ghost-button small danger-text-button" onClick={() => openDoDeleteConfirm(item)}>
+                {locale === 'ca' ? 'Eliminar' : 'Borrar'}
+              </button>
+            </div>
+          </td>
+        </tr>
+      )
+    })
+  ), [doDirectoryItems, labels.dashboard.table.region, locale, openDoDeleteConfirm, openDoEdit])
 
   const handleDoEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -5744,73 +5794,7 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {doDirectoryItems.map((item) => {
-                      const logoPath = doLogoPathFromImageName(item.do_logo)
-                      const regionLogoPath = regionLogoPathFromImageName(item.region_logo)
-                      const communityFlagPath = regionLogoPath
-
-                      return (
-                        <tr key={item.id}>
-                          <td className="do-directory-logo-cell" data-label="Logo">
-                            <div className="do-directory-logo-stack">
-                              {logoPath ? (
-                                <img
-                                  src={logoPath}
-                                  alt={`${item.name} logo`}
-                                  className="do-directory-logo"
-                                  loading="lazy"
-                                  onError={fallbackToAdminAsset}
-                                />
-                              ) : (
-                                <span className="do-directory-logo-fallback" aria-hidden="true">D.O.</span>
-                              )}
-                              {communityFlagPath ? (
-                                <img
-                                  src={communityFlagPath}
-                                  alt=""
-                                  className="do-directory-community-flag"
-                                  loading="lazy"
-                                  aria-hidden="true"
-                                  onError={fallbackToAdminAsset}
-                                />
-                              ) : null}
-                            </div>
-                          </td>
-                          <td className="do-directory-name-cell" data-label={locale === 'ca' ? 'Nom' : 'Nombre'}>
-                            <strong>{item.name}</strong>
-                          </td>
-                          <td className="do-directory-region-cell" data-label={labels.dashboard.table.region}>
-                            <span className="wine-cell-value">{item.region}</span>
-                          </td>
-                          <td className="do-directory-country-cell" data-label={locale === 'ca' ? 'País' : 'País'}>
-                            <span className="wine-country-chip">
-                              {countryFlagPath(item.country) ? (
-                                <img
-                                  className="wine-country-flag"
-                                  src={countryFlagPath(item.country) as string}
-                                  alt={countryCodeToLabel(item.country, locale)}
-                                  loading="lazy"
-                                  onError={fallbackToAdminAsset}
-                                />
-                              ) : (
-                                <span className="wine-country-emoji" aria-hidden="true">{countryFlagEmoji(item.country)}</span>
-                              )}
-                              <span className="wine-country-name">{countryCodeToLabel(item.country, locale)}</span>
-                            </span>
-                          </td>
-                          <td className="wine-col-actions do-directory-actions-cell" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
-                            <div className="do-directory-actions">
-                              <button type="button" className="ghost-button small" onClick={() => openDoEdit(item)}>
-                                {locale === 'ca' ? 'Editar' : 'Editar'}
-                              </button>
-                              <button type="button" className="ghost-button small danger-text-button" onClick={() => openDoDeleteConfirm(item)}>
-                                {locale === 'ca' ? 'Eliminar' : 'Borrar'}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
+                    {doDirectoryRows}
                     {doDirectoryItems.length === 0 ? (
                       <tr>
                         <td colSpan={5}>{locale === 'ca' ? 'Cap D.O. disponible.' : 'No hay DO disponibles.'}</td>
@@ -7251,7 +7235,7 @@ function App() {
         </div>
       ) : null}
       {doEditTarget ? (
-        <div className="modal-backdrop wine-delete-backdrop" role="presentation" onClick={closeDoEdit}>
+        <div className="modal-backdrop wine-delete-backdrop do-edit-backdrop" role="presentation" onClick={closeDoEdit}>
           <section
             className="confirm-modal do-edit-modal"
             role="dialog"
