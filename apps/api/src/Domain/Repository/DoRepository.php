@@ -20,7 +20,12 @@ interface DoRepository
      *
      * @return list<DenominationOfOrigin>
      */
-    public function findAll(array $sortFields = []): array;
+    public function findAll(
+        array $sortFields = [],
+        ?string $name = null,
+        ?Country $country = null,
+        ?string $region = null,
+    ): array;
 
     public function update(DenominationOfOrigin $do): bool;
 

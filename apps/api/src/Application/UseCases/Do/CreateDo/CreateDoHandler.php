@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Application\UseCases\Do\CreateDo;
 
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Repository\DoRepository;
 
 final readonly class CreateDoHandler
 {
-    public function __construct(private DoRepository $dos)
+    public function __construct(
+        private DoRepository $dos,
+        private PhotoInputGuard $photoInputGuard,
+    )
     {
     }
 
@@ -30,6 +34,10 @@ final readonly class CreateDoHandler
 
             if (2 !== strlen($command->countryCode)) {
                 throw new \InvalidArgumentException('country_code must have 2 characters.');
+            }
+
+            if (null !== $command->doLogo) {
+                $this->photoInputGuard->assertImageFilename($command->doLogo, 'do_logo');
             }
 
             $do = new DenominationOfOrigin(

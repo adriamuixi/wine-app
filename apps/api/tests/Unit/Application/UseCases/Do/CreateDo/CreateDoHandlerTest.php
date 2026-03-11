@@ -7,6 +7,7 @@ namespace App\Tests\Unit\Application\UseCases\Do\CreateDo;
 use App\Application\UseCases\Do\CreateDo\CreateDoCommand;
 use App\Application\UseCases\Do\CreateDo\CreateDoHandler;
 use App\Application\UseCases\Do\CreateDo\CreateDoValidationException;
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Domain\Enum\Country;
 use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Repository\DoRepository;
@@ -17,7 +18,7 @@ final class CreateDoHandlerTest extends TestCase
     public function testItCreatesDoAndReturnsId(): void
     {
         $repository = new SpyCreateDoRepository();
-        $handler = new CreateDoHandler($repository);
+        $handler = new CreateDoHandler($repository, new PhotoInputGuard());
 
         $result = $handler->handle(new CreateDoCommand(
             name: 'Montsant',
@@ -35,7 +36,7 @@ final class CreateDoHandlerTest extends TestCase
 
     public function testItRejectsInvalidCountryCodeLength(): void
     {
-        $handler = new CreateDoHandler(new SpyCreateDoRepository());
+        $handler = new CreateDoHandler(new SpyCreateDoRepository(), new PhotoInputGuard());
 
         $this->expectException(CreateDoValidationException::class);
         $this->expectExceptionMessage('country_code must have 2 characters.');
@@ -46,6 +47,22 @@ final class CreateDoHandlerTest extends TestCase
             country: Country::Spain,
             countryCode: 'ESP',
             doLogo: null,
+        ));
+    }
+
+    public function testItRejectsInvalidDoLogoExtension(): void
+    {
+        $handler = new CreateDoHandler(new SpyCreateDoRepository(), new PhotoInputGuard());
+
+        $this->expectException(CreateDoValidationException::class);
+        $this->expectExceptionMessage('do_logo must use an image extension: jpg, jpeg, png, webp, gif, avif.');
+
+        $handler->handle(new CreateDoCommand(
+            name: 'Montsant',
+            region: 'Catalunya',
+            country: Country::Spain,
+            countryCode: 'ES',
+            doLogo: 'montsant_DO.pdf',
         ));
     }
 }
@@ -71,7 +88,12 @@ final class SpyCreateDoRepository implements DoRepository
         return null;
     }
 
-    public function findAll(array $sortFields = []): array
+    public function findAll(
+        array $sortFields = [],
+        ?string $name = null,
+        ?Country $country = null,
+        ?string $region = null,
+    ): array
     {
         return [];
     }

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Application\UseCases\Do\CreateDoAsset;
 
 use App\Application\Ports\PhotoStoragePort;
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Domain\Enum\DoAssetType;
+use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Repository\DoRepository;
 
 final readonly class CreateDoAssetHandler
@@ -13,6 +15,7 @@ final readonly class CreateDoAssetHandler
     public function __construct(
         private DoRepository $dos,
         private PhotoStoragePort $assetStorage,
+        private PhotoInputGuard $photoInputGuard,
     ) {
     }
 
@@ -31,7 +34,11 @@ final readonly class CreateDoAssetHandler
             throw new CreateDoAssetValidationException('Uploaded file path is invalid.');
         }
 
-        $extension = $this->extractExtension($command->originalFilename);
+        try {
+            $extension = $this->photoInputGuard->extractImageExtensionFromOriginalFilename($command->originalFilename);
+        } catch (\InvalidArgumentException $exception) {
+            throw new CreateDoAssetValidationException($exception->getMessage(), previous: $exception);
+        }
         $rawBaseName = match ($command->type) {
             DoAssetType::DoLogo => $do->name,
             DoAssetType::RegionLogo => $do->region,
@@ -48,19 +55,36 @@ final readonly class CreateDoAssetHandler
             DoAssetType::RegionLogo => '/images/flags/regions/'.$filename,
         };
 
+        $updatedDo = match ($command->type) {
+            DoAssetType::DoLogo => new DenominationOfOrigin(
+                id: $do->id,
+                name: $do->name,
+                region: $do->region,
+                country: $do->country,
+                countryCode: $do->countryCode,
+                doLogo: $filename,
+                regionLogo: $do->regionLogo,
+            ),
+            DoAssetType::RegionLogo => new DenominationOfOrigin(
+                id: $do->id,
+                name: $do->name,
+                region: $do->region,
+                country: $do->country,
+                countryCode: $do->countryCode,
+                doLogo: $do->doLogo,
+                regionLogo: $filename,
+            ),
+        };
+
+        if (!$this->dos->update($updatedDo)) {
+            throw new CreateDoAssetNotFound(sprintf('DO not found for id %d.', $command->doId));
+        }
+
         return new CreateDoAssetResult(
             doId: $command->doId,
             type: $command->type,
             filename: $filename,
             url: $url,
         );
-    }
-
-    private function extractExtension(string $originalFilename): string
-    {
-        $extension = strtolower((string) pathinfo($originalFilename, PATHINFO_EXTENSION));
-        $extension = preg_replace('/[^a-z0-9]/', '', $extension) ?? '';
-
-        return '' === $extension ? 'bin' : substr($extension, 0, 10);
     }
 }

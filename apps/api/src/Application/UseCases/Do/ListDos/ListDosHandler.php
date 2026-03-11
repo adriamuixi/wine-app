@@ -16,6 +16,11 @@ final readonly class ListDosHandler
     /** @return list<DenominationOfOrigin> */
     public function handle(ListDosQuery $query = new ListDosQuery()): array
     {
-        return $this->dos->findAll($query->sortFields);
+        return $this->dos->findAll(
+            sortFields: $query->sortFields,
+            name: $query->name,
+            country: $query->country,
+            region: $query->region,
+        );
     }
 }

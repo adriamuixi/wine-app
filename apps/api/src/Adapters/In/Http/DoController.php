@@ -18,6 +18,7 @@ use App\Application\UseCases\Do\UpdateDo\UpdateDoHandler;
 use App\Application\UseCases\Do\UpdateDo\UpdateDoNotFound;
 use App\Application\UseCases\Do\UpdateDo\UpdateDoValidationException;
 use App\Domain\Enum\Country;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,6 +47,8 @@ final class DoController
             $result = $this->createDoHandler->handle($command);
         } catch (CreateDoValidationException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (UniqueConstraintViolationException) {
+            return new JsonResponse(['error' => 'A denomination of origin with the same country and name already exists.'], Response::HTTP_CONFLICT);
         }
 
         return new JsonResponse(['do' => ['id' => $result->id]], Response::HTTP_CREATED);
@@ -56,11 +59,19 @@ final class DoController
     {
         try {
             $sortFields = $this->parseSortFields($request);
+            $nameFilter = $this->parseOptionalStringFilter($request, 'name');
+            $countryFilter = $this->parseCountryFilter($request, 'country');
+            $regionFilter = $this->parseOptionalStringFilter($request, 'region');
         } catch (\InvalidArgumentException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
-        $items = $this->listDosHandler->handle(new ListDosQuery($sortFields));
+        $items = $this->listDosHandler->handle(new ListDosQuery(
+            sortFields: $sortFields,
+            name: $nameFilter,
+            country: $countryFilter,
+            region: $regionFilter,
+        ));
 
         return new JsonResponse([
             'items' => array_map(
@@ -282,5 +293,33 @@ final class DoController
         }
 
         return $value;
+    }
+
+    private function parseOptionalStringFilter(Request $request, string $field): ?string
+    {
+        $value = $request->query->get($field);
+        if (null === $value) {
+            return null;
+        }
+        if (!is_string($value)) {
+            throw new \InvalidArgumentException(sprintf('%s must be a string.', $field));
+        }
+        $trimmed = trim($value);
+
+        return '' === $trimmed ? null : $trimmed;
+    }
+
+    private function parseCountryFilter(Request $request, string $field): ?Country
+    {
+        $value = $this->parseOptionalStringFilter($request, $field);
+        if (null === $value) {
+            return null;
+        }
+
+        try {
+            return Country::from($value);
+        } catch (\ValueError) {
+            throw new \InvalidArgumentException(sprintf('Invalid %s value.', $field));
+        }
     }
 }

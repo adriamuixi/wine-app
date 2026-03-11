@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\UseCases\Wine\CreateWinePhoto;
 
 use App\Application\Ports\PhotoStoragePort;
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Domain\Model\WinePhoto;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
@@ -15,6 +16,7 @@ final readonly class CreateWinePhotoHandler
         private WineRepository $wines,
         private WinePhotoRepository $photos,
         private PhotoStoragePort $photoStorage,
+        private PhotoInputGuard $photoInputGuard,
     ) {
     }
 
@@ -32,7 +34,11 @@ final readonly class CreateWinePhotoHandler
             throw new CreateWinePhotoValidationException('Uploaded file path is invalid.');
         }
 
-        $extension = $this->extractExtension($command->originalFilename);
+        try {
+            $extension = $this->photoInputGuard->extractImageExtensionFromOriginalFilename($command->originalFilename);
+        } catch (\InvalidArgumentException $exception) {
+            throw new CreateWinePhotoValidationException($exception->getMessage(), previous: $exception);
+        }
         $fullHash = hash_file('sha256', $command->sourcePath);
         if (!is_string($fullHash) || '' === $fullHash) {
             throw new CreateWinePhotoValidationException('Unable to calculate file hash.');
@@ -74,13 +80,5 @@ final readonly class CreateWinePhotoHandler
             size: $command->size,
             extension: $extension,
         );
-    }
-
-    private function extractExtension(string $originalFilename): string
-    {
-        $extension = strtolower((string) pathinfo($originalFilename, PATHINFO_EXTENSION));
-        $extension = preg_replace('/[^a-z0-9]/', '', $extension) ?? '';
-
-        return '' === $extension ? 'bin' : substr($extension, 0, 10);
     }
 }

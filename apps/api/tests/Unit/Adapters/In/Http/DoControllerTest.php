@@ -10,11 +10,15 @@ use App\Application\UseCases\Do\CreateDo\CreateDoHandler;
 use App\Application\UseCases\Do\DeleteDo\DeleteDoHandler;
 use App\Application\UseCases\Do\ListDos\ListDosHandler;
 use App\Application\UseCases\Do\ListDos\ListDosSort;
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Application\UseCases\Do\UpdateDo\UpdateDoHandler;
 use App\Domain\Enum\Country;
 use App\Domain\Enum\DoAssetType;
 use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Repository\DoRepository;
+use Doctrine\DBAL\Driver\PDO\Exception as DoctrinePdoException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use PDOException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,9 +29,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository();
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
@@ -48,9 +52,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository();
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
@@ -67,9 +71,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository();
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
@@ -80,13 +84,48 @@ final class DoControllerTest extends TestCase
         self::assertSame('sort_by_2 contains duplicate sort field "country".', $payload['error']);
     }
 
+    public function testListPassesFiltersToRepository(): void
+    {
+        $repository = new DoControllerInMemoryDoRepository();
+        $controller = new DoController(
+            new CreateDoHandler($repository, new PhotoInputGuard()),
+            new ListDosHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
+        );
+
+        $response = $controller->list(Request::create('/api/dos?name=rio&country=spain&region=rioja', 'GET'));
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSame('rio', $repository->lastNameFilter);
+        self::assertSame(Country::Spain, $repository->lastCountryFilter);
+        self::assertSame('rioja', $repository->lastRegionFilter);
+    }
+
+    public function testListReturnsBadRequestForInvalidCountryFilter(): void
+    {
+        $repository = new DoControllerInMemoryDoRepository();
+        $controller = new DoController(
+            new CreateDoHandler($repository, new PhotoInputGuard()),
+            new ListDosHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
+        );
+
+        $response = $controller->list(Request::create('/api/dos?country=usa', 'GET'));
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertSame('Invalid country value.', $payload['error']);
+    }
+
     public function testUpdateReturnsNoContentWhenDoExists(): void
     {
         $repository = new DoControllerInMemoryDoRepository(updatableIds: [20]);
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
@@ -108,9 +147,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(updatableIds: [20]);
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
@@ -131,9 +170,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(updatableIds: [20]);
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
@@ -150,13 +189,36 @@ final class DoControllerTest extends TestCase
         self::assertSame('Invalid country value.', $payload['error']);
     }
 
+    public function testUpdateReturnsBadRequestForInvalidDoLogoExtension(): void
+    {
+        $repository = new DoControllerInMemoryDoRepository(updatableIds: [20]);
+        $controller = new DoController(
+            new CreateDoHandler($repository, new PhotoInputGuard()),
+            new ListDosHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
+        );
+        $request = Request::create(
+            '/api/dos/20',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['do_logo' => 'logo.txt'], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(20, $request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertSame('do_logo must use an image extension: jpg, jpeg, png, webp, gif, avif.', $payload['error']);
+    }
+
     public function testUpdateReturnsNotFoundWhenDoDoesNotExist(): void
     {
         $repository = new DoControllerInMemoryDoRepository(updatableIds: []);
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
@@ -175,9 +237,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(deletableIds: [33]);
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
@@ -190,9 +252,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(deletableIds: [33], associatedWineIds: [33]);
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
@@ -207,9 +269,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository(deletableIds: []);
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
 
@@ -222,9 +284,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository();
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
@@ -254,9 +316,9 @@ final class DoControllerTest extends TestCase
     {
         $repository = new DoControllerInMemoryDoRepository();
         $controller = new DoController(
-            new CreateDoHandler($repository),
+            new CreateDoHandler($repository, new PhotoInputGuard()),
             new ListDosHandler($repository),
-            new UpdateDoHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
             new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
         );
         $request = Request::create(
@@ -278,12 +340,76 @@ final class DoControllerTest extends TestCase
         self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
         self::assertSame('region_logo cannot be created via this endpoint.', $payload['error']);
     }
+
+    public function testCreateReturnsBadRequestForInvalidDoLogoExtension(): void
+    {
+        $repository = new DoControllerInMemoryDoRepository();
+        $controller = new DoController(
+            new CreateDoHandler($repository, new PhotoInputGuard()),
+            new ListDosHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
+        );
+        $request = Request::create(
+            '/api/dos',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Montsant',
+                'region' => 'Catalunya',
+                'country' => 'spain',
+                'country_code' => 'ES',
+                'do_logo' => 'montsant_DO.txt',
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertSame('do_logo must use an image extension: jpg, jpeg, png, webp, gif, avif.', $payload['error']);
+    }
+
+    public function testCreateReturnsConflictWhenDoAlreadyExists(): void
+    {
+        $repository = new DoControllerInMemoryDoRepository(throwUniqueConstraintOnCreate: true);
+        $controller = new DoController(
+            new CreateDoHandler($repository, new PhotoInputGuard()),
+            new ListDosHandler($repository),
+            new UpdateDoHandler($repository, new PhotoInputGuard()),
+            new DeleteDoHandler($repository, new DoControllerNullDoAssetStorage()),
+        );
+        $request = Request::create(
+            '/api/dos',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Montsant',
+                'region' => 'Catalunya',
+                'country' => 'spain',
+                'country_code' => 'ES',
+                'do_logo' => null,
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_CONFLICT, $response->getStatusCode());
+        self::assertSame(
+            'A denomination of origin with the same country and name already exists.',
+            $payload['error'],
+        );
+    }
 }
 
 final class DoControllerInMemoryDoRepository implements DoRepository
 {
     /** @var list<string> */
     public array $lastSortFields = [];
+    public ?string $lastNameFilter = null;
+    public ?Country $lastCountryFilter = null;
+    public ?string $lastRegionFilter = null;
     public ?DenominationOfOrigin $lastCreatedDo = null;
     public ?DenominationOfOrigin $lastUpdatedDo = null;
     /** @var list<int> */
@@ -298,11 +424,19 @@ final class DoControllerInMemoryDoRepository implements DoRepository
         private readonly array $updatableIds = [],
         private readonly array $deletableIds = [],
         private readonly array $associatedWineIds = [],
+        private readonly bool $throwUniqueConstraintOnCreate = false,
     ) {
     }
 
     public function create(DenominationOfOrigin $do): int
     {
+        if ($this->throwUniqueConstraintOnCreate) {
+            throw new UniqueConstraintViolationException(
+                DoctrinePdoException::new(new PDOException('duplicate key value violates unique constraint "uniq_do_country_name"')),
+                null,
+            );
+        }
+
         $this->lastCreatedDo = $do;
 
         return 150;
@@ -318,9 +452,17 @@ final class DoControllerInMemoryDoRepository implements DoRepository
         return null;
     }
 
-    public function findAll(array $sortFields = []): array
+    public function findAll(
+        array $sortFields = [],
+        ?string $name = null,
+        ?Country $country = null,
+        ?string $region = null,
+    ): array
     {
         $this->lastSortFields = $sortFields;
+        $this->lastNameFilter = $name;
+        $this->lastCountryFilter = $country;
+        $this->lastRegionFilter = $region;
 
         return [
             new DenominationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES', 'rioja_DO.png', 'la_rioja.png'),

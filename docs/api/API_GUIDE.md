@@ -441,6 +441,10 @@ Creates a denomination of origin.
 Expected:
 - `201` created
 - `400` invalid body
+- `409` duplicate `(country, name)`
+
+Notes:
+- `do_logo` (if provided in JSON) must use an image extension: `jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`.
 
 Example:
 
@@ -472,10 +476,23 @@ Response shape:
 
 Returns all denominations of origin from DB.
 
+Query params:
+
+- `name` optional, case-insensitive contains match on DO name
+- `country` optional country enum value
+- `region` optional, case-insensitive contains match on region
+- `sort_by_1`, `sort_by_2`, `sort_by_3` optional sort order (`country|region|name`)
+
 Example:
 
 ```bash
 curl -s "http://localhost:8080/api/dos" | jq
+```
+
+Example with filters:
+
+```bash
+curl -s "http://localhost:8080/api/dos?name=rio&country=spain&region=rioja" | jq
 ```
 
 Response shape:
@@ -662,6 +679,9 @@ curl -s -X DELETE http://localhost:8080/api/wines/999999 | jq
 ### `POST /api/wines/{id}/photos`
 
 Uploads/replaces photo by type (`front_label`, `back_label`, `bottle`).
+
+Notes:
+- Uploaded file must use an image extension: `jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`.
 
 Example 1:
 

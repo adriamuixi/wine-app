@@ -27,7 +27,7 @@ final readonly class LocalDoPhotoStorage implements PhotoStoragePort
             throw new \RuntimeException(sprintf('Unable to create directory: %s', $targetDir));
         }
 
-        $safeExtension = $this->extractExtension($extension);
+        $safeExtension = $this->sanitizeExtension($extension);
         $basename = $this->sanitizeBasename($rawBaseName);
         if ('do_logo' === $assetType) {
             $basename .= '_DO';
@@ -89,12 +89,15 @@ final readonly class LocalDoPhotoStorage implements PhotoStoragePort
         return [$assetType, $rawBaseName];
     }
 
-    private function extractExtension(string $originalFilename): string
+    private function sanitizeExtension(string $extension): string
     {
-        $extension = strtolower((string) pathinfo($originalFilename, PATHINFO_EXTENSION));
         $extension = preg_replace('/[^a-z0-9]/', '', $extension) ?? '';
+        $extension = substr($extension, 0, 10);
+        if ('' === $extension) {
+            throw new \RuntimeException('Invalid image extension.');
+        }
 
-        return '' === $extension ? 'bin' : substr($extension, 0, 10);
+        return $extension;
     }
 
     private function sanitizeBasename(string $value): string

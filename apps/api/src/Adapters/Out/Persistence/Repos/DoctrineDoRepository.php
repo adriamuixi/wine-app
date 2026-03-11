@@ -67,7 +67,12 @@ final readonly class DoctrineDoRepository implements DoRepository
         );
     }
 
-    public function findAll(array $sortFields = []): array
+    public function findAll(
+        array $sortFields = [],
+        ?string $name = null,
+        ?Country $country = null,
+        ?string $region = null,
+    ): array
     {
         $resolvedSortFields = [] === $sortFields ? ListDosSort::DEFAULT_ORDER : $sortFields;
         $columnMap = [
@@ -80,8 +85,30 @@ final readonly class DoctrineDoRepository implements DoRepository
             $resolvedSortFields,
         ));
 
+        $where = [];
+        $params = [];
+        if (null !== $name && '' !== trim($name)) {
+            $where[] = 'name ILIKE :name';
+            $params['name'] = '%'.trim($name).'%';
+        }
+        if (null !== $country) {
+            $where[] = 'country = :country';
+            $params['country'] = $country->value;
+        }
+        if (null !== $region && '' !== trim($region)) {
+            $where[] = 'region ILIKE :region';
+            $params['region'] = '%'.trim($region).'%';
+        }
+
+        $sql = 'SELECT id, name, region, country, country_code, do_logo, region_logo FROM "do"';
+        if ([] !== $where) {
+            $sql .= ' WHERE '.implode(' AND ', $where);
+        }
+        $sql .= sprintf(' ORDER BY %s', $orderBy);
+
         $rows = $this->entityManager->getConnection()->fetchAllAssociative(
-            sprintf('SELECT id, name, region, country, country_code, do_logo, region_logo FROM "do" ORDER BY %s', $orderBy),
+            $sql,
+            $params,
         );
 
         return array_map(

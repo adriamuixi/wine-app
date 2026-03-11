@@ -7,6 +7,7 @@ namespace App\Tests\Unit\Application\UseCases\Wine\CreateWinePhoto;
 use App\Application\Ports\PhotoStoragePort;
 use App\Domain\Repository\WinePhotoRepository;
 use App\Domain\Repository\WineRepository;
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoCommand;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoHandler;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoNotFound;
@@ -32,7 +33,7 @@ final class CreateWinePhotoHandlerTest extends TestCase
         $wineRepo = new SpyWineRepository(existingIds: [1]);
         $photoRepo = new SpyWinePhotoRepository();
         $photoStorage = new SpyWinePhotoStorage();
-        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage);
+        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage, new PhotoInputGuard());
         $result = $handler->handle(new CreateWinePhotoCommand(1, WinePhotoType::Bottle, $tmp, 'bottle.jpg', 12));
 
         self::assertSame(55, $result->id);
@@ -51,6 +52,7 @@ final class CreateWinePhotoHandlerTest extends TestCase
             new SpyWineRepository(existingIds: []),
             new SpyWinePhotoRepository(),
             new SpyWinePhotoStorage(),
+            new PhotoInputGuard(),
         );
 
         $this->expectException(CreateWinePhotoNotFound::class);
@@ -67,6 +69,7 @@ final class CreateWinePhotoHandlerTest extends TestCase
             new SpyWineRepository(existingIds: [1]),
             new SpyWinePhotoRepository(),
             new SpyWinePhotoStorage(),
+            new PhotoInputGuard(),
         );
 
         $this->expectException(CreateWinePhotoValidationException::class);
@@ -83,7 +86,7 @@ final class CreateWinePhotoHandlerTest extends TestCase
         $photoRepo = new SpyWinePhotoRepository();
         $photoStorage = new SpyWinePhotoStorage();
         $photoRepo->existing = new WinePhoto(77, '/images/wines/1/old.jpg', WinePhotoType::Bottle);
-        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage);
+        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage, new PhotoInputGuard());
         $result = $handler->handle(new CreateWinePhotoCommand(1, WinePhotoType::Bottle, $tmp, 'bottle.jpg', 24));
 
         self::assertSame(77, $result->id);
@@ -100,11 +103,29 @@ final class CreateWinePhotoHandlerTest extends TestCase
         $wineRepo = new SpyWineRepository(existingIds: [1]);
         $photoRepo = new SpyWinePhotoRepository();
         $photoStorage = new SpyWinePhotoStorage();
-        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage);
+        $handler = new CreateWinePhotoHandler($wineRepo, $photoRepo, $photoStorage, new PhotoInputGuard());
         $result = $handler->handle(new CreateWinePhotoCommand(1, WinePhotoType::Situation, $tmp, 'situation.jpg', 15));
 
         self::assertSame('situation', $result->type->value);
         self::assertSame('/images/wines/1/hash123.jpg', $result->url);
+    }
+
+    public function testItRejectsUnsupportedImageExtension(): void
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'wine-photo-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'image-content');
+
+        $handler = new CreateWinePhotoHandler(
+            new SpyWineRepository(existingIds: [1]),
+            new SpyWinePhotoRepository(),
+            new SpyWinePhotoStorage(),
+            new PhotoInputGuard(),
+        );
+
+        $this->expectException(CreateWinePhotoValidationException::class);
+        $this->expectExceptionMessage('Unsupported image extension. Allowed: jpg, jpeg, png, webp, gif, avif.');
+        $handler->handle(new CreateWinePhotoCommand(1, WinePhotoType::Bottle, $tmp, 'bottle.pdf', 12));
     }
 }
 

@@ -8,6 +8,7 @@ use App\Application\UseCases\Do\UpdateDo\UpdateDoCommand;
 use App\Application\UseCases\Do\UpdateDo\UpdateDoHandler;
 use App\Application\UseCases\Do\UpdateDo\UpdateDoNotFound;
 use App\Application\UseCases\Do\UpdateDo\UpdateDoValidationException;
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Domain\Enum\Country;
 use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Repository\DoRepository;
@@ -18,7 +19,7 @@ final class UpdateDoHandlerTest extends TestCase
     public function testItUpdatesExistingDo(): void
     {
         $repository = new SpyDoRepository(updatableIds: [10]);
-        $handler = new UpdateDoHandler($repository);
+        $handler = new UpdateDoHandler($repository, new PhotoInputGuard());
 
         $handler->handle(new UpdateDoCommand(
             doId: 10,
@@ -39,7 +40,7 @@ final class UpdateDoHandlerTest extends TestCase
 
     public function testItRejectsRegionLogoUpdate(): void
     {
-        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: [10]));
+        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: [10]), new PhotoInputGuard());
 
         $this->expectException(UpdateDoValidationException::class);
         $this->expectExceptionMessage('region_logo cannot be updated via this endpoint.');
@@ -57,7 +58,7 @@ final class UpdateDoHandlerTest extends TestCase
 
     public function testItRejectsWhenNoFieldsProvided(): void
     {
-        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: [10]));
+        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: [10]), new PhotoInputGuard());
 
         $this->expectException(UpdateDoValidationException::class);
         $handler->handle(new UpdateDoCommand(
@@ -74,7 +75,7 @@ final class UpdateDoHandlerTest extends TestCase
 
     public function testItRejectsInvalidCountryCodeLength(): void
     {
-        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: [10]));
+        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: [10]), new PhotoInputGuard());
 
         $this->expectException(UpdateDoValidationException::class);
         $handler->handle(new UpdateDoCommand(
@@ -89,9 +90,27 @@ final class UpdateDoHandlerTest extends TestCase
         ));
     }
 
+    public function testItRejectsInvalidDoLogoExtension(): void
+    {
+        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: [10]), new PhotoInputGuard());
+
+        $this->expectException(UpdateDoValidationException::class);
+        $this->expectExceptionMessage('do_logo must use an image extension: jpg, jpeg, png, webp, gif, avif.');
+        $handler->handle(new UpdateDoCommand(
+            doId: 10,
+            name: null,
+            region: null,
+            country: null,
+            countryCode: null,
+            doLogo: 'logo.txt',
+            regionLogo: null,
+            provided: ['do_logo' => true],
+        ));
+    }
+
     public function testItThrowsNotFoundWhenDoDoesNotExist(): void
     {
-        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: []));
+        $handler = new UpdateDoHandler(new SpyDoRepository(updatableIds: []), new PhotoInputGuard());
 
         $this->expectException(UpdateDoNotFound::class);
         $handler->handle(new UpdateDoCommand(
@@ -133,7 +152,12 @@ final class SpyDoRepository implements DoRepository
         return Country::Spain;
     }
 
-    public function findAll(array $sortFields = []): array
+    public function findAll(
+        array $sortFields = [],
+        ?string $name = null,
+        ?Country $country = null,
+        ?string $region = null,
+    ): array
     {
         return [];
     }

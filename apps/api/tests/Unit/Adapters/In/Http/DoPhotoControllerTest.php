@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\DoPhotoController;
 use App\Application\Ports\PhotoStoragePort;
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetCommand;
 use App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetHandler;
 use App\Domain\Enum\Country;
@@ -58,6 +59,24 @@ final class DoPhotoControllerTest extends TestCase
         self::assertSame('saved_asset.png', $payload['asset']['filename']);
     }
 
+    public function testCreateReturnsBadRequestForUnsupportedImageExtension(): void
+    {
+        $controller = $this->controller(existingDoIds: [1]);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'do-asset-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'binary-data');
+
+        $uploaded = new UploadedFile($tmp, 'rioja.pdf', null, null, true);
+        $request = Request::create('/api/dos/1/assets', 'POST', ['type' => 'do_logo'], [], ['file' => $uploaded]);
+
+        $response = $controller->create(1, $request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertSame('Unsupported image extension. Allowed: jpg, jpeg, png, webp, gif, avif.', $payload['error']);
+    }
+
     /**
      * @param list<int> $existingDoIds
      */
@@ -67,6 +86,7 @@ final class DoPhotoControllerTest extends TestCase
             new CreateDoAssetHandler(
                 new DoPhotoControllerInMemoryDoRepository($existingDoIds),
                 new DoPhotoControllerSpyStorage(),
+                new PhotoInputGuard(),
             ),
         );
     }
@@ -98,14 +118,19 @@ final class DoPhotoControllerInMemoryDoRepository implements DoRepository
         return null;
     }
 
-    public function findAll(array $sortFields = []): array
+    public function findAll(
+        array $sortFields = [],
+        ?string $name = null,
+        ?Country $country = null,
+        ?string $region = null,
+    ): array
     {
         return [];
     }
 
     public function update(DenominationOfOrigin $do): bool
     {
-        return false;
+        return in_array($do->id, $this->existingDoIds, true);
     }
 
     public function deleteById(int $id): bool

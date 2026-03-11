@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Application\UseCases\Do\UpdateDo;
 
+use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Domain\Model\DenominationOfOrigin;
 use App\Domain\Repository\DoRepository;
 
 final readonly class UpdateDoHandler
 {
-    public function __construct(private DoRepository $dos)
+    public function __construct(
+        private DoRepository $dos,
+        private PhotoInputGuard $photoInputGuard,
+    )
     {
     }
 
@@ -67,6 +71,9 @@ final readonly class UpdateDoHandler
 
         if ($command->isProvided('do_logo') && null !== $command->doLogo && '' === trim($command->doLogo)) {
             throw new \InvalidArgumentException('do_logo cannot be empty when provided.');
+        }
+        if ($command->isProvided('do_logo') && null !== $command->doLogo) {
+            $this->photoInputGuard->assertImageFilename($command->doLogo, 'do_logo');
         }
 
         if ($command->isProvided('region_logo')) {

@@ -44,12 +44,32 @@ final class ListDosHandlerTest extends TestCase
             $repository->lastSortFields,
         );
     }
+
+    public function testItPassesFiltersToRepository(): void
+    {
+        $repository = new InMemoryDoRepository();
+        $handler = new ListDosHandler($repository);
+
+        $handler->handle(new ListDosQuery(
+            sortFields: ListDosSort::DEFAULT_ORDER,
+            name: 'Rio',
+            country: Country::Spain,
+            region: 'Rioja',
+        ));
+
+        self::assertSame('Rio', $repository->lastNameFilter);
+        self::assertSame(Country::Spain, $repository->lastCountryFilter);
+        self::assertSame('Rioja', $repository->lastRegionFilter);
+    }
 }
 
 final class InMemoryDoRepository implements DoRepository
 {
     /** @var list<string> */
     public array $lastSortFields = [];
+    public ?string $lastNameFilter = null;
+    public ?Country $lastCountryFilter = null;
+    public ?string $lastRegionFilter = null;
 
     public function create(DenominationOfOrigin $do): int
     {
@@ -66,9 +86,17 @@ final class InMemoryDoRepository implements DoRepository
         return null;
     }
 
-    public function findAll(array $sortFields = []): array
+    public function findAll(
+        array $sortFields = [],
+        ?string $name = null,
+        ?Country $country = null,
+        ?string $region = null,
+    ): array
     {
         $this->lastSortFields = $sortFields;
+        $this->lastNameFilter = $name;
+        $this->lastCountryFilter = $country;
+        $this->lastRegionFilter = $region;
 
         return [
             new DenominationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES', 'rioja_DO.png', 'la_rioja.png'),

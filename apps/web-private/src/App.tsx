@@ -148,18 +148,6 @@ type DoCreateDraft = {
 type DoSortField = 'country' | 'region' | 'name'
 type DoSortPresetKey = 'country_region_name' | 'name_country_region' | 'region_name_country'
 
-const SAMPLE_DO_DIRECTORY: DoApiItem[] = [
-  { id: 101, name: 'Alella', region: 'Cataluña', country: 'spain', country_code: 'ES', do_logo: 'alella_DO.png', region_logo: 'cataluna.png' },
-  { id: 102, name: 'Jerez-Xérès-Sherry', region: 'Andalucía', country: 'spain', country_code: 'ES', do_logo: 'jerez_xerez_sherry_DO.jpg', region_logo: 'andalucia.png' },
-  { id: 103, name: 'Jumilla', region: 'Murcia', country: 'spain', country_code: 'ES', do_logo: 'jumilla_DO.jpg', region_logo: 'murcia.png' },
-  { id: 104, name: 'Penedès', region: 'Cataluña', country: 'spain', country_code: 'ES', do_logo: 'penedes_DO.png', region_logo: 'cataluna.png' },
-  { id: 105, name: 'Priorat', region: 'Cataluña', country: 'spain', country_code: 'ES', do_logo: 'priorat_DO.png', region_logo: 'cataluna.png' },
-  { id: 106, name: 'Rías Baixas', region: 'Galicia', country: 'spain', country_code: 'ES', do_logo: 'rias_baixas_DO.png', region_logo: 'galicia.png' },
-  { id: 107, name: 'Somontano', region: 'Aragón', country: 'spain', country_code: 'ES', do_logo: 'somontano_DO.jpg', region_logo: 'aragon.png' },
-  { id: 108, name: 'Toro', region: 'Castilla y León', country: 'spain', country_code: 'ES', do_logo: 'toro_DO.jpg', region_logo: 'castilla_y_leon.png' },
-  { id: 109, name: 'Napa Valley', region: 'California', country: 'united_states', country_code: 'US', do_logo: 'hunter_valley_DO.png', region_logo: 'united_states.png' },
-]
-
 type ReviewsPerMonthStatsApiResponse = {
   months: string[]
   review_counts: number[]
@@ -278,6 +266,7 @@ type ThemeMode = 'light' | 'dark'
 type GalleryModalVariant = 'full' | 'compact'
 type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label' | 'situation'
 type PhotoEditorAssetType = WinePhotoSlotType | 'do_logo'
+type DoLogoCropRatio = 'photo' | '1:1' | '3:4' | '4:3' | '16:9' | '9:16'
 
 type AppUser = {
   id: number
@@ -1006,13 +995,14 @@ function App() {
   const [selectedWineSheetError, setSelectedWineSheetError] = useState<string | null>(null)
   const [wineProfileReloadToken, setWineProfileReloadToken] = useState(0)
   const [photoPickerType, setPhotoPickerType] = useState<PhotoEditorAssetType | null>(null)
-  const [photoPickerContext, setPhotoPickerContext] = useState<'wine' | 'doCreate' | null>(null)
+  const [photoPickerContext, setPhotoPickerContext] = useState<'wine' | 'doCreate' | 'doEdit' | null>(null)
   const [photoEditorWineId, setPhotoEditorWineId] = useState<number | null>(null)
   const [photoEditorType, setPhotoEditorType] = useState<PhotoEditorAssetType | null>(null)
   const [photoEditorSource, setPhotoEditorSource] = useState<string | null>(null)
   const [photoEditorZoom, setPhotoEditorZoom] = useState(1)
   const [photoEditorOffsetX, setPhotoEditorOffsetX] = useState(0)
   const [photoEditorOffsetY, setPhotoEditorOffsetY] = useState(0)
+  const [photoEditorDoLogoCropRatio, setPhotoEditorDoLogoCropRatio] = useState<DoLogoCropRatio>('photo')
   const [photoEditorSaving, setPhotoEditorSaving] = useState(false)
   const [photoEditorError, setPhotoEditorError] = useState<string | null>(null)
   const [photoDeleteBusyType, setPhotoDeleteBusyType] = useState<WinePhotoSlotType | null>(null)
@@ -1047,6 +1037,10 @@ function App() {
   const [wineCountryFilter, setWineCountryFilter] = useState<CountryFilterValue>('all')
   const [doCountryFilter, setDoCountryFilter] = useState<CountryFilterValue>('all')
   const [doSortPreset, setDoSortPreset] = useState<DoSortPresetKey>('country_region_name')
+  const [doListNameFilter, setDoListNameFilter] = useState('')
+  const [doListCountryFilter, setDoListCountryFilter] = useState<CountryFilterValue>('all')
+  const [doListRegionFilter, setDoListRegionFilter] = useState('')
+  const [doRegionFilterOptions, setDoRegionFilterOptions] = useState<string[]>([])
   const [typeFilter, setTypeFilter] = useState<'all' | WineType>('all')
   const [minScoreFilter, setMinScoreFilter] = useState<'all' | number>('all')
   const [grapeFilter, setGrapeFilter] = useState<'all' | number>('all')
@@ -1123,7 +1117,6 @@ function App() {
   const [wineSuccessToast, setWineSuccessToast] = useState<string | null>(null)
   const doDropdownRef = useRef<HTMLDivElement | null>(null)
   const createDoDropdownRef = useRef<HTMLDivElement | null>(null)
-  const doLogoInputRef = useRef<HTMLInputElement | null>(null)
   const photoPickerInputRef = useRef<HTMLInputElement | null>(null)
   const photoEditorCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const photoEditorDragRef = useRef<{ active: boolean; pointerId: number; lastX: number; lastY: number } | null>(null)
@@ -1359,7 +1352,7 @@ function App() {
     [locale],
   )
   const doDirectoryItems = useMemo(() => {
-    const items = doOptions.length > 0 ? [...doOptions] : [...SAMPLE_DO_DIRECTORY]
+    const items = [...doOptions]
     const collator = new Intl.Collator(locale === 'ca' ? 'ca-ES' : 'es-ES', { sensitivity: 'base' })
 
     return items.sort((left, right) => {
@@ -1382,6 +1375,11 @@ function App() {
       return left.id - right.id
     })
   }, [doOptions, doSortFields, locale])
+  const sortedDoRegionFilterOptions = useMemo(() => {
+    const collator = new Intl.Collator(locale === 'ca' ? 'ca-ES' : 'es-ES', { sensitivity: 'base' })
+
+    return [...doRegionFilterOptions].sort((left, right) => collator.compare(left, right))
+  }, [doRegionFilterOptions, locale])
 
   const metrics = useMemo(
     () => ({
@@ -1924,6 +1922,19 @@ function App() {
       sort_by_2: doSortFields[1],
       sort_by_3: doSortFields[2],
     })
+    if (menu === 'dos') {
+      const normalizedName = doListNameFilter.trim()
+      const normalizedRegion = doListRegionFilter.trim()
+      if (normalizedName !== '') {
+        searchParams.set('name', normalizedName)
+      }
+      if (doListCountryFilter !== 'all') {
+        searchParams.set('country', doListCountryFilter)
+      }
+      if (normalizedRegion !== '') {
+        searchParams.set('region', normalizedRegion)
+      }
+    }
 
     fetch(`${apiBaseUrl}/api/dos?${searchParams.toString()}`, {
       signal: controller.signal,
@@ -1946,7 +1957,50 @@ function App() {
     return () => {
       controller.abort()
     }
-  }, [doListReloadToken, doSortFields, menu])
+  }, [doListCountryFilter, doListNameFilter, doListRegionFilter, doListReloadToken, doSortFields, menu])
+
+  useEffect(() => {
+    if (menu !== 'dos') {
+      return
+    }
+
+    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
+    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+    const controller = new AbortController()
+    const searchParams = new URLSearchParams({
+      sort_by_1: 'region',
+      sort_by_2: 'name',
+      sort_by_3: 'country',
+    })
+
+    fetch(`${apiBaseUrl}/api/dos?${searchParams.toString()}`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as DoApiResponse
+        const regions = [...new Set(
+          payload.items
+            .map((item) => item.region.trim())
+            .filter((value) => value !== ''),
+        )]
+        setDoRegionFilterOptions(regions)
+      })
+      .catch(() => {
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [doListReloadToken, menu])
 
   const openDoCreate = () => {
     if (doCreateLogoPreviewSrc != null) {
@@ -2187,61 +2241,6 @@ function App() {
     } catch (error: unknown) {
       setDoEditError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut actualitzar la D.O.' : 'No se pudo actualizar la DO.'))
       setDoEditSubmitting(false)
-    }
-  }
-
-  const handleDoAssetUpload = async (type: 'do_logo', fileList: FileList | null) => {
-    if (!doEditTarget || !doEditDraft || !fileList || fileList.length === 0) {
-      return
-    }
-
-    const file = fileList[0]
-    const formData = new FormData()
-    formData.set('type', type)
-    formData.set('file', file)
-
-    setDoAssetUploadingType(type)
-    setDoEditError(null)
-
-    try {
-      const response = await fetch(`${resolveApiBaseUrl()}/api/dos/${doEditTarget.id}/assets`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-        },
-        body: formData,
-      })
-
-      if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}`
-        try {
-          const errorPayload = await response.json() as { error?: string }
-          if (typeof errorPayload.error === 'string' && errorPayload.error.trim() !== '') {
-            errorMessage = errorPayload.error
-          }
-        } catch {
-          // Keep HTTP fallback.
-        }
-        throw new Error(errorMessage)
-      }
-
-      const payload = await response.json() as DoAssetUploadResponse
-      const filename = payload.asset.filename
-      setDoEditDraft((current) => {
-        if (current == null) {
-          return current
-        }
-
-        return { ...current, do_logo: filename }
-      })
-    } catch (error: unknown) {
-      setDoEditError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut pujar la imatge.' : 'No se pudo subir la imagen.'))
-    } finally {
-      setDoAssetUploadingType(null)
-      if (type === 'do_logo' && doLogoInputRef.current) {
-        doLogoInputRef.current.value = ''
-      }
     }
   }
 
@@ -3181,6 +3180,18 @@ function App() {
     photoPickerInputRef.current?.click()
   }
 
+  const startDoEditLogoPick = () => {
+    if (!doEditTarget || doEditDraft == null) {
+      return
+    }
+
+    setPhotoPickerContext('doEdit')
+    setPhotoEditorWineId(doEditTarget.id)
+    setPhotoPickerType('do_logo')
+    setPhotoEditorError(null)
+    photoPickerInputRef.current?.click()
+  }
+
   const handlePhotoPickerChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file || photoPickerType == null || photoPickerContext == null) {
@@ -3194,6 +3205,7 @@ function App() {
     setPhotoEditorZoom(1)
     setPhotoEditorOffsetX(0)
     setPhotoEditorOffsetY(0)
+    setPhotoEditorDoLogoCropRatio('photo')
     setPhotoEditorError(null)
     event.currentTarget.value = ''
   }
@@ -3211,9 +3223,93 @@ function App() {
     setPhotoEditorZoom(1)
     setPhotoEditorOffsetX(0)
     setPhotoEditorOffsetY(0)
+    setPhotoEditorDoLogoCropRatio('photo')
     photoEditorDragRef.current = null
     photoEditorPinchRef.current = null
     photoEditorPointersRef.current.clear()
+  }
+
+  const uploadDoLogoAsset = async (doId: number, file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.set('type', 'do_logo')
+    formData.set('file', file)
+
+    const response = await fetch(`${resolveApiBaseUrl()}/api/dos/${doId}/assets`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`
+      try {
+        const errorPayload = await response.json() as { error?: string }
+        if (typeof errorPayload.error === 'string' && errorPayload.error.trim() !== '') {
+          errorMessage = errorPayload.error
+        }
+      } catch {
+        // Keep HTTP fallback.
+      }
+      throw new Error(errorMessage)
+    }
+
+    const payload = await response.json() as DoAssetUploadResponse
+    return payload.asset.filename
+  }
+
+  const currentDoLogoCropAspect = (): number | null => {
+    if (photoEditorType !== 'do_logo') {
+      return null
+    }
+
+    switch (photoEditorDoLogoCropRatio) {
+      case '1:1':
+        return 1
+      case '3:4':
+        return 3 / 4
+      case '4:3':
+        return 4 / 3
+      case '16:9':
+        return 16 / 9
+      case '9:16':
+        return 9 / 16
+      case 'photo':
+      default:
+        return null
+    }
+  }
+
+  const photoEditorRatioClass = (): string => {
+    if (photoEditorType === 'bottle') {
+      return 'ratio-9-16'
+    }
+    if (photoEditorType === 'situation') {
+      return 'ratio-free'
+    }
+    if (photoEditorType === 'do_logo') {
+      if (photoEditorDoLogoCropRatio === '1:1') {
+        return 'ratio-1-1'
+      }
+      if (photoEditorDoLogoCropRatio === '3:4') {
+        return 'ratio-3-4'
+      }
+      if (photoEditorDoLogoCropRatio === '4:3') {
+        return 'ratio-4-3'
+      }
+      if (photoEditorDoLogoCropRatio === '16:9') {
+        return 'ratio-16-9'
+      }
+      if (photoEditorDoLogoCropRatio === '9:16') {
+        return 'ratio-9-16'
+      }
+
+      return 'ratio-free'
+    }
+
+    return 'ratio-3-4'
   }
 
   const drawPhotoEditorPreview = async (): Promise<{ canvas: HTMLCanvasElement; outputFileName: string } | null> => {
@@ -3235,15 +3331,20 @@ function App() {
     const isBottlePhoto = photoEditorType === 'bottle'
     const isSituationPhoto = photoEditorType === 'situation'
     const isDoLogoPhoto = photoEditorType === 'do_logo'
-    const isFreeAspectPhoto = isSituationPhoto || isDoLogoPhoto
+    const doLogoCropAspect = currentDoLogoCropAspect()
+    const isFreeAspectPhoto = isSituationPhoto || (isDoLogoPhoto && doLogoCropAspect == null)
     const maxFreeSide = 2048
     const freeScale = isFreeAspectPhoto ? Math.min(1, maxFreeSide / Math.max(image.naturalWidth, image.naturalHeight)) : 1
     const outputWidth = isFreeAspectPhoto
       ? Math.max(1, Math.round(image.naturalWidth * freeScale))
-      : (isBottlePhoto ? 576 : 768)
+      : (isDoLogoPhoto && doLogoCropAspect != null
+        ? Math.max(1, Math.round(doLogoCropAspect >= 1 ? (1024 * doLogoCropAspect) : 1024))
+        : (isBottlePhoto ? 576 : 768))
     const outputHeight = isFreeAspectPhoto
       ? Math.max(1, Math.round(image.naturalHeight * freeScale))
-      : 1024
+      : (isDoLogoPhoto && doLogoCropAspect != null
+        ? Math.max(1, Math.round(doLogoCropAspect >= 1 ? 1024 : (1024 / doLogoCropAspect)))
+        : 1024)
     canvas.width = outputWidth
     canvas.height = outputHeight
     const ctx = canvas.getContext('2d')
@@ -3439,6 +3540,19 @@ function App() {
         setDoCreateLogoPreviewSrc(nextPreview)
         setDoCreateDraft((current) => ({ ...current, do_logo: file.name }))
         closePhotoEditor()
+      } else if (photoPickerContext === 'doEdit' && photoEditorType === 'do_logo') {
+        if (photoEditorWineId == null) {
+          throw new Error(locale === 'ca' ? 'No s’ha pogut identificar la D.O.' : 'No se pudo identificar la DO.')
+        }
+
+        setDoAssetUploadingType('do_logo')
+        setDoEditError(null)
+        const uploadedFilename = await uploadDoLogoAsset(photoEditorWineId, file)
+        setDoEditDraft((current) => (current == null ? current : { ...current, do_logo: uploadedFilename }))
+        setDoOptions((current) => current.map((item) => (item.id === photoEditorWineId ? { ...item, do_logo: uploadedFilename } : item)))
+        setDoListReloadToken((current) => current + 1)
+        closePhotoEditor()
+        setDoAssetUploadingType(null)
       } else {
         if (photoEditorWineId == null || (photoEditorType !== 'bottle' && photoEditorType !== 'front_label' && photoEditorType !== 'back_label' && photoEditorType !== 'situation')) {
           throw new Error(locale === 'ca' ? 'No s’ha pogut identificar la foto del vi.' : 'No se pudo identificar la foto del vino.')
@@ -3470,6 +3584,7 @@ function App() {
         }
       }
     } catch (error: unknown) {
+      setDoAssetUploadingType(null)
       setPhotoEditorError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut pujar la foto.' : 'No se pudo subir la foto.'))
     } finally {
       setPhotoEditorSaving(false)
@@ -3524,7 +3639,7 @@ function App() {
     void drawPhotoEditorPreview().catch(() => {
       setPhotoEditorError(locale === 'ca' ? 'No s’ha pogut previsualitzar la foto.' : 'No se pudo previsualizar la foto.')
     })
-  }, [photoEditorSource, photoEditorType, photoEditorZoom, photoEditorOffsetX, photoEditorOffsetY, locale])
+  }, [photoEditorSource, photoEditorType, photoEditorZoom, photoEditorOffsetX, photoEditorOffsetY, photoEditorDoLogoCropRatio, locale])
 
   const openReviewCreate = () => {
     setSelectedReviewForEdit(null)
@@ -5581,6 +5696,42 @@ function App() {
                 </div>
               </div>
 
+              <div className="inline-grid triple do-directory-filter-grid">
+                <label className="do-directory-filter-field">
+                  {locale === 'ca' ? 'Filtrar per nom' : 'Filtrar por nombre'}
+                  <input
+                    type="search"
+                    value={doListNameFilter}
+                    placeholder={locale === 'ca' ? 'Ex. Rioja' : 'Ej. Rioja'}
+                    onChange={(event) => setDoListNameFilter(event.target.value)}
+                  />
+                </label>
+                <label className="do-directory-filter-field">
+                  {locale === 'ca' ? 'Filtrar per país' : 'Filtrar por país'}
+                  <select
+                    value={doListCountryFilter}
+                    onChange={(event) => setDoListCountryFilter(event.target.value as CountryFilterValue)}
+                  >
+                    <option value="all">{locale === 'ca' ? 'Tots els països' : 'Todos los países'}</option>
+                    {WINE_COUNTRY_FILTER_VALUES.map((countryCode) => (
+                      <option key={countryCode} value={countryCode}>{countryCodeToLabel(countryCode, locale)}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="do-directory-filter-field">
+                  {locale === 'ca' ? 'Filtrar per regió' : 'Filtrar por región'}
+                  <select
+                    value={doListRegionFilter}
+                    onChange={(event) => setDoListRegionFilter(event.target.value)}
+                  >
+                    <option value="">{locale === 'ca' ? 'Totes les regions' : 'Todas las regiones'}</option>
+                    {sortedDoRegionFilterOptions.map((region) => (
+                      <option key={region} value={region}>{region}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
               <div className="table-wrap">
                 <table className="wine-table do-directory-table">
                   <thead>
@@ -7121,21 +7272,12 @@ function App() {
                       <h4>{locale === 'ca' ? 'Imatge principal' : 'Imagen principal'}</h4>
                     </div>
                     <div className="wine-photo-actions">
-                      <input
-                        ref={doLogoInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={(event) => { void handleDoAssetUpload('do_logo', event.target.files) }}
-                      />
                       <button
                         type="button"
                         className="ghost-button tiny photo-icon-button"
                         aria-label={locale === 'ca' ? 'Editar logo D.O.' : 'Editar logo DO'}
-                        disabled={doAssetUploadingType != null || doEditSubmitting}
-                        onClick={() => {
-                          doLogoInputRef.current?.click()
-                        }}
+                        disabled={doAssetUploadingType != null || doEditSubmitting || photoEditorSaving}
+                        onClick={startDoEditLogoPick}
                       >
                         <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
                           <path d="M4 20h4l10-10-4-4L4 16v4Z" fill="currentColor" />
@@ -7350,13 +7492,7 @@ function App() {
 
             <div className="photo-editor-body">
               <div
-                className={`photo-editor-preview-wrap ${
-                  photoEditorType === 'bottle'
-                    ? 'ratio-9-16'
-                    : (photoEditorType === 'situation' || photoEditorType === 'do_logo')
-                      ? 'ratio-free'
-                      : 'ratio-3-4'
-                }`}
+                className={`photo-editor-preview-wrap ${photoEditorRatioClass()}`}
                 onPointerDown={handlePhotoEditorPointerDown}
                 onPointerMove={handlePhotoEditorPointerMove}
                 onPointerUp={handlePhotoEditorPointerUp}
@@ -7389,9 +7525,26 @@ function App() {
                   {photoEditorType === 'situation'
                     ? (locale === 'ca' ? 'Format lliure (sense retall obligatori)' : 'Formato libre (sin recorte obligatorio)')
                     : photoEditorType === 'do_logo'
-                      ? (locale === 'ca' ? 'Logo D.O. en format lliure · arrossega i fes pinça per ajustar' : 'Logo DO en formato libre · arrastra y pellizca para ajustar')
+                      ? (locale === 'ca' ? 'Logo D.O. · tria relació, arrossega i fes pinça per ajustar' : 'Logo DO · elige relación, arrastra y pellizca para ajustar')
                       : `Format ${photoEditorType === 'bottle' ? '9:16' : '3:4'} · ${locale === 'ca' ? 'Arrossega per moure i fes pinça per zoom' : 'Arrastra para mover y pellizca para zoom'}`}
                 </p>
+                {photoEditorType === 'do_logo' ? (
+                  <label>
+                    {locale === 'ca' ? 'Crop' : 'Crop'}
+                    <div className="photo-editor-crop-buttons" role="group" aria-label={locale === 'ca' ? 'Seleccionar relació de retall' : 'Seleccionar relación de recorte'}>
+                      {(['photo', '1:1', '3:4', '4:3', '16:9', '9:16'] as DoLogoCropRatio[]).map((ratio) => (
+                        <button
+                          key={ratio}
+                          type="button"
+                          className={`ghost-button tiny${photoEditorDoLogoCropRatio === ratio ? ' is-active' : ''}`}
+                          onClick={() => setPhotoEditorDoLogoCropRatio(ratio)}
+                        >
+                          {ratio === 'photo' ? (locale === 'ca' ? 'Foto' : 'Foto') : ratio}
+                        </button>
+                      ))}
+                    </div>
+                  </label>
+                ) : null}
                 {photoEditorType !== 'situation' ? (
                   <>
                     <label>

@@ -430,11 +430,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: DO already exists for the same country and name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     get:
       summary: List all denominations of origin
       operationId: getDosList
       tags: [DO]
       parameters:
+        - in: query
+          name: name
+          description: Filter by DO name (case-insensitive contains)
+          schema:
+            type: string
+        - in: query
+          name: country
+          description: Filter by country
+          schema:
+            type: string
+            enum: [spain, france, italy, portugal, germany, argentina, chile, united_states, south_africa, australia]
+        - in: query
+          name: region
+          description: Filter by DO region (case-insensitive contains)
+          schema:
+            type: string
         - in: query
           name: sort_by_1
           description: Primary sort field. Allowed values are `country`, `region`, `name`.
@@ -554,6 +576,7 @@ paths:
                 file:
                   type: string
                   format: binary
+                  description: Image file. Allowed extensions are `jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`.
       responses:
         '201':
           description: DO asset uploaded successfully
@@ -800,6 +823,7 @@ paths:
                 file:
                   type: string
                   format: binary
+                  description: Image file. Allowed extensions are `jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`.
       responses:
         '201':
           description: Photo created or replaced
@@ -1309,6 +1333,7 @@ components:
         do_logo:
           type: string
           nullable: true
+          description: Logo filename or path using an image extension (`jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`).
     CreateDoRequest:
       type: object
       required: [name, region, country, country_code]
@@ -1327,6 +1352,7 @@ components:
         do_logo:
           type: string
           nullable: true
+          description: Logo filename or path using an image extension (`jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`).
     CreateDoResponse:
       type: object
       required: [do]
