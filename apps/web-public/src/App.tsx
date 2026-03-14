@@ -200,6 +200,12 @@ type WineDetailsApiResponse = {
         lastname: string
       }
       score: number | null
+      aroma: number
+      appearance: number
+      palate_entry: number
+      body: number
+      persistence: number
+      bullets: Array<'fruity' | 'floral' | 'mineral' | 'oak_forward' | 'powerful'>
       created_at: string
     }>
   }
