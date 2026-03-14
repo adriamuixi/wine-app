@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 type Locale = 'ca' | 'es'
@@ -6,6 +6,20 @@ type ThemeMode = 'light' | 'dark'
 type WineType = 'red' | 'white' | 'rose' | 'sparkling'
 type SortKey = 'score_desc' | 'price_asc' | 'price_desc' | 'latest' | 'tasting_date_desc' | 'tasting_date_asc'
 type ScoreFilterBucket = 'all' | 'lt70' | '70_80' | '80_90' | 'gte90'
+const DO_MAP_ALL_WORLD_VALUE = '__all_world__'
+type DoMapPoint = {
+  id: number
+  name: string
+  countryCode: NonNullable<WineListApiItem['country']>
+  country: string
+  region: string
+  lat: number
+  lng: number
+  zoom?: number
+  doLogoImage?: string
+  regionLogoImage?: string
+  description?: string
+}
 type UrlCatalogState = {
   q: string
   type: 'all' | WineType
@@ -114,6 +128,11 @@ type DoApiItem = {
   country_code: string
   do_logo: string | null
   region_logo: string | null
+  map_data?: {
+    lat: number
+    lng: number
+    zoom?: number | null
+  } | null
 }
 
 type DoApiResponse = {
@@ -214,10 +233,28 @@ type Dictionary = {
     menu: string
     navigation: string
     winesCatalog: string
+    doMap: string
     whoWeAre: string
     backoffice: string
     openFilters: string
     closeFilters: string
+  }
+  doMap: {
+    eyebrow: string
+    title: string
+    subtitle: string
+    tip: string
+    listTitle: string
+    worldMapLabel: string
+    openCatalog: string
+    filterCountry: string
+    chooseDo: string
+    chooseCountryFirst: string
+    chooseDoPlaceholder: string
+    closeSelector: string
+    allWorld: string
+    fullscreenOpen: string
+    fullscreenClose: string
   }
   card: {
     avgScore: string
@@ -280,6 +317,78 @@ const THEME_KEY = 'wine-web-public-theme'
 const LOCALE_KEY = 'wine-web-public-locale'
 const MOBILE_VIEW_COOKIE_KEY = 'wine-web-public-mobile-view'
 const DEFAULT_SORT: SortKey = 'score_desc'
+const LEAFLET_CSS_LINK_ID = 'leaflet-css'
+const LEAFLET_CSS_URL = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+const LEAFLET_SCRIPT_ID = 'leaflet-script'
+const LEAFLET_JS_URL = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+
+type LeafletGlobal = {
+  map: (container: HTMLElement, options?: Record<string, unknown>) => {
+    setView: (center: [number, number], zoom: number) => unknown
+    flyTo: (center: [number, number], zoom?: number, options?: Record<string, unknown>) => unknown
+    fitBounds: (bounds: unknown, options?: Record<string, unknown>) => unknown
+    on: (event: string, handler: () => void) => unknown
+    getZoom: () => number
+    invalidateSize: (options?: Record<string, unknown>) => void
+    remove: () => void
+  }
+  tileLayer: (urlTemplate: string, options?: Record<string, unknown>) => { addTo: (map: unknown) => unknown }
+  latLngBounds: (latlngs: Array<[number, number]>) => unknown
+  divIcon: (options?: Record<string, unknown>) => unknown
+  marker: (latlng: [number, number], options?: Record<string, unknown>) => {
+    addTo: (map: unknown) => unknown
+    on: (event: string, handler: () => void) => unknown
+    bindTooltip: (content: string, options?: Record<string, unknown>) => unknown
+    openTooltip: () => unknown
+    closeTooltip: () => unknown
+    getElement: () => HTMLElement | null
+  }
+  circleMarker: (latlng: [number, number], options?: Record<string, unknown>) => {
+    addTo: (map: unknown) => unknown
+    on: (event: string, handler: () => void) => unknown
+    setStyle: (style: Record<string, unknown>) => unknown
+    bindTooltip: (content: string, options?: Record<string, unknown>) => unknown
+  }
+}
+
+declare global {
+  interface Window {
+    L?: LeafletGlobal
+  }
+}
+
+function loadLeafletGlobal(): Promise<LeafletGlobal> {
+  if (typeof window === 'undefined') {
+    return Promise.reject(new Error('Leaflet requires a browser environment.'))
+  }
+
+  if (window.L) {
+    return Promise.resolve(window.L)
+  }
+
+  return new Promise((resolve, reject) => {
+    const existing = document.getElementById(LEAFLET_SCRIPT_ID) as HTMLScriptElement | null
+    if (existing && !window.L) {
+      existing.remove()
+    }
+
+    const script = document.createElement('script')
+    script.id = LEAFLET_SCRIPT_ID
+    script.src = LEAFLET_JS_URL
+    script.async = true
+    script.onload = () => {
+      if (!window.L) {
+        reject(new Error('Leaflet loaded but global object is missing.'))
+        return
+      }
+      resolve(window.L)
+    }
+    script.onerror = () => {
+      reject(new Error('Failed to load Leaflet script.'))
+    }
+    document.head.appendChild(script)
+  })
+}
 
 const DICT: Record<Locale, Dictionary> = {
   ca: {
@@ -310,10 +419,28 @@ const DICT: Record<Locale, Dictionary> = {
       menu: 'Menú',
       navigation: 'Navegació',
       winesCatalog: 'Catàleg de vins',
+      doMap: 'Mapa DO',
       whoWeAre: 'Qui som',
-      backoffice: 'Backoffice',
+      backoffice: 'Àrea privada',
       openFilters: 'Obre filtres',
       closeFilters: 'Tanca filtres',
+    },
+    doMap: {
+      eyebrow: '',
+      title: 'Mapa DO',
+      subtitle: '',
+      tip: '',
+      listTitle: 'Denominacions destacades',
+      worldMapLabel: 'Mapa mundi de DO',
+      openCatalog: '',
+      filterCountry: 'País',
+      chooseDo: 'Seleccionar DO',
+      chooseCountryFirst: 'Primer selecciona un país.',
+      chooseDoPlaceholder: 'Escull una denominació',
+      closeSelector: 'Tancar selector',
+      allWorld: 'Tot el món',
+      fullscreenOpen: 'Obrir mapa a pantalla completa',
+      fullscreenClose: 'Tancar pantalla completa',
     },
     card: {
       avgScore: 'Punt. mitjana',
@@ -411,10 +538,28 @@ const DICT: Record<Locale, Dictionary> = {
       menu: 'Menú',
       navigation: 'Navegación',
       winesCatalog: 'Catálogo de vinos',
+      doMap: 'Mapa DO',
       whoWeAre: 'Quiénes somos',
-      backoffice: 'Backoffice',
+      backoffice: 'Área privada',
       openFilters: 'Abrir filtros',
       closeFilters: 'Cerrar filtros',
+    },
+    doMap: {
+      eyebrow: '',
+      title: 'Mapa DO',
+      subtitle: '',
+      tip: '',
+      listTitle: 'Denominaciones destacadas',
+      worldMapLabel: 'Mapa mundi de DO',
+      openCatalog: '',
+      filterCountry: 'País',
+      chooseDo: 'Seleccionar DO',
+      chooseCountryFirst: 'Primero selecciona un país.',
+      chooseDoPlaceholder: 'Elige una denominación',
+      closeSelector: 'Cerrar selector',
+      allWorld: 'Todo el mundo',
+      fullscreenOpen: 'Abrir mapa en pantalla completa',
+      fullscreenClose: 'Cerrar pantalla completa',
     },
     card: {
       avgScore: 'Punt. media',
@@ -618,8 +763,20 @@ function countryFlagPath(country: string): string | null {
 }
 
 function localizedCountryName(country: string, locale: Locale): string {
-  if (country === 'Spain') return locale === 'ca' ? 'Espanya' : 'España'
-  return country
+  const map: Record<string, { ca: string; es: string }> = {
+    Spain: { ca: 'Espanya', es: 'España' },
+    France: { ca: 'França', es: 'Francia' },
+    Italy: { ca: 'Itàlia', es: 'Italia' },
+    Portugal: { ca: 'Portugal', es: 'Portugal' },
+    Germany: { ca: 'Alemanya', es: 'Alemania' },
+    Argentina: { ca: 'Argentina', es: 'Argentina' },
+    Chile: { ca: 'Xile', es: 'Chile' },
+    'United States': { ca: 'Estats Units', es: 'Estados Unidos' },
+    'South Africa': { ca: 'Sud-àfrica', es: 'Sudáfrica' },
+    Australia: { ca: 'Austràlia', es: 'Australia' },
+  }
+
+  return map[country]?.[locale] ?? country
 }
 
 function spanishAutonomousCommunity(region: string): { name: string; slug: string } | null {
@@ -987,6 +1144,10 @@ function parseUrlState(): UrlCatalogState {
 
 export default function App() {
   const initialUrl = useMemo(() => parseUrlState(), [])
+  const currentPath = typeof window !== 'undefined'
+    ? (window.location.pathname.replace(/\/+$/, '') || '/')
+    : '/'
+  const isDoMapPage = currentPath === '/do-map'
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme)
   const [locale, setLocale] = useState<Locale>(getInitialLocale)
   const [search, setSearch] = useState(initialUrl.q)
@@ -1011,9 +1172,35 @@ export default function App() {
   const [wines, setWines] = useState<WineCard[]>([])
   const [doOptions, setDoOptions] = useState<DoApiItem[]>([])
   const [wineDetailsById, setWineDetailsById] = useState<Record<number, WineDetailsApiResponse['wine']>>({})
+  const [selectedMapDoId, setSelectedMapDoId] = useState<number | null>(null)
+  const [doMapZoomLevel, setDoMapZoomLevel] = useState(3.1)
+  const [doMapCountryFilter, setDoMapCountryFilter] = useState<string>(DO_MAP_ALL_WORLD_VALUE)
+  const [isDoMapCountryMenuOpen, setIsDoMapCountryMenuOpen] = useState(false)
+  const [isDoMapMobileDoPickerOpen, setIsDoMapMobileDoPickerOpen] = useState(false)
+  const [isDoMapMobile, setIsDoMapMobile] = useState(false)
+  const [canDoMapFullscreen, setCanDoMapFullscreen] = useState(false)
+  const [isDoMapFullscreen, setIsDoMapFullscreen] = useState(false)
+  const [doMapInitError, setDoMapInitError] = useState(false)
+  const doMapCanvasRef = useRef<HTMLDivElement | null>(null)
+  const doMapContainerRef = useRef<HTMLDivElement | null>(null)
+  const doMapInstanceRef = useRef<{
+    setView: (center: [number, number], zoom: number) => unknown
+    flyTo: (center: [number, number], zoom?: number, options?: Record<string, unknown>) => unknown
+    fitBounds: (bounds: unknown, options?: Record<string, unknown>) => unknown
+    on: (event: string, handler: () => void) => unknown
+    getZoom: () => number
+    invalidateSize: (options?: Record<string, unknown>) => void
+    remove: () => void
+  } | null>(null)
+  const doMapMarkersRef = useRef<Array<{
+    id: number
+    marker: { openTooltip: () => unknown; closeTooltip: () => unknown }
+    setSelected: (selected: boolean, zoomBoost: boolean) => void
+  }>>([])
 
   const t = DICT[locale]
   const isDark = theme === 'dark'
+  const isCatalogPage = !isDoMapPage
   const galleryPhotoLabels = locale === 'ca'
     ? ['Ampolla', 'Etiqueta frontal', 'Etiqueta posterior', 'Context']
     : ['Botella', 'Etiqueta frontal', 'Etiqueta posterior', 'Contexto']
@@ -1046,6 +1233,10 @@ export default function App() {
   }, [mobileViewMode])
 
   useEffect(() => {
+    if (isDoMapPage) {
+      return
+    }
+
     const controller = new AbortController()
 
     const loadWines = async () => {
@@ -1083,9 +1274,13 @@ export default function App() {
     return () => {
       controller.abort()
     }
-  }, [locale])
+  }, [isDoMapPage, locale])
 
   useEffect(() => {
+    if (isDoMapPage) {
+      return
+    }
+
     if (selectedWineId == null || wineDetailsById[selectedWineId]) {
       return
     }
@@ -1117,7 +1312,7 @@ export default function App() {
     return () => {
       controller.abort()
     }
-  }, [selectedWineId, wineDetailsById])
+  }, [isDoMapPage, selectedWineId, wineDetailsById])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -1158,6 +1353,17 @@ export default function App() {
       document.body.style.overflow = previousBodyOverflow
     }
   }, [isMobileMenuOpen, isMobileFiltersOpen, isMobileSortOpen])
+
+  useEffect(() => {
+    if (!isDoMapPage) {
+      return
+    }
+
+    const sync = () => setIsDoMapMobile(window.matchMedia('(max-width: 980px)').matches)
+    sync()
+    window.addEventListener('resize', sync)
+    return () => window.removeEventListener('resize', sync)
+  }, [isDoMapPage])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1202,6 +1408,22 @@ export default function App() {
     window.addEventListener('pointerdown', onPointerDown)
     return () => window.removeEventListener('pointerdown', onPointerDown)
   }, [isDoDropdownOpen])
+
+  useEffect(() => {
+    if (!isDoMapCountryMenuOpen) {
+      return
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest('.do-map-country-select')) {
+        return
+      }
+      setIsDoMapCountryMenuOpen(false)
+    }
+
+    window.addEventListener('pointerdown', onPointerDown)
+    return () => window.removeEventListener('pointerdown', onPointerDown)
+  }, [isDoMapCountryMenuOpen])
 
   useEffect(() => {
     const onPopState = () => {
@@ -1352,6 +1574,311 @@ export default function App() {
     const details = wineDetailsById[selectedWineId]
     return details ? mergeWineCardWithDetails(baseWine, details, locale) : baseWine
   }, [selectedWineId, wines, wineDetailsById, locale])
+  const doMapPoints = useMemo<DoMapPoint[]>(
+    () => doOptions
+      .filter((item) => item.map_data && Number.isFinite(item.map_data.lat) && Number.isFinite(item.map_data.lng))
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        countryCode: item.country,
+        region: item.region,
+        country: countryCodeToLabel(item.country),
+        lat: Number(item.map_data?.lat),
+        lng: Number(item.map_data?.lng),
+        zoom: typeof item.map_data?.zoom === 'number' ? item.map_data.zoom : undefined,
+        doLogoImage: doLogoPathFromImageName(item.do_logo),
+        regionLogoImage: regionLogoPathFromImageName(item.region_logo),
+      }))
+      .sort((a, b) => {
+        const byCountry = a.country.localeCompare(b.country)
+        if (byCountry !== 0) return byCountry
+        const byRegion = a.region.localeCompare(b.region)
+        if (byRegion !== 0) return byRegion
+        return a.name.localeCompare(b.name)
+      }),
+    [doOptions, locale],
+  )
+  const doMapCountryOptions = useMemo(
+    () => [
+      DO_MAP_ALL_WORLD_VALUE,
+      ...Array.from(new Set(doMapPoints.map((point) => point.country))).sort((a, b) => {
+        if (a === 'Spain') return -1
+        if (b === 'Spain') return 1
+        return a.localeCompare(b)
+      }),
+    ],
+    [doMapPoints],
+  )
+  const doMapVisiblePoints = useMemo(
+    () => doMapCountryFilter === DO_MAP_ALL_WORLD_VALUE
+      ? doMapPoints
+      : doMapPoints.filter((point) => point.country === doMapCountryFilter),
+    [doMapCountryFilter, doMapPoints],
+  )
+  const selectedMapDo = useMemo(
+    () => doMapVisiblePoints.find((point) => point.id === selectedMapDoId) ?? null,
+    [doMapVisiblePoints, selectedMapDoId],
+  )
+
+  useEffect(() => {
+    if (!isDoMapPage) {
+      return
+    }
+
+    if (doMapCountryOptions.length === 0) {
+      setDoMapCountryFilter('')
+      return
+    }
+
+    if (!doMapCountryOptions.includes(doMapCountryFilter)) {
+      setDoMapCountryFilter(DO_MAP_ALL_WORLD_VALUE)
+    }
+  }, [doMapCountryFilter, doMapCountryOptions, isDoMapPage])
+
+  useEffect(() => {
+    if (!isDoMapPage) {
+      return
+    }
+    setSelectedMapDoId(null)
+  }, [doMapCountryFilter, isDoMapPage])
+
+  useEffect(() => {
+    if (!isDoMapMobile) {
+      setIsDoMapMobileDoPickerOpen(false)
+    }
+  }, [isDoMapMobile])
+
+  useEffect(() => {
+    if (!isDoMapPage) {
+      return
+    }
+
+    const canFullscreen = Boolean(
+      doMapCanvasRef.current
+      && typeof doMapCanvasRef.current.requestFullscreen === 'function',
+    )
+    setCanDoMapFullscreen(canFullscreen)
+
+    const onFullscreenChange = () => {
+      const isActive = document.fullscreenElement === doMapCanvasRef.current
+      setIsDoMapFullscreen(isActive)
+      window.setTimeout(() => {
+        doMapInstanceRef.current?.invalidateSize({ pan: false, animate: false })
+      }, 100)
+    }
+
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [isDoMapPage])
+
+  useEffect(() => {
+    if (!isDoMapPage) {
+      return
+    }
+
+    if (doMapVisiblePoints.length === 0) {
+      setSelectedMapDoId(null)
+      return
+    }
+
+    if (null !== selectedMapDoId && !doMapVisiblePoints.some((point) => point.id === selectedMapDoId)) {
+      setSelectedMapDoId(null)
+    }
+  }, [doMapVisiblePoints, isDoMapPage, selectedMapDoId])
+
+  useEffect(() => {
+    if (!isDoMapPage) {
+      return
+    }
+
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    if (document.getElementById(LEAFLET_CSS_LINK_ID)) {
+      return
+    }
+
+    const link = document.createElement('link')
+    link.id = LEAFLET_CSS_LINK_ID
+    link.rel = 'stylesheet'
+    link.href = LEAFLET_CSS_URL
+    document.head.appendChild(link)
+  }, [isDoMapPage])
+
+  useEffect(() => {
+    if (!isDoMapPage || !doMapContainerRef.current || doMapVisiblePoints.length === 0) {
+      return
+    }
+
+    doMapMarkersRef.current = []
+    if (doMapInstanceRef.current) {
+      doMapInstanceRef.current.remove()
+      doMapInstanceRef.current = null
+    }
+
+    let isDisposed = false
+    let map: {
+      setView: (center: [number, number], zoom: number) => unknown
+      flyTo: (center: [number, number], zoom?: number, options?: Record<string, unknown>) => unknown
+      fitBounds: (bounds: unknown, options?: Record<string, unknown>) => unknown
+      on: (event: string, handler: () => void) => unknown
+      getZoom: () => number
+      invalidateSize: (options?: Record<string, unknown>) => void
+      remove: () => void
+    } | null = null
+    let resizeObserver: ResizeObserver | null = null
+    const initLeaflet = async () => {
+      const leaflet = await loadLeafletGlobal()
+      if (isDisposed || !doMapContainerRef.current) {
+        return
+      }
+
+      const leafletMap = leaflet.map(doMapContainerRef.current, {
+        zoomControl: false,
+        minZoom: 2,
+        maxZoom: 12,
+        zoomAnimation: false,
+        fadeAnimation: false,
+        markerZoomAnimation: false,
+        zoomSnap: 1,
+        zoomDelta: 1,
+      })
+      map = leafletMap
+
+      if (doMapCountryFilter === DO_MAP_ALL_WORLD_VALUE) {
+        leafletMap.setView([20, 0], 3.1)
+      } else {
+        leafletMap.fitBounds(doMapVisiblePoints.map((point) => [point.lat, point.lng] as [number, number]), { padding: [36, 36], maxZoom: 7, animate: false })
+      }
+
+      setDoMapZoomLevel(leafletMap.getZoom())
+      leafletMap.on('zoomend', () => {
+        setDoMapZoomLevel(leafletMap.getZoom())
+      })
+
+      const tileLanguage = locale === 'ca' ? 'ca' : 'es'
+      const tileUrl = isDoMapMobile
+        ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        : `https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png?lang=${tileLanguage}`
+      leaflet.tileLayer(tileUrl, {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+      }).addTo(leafletMap)
+
+      resizeObserver = new ResizeObserver(() => {
+        leafletMap.invalidateSize({ pan: false, animate: false })
+      })
+      resizeObserver.observe(doMapContainerRef.current)
+      window.setTimeout(() => {
+        leafletMap.invalidateSize({ pan: false, animate: false })
+      }, 100)
+
+      const markers = doMapVisiblePoints.map((point) => {
+        const encodedLogoUrl = point.doLogoImage ? encodeURI(resolveApiAssetUrl(point.doLogoImage)) : null
+        const icon = leaflet.divIcon({
+          className: 'do-map-logo-icon',
+          iconSize: [26, 26],
+          iconAnchor: [13, 13],
+          html: encodedLogoUrl
+            ? `<span class="do-map-logo-marker"><img src="${encodedLogoUrl}" alt="" onerror="this.style.display='none';this.parentNode.classList.add('is-fallback')" /></span>`
+            : '<span class="do-map-logo-marker is-fallback"></span>',
+        })
+
+        const marker = leaflet.marker([point.lat, point.lng], { icon }) as {
+          addTo: (map: unknown) => unknown
+          on: (event: string, handler: () => void) => unknown
+          bindTooltip: (content: string, options?: Record<string, unknown>) => unknown
+          openTooltip: () => unknown
+          closeTooltip: () => unknown
+          getElement: () => HTMLElement | null
+          setZIndexOffset: (offset: number) => unknown
+        }
+        marker.addTo(leafletMap)
+        marker.bindTooltip(point.name, { direction: 'top', offset: [0, -10] })
+        marker.on('click', () => setSelectedMapDoId(point.id))
+
+        return {
+          id: point.id,
+          marker,
+          setSelected: (selected: boolean, zoomBoost: boolean) => {
+            const el = marker.getElement()
+            const bubble = el?.querySelector('.do-map-logo-marker')
+            if (!(bubble instanceof HTMLElement)) {
+              return
+            }
+            marker.setZIndexOffset(selected ? 1000 : 0)
+            bubble.classList.toggle('is-selected', selected)
+            bubble.classList.toggle('is-zoomed', zoomBoost)
+          },
+        }
+      })
+
+      doMapInstanceRef.current = leafletMap
+      doMapMarkersRef.current = markers
+      setDoMapInitError(false)
+    }
+
+    void initLeaflet().catch(() => {
+      setDoMapInitError(true)
+    })
+
+    return () => {
+      isDisposed = true
+      doMapMarkersRef.current = []
+      if (map) {
+        map.remove()
+      }
+      resizeObserver?.disconnect()
+      doMapInstanceRef.current = null
+    }
+  }, [doMapCountryFilter, doMapVisiblePoints, isDoMapMobile, isDoMapPage, locale])
+
+  useEffect(() => {
+    const map = doMapInstanceRef.current
+    if (!isDoMapPage || !map) {
+      return
+    }
+
+    const zoomBoost = map.getZoom() >= 6
+    doMapMarkersRef.current.forEach(({ id, marker, setSelected }) => {
+      const isSelected = selectedMapDo?.id === id
+      setSelected(isSelected, zoomBoost)
+      if (isSelected) {
+        marker.openTooltip()
+      } else {
+        marker.closeTooltip()
+      }
+    })
+
+    if (doMapCountryFilter === DO_MAP_ALL_WORLD_VALUE && !selectedMapDo) {
+      map.setView([20, 0], 3.1)
+      return
+    }
+
+    if (doMapCountryFilter !== DO_MAP_ALL_WORLD_VALUE && !selectedMapDo && doMapVisiblePoints.length > 0) {
+      const countryBounds = doMapVisiblePoints.map((point) => [point.lat, point.lng] as [number, number])
+      map.fitBounds(countryBounds, { padding: [36, 36], maxZoom: 7, animate: true, duration: 0.5 })
+      return
+    }
+
+    if (selectedMapDo) {
+      map.flyTo([selectedMapDo.lat, selectedMapDo.lng], selectedMapDo.zoom ?? Math.max(map.getZoom(), 6), { duration: 0.6 })
+    }
+  }, [doMapCountryFilter, doMapVisiblePoints, isDoMapPage, selectedMapDo])
+
+  useEffect(() => {
+    const map = doMapInstanceRef.current
+    if (!isDoMapPage || !map) {
+      return
+    }
+
+    const zoomBoost = doMapZoomLevel >= 6
+    doMapMarkersRef.current.forEach(({ id, setSelected }) => {
+      setSelected(selectedMapDo?.id === id, zoomBoost)
+    })
+  }, [doMapZoomLevel, isDoMapPage, selectedMapDo])
 
   useEffect(() => {
     if (selectedWine && activeModalImageIndex >= selectedWine.gallery.length) {
@@ -1638,6 +2165,347 @@ export default function App() {
       </button>
     </>
   )
+  const selectedMapCountryFlag = doMapCountryFilter === DO_MAP_ALL_WORLD_VALUE ? null : countryFlagPath(doMapCountryFilter)
+  const selectedMapCountryLabel = doMapCountryFilter === DO_MAP_ALL_WORLD_VALUE
+    ? t.doMap.allWorld
+    : localizedCountryName(doMapCountryFilter, locale)
+  const selectedMapCountryCompactLabel = useMemo(() => {
+    if (doMapCountryFilter === DO_MAP_ALL_WORLD_VALUE) {
+      return locale === 'ca' ? 'Món' : 'Mundo'
+    }
+    if (doMapCountryFilter === 'United States') {
+      return 'USA'
+    }
+    if (doMapCountryFilter === 'South Africa') {
+      return 'SA'
+    }
+    return localizedCountryName(doMapCountryFilter, locale)
+  }, [doMapCountryFilter, locale])
+  const toggleDoMapFullscreen = () => {
+    if (!doMapCanvasRef.current) {
+      return
+    }
+
+    if (document.fullscreenElement === doMapCanvasRef.current) {
+      void document.exitFullscreen()
+      return
+    }
+
+    void doMapCanvasRef.current.requestFullscreen()
+  }
+  const desktopNav = (
+    <nav className="topbar-nav" aria-label={t.topbar.navigation}>
+      <a className={`topbar-nav-link${isCatalogPage ? ' active' : ''}`} href="/">{t.topbar.winesCatalog}</a>
+      <a className={`topbar-nav-link${isDoMapPage ? ' active' : ''}`} href="/do-map">{t.topbar.doMap}</a>
+      <a className="topbar-nav-link" href="/#about">{t.topbar.whoWeAre}</a>
+      <a
+        className="topbar-nav-link topbar-nav-link-admin"
+        href={adminHref}
+        onClick={() => {
+          window.localStorage.setItem('wine-app-theme-mode', theme)
+        }}
+      >
+        {t.topbar.backoffice}
+      </a>
+    </nav>
+  )
+
+  if (isDoMapPage) {
+    return (
+      <main className="public-shell do-map-shell">
+        <div className="public-background" aria-hidden="true" />
+
+        <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
+          <div className="brand-block">
+            <div className="brand-copy">
+              <img src={logoSrc} className="brand-wordmark" alt="Vins Tat & Rosset" />
+              <p>{t.appName}</p>
+            </div>
+          </div>
+          {desktopNav}
+
+          <div className="topbar-actions">
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
+              aria-label={isDark ? t.topbar.light : t.topbar.dark}
+            >
+              <span aria-hidden="true">{isDark ? '☾' : '☀'}</span>
+              <span>{isDark ? t.topbar.dark : t.topbar.light}</span>
+            </button>
+
+            <label className="select-wrap">
+              <span className="sr-only">{t.topbar.language}</span>
+              <select value={locale} onChange={(event) => setLocale(event.target.value as Locale)} aria-label={t.topbar.language}>
+                <option value="ca">CA</option>
+                <option value="es">ES</option>
+              </select>
+            </label>
+
+            <button
+              type="button"
+              className={`mobile-header-icon-button${isMobileMenuOpen ? ' active' : ''}`}
+              aria-label={t.topbar.menu}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-nav-menu"
+              onClick={() => setIsMobileMenuOpen((open) => !open)}
+            >
+              <span aria-hidden="true">☰</span>
+            </button>
+          </div>
+
+          <nav id="mobile-nav-menu" className={`mobile-nav-menu${isMobileMenuOpen ? ' open' : ''}`} aria-label={t.topbar.navigation}>
+            <div className="mobile-nav-menu-head">
+              <span>{t.topbar.navigation}</span>
+              <button type="button" className="mobile-nav-menu-close" onClick={() => setIsMobileMenuOpen(false)} aria-label={t.modal.close}>
+                <span aria-hidden="true">✕</span>
+              </button>
+            </div>
+            <a href="/" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
+            <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.doMap}</a>
+            <a href="/#about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
+            <a
+              href={adminHref}
+              onClick={() => {
+                window.localStorage.setItem('wine-app-theme-mode', theme)
+                setIsMobileMenuOpen(false)
+              }}
+            >
+              {t.topbar.backoffice}
+            </a>
+          </nav>
+        </header>
+
+        {isMobileMenuOpen ? (
+          <button
+            type="button"
+            className="mobile-nav-backdrop"
+            aria-label={t.topbar.closeFilters}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        ) : null}
+
+        <section className="hero-panel do-map-hero">
+          <div className="do-map-hero-main">
+            {t.doMap.eyebrow.trim() !== '' ? (
+              <p className="eyebrow">{t.doMap.eyebrow}</p>
+            ) : null}
+            <div className="do-map-hero-title-row">
+              <h1>{t.doMap.title}</h1>
+              <div className="do-map-country-filter-bar" aria-label={t.doMap.filterCountry}>
+                {!isDoMapMobile ? (
+                  <span>{t.icons.country} {t.doMap.filterCountry}</span>
+                ) : null}
+                <div className="do-map-country-select">
+                  <button
+                    type="button"
+                    className="do-map-country-button"
+                    aria-haspopup="listbox"
+                    aria-expanded={isDoMapCountryMenuOpen}
+                    onClick={() => setIsDoMapCountryMenuOpen((open) => !open)}
+                  >
+                    {isDoMapMobile ? <span className="do-map-control-icon" aria-hidden="true">🌍</span> : null}
+                    {selectedMapCountryFlag ? <img src={selectedMapCountryFlag} alt="" className="do-map-country-flag" aria-hidden="true" /> : null}
+                    <strong>{isDoMapMobile ? selectedMapCountryCompactLabel : selectedMapCountryLabel}</strong>
+                    <span className="do-map-country-caret" aria-hidden="true">▾</span>
+                  </button>
+
+                  {isDoMapCountryMenuOpen ? (
+                    <div className="do-map-country-menu" role="listbox" aria-label={t.doMap.filterCountry}>
+                  {doMapCountryOptions.map((country) => {
+                    if (country === DO_MAP_ALL_WORLD_VALUE) {
+                      return (
+                        <button
+                          key={`map-country-option-${country}`}
+                          type="button"
+                          role="option"
+                          aria-selected={doMapCountryFilter === country}
+                          className={`do-map-country-option${doMapCountryFilter === country ? ' is-selected' : ''}`}
+                          onClick={() => {
+                            setDoMapCountryFilter(country)
+                            setIsDoMapCountryMenuOpen(false)
+                            setSelectedMapDoId(null)
+                          }}
+                        >
+                          <span>{t.doMap.allWorld}</span>
+                        </button>
+                      )
+                    }
+
+                    const flag = countryFlagPath(country)
+                    return (
+                      <button
+                            key={`map-country-option-${country}`}
+                            type="button"
+                            role="option"
+                            aria-selected={doMapCountryFilter === country}
+                            className={`do-map-country-option${doMapCountryFilter === country ? ' is-selected' : ''}`}
+                            onClick={() => {
+                        setDoMapCountryFilter(country)
+                        setIsDoMapCountryMenuOpen(false)
+                      }}
+                          >
+                            {flag ? <img src={flag} alt="" className="do-map-country-flag" aria-hidden="true" /> : null}
+                            <span>{localizedCountryName(country, locale)}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+
+                {isDoMapMobile ? (
+                  <button
+                    type="button"
+                    className="do-map-mobile-picker-trigger"
+                    onClick={() => setIsDoMapMobileDoPickerOpen(true)}
+                    disabled={doMapVisiblePoints.length === 0}
+                  >
+                    <span>DO</span>
+                  </button>
+                ) : null}
+              </div>
+            </div>
+            {t.doMap.subtitle.trim() !== '' ? (
+              <p className="hero-subtitle">{t.doMap.subtitle}</p>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="do-map-layout">
+          <div className="cards-panel do-map-canvas-card">
+            <div ref={doMapCanvasRef} className="do-map-canvas" role="img" aria-label={t.doMap.worldMapLabel}>
+              <div ref={doMapContainerRef} className="do-map-leaflet" />
+              {isDoMapMobile && canDoMapFullscreen ? (
+                <button
+                  type="button"
+                  className="do-map-fullscreen-button"
+                  onClick={toggleDoMapFullscreen}
+                  aria-label={isDoMapFullscreen ? t.doMap.fullscreenClose : t.doMap.fullscreenOpen}
+                  title={isDoMapFullscreen ? t.doMap.fullscreenClose : t.doMap.fullscreenOpen}
+                >
+                  {isDoMapFullscreen ? '✕' : '⛶'}
+                </button>
+              ) : null}
+              {doMapInitError ? (
+                <p className="do-map-error">
+                  {locale === 'ca'
+                    ? 'No s ha pogut carregar el mapa. Recarrega la pàgina.'
+                    : 'No se ha podido cargar el mapa. Recarga la página.'}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <aside className={`cards-panel do-map-detail-card${isDoMapMobile ? ' is-mobile' : ''}`}>
+            {selectedMapDo ? (
+              <>
+                <h2>{selectedMapDo.name}</h2>
+                <p>{selectedMapDo.region} · {localizedCountryName(selectedMapDo.country, locale)}</p>
+                <div className="do-map-detail-logos">
+                  {selectedMapDo.regionLogoImage ? (
+                    <img src={selectedMapDo.regionLogoImage} alt={selectedMapDo.region} loading="lazy" />
+                  ) : null}
+                  {selectedMapDo.doLogoImage ? (
+                    <img src={selectedMapDo.doLogoImage} alt={`${selectedMapDo.name} DO`} loading="lazy" />
+                  ) : null}
+                </div>
+              </>
+            ) : null}
+
+            {!isDoMapMobile ? (
+              <>
+                <h3>{t.doMap.listTitle}</h3>
+                <div className="do-map-list">
+                  {doMapVisiblePoints.map((point) => (
+                    <button
+                      key={`map-list-${point.id}`}
+                      type="button"
+                      className={`do-map-list-item${selectedMapDo?.id === point.id ? ' active' : ''}`}
+                      onClick={() => setSelectedMapDoId(point.id)}
+                    >
+                      <span className="do-map-list-item-row">
+                        {countryFlagPath(point.country) ? (
+                          <img
+                            src={countryFlagPath(point.country) ?? ''}
+                            alt=""
+                            className="do-map-list-item-flag"
+                            aria-hidden="true"
+                          />
+                        ) : null}
+                        <span className="do-map-list-item-text">
+                          <strong>{point.name}</strong>
+                          <span>{point.region} · {localizedCountryName(point.country, locale)}</span>
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                  {doMapVisiblePoints.length === 0 ? (
+                  <p className="do-map-empty">
+                    {locale === 'ca'
+                      ? 'No hi ha DO amb coordenades disponibles.'
+                      : 'No hay DO con coordenadas disponibles.'}
+                  </p>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
+          </aside>
+        </section>
+
+        {isDoMapMobile && isDoMapMobileDoPickerOpen ? (
+          <>
+            <button
+              type="button"
+              className="do-map-mobile-picker-backdrop"
+              aria-label={t.doMap.closeSelector}
+              onClick={() => setIsDoMapMobileDoPickerOpen(false)}
+            />
+            <section className="do-map-mobile-picker" role="dialog" aria-modal="true" aria-label={t.doMap.chooseDo}>
+              <div className="do-map-mobile-picker-head">
+                <strong>{t.doMap.chooseDoPlaceholder}</strong>
+                <button type="button" onClick={() => setIsDoMapMobileDoPickerOpen(false)} aria-label={t.doMap.closeSelector}>
+                  ✕
+                </button>
+              </div>
+              <div className="do-map-mobile-picker-list">
+                {doMapVisiblePoints.map((point) => (
+                  <button
+                    key={`map-mobile-list-${point.id}`}
+                    type="button"
+                    className={`do-map-list-item${selectedMapDo?.id === point.id ? ' active' : ''}`}
+                    onClick={() => {
+                      setSelectedMapDoId(point.id)
+                      setIsDoMapMobileDoPickerOpen(false)
+                    }}
+                  >
+                    <span className="do-map-list-item-row">
+                      {countryFlagPath(point.country) ? (
+                        <img
+                          src={countryFlagPath(point.country) ?? ''}
+                          alt=""
+                          className="do-map-list-item-flag"
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      <span className="do-map-list-item-text">
+                        <strong>{point.name}</strong>
+                        <span>{point.region} · {localizedCountryName(point.country, locale)}</span>
+                      </span>
+                    </span>
+                  </button>
+                ))}
+                {doMapVisiblePoints.length === 0 ? (
+                  <p className="do-map-empty">{t.doMap.chooseCountryFirst}</p>
+                ) : null}
+              </div>
+            </section>
+          </>
+        ) : null}
+      </main>
+    )
+  }
 
   return (
     <main className="public-shell">
@@ -1650,30 +2518,9 @@ export default function App() {
             <p>{t.appName}</p>
           </div>
         </div>
+        {desktopNav}
 
         <div className="topbar-actions">
-          <a
-            href={adminHref}
-            className="admin-login-icon"
-            aria-label={`${t.topbar.backoffice} Login`}
-            title={`${t.topbar.backoffice} Login`}
-            onClick={() => {
-              window.localStorage.setItem('wine-app-theme-mode', theme)
-            }}
-          >
-            <svg
-              className="admin-login-icon-svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path d="M10 4.75H6.75A1.75 1.75 0 0 0 5 6.5v11A1.75 1.75 0 0 0 6.75 19.25H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M12 12h7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="m16.8 8.3 3.7 3.7-3.7 3.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </a>
-
           <button
             type="button"
             className="theme-toggle"
@@ -1711,8 +2558,9 @@ export default function App() {
               <span aria-hidden="true">✕</span>
             </button>
           </div>
-          <a href="#catalog" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
-          <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
+          <a href="/" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
+          <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.doMap}</a>
+          <a href="/#about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
           <a
             href={adminHref}
             onClick={() => {
