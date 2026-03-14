@@ -931,10 +931,10 @@ components:
           example: Invalid credentials.
     ReviewBulletValue:
       type: string
-      enum: [fruity, floral, spicy, mineral, oak_forward, easy_drinking, elegant, powerful, food_friendly]
+      enum: [fruity, floral, mineral, oak_forward, powerful]
     Review:
       type: object
-      required: [id, user_id, wine_id, intensity_aroma, sweetness, acidity, body, persistence, bullets]
+      required: [id, user_id, wine_id, aroma, appearance, palate_entry, body, persistence, bullets]
       properties:
         id:
           type: integer
@@ -950,21 +950,16 @@ components:
           nullable: true
           minimum: 0
           maximum: 100
-        intensity_aroma:
+        aroma:
           type: integer
           minimum: 0
           maximum: 10
-        sweetness:
+        appearance:
           type: integer
           minimum: 0
           maximum: 10
-        acidity:
+        palate_entry:
           type: integer
-          minimum: 0
-          maximum: 10
-        tannin:
-          type: integer
-          nullable: true
           minimum: 0
           maximum: 10
         body:
@@ -985,7 +980,7 @@ components:
           nullable: true
     CreateReviewRequest:
       type: object
-      required: [intensity_aroma, sweetness, acidity, body, persistence]
+      required: [aroma, appearance, palate_entry, body, persistence]
       properties:
         created_at:
           type: string
@@ -997,21 +992,16 @@ components:
           nullable: true
           minimum: 0
           maximum: 100
-        intensity_aroma:
+        aroma:
           type: integer
           minimum: 0
           maximum: 10
-        sweetness:
+        appearance:
           type: integer
           minimum: 0
           maximum: 10
-        acidity:
+        palate_entry:
           type: integer
-          minimum: 0
-          maximum: 10
-        tannin:
-          type: integer
-          nullable: true
           minimum: 0
           maximum: 10
         body:
@@ -1028,7 +1018,7 @@ components:
             $ref: '#/components/schemas/ReviewBulletValue'
     UpdateReviewRequest:
       type: object
-      required: [intensity_aroma, sweetness, acidity, body, persistence]
+      required: [aroma, appearance, palate_entry, body, persistence]
       properties:
         created_at:
           type: string
@@ -1040,21 +1030,16 @@ components:
           nullable: true
           minimum: 0
           maximum: 100
-        intensity_aroma:
+        aroma:
           type: integer
           minimum: 0
           maximum: 10
-        sweetness:
+        appearance:
           type: integer
           minimum: 0
           maximum: 10
-        acidity:
+        palate_entry:
           type: integer
-          minimum: 0
-          maximum: 10
-        tannin:
-          type: integer
-          nullable: true
           minimum: 0
           maximum: 10
         body:
@@ -1552,7 +1537,7 @@ components:
           type: string
     WineDetailReview:
       type: object
-      required: [id, user, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, bullets, created_at]
+      required: [id, user, score, aroma, appearance, palate_entry, body, persistence, bullets, created_at]
       properties:
         id:
           type: integer
@@ -1562,23 +1547,18 @@ components:
         score:
           type: integer
           nullable: true
-        intensity_aroma:
+        aroma:
           type: integer
           minimum: 0
           maximum: 10
-        sweetness:
+        appearance:
           type: integer
           minimum: 0
           maximum: 10
-        acidity:
+        palate_entry:
           type: integer
           minimum: 0
           maximum: 10
-        tannin:
-          type: integer
-          minimum: 0
-          maximum: 10
-          nullable: true
         body:
           type: integer
           minimum: 0
@@ -1591,7 +1571,7 @@ components:
           type: array
           items:
             type: string
-            enum: [fruity, floral, spicy, mineral, oak_forward, easy_drinking, elegant, powerful, food_friendly]
+            enum: [fruity, floral, mineral, oak_forward, powerful]
         created_at:
           type: string
           format: date-time

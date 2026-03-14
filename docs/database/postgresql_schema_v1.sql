@@ -26,8 +26,7 @@ CREATE TYPE award_name AS ENUM (
 );
 
 CREATE TYPE review_bullet AS ENUM (
-  'fruity', 'floral', 'spicy', 'mineral', 'oak_forward',
-  'easy_drinking', 'elegant', 'powerful', 'food_friendly'
+  'fruity', 'floral', 'mineral', 'oak_forward', 'powerful'
 );
 
 CREATE TYPE grape_color AS ENUM ('red', 'white');
@@ -138,10 +137,9 @@ CREATE TABLE review (
   user_id            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   wine_id            BIGINT NOT NULL REFERENCES wine(id) ON DELETE CASCADE,
   score              INT CHECK (score IS NULL OR (score >= 0 AND score <= 100)),
-  intensity_aroma    SMALLINT NOT NULL CHECK (intensity_aroma BETWEEN 0 AND 10),
-  sweetness          SMALLINT NOT NULL CHECK (sweetness BETWEEN 0 AND 10),
-  acidity            SMALLINT NOT NULL CHECK (acidity BETWEEN 0 AND 10),
-  tannin             SMALLINT CHECK (tannin IS NULL OR tannin BETWEEN 0 AND 10),
+  aroma              SMALLINT NOT NULL CHECK (aroma BETWEEN 0 AND 10),
+  appearance         SMALLINT NOT NULL CHECK (appearance BETWEEN 0 AND 10),
+  palate_entry       SMALLINT NOT NULL CHECK (palate_entry BETWEEN 0 AND 10),
   body               SMALLINT NOT NULL CHECK (body BETWEEN 0 AND 10),
   persistence        SMALLINT NOT NULL CHECK (persistence BETWEEN 0 AND 10),
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),

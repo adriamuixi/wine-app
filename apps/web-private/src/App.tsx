@@ -51,10 +51,9 @@ type ReviewItem = {
   score: number
   createdAt: string
   notes: string
-  intensityAroma?: number
-  sweetness?: number
-  acidity?: number
-  tannin?: number
+  aroma?: number
+  appearance?: number
+  palateEntry?: number
   body?: number
   persistence?: number
   tags?: string[]
@@ -220,13 +219,12 @@ type WineDetailsApiReview = {
     lastname: string
   }
   score: number | null
-  intensity_aroma: number
-  sweetness: number
-  acidity: number
-  tannin: number | null
+  aroma: number
+  appearance: number
+  palate_entry: number
   body: number
   persistence: number
-  bullets: Array<'fruity' | 'floral' | 'spicy' | 'mineral' | 'oak_forward' | 'easy_drinking' | 'elegant' | 'powerful' | 'food_friendly'>
+  bullets: Array<'fruity' | 'floral' | 'mineral' | 'oak_forward' | 'powerful'>
   created_at: string
 }
 
@@ -304,9 +302,8 @@ type ReviewFormPreset = {
   tastingDate: string
   overallScore: number
   aroma: number
-  sweetness: number
-  acidity: number
-  tannin: number
+  appearance: number
+  palateEntry: number
   body: number
   persistence: number
   tags: string[]
@@ -334,28 +331,20 @@ const DEFAULT_USER_PLACEHOLDER: AppUser = {
 const AGING_OPTIONS = ['young', 'crianza', 'reserve', 'grand_reserve'] as const
 const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket'] as const
 const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker', 'james_suckling', 'guia_proensa'] as const
-const REVIEW_TAG_OPTIONS = ['Afrutado', 'Floral', 'Especiado', 'Mineral', 'Madera marcada', 'Fácil de beber', 'Elegante', 'Potente', 'Gastronómico'] as const
+const REVIEW_TAG_OPTIONS = ['AFRUTADO', 'FLORAL', 'MINERAL', 'MADERA MARCADA', 'POTENTE'] as const
 const REVIEW_TAG_TO_ENUM: Record<(typeof REVIEW_TAG_OPTIONS)[number], WineDetailsApiReview['bullets'][number]> = {
-  Afrutado: 'fruity',
-  Floral: 'floral',
-  Especiado: 'spicy',
-  Mineral: 'mineral',
-  'Madera marcada': 'oak_forward',
-  'Fácil de beber': 'easy_drinking',
-  Elegante: 'elegant',
-  Potente: 'powerful',
-  Gastronómico: 'food_friendly',
+  AFRUTADO: 'fruity',
+  FLORAL: 'floral',
+  MINERAL: 'mineral',
+  'MADERA MARCADA': 'oak_forward',
+  POTENTE: 'powerful',
 }
 const REVIEW_ENUM_TO_TAG: Record<WineDetailsApiReview['bullets'][number], (typeof REVIEW_TAG_OPTIONS)[number]> = {
-  fruity: 'Afrutado',
-  floral: 'Floral',
-  spicy: 'Especiado',
-  mineral: 'Mineral',
-  oak_forward: 'Madera marcada',
-  easy_drinking: 'Fácil de beber',
-  elegant: 'Elegante',
-  powerful: 'Potente',
-  food_friendly: 'Gastronómico',
+  fruity: 'AFRUTADO',
+  floral: 'FLORAL',
+  mineral: 'MINERAL',
+  oak_forward: 'MADERA MARCADA',
+  powerful: 'POTENTE',
 }
 const SCORE_OPTIONS_0_TO_10 = Array.from({ length: 11 }, (_, value) => value)
 const SCORE_OPTIONS_0_TO_100 = Array.from({ length: 101 }, (_, value) => value)
@@ -386,9 +375,8 @@ function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
       tastingDate: '2026-02-27',
       overallScore: 85,
       aroma: 5,
-      sweetness: 5,
-      acidity: 5,
-      tannin: 5,
+      appearance: 5,
+      palateEntry: 5,
       body: 5,
       persistence: 5,
       tags: [],
@@ -397,25 +385,24 @@ function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
   }
 
   const hasDetailedAxes = (
-    review.intensityAroma != null
-    && review.sweetness != null
-    && review.acidity != null
+    review.aroma != null
+    && review.appearance != null
+    && review.palateEntry != null
     && review.body != null
     && review.persistence != null
   )
 
   const base = Math.max(0, Math.min(10, Math.round(review.score / 10)))
   const boosted = Math.max(0, Math.min(10, base + 1))
-  const tags = review.tags ?? (review.score >= 90 ? ['Elegante', 'Potente', 'Gastronómico'] : ['Afrutado', 'Fácil de beber'])
+  const tags = review.tags ?? (review.score >= 90 ? ['POTENTE', 'MADERA MARCADA'] : ['AFRUTADO', 'FLORAL'])
 
   return {
     wineId: String(review.wineId),
     tastingDate: review.createdAt,
     overallScore: review.score,
-    aroma: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.intensityAroma ?? 0))) : boosted,
-    sweetness: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.sweetness ?? 0))) : Math.max(0, base - 1),
-    acidity: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.acidity ?? 0))) : base,
-    tannin: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.tannin ?? 0))) : boosted,
+    aroma: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.aroma ?? 0))) : boosted,
+    appearance: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.appearance ?? 0))) : Math.max(0, base - 1),
+    palateEntry: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.palateEntry ?? 0))) : base,
     body: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.body ?? 0))) : boosted,
     persistence: hasDetailedAxes ? Math.max(0, Math.min(10, Math.round(review.persistence ?? 0))) : base,
     tags,
@@ -3705,10 +3692,9 @@ function App() {
       score: review.score ?? 0,
       createdAt: review.created_at.slice(0, 10),
       notes: review.bullets.join(' · '),
-      intensityAroma: review.intensity_aroma,
-      sweetness: review.sweetness,
-      acidity: review.acidity,
-      tannin: review.tannin ?? 0,
+      aroma: review.aroma,
+      appearance: review.appearance,
+      palateEntry: review.palate_entry,
       body: review.body,
       persistence: review.persistence,
       tags: review.bullets.map((bullet) => REVIEW_ENUM_TO_TAG[bullet]).filter((tag): tag is (typeof REVIEW_TAG_OPTIONS)[number] => tag != null),
@@ -4392,10 +4378,9 @@ function App() {
 
     const wineIdRaw = String(data.get('wine_id') ?? '').trim()
     const scoreRaw = String(data.get('score') ?? '').trim()
-    const intensityRaw = String(data.get('intensity_aroma') ?? '').trim()
-    const sweetnessRaw = String(data.get('sweetness') ?? '').trim()
-    const acidityRaw = String(data.get('acidity') ?? '').trim()
-    const tanninRaw = String(data.get('tannin') ?? '').trim()
+    const aromaRaw = String(data.get('aroma') ?? '').trim()
+    const appearanceRaw = String(data.get('appearance') ?? '').trim()
+    const palateEntryRaw = String(data.get('palate_entry') ?? '').trim()
     const bodyRaw = String(data.get('body') ?? '').trim()
     const persistenceRaw = String(data.get('persistence') ?? '').trim()
     const bulletsRaw = data.getAll('bullets').map((value) => String(value)) as Array<(typeof REVIEW_TAG_OPTIONS)[number]>
@@ -4403,10 +4388,9 @@ function App() {
 
     const wineId = Number(wineIdRaw)
     const score = Number(scoreRaw)
-    const intensityAroma = Number(intensityRaw)
-    const sweetness = Number(sweetnessRaw)
-    const acidity = Number(acidityRaw)
-    const tannin = Number(tanninRaw)
+    const aroma = Number(aromaRaw)
+    const appearance = Number(appearanceRaw)
+    const palateEntry = Number(palateEntryRaw)
     const body = Number(bodyRaw)
     const persistence = Number(persistenceRaw)
 
@@ -4424,10 +4408,9 @@ function App() {
 
     const payload = {
       score: Math.max(0, Math.min(100, Math.round(score))),
-      intensity_aroma: Math.max(0, Math.min(10, Math.round(intensityAroma))),
-      sweetness: Math.max(0, Math.min(10, Math.round(sweetness))),
-      acidity: Math.max(0, Math.min(10, Math.round(acidity))),
-      tannin: Math.max(0, Math.min(10, Math.round(tannin))),
+      aroma: Math.max(0, Math.min(10, Math.round(aroma))),
+      appearance: Math.max(0, Math.min(10, Math.round(appearance))),
+      palate_entry: Math.max(0, Math.min(10, Math.round(palateEntry))),
       body: Math.max(0, Math.min(10, Math.round(body))),
       persistence: Math.max(0, Math.min(10, Math.round(persistence))),
       bullets: bulletsRaw.map((tag) => REVIEW_TAG_TO_ENUM[tag]),
@@ -4630,23 +4613,23 @@ function App() {
             <div className="inline-grid triple">
               <label>
                 {locale === 'ca' ? 'Aroma' : 'Aroma'}
-                <select name="intensity_aroma" defaultValue={String(preset.aroma)}>
+                <select name="aroma" defaultValue={String(preset.aroma)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
                 </select>
               </label>
               <label>
-                {locale === 'ca' ? 'Dolçor' : 'Dulzor'}
-                <select name="sweetness" defaultValue={String(preset.sweetness)}>
+                {locale === 'ca' ? 'Aspecte' : 'Aspecto'}
+                <select name="appearance" defaultValue={String(preset.appearance)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
                 </select>
               </label>
               <label>
-                {locale === 'ca' ? 'Acidesa' : 'Acidez'}
-                <select name="acidity" defaultValue={String(preset.acidity)}>
+                {locale === 'ca' ? 'Entrada en boca' : 'Entrada en boca'}
+                <select name="palate_entry" defaultValue={String(preset.palateEntry)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
                   ))}
@@ -4654,14 +4637,6 @@ function App() {
               </label>
             </div>
             <div className="inline-grid triple">
-              <label>
-                {locale === 'ca' ? 'Taní' : 'Tanino'}
-                <select name="tannin" defaultValue={String(preset.tannin)}>
-                  {SCORE_OPTIONS_0_TO_10.map((score) => (
-                    <option key={score} value={score}>{score}</option>
-                  ))}
-                </select>
-              </label>
               <label>
                 {locale === 'ca' ? 'Cos' : 'Cuerpo'}
                 <select name="body" defaultValue={String(preset.body)}>
@@ -6526,19 +6501,15 @@ function App() {
                         <dl className="review-metrics-grid review-metrics-grid-inline">
                           <div>
                             <dt>{locale === 'ca' ? 'Aroma' : 'Aroma'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.intensity_aroma)}`}>{entry.review.intensity_aroma}/10</dd>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.aroma)}`}>{entry.review.aroma}/10</dd>
                           </div>
                           <div>
-                            <dt>{locale === 'ca' ? 'Dolçor' : 'Dulzor'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.sweetness)}`}>{entry.review.sweetness}/10</dd>
+                            <dt>{locale === 'ca' ? 'Aspecte' : 'Aspecto'}</dt>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.appearance)}`}>{entry.review.appearance}/10</dd>
                           </div>
                           <div>
-                            <dt>{locale === 'ca' ? 'Acidesa' : 'Acidez'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.acidity)}`}>{entry.review.acidity}/10</dd>
-                          </div>
-                          <div>
-                            <dt>{locale === 'ca' ? 'Taní' : 'Tanino'}</dt>
-                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.tannin)}`}>{entry.review.tannin == null ? '-' : `${entry.review.tannin}/10`}</dd>
+                            <dt>{locale === 'ca' ? 'Entrada en boca' : 'Entrada en boca'}</dt>
+                            <dd className={`review-metric-value ${medalToneFromTen(entry.review.palate_entry)}`}>{entry.review.palate_entry}/10</dd>
                           </div>
                           <div>
                             <dt>{locale === 'ca' ? 'Cos' : 'Cuerpo'}</dt>

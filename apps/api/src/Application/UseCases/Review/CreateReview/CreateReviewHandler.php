@@ -23,10 +23,9 @@ final readonly class CreateReviewHandler
             $review = new WineReview(
                 userId: $command->userId,
                 wineId: $command->wineId,
-                intensityAroma: $command->intensityAroma,
-                sweetness: $command->sweetness,
-                acidity: $command->acidity,
-                tannin: $command->tannin,
+                aroma: $command->aroma,
+                appearance: $command->appearance,
+                palateEntry: $command->palateEntry,
                 body: $command->body,
                 persistence: $command->persistence,
                 bullets: $command->bullets,

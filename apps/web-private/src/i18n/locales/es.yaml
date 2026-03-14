@@ -103,7 +103,8 @@ reviews:
     selectWine: Selecciona un vino
     score: Puntuación
     body: Cuerpo
-    acidity: Acidez
+    appearance: Aspecto
+    palateEntry: Entrada en boca
     notes: Notas
     notesPlaceholder: Describe aromas, estructura y final...
     submit: Crear reseña

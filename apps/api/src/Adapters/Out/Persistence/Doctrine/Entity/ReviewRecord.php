@@ -28,19 +28,16 @@ class ReviewRecord
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $score = null;
 
-    #[ORM\Column(name: 'intensity_aroma', type: Types::SMALLINT)]
-    private int $intensityAroma;
+    #[ORM\Column(name: 'aroma', type: Types::SMALLINT)]
+    private int $aroma;
 
     #[ORM\Column(type: Types::SMALLINT)]
-    private int $sweetness;
+    private int $appearance;
 
-    #[ORM\Column(type: Types::SMALLINT)]
-    private int $acidity;
+    #[ORM\Column(name: 'palate_entry', type: Types::SMALLINT)]
+    private int $palateEntry;
 
-    #[ORM\Column(type: Types::SMALLINT, nullable: true)]
-    private ?int $tannin = null;
-
-    #[ORM\Column(type: Types::SMALLINT)]
+    #[ORM\Column(name: 'body', type: Types::SMALLINT)]
     private int $body;
 
     #[ORM\Column(type: Types::SMALLINT)]

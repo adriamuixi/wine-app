@@ -14,10 +14,9 @@ final readonly class CreateReviewCommand
     public function __construct(
         public int $userId,
         public int $wineId,
-        public int $intensityAroma,
-        public int $sweetness,
-        public int $acidity,
-        public ?int $tannin,
+        public int $aroma,
+        public int $appearance,
+        public int $palateEntry,
         public int $body,
         public int $persistence,
         public array $bullets = [],

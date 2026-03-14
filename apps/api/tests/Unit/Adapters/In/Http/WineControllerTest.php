@@ -440,10 +440,9 @@ final class SpyWineRepository implements WineRepository
                 new WineReview(
                     userId: 8,
                     wineId: $id,
-                    intensityAroma: 4,
-                    sweetness: 2,
-                    acidity: 3,
-                    tannin: 2,
+                    aroma: 4,
+                    appearance: 2,
+                    palateEntry: 3,
                     body: 4,
                     persistence: 5,
                     bullets: [ReviewBullet::Afrutado],

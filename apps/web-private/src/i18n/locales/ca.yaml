@@ -103,7 +103,8 @@ reviews:
     selectWine: Selecciona un vi
     score: Puntuació
     body: Cos
-    acidity: Acidesa
+    appearance: Aspecte
+    palateEntry: Entrada en boca
     notes: Notes
     notesPlaceholder: Descriu aromes, estructura i final...
     submit: Crear ressenya

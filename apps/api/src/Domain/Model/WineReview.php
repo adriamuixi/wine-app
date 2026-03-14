@@ -14,10 +14,9 @@ final readonly class WineReview
     public function __construct(
         public int $userId,
         public int $wineId,
-        public int $intensityAroma,
-        public int $sweetness,
-        public int $acidity,
-        public ?int $tannin,
+        public int $aroma,
+        public int $appearance,
+        public int $palateEntry,
         public int $body,
         public int $persistence,
         public array $bullets,
@@ -43,15 +42,11 @@ final readonly class WineReview
             throw new \InvalidArgumentException('score must be between 0 and 100.');
         }
 
-        self::assertAxisInRange('intensity_aroma', $this->intensityAroma);
-        self::assertAxisInRange('sweetness', $this->sweetness);
-        self::assertAxisInRange('acidity', $this->acidity);
+        self::assertAxisInRange('aroma', $this->aroma);
+        self::assertAxisInRange('appearance', $this->appearance);
+        self::assertAxisInRange('palate_entry', $this->palateEntry);
         self::assertAxisInRange('body', $this->body);
         self::assertAxisInRange('persistence', $this->persistence);
-
-        if (null !== $this->tannin) {
-            self::assertAxisInRange('tannin', $this->tannin);
-        }
 
         $bulletValues = $this->bulletsAsValues();
         if (count($bulletValues) !== count(array_unique($bulletValues))) {

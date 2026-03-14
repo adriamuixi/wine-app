@@ -265,7 +265,7 @@ Example:
 ```bash
 curl -s -b cookies.txt -X POST http://localhost:8080/api/wines/2/reviews \
   -H 'Content-Type: application/json' \
-  -d '{"created_at":"2025-12-24","score":88,"intensity_aroma":4,"sweetness":2,"acidity":3,"tannin":2,"body":4,"persistence":4,"bullets":["floral"]}' | jq
+  -d '{"created_at":"2025-12-24","score":88,"aroma":4,"appearance":2,"palate_entry":3,"body":4,"persistence":4,"bullets":["floral"]}' | jq
 ```
 
 Notes:
@@ -290,7 +290,7 @@ Example:
 ```bash
 curl -i -b cookies.txt -X PUT http://localhost:8080/api/wines/2/reviews/1 \
   -H 'Content-Type: application/json' \
-  -d '{"created_at":"2025-12-24","intensity_aroma":5,"sweetness":2,"acidity":2,"tannin":1,"body":4,"persistence":4,"bullets":["elegant"],"score":88}'
+  -d '{"created_at":"2025-12-24","aroma":5,"appearance":2,"palate_entry":2,"body":4,"persistence":4,"bullets":["powerful"],"score":88}'
 ```
 
 Notes:

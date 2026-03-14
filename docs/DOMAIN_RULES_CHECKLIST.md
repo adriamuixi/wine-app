@@ -20,10 +20,9 @@ Use this checklist in design, implementation, and review.
 
 ## Review Axes (0..10)
 
-- `intensity_aroma`
-- `sweetness`
-- `acidity`
-- `tannin`
+- `aroma`
+- `appearance`
+- `palate_entry`
 - `body`
 - `persistence`
 
@@ -37,13 +36,9 @@ Checks:
 
 - Afrutado
 - Floral
-- Especiado
 - Mineral
 - Madera marcada
-- Fácil de beber
-- Elegante
 - Potente
-- Gastronómico
 
 Checks:
 

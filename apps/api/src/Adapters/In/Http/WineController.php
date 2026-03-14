@@ -653,7 +653,7 @@ final class WineController
      *     purchases:list<array{id:int,place:array{id:int,place_type:string,name:string,address:?string,city:?string,country:string},price_paid:float,purchased_at:string}>,
      *     awards:list<array{id:int,name:string,score:?float,year:?int}>,
      *     photos:list<array{id:int,type:?string,url:string,hash:string,size:int,extension:string}>,
-     *     reviews:list<array{id:int,user:array{id:int,name:string,lastname:string},score:?int,intensity_aroma:int,sweetness:int,acidity:int,tannin:?int,body:int,persistence:int,bullets:list<string>,created_at:string}>
+     *     reviews:list<array{id:int,user:array{id:int,name:string,lastname:string},score:?int,aroma:int,appearance:int,palate_entry:int,body:int,persistence:int,bullets:list<string>,created_at:string}>
      * }
      */
     private function winePayload(Wine $wine): array
@@ -724,10 +724,9 @@ final class WineController
                         'lastname' => $review->userLastname,
                     ],
                     'score' => $review->score,
-                    'intensity_aroma' => $review->intensityAroma,
-                    'sweetness' => $review->sweetness,
-                    'acidity' => $review->acidity,
-                    'tannin' => $review->tannin,
+                    'aroma' => $review->aroma,
+                    'appearance' => $review->appearance,
+                    'palate_entry' => $review->palateEntry,
                     'body' => $review->body,
                     'persistence' => $review->persistence,
                     'bullets' => $review->bulletsAsValues(),

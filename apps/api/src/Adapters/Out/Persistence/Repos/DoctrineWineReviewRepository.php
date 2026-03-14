@@ -19,7 +19,7 @@ final readonly class DoctrineWineReviewRepository implements WineReviewRepositor
     {
         $row = $this->entityManager->getConnection()->fetchAssociative(
             <<<'SQL'
-SELECT id, user_id, wine_id, intensity_aroma, sweetness, acidity, tannin, body, persistence, score, created_at
+SELECT id, user_id, wine_id, aroma, appearance, palate_entry, body, persistence, score, created_at
 FROM review
 WHERE id = :id
 LIMIT 1
@@ -46,10 +46,9 @@ SQL,
             id: (int) $row['id'],
             userId: (int) $row['user_id'],
             wineId: (int) $row['wine_id'],
-            intensityAroma: (int) $row['intensity_aroma'],
-            sweetness: (int) $row['sweetness'],
-            acidity: (int) $row['acidity'],
-            tannin: null === $row['tannin'] ? null : (int) $row['tannin'],
+            aroma: (int) $row['aroma'],
+            appearance: (int) $row['appearance'],
+            palateEntry: (int) $row['palate_entry'],
             body: (int) $row['body'],
             persistence: (int) $row['persistence'],
             bullets: $bullets,
@@ -76,18 +75,17 @@ SQL,
         return $this->entityManager->getConnection()->transactional(function () use ($review): int {
             $id = $this->entityManager->getConnection()->fetchOne(
                 <<<'SQL'
-INSERT INTO review (user_id, wine_id, score, intensity_aroma, sweetness, acidity, tannin, body, persistence, created_at)
-VALUES (:user_id, :wine_id, :score, :intensity_aroma, :sweetness, :acidity, :tannin, :body, :persistence, :created_at)
+INSERT INTO review (user_id, wine_id, score, aroma, appearance, palate_entry, body, persistence, created_at)
+VALUES (:user_id, :wine_id, :score, :aroma, :appearance, :palate_entry, :body, :persistence, :created_at)
 RETURNING id
 SQL,
                 [
                     'user_id' => $review->userId,
                     'wine_id' => $review->wineId,
                     'score' => $review->score,
-                    'intensity_aroma' => $review->intensityAroma,
-                    'sweetness' => $review->sweetness,
-                    'acidity' => $review->acidity,
-                    'tannin' => $review->tannin,
+                    'aroma' => $review->aroma,
+                    'appearance' => $review->appearance,
+                    'palate_entry' => $review->palateEntry,
                     'body' => $review->body,
                     'persistence' => $review->persistence,
                     'created_at' => ($review->createdAt ?? new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
@@ -120,24 +118,22 @@ SQL,
             $this->entityManager->getConnection()->executeStatement(
                 <<<'SQL'
 UPDATE review
-SET intensity_aroma = :intensity_aroma,
-    sweetness = :sweetness,
-    acidity = :acidity,
-    tannin = :tannin,
-    score = :score,
+SET aroma = :aroma,
+    appearance = :appearance,
+    palate_entry = :palate_entry,
     body = :body,
+    score = :score,
     persistence = :persistence,
     created_at = :created_at
 WHERE id = :id
 SQL,
                 [
                     'id' => $review->id,
-                    'intensity_aroma' => $review->intensityAroma,
-                    'sweetness' => $review->sweetness,
-                    'acidity' => $review->acidity,
-                    'tannin' => $review->tannin,
-                    'score' => $review->score,
+                    'aroma' => $review->aroma,
+                    'appearance' => $review->appearance,
+                    'palate_entry' => $review->palateEntry,
                     'body' => $review->body,
+                    'score' => $review->score,
                     'persistence' => $review->persistence,
                     'created_at' => ($review->createdAt ?? new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
                 ],

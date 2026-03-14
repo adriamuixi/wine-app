@@ -22,21 +22,20 @@ final class UpdateReviewHandlerTest extends TestCase
 
         $handler->handle(new UpdateReviewCommand(
             id: 1,
-            intensityAroma: 5,
-            sweetness: 2,
-            acidity: 2,
-            tannin: 1,
+            aroma: 5,
+            appearance: 2,
+            palateEntry: 2,
             body: 5,
             persistence: 4,
-            bullets: [ReviewBullet::Elegante],
+            bullets: [ReviewBullet::Potente],
             score: 90,
         ));
 
         $saved = $repository->findById(1);
         self::assertNotNull($saved);
-        self::assertSame(5, $saved->intensityAroma);
+        self::assertSame(5, $saved->aroma);
         self::assertSame(90, $saved->score);
-        self::assertSame(['elegant'], $saved->bulletsAsValues());
+        self::assertSame(['powerful'], $saved->bulletsAsValues());
     }
 
     public function testUpdateAllowsCreatedAtChanges(): void
@@ -47,10 +46,9 @@ final class UpdateReviewHandlerTest extends TestCase
 
         $handler->handle(new UpdateReviewCommand(
             id: 1,
-            intensityAroma: 5,
-            sweetness: 2,
-            acidity: 2,
-            tannin: 1,
+            aroma: 5,
+            appearance: 2,
+            palateEntry: 2,
             body: 5,
             persistence: 4,
             createdAt: $updatedCreatedAt,
@@ -70,10 +68,9 @@ final class UpdateReviewHandlerTest extends TestCase
 
         $handler->handle(new UpdateReviewCommand(
             id: 99,
-            intensityAroma: 5,
-            sweetness: 2,
-            acidity: 2,
-            tannin: 1,
+            aroma: 5,
+            appearance: 2,
+            palateEntry: 2,
             body: 5,
             persistence: 4,
         ));
@@ -86,10 +83,9 @@ final class UpdateReviewHandlerTest extends TestCase
 
         $handler->handle(new UpdateReviewCommand(
             id: 1,
-            intensityAroma: 5,
-            sweetness: 2,
-            acidity: 2,
-            tannin: 1,
+            aroma: 5,
+            appearance: 2,
+            palateEntry: 2,
             body: 5,
             persistence: 4,
             score: 91,
@@ -112,10 +108,9 @@ final class InMemoryWineReviewRepository implements WineReviewRepository
             id: 1,
             userId: 4,
             wineId: 2,
-            intensityAroma: 3,
-            sweetness: 2,
-            acidity: 3,
-            tannin: 2,
+            aroma: 3,
+            appearance: 2,
+            palateEntry: 3,
             body: 3,
             persistence: 3,
             bullets: [ReviewBullet::Floral],
