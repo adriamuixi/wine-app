@@ -7,14 +7,14 @@ namespace App\Application\UseCases\Wine\UpdateWine;
 use App\Domain\Model\Wine;
 use App\Domain\Model\Award;
 use App\Domain\Model\WineGrape;
-use App\Domain\Repository\DoRepository;
+use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Repository\WineRepository;
 
 final readonly class UpdateWineHandler
 {
     public function __construct(
         private WineRepository $wines,
-        private DoRepository $dos,
+        private DesignationOfOriginRepository $dos,
     ) {
     }
 

@@ -18,7 +18,7 @@ services:
     App\Application\Ports\PasswordVerifier: '@App\Adapters\Out\Security\NativePasswordVerifier'
     App\Application\Ports\AuthSessionManager: '@App\Adapters\Out\Security\SymfonyAuthSessionManager'
     App\Domain\Repository\UserRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineUserRepository'
-    App\Domain\Repository\DoRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineDoRepository'
+    App\Domain\Repository\DesignationOfOriginRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineDesignationOfOriginRepository'
     App\Domain\Repository\GrapeRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineGrapeRepository'
     App\Domain\Repository\AwardRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineAwardRepository'
     App\Domain\Repository\ReviewStatsRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineReviewStatsRepository'
@@ -31,18 +31,18 @@ services:
         arguments:
             $baseDir: '/shared/public/images/wines'
 
-    App\Adapters\Out\Storage\LocalDoPhotoStorage:
+    App\Adapters\Out\Storage\LocalDesignationOfOriginPhotoStorage:
         arguments:
             $doLogoDir: '/shared/public/images/icons/DO'
             $regionLogoDir: '/shared/public/images/flags/regions'
 
-    App\Application\UseCases\Do\CreateDoAsset\CreateDoAssetHandler:
+    App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOriginAsset\CreateDesignationOfOriginAssetHandler:
         arguments:
-            $assetStorage: '@App\Adapters\Out\Storage\LocalDoPhotoStorage'
+            $assetStorage: '@App\Adapters\Out\Storage\LocalDesignationOfOriginPhotoStorage'
 
-    App\Application\UseCases\Do\DeleteDo\DeleteDoHandler:
+    App\Application\UseCases\DesignationOfOrigin\DeleteDesignationOfOrigin\DeleteDesignationOfOriginHandler:
         arguments:
-            $assets: '@App\Adapters\Out\Storage\LocalDoPhotoStorage'
+            $assets: '@App\Adapters\Out\Storage\LocalDesignationOfOriginPhotoStorage'
 
     # Domain objects are pure PHP and should not be container services by default.
     App\Domain\:

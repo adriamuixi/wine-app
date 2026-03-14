@@ -131,7 +131,7 @@ final class WinePhotoControllerWebTest extends WebTestCase
 
     private function resetTables(): void
     {
-        $this->connection->executeStatement('TRUNCATE TABLE wine_photo, wine_award, review_bullets, review, wine_grape, wine_purchase, wine, grape, place, "do" RESTART IDENTITY CASCADE');
+        $this->connection->executeStatement('TRUNCATE TABLE wine_photo, wine_award, review_bullets, review, wine_grape, wine_purchase, wine, grape, place, designation_of_origin RESTART IDENTITY CASCADE');
     }
 
     private function seedWine(): void

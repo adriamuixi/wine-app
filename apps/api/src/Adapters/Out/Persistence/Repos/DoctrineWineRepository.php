@@ -24,7 +24,7 @@ use App\Domain\Enum\ReviewBullet;
 use App\Domain\Enum\WineType;
 use App\Domain\Enum\WinePhotoType;
 use App\Domain\Model\Award;
-use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Model\DesignationOfOrigin;
 use App\Domain\Model\Place;
 use App\Domain\Model\Wine;
 use App\Domain\Model\WineGrape;
@@ -302,7 +302,7 @@ SELECT
     d.do_logo AS do_logo,
     d.region_logo AS do_region_logo
 FROM wine w
-LEFT JOIN "do" d ON d.id = w.do_id
+LEFT JOIN designation_of_origin d ON d.id = w.do_id
 WHERE w.id = :id
 SQL,
             ['id' => $id],
@@ -435,7 +435,7 @@ SQL,
             name: (string) $wineRow['name'],
             winery: null === $wineRow['winery'] ? null : (string) $wineRow['winery'],
             wineType: null === $wineRow['wine_type'] ? null : WineType::from((string) $wineRow['wine_type']),
-            do: null === $wineRow['do_id'] ? null : new DenominationOfOrigin(
+            do: null === $wineRow['do_id'] ? null : new DesignationOfOrigin(
                 id: (int) $wineRow['do_id'],
                 name: (string) $wineRow['do_name'],
                 region: (string) $wineRow['do_region'],
@@ -512,7 +512,7 @@ SQL,
         $offset = ($query->page - 1) * $query->limit;
 
         $totalItems = (int) $connection->fetchOne(
-            'SELECT count(*) FROM wine w LEFT JOIN "do" d ON d.id = w.do_id'.$whereSql,
+            'SELECT count(*) FROM wine w LEFT JOIN designation_of_origin d ON d.id = w.do_id'.$whereSql,
             $params,
             $types,
         );
@@ -535,7 +535,7 @@ SELECT
     %s AS avg_score,
     w.updated_at
 FROM wine w
-LEFT JOIN "do" d ON d.id = w.do_id
+LEFT JOIN designation_of_origin d ON d.id = w.do_id
 %s
 ORDER BY %s %s NULLS LAST, w.id DESC
 LIMIT :limit OFFSET :offset

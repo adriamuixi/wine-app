@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Application\UseCases\Wine\UpdateWine;
 
-use App\Domain\Repository\DoRepository;
+use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Domain\Model\Wine;
@@ -16,7 +16,7 @@ use App\Application\UseCases\Wine\UpdateWine\UpdateWineNotFound;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineReferenceNotFound;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineValidationException;
 use App\Domain\Enum\Country;
-use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Model\DesignationOfOrigin;
 use PHPUnit\Framework\TestCase;
 
 final class UpdateWineHandlerTest extends TestCase
@@ -24,7 +24,7 @@ final class UpdateWineHandlerTest extends TestCase
     public function testItUpdatesExistingWine(): void
     {
         $repo = new SpyWineRepository(updatable: [10]);
-        $handler = new UpdateWineHandler($repo, new InMemoryDoRepository([2 => Country::Spain]));
+        $handler = new UpdateWineHandler($repo, new InMemoryDesignationOfOriginRepository([2 => Country::Spain]));
 
         $handler->handle(new UpdateWineCommand(
             wineId: 10,
@@ -46,7 +46,7 @@ final class UpdateWineHandlerTest extends TestCase
     public function testItRejectsInvalidDoId(): void
     {
         $repo = new SpyWineRepository(updatable: [10]);
-        $handler = new UpdateWineHandler($repo, new InMemoryDoRepository([]));
+        $handler = new UpdateWineHandler($repo, new InMemoryDesignationOfOriginRepository([]));
 
         $this->expectException(UpdateWineReferenceNotFound::class);
         $handler->handle(new UpdateWineCommand(
@@ -66,7 +66,7 @@ final class UpdateWineHandlerTest extends TestCase
     public function testItRejectsWhenNoFieldsProvided(): void
     {
         $repo = new SpyWineRepository(updatable: [10]);
-        $handler = new UpdateWineHandler($repo, new InMemoryDoRepository([]));
+        $handler = new UpdateWineHandler($repo, new InMemoryDesignationOfOriginRepository([]));
 
         $this->expectException(UpdateWineValidationException::class);
         $handler->handle(new UpdateWineCommand(
@@ -86,7 +86,7 @@ final class UpdateWineHandlerTest extends TestCase
     public function testItThrowsNotFoundWhenWineDoesNotExist(): void
     {
         $repo = new SpyWineRepository(updatable: []);
-        $handler = new UpdateWineHandler($repo, new InMemoryDoRepository([]));
+        $handler = new UpdateWineHandler($repo, new InMemoryDesignationOfOriginRepository([]));
 
         $this->expectException(UpdateWineNotFound::class);
         $handler->handle(new UpdateWineCommand(
@@ -148,7 +148,7 @@ final class SpyWineRepository implements WineRepository
     }
 }
 
-final class InMemoryDoRepository implements DoRepository
+final class InMemoryDesignationOfOriginRepository implements DesignationOfOriginRepository
 {
     /**
      * @param array<int,Country> $items
@@ -157,7 +157,7 @@ final class InMemoryDoRepository implements DoRepository
     {
     }
 
-    public function create(DenominationOfOrigin $do): int
+    public function create(DesignationOfOrigin $do): int
     {
         return 0;
     }
@@ -167,14 +167,14 @@ final class InMemoryDoRepository implements DoRepository
         return $this->items[$id] ?? null;
     }
 
-    public function findById(int $id): ?DenominationOfOrigin
+    public function findById(int $id): ?DesignationOfOrigin
     {
         $country = $this->findCountryById($id);
         if (null === $country) {
             return null;
         }
 
-        return new DenominationOfOrigin(
+        return new DesignationOfOrigin(
             id: $id,
             name: 'DO '.$id,
             region: 'Region '.$id,
@@ -195,7 +195,7 @@ final class InMemoryDoRepository implements DoRepository
         return [];
     }
 
-    public function update(DenominationOfOrigin $do): bool
+    public function update(DesignationOfOrigin $do): bool
     {
         return false;
     }

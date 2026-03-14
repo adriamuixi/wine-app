@@ -1334,6 +1334,10 @@ components:
           type: string
           nullable: true
           description: Logo filename or path using an image extension (`jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`).
+        map_data:
+          allOf:
+            - $ref: '#/components/schemas/DoMapData'
+          nullable: true
     CreateDoRequest:
       type: object
       required: [name, region, country, country_code]
@@ -1353,6 +1357,10 @@ components:
           type: string
           nullable: true
           description: Logo filename or path using an image extension (`jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`).
+        map_data:
+          allOf:
+            - $ref: '#/components/schemas/DoMapData'
+          nullable: true
     CreateDoResponse:
       type: object
       required: [do]
@@ -1834,7 +1842,7 @@ components:
             $ref: '#/components/schemas/GrapeListItem'
     DoListItem:
       type: object
-      required: [id, name, region, country, country_code, do_logo, region_logo]
+      required: [id, name, region, country, country_code, do_logo, region_logo, map_data]
       properties:
         id:
           type: integer
@@ -1858,6 +1866,29 @@ components:
           type: string
           nullable: true
           example: la_rioja.png
+        map_data:
+          allOf:
+            - $ref: '#/components/schemas/DoMapData'
+          nullable: true
+    DoMapData:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+        lng:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+        zoom:
+          type: integer
+          minimum: 1
+          maximum: 18
+          nullable: true
     DoListResponse:
       type: object
       required: [items]

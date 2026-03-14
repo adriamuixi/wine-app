@@ -30,9 +30,9 @@ class WineRecord
     #[ORM\Column(name: 'wine_type', enumType: WineType::class, nullable: true)]
     private ?WineType $wineType = null;
 
-    #[ORM\ManyToOne(targetEntity: DoRecord::class)]
+    #[ORM\ManyToOne(targetEntity: DesignationOfOriginRecord::class)]
     #[ORM\JoinColumn(name: 'do_id', referencedColumnName: 'id', nullable: true)]
-    private ?DoRecord $do = null;
+    private ?DesignationOfOriginRecord $do = null;
 
     #[ORM\Column(enumType: Country::class, nullable: true)]
     private ?Country $country = null;

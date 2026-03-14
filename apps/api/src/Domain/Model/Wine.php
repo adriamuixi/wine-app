@@ -30,7 +30,7 @@ final readonly class Wine
         public ?int $vintageYear,
         public ?float $alcoholPercentage,
         ?int $id = null,
-        public ?DenominationOfOrigin $do = null,
+        public ?DesignationOfOrigin $do = null,
         public ?string $createdAt = null,
         public ?string $updatedAt = null,
         public array $grapes = [],
@@ -69,7 +69,7 @@ final readonly class Wine
         }
     }
 
-    public function assertCountryMatchesDo(?DenominationOfOrigin $do): void
+    public function assertCountryMatchesDo(?DesignationOfOrigin $do): void
     {
         if (null === $do || null === $this->country) {
             return;

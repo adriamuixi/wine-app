@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Application\UseCases\Wine\CreateWine;
 
-use App\Domain\Repository\DoRepository;
+use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Repository\GrapeRepository;
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\CreateWine\CreateWineAwardInput;
@@ -21,7 +21,7 @@ use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
 use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
-use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Model\DesignationOfOrigin;
 use App\Domain\Enum\PlaceType;
 use PHPUnit\Framework\TestCase;
 
@@ -32,7 +32,7 @@ final class CreateWineHandlerTest extends TestCase
         $wineRepository = new SpyWineRepository();
         $handler = new CreateWineHandler(
             $wineRepository,
-            new InMemoryDoRepository(),
+            new InMemoryDesignationOfOriginRepository(),
             new InMemoryGrapeRepository(),
         );
 
@@ -48,7 +48,7 @@ final class CreateWineHandlerTest extends TestCase
         $wineRepository = new SpyWineRepository();
         $handler = new CreateWineHandler(
             $wineRepository,
-            new InMemoryDoRepository(),
+            new InMemoryDesignationOfOriginRepository(),
             new InMemoryGrapeRepository(),
         );
 
@@ -63,7 +63,7 @@ final class CreateWineHandlerTest extends TestCase
         $wineRepository = new SpyWineRepository();
         $handler = new CreateWineHandler(
             $wineRepository,
-            new InMemoryDoRepository([9 => Country::Spain]),
+            new InMemoryDesignationOfOriginRepository([9 => Country::Spain]),
             new InMemoryGrapeRepository([2]),
         );
 
@@ -86,7 +86,7 @@ final class CreateWineHandlerTest extends TestCase
     {
         $handler = new CreateWineHandler(
             new SpyWineRepository(),
-            new InMemoryDoRepository(),
+            new InMemoryDesignationOfOriginRepository(),
             new InMemoryGrapeRepository(),
         );
 
@@ -98,7 +98,7 @@ final class CreateWineHandlerTest extends TestCase
     {
         $handler = new CreateWineHandler(
             new SpyWineRepository(),
-            new InMemoryDoRepository(),
+            new InMemoryDesignationOfOriginRepository(),
             new InMemoryGrapeRepository([1]),
         );
 
@@ -110,7 +110,7 @@ final class CreateWineHandlerTest extends TestCase
     {
         $handler = new CreateWineHandler(
             new SpyWineRepository(),
-            new InMemoryDoRepository([12 => Country::France]),
+            new InMemoryDesignationOfOriginRepository([12 => Country::France]),
             new InMemoryGrapeRepository(),
         );
 
@@ -122,7 +122,7 @@ final class CreateWineHandlerTest extends TestCase
     {
         $handler = new CreateWineHandler(
             new SpyWineRepository(),
-            new InMemoryDoRepository(),
+            new InMemoryDesignationOfOriginRepository(),
             new InMemoryGrapeRepository(),
         );
 
@@ -141,7 +141,7 @@ final class CreateWineHandlerTest extends TestCase
         $wineRepository = new SpyWineRepository();
         $handler = new CreateWineHandler(
             $wineRepository,
-            new InMemoryDoRepository(),
+            new InMemoryDesignationOfOriginRepository(),
             new InMemoryGrapeRepository(),
         );
 
@@ -226,7 +226,7 @@ final class SpyWineRepository implements WineRepository
     }
 }
 
-final class InMemoryDoRepository implements DoRepository
+final class InMemoryDesignationOfOriginRepository implements DesignationOfOriginRepository
 {
     /**
      * @param array<int,Country> $countryByDoId
@@ -235,7 +235,7 @@ final class InMemoryDoRepository implements DoRepository
     {
     }
 
-    public function create(DenominationOfOrigin $do): int
+    public function create(DesignationOfOrigin $do): int
     {
         return 0;
     }
@@ -245,14 +245,14 @@ final class InMemoryDoRepository implements DoRepository
         return $this->countryByDoId[$id] ?? null;
     }
 
-    public function findById(int $id): ?DenominationOfOrigin
+    public function findById(int $id): ?DesignationOfOrigin
     {
         $country = $this->findCountryById($id);
         if (null === $country) {
             return null;
         }
 
-        return new DenominationOfOrigin(
+        return new DesignationOfOrigin(
             id: $id,
             name: 'DO '.$id,
             region: 'Region '.$id,
@@ -273,7 +273,7 @@ final class InMemoryDoRepository implements DoRepository
         return [];
     }
 
-    public function update(DenominationOfOrigin $do): bool
+    public function update(DesignationOfOrigin $do): bool
     {
         return false;
     }

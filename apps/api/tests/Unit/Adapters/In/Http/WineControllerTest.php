@@ -6,7 +6,7 @@ namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\WineController;
 use App\Application\Ports\PhotoStoragePort;
-use App\Domain\Repository\DoRepository;
+use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Repository\GrapeRepository;
 use App\Domain\Repository\WineRepository;
 use App\Domain\Repository\WinePhotoRepository;
@@ -17,7 +17,7 @@ use App\Application\UseCases\Wine\CreateWine\CreateWineHandler;
 use App\Application\UseCases\Wine\DeleteWine\DeleteWineHandler;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsHandler;
 use App\Domain\Model\Wine;
-use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Model\DesignationOfOrigin;
 use App\Domain\Model\WineGrape;
 use App\Domain\Model\WinePhoto;
 use App\Domain\Model\WinePurchase;
@@ -359,10 +359,10 @@ final class WineControllerTest extends TestCase
         return new WineController(
             new CreateWineHandler(
                 $repo,
-                new InMemoryDoRepository($doCountries),
+                new InMemoryDesignationOfOriginRepository($doCountries),
                 new InMemoryGrapeRepository($grapeIds),
             ),
-            new UpdateWineHandler($repo, new InMemoryDoRepository($doCountries)),
+            new UpdateWineHandler($repo, new InMemoryDesignationOfOriginRepository($doCountries)),
             new DeleteWineHandler($repo, new NoopWinePhotoRepository(), new NoopWinePhotoStorage()),
             new GetWineDetailsHandler($repo),
             new ListWinesHandler($repo),
@@ -418,7 +418,7 @@ final class SpyWineRepository implements WineRepository
             name: 'Wine Full',
             winery: 'Bodega Demo',
             wineType: WineType::Red,
-            do: new DenominationOfOrigin(1, 'ribera', 'Castilla y Leon', Country::Spain, 'ES', 'ribera_del_duero_DO.png', 'castilla_y_leon.png'),
+            do: new DesignationOfOrigin(1, 'ribera', 'Castilla y Leon', Country::Spain, 'ES', 'ribera_del_duero_DO.png', 'castilla_y_leon.png'),
             country: Country::Spain,
             agingType: AgingType::Reserve,
             vintageYear: 2020,
@@ -542,7 +542,7 @@ final class NoopWinePhotoStorage implements PhotoStoragePort
 
 }
 
-final class InMemoryDoRepository implements DoRepository
+final class InMemoryDesignationOfOriginRepository implements DesignationOfOriginRepository
 {
     /**
      * @param array<int,Country> $countryByDoId
@@ -551,7 +551,7 @@ final class InMemoryDoRepository implements DoRepository
     {
     }
 
-    public function create(DenominationOfOrigin $do): int
+    public function create(DesignationOfOrigin $do): int
     {
         return 0;
     }
@@ -561,14 +561,14 @@ final class InMemoryDoRepository implements DoRepository
         return $this->countryByDoId[$id] ?? null;
     }
 
-    public function findById(int $id): ?DenominationOfOrigin
+    public function findById(int $id): ?DesignationOfOrigin
     {
         $country = $this->findCountryById($id);
         if (null === $country) {
             return null;
         }
 
-        return new DenominationOfOrigin(
+        return new DesignationOfOrigin(
             id: $id,
             name: 'DO '.$id,
             region: 'Region '.$id,
@@ -589,7 +589,7 @@ final class InMemoryDoRepository implements DoRepository
         return [];
     }
 
-    public function update(DenominationOfOrigin $do): bool
+    public function update(DesignationOfOrigin $do): bool
     {
         return false;
     }

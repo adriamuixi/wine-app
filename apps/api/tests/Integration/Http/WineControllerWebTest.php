@@ -369,7 +369,7 @@ final class WineControllerWebTest extends WebTestCase
     public function testListSupportsTypeCountryRegionGrapeAndScoreFilters(): void
     {
         $this->connection->executeStatement(
-            'INSERT INTO "do" (name, region, country, country_code) VALUES (:name, :region, :country, :country_code)',
+            'INSERT INTO designation_of_origin (name, region, country, country_code) VALUES (:name, :region, :country, :country_code)',
             [
                 'name' => 'Rioja',
                 'region' => 'La Rioja',
@@ -522,13 +522,13 @@ final class WineControllerWebTest extends WebTestCase
 
     private function resetWineTables(): void
     {
-        $this->connection->executeStatement('TRUNCATE TABLE wine_award, wine_photo, review_bullets, review, wine_grape, wine_purchase, wine, grape, place, users, "do" RESTART IDENTITY CASCADE');
+        $this->connection->executeStatement('TRUNCATE TABLE wine_award, wine_photo, review_bullets, review, wine_grape, wine_purchase, wine, grape, place, users, designation_of_origin RESTART IDENTITY CASCADE');
     }
 
     private function seedDoAndGrape(): void
     {
         $this->connection->executeStatement(
-            'INSERT INTO "do" (name, region, country, country_code) VALUES (:name, :region, :country, :country_code)',
+            'INSERT INTO designation_of_origin (name, region, country, country_code) VALUES (:name, :region, :country, :country_code)',
             [
                 'name' => 'Ribera',
                 'region' => 'Castilla y Leon',

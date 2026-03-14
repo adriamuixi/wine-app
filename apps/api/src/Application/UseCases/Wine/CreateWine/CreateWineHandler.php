@@ -9,7 +9,7 @@ use App\Domain\Model\Award;
 use App\Domain\Model\WineGrape;
 use App\Domain\Model\Place;
 use App\Domain\Model\WinePurchase;
-use App\Domain\Repository\DoRepository;
+use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Repository\GrapeRepository;
 use App\Domain\Repository\WineRepository;
 use App\Domain\Enum\Country;
@@ -18,7 +18,7 @@ final readonly class CreateWineHandler
 {
     public function __construct(
         private WineRepository $wines,
-        private DoRepository $dos,
+        private DesignationOfOriginRepository $dos,
         private GrapeRepository $grapes,
     ) {
     }

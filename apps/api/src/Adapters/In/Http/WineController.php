@@ -30,7 +30,7 @@ use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
 use App\Domain\Enum\PlaceType;
 use App\Domain\Enum\WineType;
-use App\Domain\Model\DenominationOfOrigin;
+use App\Domain\Model\DesignationOfOrigin;
 use App\Domain\Model\Wine;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -741,7 +741,7 @@ final class WineController
     /**
      * @return array{id:int,name:string,region:string,country:string,country_code:string,do_logo:?string,region_logo:?string}|null
      */
-    private function doPayload(?DenominationOfOrigin $wineDo): ?array
+    private function doPayload(?DesignationOfOrigin $wineDo): ?array
     {
         if (null === $wineDo) {
             return null;
