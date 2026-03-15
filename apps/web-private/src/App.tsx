@@ -4163,7 +4163,7 @@ function App() {
     const doId = createDoId === 'all' ? null : createDoId
     const vintageYearRaw = String(form.get('vintage_year') ?? '').trim()
     const alcoholRaw = String(form.get('alcohol_percentage') ?? '').trim()
-    const placeType = String(form.get('place_type') ?? '').trim()
+    const placeTypeRaw = String(form.get('place_type') ?? '').trim()
     const placeName = String(form.get('place_name') ?? '').trim()
     const placeAddressRaw = String(form.get('place_address') ?? '').trim()
     const placeCityRaw = String(form.get('place_city') ?? '').trim()
@@ -4175,6 +4175,25 @@ function App() {
         locale === 'ca'
           ? 'Compra incompleta: lloc, preu i data són obligatoris.'
           : 'Compra incompleta: lugar, precio y fecha son obligatorios.',
+      )
+      return
+    }
+
+    const placeType = PLACE_TYPE_OPTIONS.includes(placeTypeRaw as (typeof PLACE_TYPE_OPTIONS)[number]) ? placeTypeRaw : null
+    if (placeType === null) {
+      setWineFormError(
+        locale === 'ca'
+          ? 'Tipus de lloc invàlid.'
+          : 'Tipo de lugar inválido.',
+      )
+      return
+    }
+
+    if (placeType === 'restaurant' && (placeAddressRaw === '' || placeCityRaw === '')) {
+      setWineFormError(
+        locale === 'ca'
+          ? 'Per a restaurant, l’adreça i la ciutat són obligatòries.'
+          : 'Para restaurante, la dirección y la ciudad son obligatorias.',
       )
       return
     }
@@ -4224,7 +4243,7 @@ function App() {
           place: {
             place_type: placeType,
             name: placeName,
-            address: placeAddressRaw === '' ? null : placeAddressRaw,
+            address: placeType === 'supermarket' || placeAddressRaw === '' ? null : placeAddressRaw,
             city: placeCityRaw === '' ? null : placeCityRaw,
             country,
           },

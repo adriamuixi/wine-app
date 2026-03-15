@@ -329,16 +329,8 @@ const LEAFLET_SCRIPT_ID = 'leaflet-script'
 const LEAFLET_JS_URL = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 
 type LeafletGlobal = {
-  map: (container: HTMLElement, options?: Record<string, unknown>) => {
-    setView: (center: [number, number], zoom: number) => unknown
-    flyTo: (center: [number, number], zoom?: number, options?: Record<string, unknown>) => unknown
-    fitBounds: (bounds: unknown, options?: Record<string, unknown>) => unknown
-    on: (event: string, handler: () => void) => unknown
-    getZoom: () => number
-    invalidateSize: (options?: Record<string, unknown>) => void
-    remove: () => void
-  }
-  tileLayer: (urlTemplate: string, options?: Record<string, unknown>) => { addTo: (map: unknown) => unknown }
+  map: (container: HTMLElement, options?: Record<string, unknown>) => LeafletMap
+  tileLayer: (urlTemplate: string, options?: Record<string, unknown>) => LeafletTileLayer
   latLngBounds: (latlngs: Array<[number, number]>) => unknown
   divIcon: (options?: Record<string, unknown>) => unknown
   marker: (latlng: [number, number], options?: Record<string, unknown>) => {
@@ -355,6 +347,22 @@ type LeafletGlobal = {
     setStyle: (style: Record<string, unknown>) => unknown
     bindTooltip: (content: string, options?: Record<string, unknown>) => unknown
   }
+}
+
+type LeafletMap = {
+  setView: (center: [number, number], zoom: number) => unknown
+  flyTo: (center: [number, number], zoom?: number, options?: Record<string, unknown>) => unknown
+  fitBounds: (bounds: unknown, options?: Record<string, unknown>) => unknown
+  on: (event: string, handler: () => void) => unknown
+  getZoom: () => number
+  invalidateSize: (options?: Record<string, unknown>) => void
+  removeLayer: (layer: unknown) => unknown
+  remove: () => void
+}
+
+type LeafletTileLayer = {
+  addTo: (map: unknown) => LeafletTileLayer
+  on: (event: string, handler: () => void) => LeafletTileLayer
 }
 
 declare global {
