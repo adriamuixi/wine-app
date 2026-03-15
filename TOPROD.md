@@ -208,6 +208,18 @@ Notes:
 cat backup_file.sql | docker compose -f docker-compose.prod.yml exec -T db psql -U "$POSTGRES_USER" "$POSTGRES_DB"
 ```
 
+### Restore from compressed `.gz`
+
+```bash
+gunzip -c backup_file.sql.gz | docker compose -f docker-compose.prod.yml exec -T db psql -U "$POSTGRES_USER" "$POSTGRES_DB"
+```
+
+### Copy wine images between servers
+
+```bash
+rsync -avz --progress user@SOURCE_SERVER:/path/to/wine-app/shared/public/images/wines/ user@DEST_SERVER:/path/to/wine-app/shared/public/images/wines/
+```
+
 ## 8. Firewall (UFW example)
 
 If using UFW:

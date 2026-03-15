@@ -1764,14 +1764,25 @@ export default function App() {
       })
 
       const tileLanguage = locale === 'ca' ? 'ca' : 'es'
-      const tileUrl = isDoMapMobile
-        ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-        : `https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png?lang=${tileLanguage}`
-      leaflet.tileLayer(tileUrl, {
+      const primaryTileUrl = `https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png?lang=${tileLanguage}`
+      const fallbackTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      const tileLayerOptions = {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         updateWhenZooming: false,
         updateWhenIdle: true,
-      }).addTo(leafletMap)
+      }
+
+      const primaryTileLayer = leaflet.tileLayer(primaryTileUrl, tileLayerOptions).addTo(leafletMap)
+      let switchedToFallback = false
+      primaryTileLayer.on('tileerror', () => {
+        if (switchedToFallback) {
+          return
+        }
+
+        switchedToFallback = true
+        leafletMap.removeLayer(primaryTileLayer)
+        leaflet.tileLayer(fallbackTileUrl, tileLayerOptions).addTo(leafletMap)
+      })
 
       resizeObserver = new ResizeObserver(() => {
         leafletMap.invalidateSize({ pan: false, animate: false })
