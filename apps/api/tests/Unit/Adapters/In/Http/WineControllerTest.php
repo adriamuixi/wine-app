@@ -157,6 +157,37 @@ final class WineControllerTest extends TestCase
         self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
     }
 
+    public function testCreateAcceptsNullAddressAndCityForRestaurant(): void
+    {
+        $controller = $this->controller(doCountries: [1 => Country::Spain], grapeIds: [5]);
+        $request = Request::create(
+            '/api/wines',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Wine nullable place',
+                'do_id' => 1,
+                'purchases' => [
+                    [
+                        'place' => [
+                            'place_type' => 'restaurant',
+                            'name' => 'Casa Flexible',
+                            'address' => null,
+                            'city' => null,
+                            'country' => 'spain',
+                        ],
+                        'price_paid' => '11.50',
+                        'purchased_at' => '2026-03-01T10:00:00+00:00',
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+    }
+
     public function testListReturnsPaginatedWinesWithDefaults(): void
     {
         $controller = $this->controller();

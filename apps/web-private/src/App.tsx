@@ -330,6 +330,10 @@ const DEFAULT_USER_PLACEHOLDER: AppUser = {
 
 const AGING_OPTIONS = ['young', 'crianza', 'reserve', 'grand_reserve'] as const
 const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket'] as const
+const PLACE_TYPE_LABELS: Record<(typeof PLACE_TYPE_OPTIONS)[number], { ca: string; es: string }> = {
+  restaurant: { ca: 'Restaurant', es: 'Restaurante' },
+  supermarket: { ca: 'Mercat', es: 'Mercado' },
+}
 const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker', 'james_suckling', 'guia_proensa'] as const
 const REVIEW_TAG_OPTIONS = ['AFRUTADO', 'FLORAL', 'MINERAL', 'MADERA MARCADA', 'POTENTE'] as const
 const REVIEW_TAG_TO_ENUM: Record<(typeof REVIEW_TAG_OPTIONS)[number], WineDetailsApiReview['bullets'][number]> = {
@@ -4167,6 +4171,7 @@ function App() {
     const placeName = String(form.get('place_name') ?? '').trim()
     const placeAddressRaw = String(form.get('place_address') ?? '').trim()
     const placeCityRaw = String(form.get('place_city') ?? '').trim()
+    const placeCountryRaw = String(form.get('place_country') ?? '').trim()
     const pricePaidRaw = String(form.get('price_paid') ?? '').trim()
     const purchasedAtRaw = String(form.get('purchased_at') ?? '').trim()
 
@@ -4189,11 +4194,14 @@ function App() {
       return
     }
 
-    if (placeType === 'restaurant' && (placeAddressRaw === '' || placeCityRaw === '')) {
+    const placeCountry = WINE_COUNTRY_FILTER_VALUES.includes(placeCountryRaw as Exclude<CountryFilterValue, 'all'>)
+      ? placeCountryRaw
+      : null
+    if (placeCountry === null) {
       setWineFormError(
         locale === 'ca'
-          ? 'Per a restaurant, l’adreça i la ciutat són obligatòries.'
-          : 'Para restaurante, la dirección y la ciudad son obligatorias.',
+          ? 'País de compra invàlid.'
+          : 'País de compra inválido.',
       )
       return
     }
@@ -4243,9 +4251,9 @@ function App() {
           place: {
             place_type: placeType,
             name: placeName,
-            address: placeType === 'supermarket' || placeAddressRaw === '' ? null : placeAddressRaw,
+            address: placeAddressRaw === '' ? null : placeAddressRaw,
             city: placeCityRaw === '' ? null : placeCityRaw,
-            country,
+            country: placeCountry,
           },
           price_paid: pricePaidRaw,
           purchased_at: purchasedAtRaw,
@@ -6278,7 +6286,9 @@ function App() {
                       {locale === 'ca' ? 'Tipus de lloc' : 'Tipo de lugar'}
                       <select name="place_type" defaultValue={primaryEditPurchase?.place.place_type ?? 'restaurant'}>
                         {PLACE_TYPE_OPTIONS.map((placeType) => (
-                          <option key={placeType} value={placeType}>{placeType}</option>
+                          <option key={placeType} value={placeType}>
+                            {locale === 'ca' ? PLACE_TYPE_LABELS[placeType].ca : PLACE_TYPE_LABELS[placeType].es}
+                          </option>
                         ))}
                       </select>
                     </label>
@@ -6314,6 +6324,14 @@ function App() {
                         defaultValue={primaryEditPurchase?.purchased_at?.slice(0, 10) ?? '2026-02-27'}
                         required
                       />
+                    </label>
+                    <label>
+                      {locale === 'ca' ? 'País de compra' : 'País de compra'}
+                      <select name="place_country" defaultValue={primaryEditPurchase?.place.country ?? manufacturingCountry}>
+                        {WINE_COUNTRY_FILTER_VALUES.map((countryCode) => (
+                          <option key={countryCode} value={countryCode}>{countryCodeToLabel(countryCode, locale)}</option>
+                        ))}
+                      </select>
                     </label>
                   </div>
                   <div className="inline-grid">

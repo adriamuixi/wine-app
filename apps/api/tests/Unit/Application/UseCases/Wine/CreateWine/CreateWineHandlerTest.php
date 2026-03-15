@@ -118,22 +118,25 @@ final class CreateWineHandlerTest extends TestCase
         $handler->handle($this->command(doId: 12, country: Country::Spain));
     }
 
-    public function testItRejectsSupermarketWithAddress(): void
+    public function testItAcceptsSupermarketWithAddress(): void
     {
+        $wineRepository = new SpyWineRepository();
         $handler = new CreateWineHandler(
-            new SpyWineRepository(),
+            $wineRepository,
             new InMemoryDesignationOfOriginRepository(),
             new InMemoryGrapeRepository(),
         );
 
-        $this->expectException(CreateWineValidationException::class);
-        $handler->handle($this->command(
+        $result = $handler->handle($this->command(
             purchases: [new CreateWinePurchaseInput(
                 new CreateWinePlaceInput(PlaceType::Supermarket, 'Mercadona', 'Street 1', null, Country::Spain),
                 '10.00',
                 new \DateTimeImmutable('2026-02-28T10:00:00+00:00'),
             )],
         ));
+
+        self::assertSame(101, $result->id);
+        self::assertSame('Street 1', $wineRepository->lastCommand?->purchases[0]->place->address);
     }
 
     public function testItAcceptsSupermarketWithCity(): void

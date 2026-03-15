@@ -76,6 +76,31 @@ final class WineControllerWebTest extends WebTestCase
         self::assertSame(1, $purchaseCount);
     }
 
+    public function testCreateAllowsRestaurantWithNullAddressAndCity(): void
+    {
+        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+
+        $client->jsonRequest('POST', '/api/wines', [
+            'name' => 'Integration Wine Nullable Place',
+            'do_id' => 1,
+            'wine_purchase' => [
+                [
+                    'place' => [
+                        'place_type' => 'restaurant',
+                        'name' => 'Casa Null',
+                        'address' => null,
+                        'city' => null,
+                        'country' => 'spain',
+                    ],
+                    'price_paid' => '12.50',
+                    'purchased_at' => '2026-03-01T10:00:00+00:00',
+                ],
+            ],
+        ]);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+    }
+
     public function testDeleteRemovesRelatedRowsByCascade(): void
     {
         $client = static::createClient(['environment' => 'test', 'debug' => true]);

@@ -1171,7 +1171,7 @@ components:
     CreateWinePlaceInput:
       type: object
       required: [place_type, name, country]
-      description: For supermarket, address must be null and city is optional. For restaurant, both address and city are required.
+      description: Address and city are optional for both supermarket and restaurant.
       properties:
         place_type:
           type: string

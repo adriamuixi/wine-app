@@ -25,18 +25,12 @@ final readonly class Place
             throw new \InvalidArgumentException('purchases.place.name is required.');
         }
 
-        if (PlaceType::Restaurant === $this->placeType) {
-            if (null === $this->address || '' === trim($this->address)) {
-                throw new \InvalidArgumentException('purchases.place.address is required for restaurant.');
-            }
-
-            if (null === $this->city || '' === trim($this->city)) {
-                throw new \InvalidArgumentException('purchases.place.city is required for restaurant.');
-            }
+        if (null !== $this->address && '' === trim($this->address)) {
+            throw new \InvalidArgumentException('purchases.place.address cannot be blank when provided.');
         }
 
-        if (PlaceType::Supermarket === $this->placeType && null !== $this->address) {
-            throw new \InvalidArgumentException('purchases.place.address must be null for supermarket.');
+        if (null !== $this->city && '' === trim($this->city)) {
+            throw new \InvalidArgumentException('purchases.place.city cannot be blank when provided.');
         }
     }
 }
