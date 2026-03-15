@@ -1,7 +1,7 @@
 {
-  "name": "Vins Tat & Rosset Backoffice",
+  "name": "Vins Tat & Rosset",
   "short_name": "TatRosset",
-  "description": "Private dashboard for Vins Tat & Rosset.",
+  "description": "Catálogo público de vinos de Vins Tat & Rosset.",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

@@ -743,6 +743,27 @@ function resolveApiBaseUrl(): string {
   return configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
 }
 
+function upsertMetaTag(attribute: 'name' | 'property', key: string, content: string): void {
+  const selector = `meta[${attribute}="${key}"]`
+  let tag = document.head.querySelector(selector) as HTMLMetaElement | null
+  if (!tag) {
+    tag = document.createElement('meta')
+    tag.setAttribute(attribute, key)
+    document.head.appendChild(tag)
+  }
+  tag.setAttribute('content', content)
+}
+
+function upsertCanonicalLink(href: string): void {
+  let link = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'canonical'
+    document.head.appendChild(link)
+  }
+  link.href = href
+}
+
 function countryFlagEmoji(country: string): string {
   const map: Record<string, string> = {
     Spain: '🇪🇸',
@@ -1237,6 +1258,33 @@ export default function App() {
     document.documentElement.lang = locale
     window.localStorage.setItem(LOCALE_KEY, locale)
   }, [locale])
+
+  useEffect(() => {
+    const siteName = 'Vins Tat & Rosset'
+    const isCatalan = locale === 'ca'
+    const sectionTitle = isDoMapPage
+      ? (isCatalan ? 'Mapa DO' : 'Mapa DO')
+      : (isCatalan ? 'Catàleg de vins' : 'Catálogo de vinos')
+    const description = isDoMapPage
+      ? (isCatalan
+        ? 'Mapa públic de denominacions d’origen i vins destacats.'
+        : 'Mapa público de denominaciones de origen y vinos destacados.')
+      : (isCatalan
+        ? 'Catàleg públic de vins amb fitxes, puntuacions i denominacions d’origen.'
+        : 'Catálogo público de vinos con fichas, puntuaciones y denominaciones de origen.')
+    const relativePath = isDoMapPage ? '/do-map' : '/'
+    const canonical = `${window.location.origin}${relativePath}`
+
+    document.title = `${siteName} | ${sectionTitle}`
+    upsertCanonicalLink(canonical)
+    upsertMetaTag('name', 'description', description)
+    upsertMetaTag('property', 'og:title', `${siteName} | ${sectionTitle}`)
+    upsertMetaTag('property', 'og:description', description)
+    upsertMetaTag('property', 'og:url', canonical)
+    upsertMetaTag('property', 'og:locale', isCatalan ? 'ca_ES' : 'es_ES')
+    upsertMetaTag('name', 'twitter:title', `${siteName} | ${sectionTitle}`)
+    upsertMetaTag('name', 'twitter:description', description)
+  }, [isDoMapPage, locale])
 
   useEffect(() => {
     if (mobileViewMode === 'card') {
