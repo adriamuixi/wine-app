@@ -350,6 +350,69 @@ final class WineControllerWebTest extends WebTestCase
         self::assertSame(0, $remaining);
     }
 
+    public function testUpdateReplacesPurchasesAndStoresAddressInDatabase(): void
+    {
+        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+
+        $client->jsonRequest('POST', '/api/wines', [
+            'name' => 'Update Purchase Wine',
+            'do_id' => 1,
+            'purchases' => [
+                [
+                    'place' => [
+                        'place_type' => 'restaurant',
+                        'name' => 'Casa Before',
+                        'address' => 'Calle 1',
+                        'city' => 'Madrid',
+                        'country' => 'spain',
+                    ],
+                    'price_paid' => '18.00',
+                    'purchased_at' => '2026-03-10T10:00:00+00:00',
+                ],
+            ],
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $payload = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $wineId = (int) $payload['wine']['id'];
+
+        $client->jsonRequest('PUT', sprintf('/api/wines/%d', $wineId), [
+            'purchases' => [
+                [
+                    'place' => [
+                        'place_type' => 'supermarket',
+                        'name' => 'Mercat Central',
+                        'address' => 'Avinguda Diagonal 55',
+                        'city' => 'Barcelona',
+                        'country' => 'spain',
+                    ],
+                    'price_paid' => '12.50',
+                    'purchased_at' => '2026-03-15T10:00:00+00:00',
+                ],
+            ],
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        /** @var array<string,mixed>|false $row */
+        $row = $this->connection->fetchAssociative(
+            <<<'SQL'
+SELECT p.place_type, p.name, p.address, p.city, p.country::text AS country
+FROM wine_purchase wp
+INNER JOIN place p ON p.id = wp.place_id
+WHERE wp.wine_id = :wine_id
+ORDER BY wp.id DESC
+LIMIT 1
+SQL,
+            ['wine_id' => $wineId],
+        );
+
+        self::assertIsArray($row);
+        self::assertSame('supermarket', $row['place_type']);
+        self::assertSame('Mercat Central', $row['name']);
+        self::assertSame('Avinguda Diagonal 55', $row['address']);
+        self::assertSame('Barcelona', $row['city']);
+        self::assertSame('spain', $row['country']);
+    }
+
     public function testListUsesDefaultPaginationOfTwentyItems(): void
     {
         for ($i = 1; $i <= 25; ++$i) {

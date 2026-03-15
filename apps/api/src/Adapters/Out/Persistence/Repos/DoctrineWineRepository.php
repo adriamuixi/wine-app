@@ -169,6 +169,7 @@ SQL,
     public function updatePartial(UpdateWineCommand $command): bool
     {
         $hasGrapes = $command->isProvided('grapes');
+        $hasPurchases = $command->isProvided('purchases');
         $hasAwards = $command->isProvided('awards');
         $sets = [];
         $params = ['id' => $command->wineId];
@@ -206,14 +207,14 @@ SQL,
             $params['alcohol_percentage'] = $command->alcoholPercentage;
         }
 
-        if ([] === $sets && !$hasGrapes && !$hasAwards) {
+        if ([] === $sets && !$hasGrapes && !$hasPurchases && !$hasAwards) {
             return false;
         }
 
         $connection = $this->entityManager->getConnection();
 
         $affected = $connection->transactional(
-            function (Connection $connection) use ($sets, $params, $command, $hasGrapes, $hasAwards): int {
+            function (Connection $connection) use ($sets, $params, $command, $hasGrapes, $hasPurchases, $hasAwards): int {
                 $setsWithTimestamp = [...$sets, 'updated_at = now()'];
                 $sql = sprintf('UPDATE wine SET %s WHERE id = :id', implode(', ', $setsWithTimestamp));
                 $affected = $connection->executeStatement($sql, $params);
@@ -254,6 +255,64 @@ SQL,
                                 'score' => $award->score,
                                 'year' => $award->year,
                             ],
+                        );
+                    }
+                }
+
+                if ($hasPurchases) {
+                    $oldPlaceIds = array_map(
+                        static fn (mixed $value): int => (int) $value,
+                        $connection->fetchFirstColumn(
+                            'SELECT place_id FROM wine_purchase WHERE wine_id = :wine_id',
+                            ['wine_id' => $command->wineId],
+                        ),
+                    );
+
+                    $connection->executeStatement(
+                        'DELETE FROM wine_purchase WHERE wine_id = :wine_id',
+                        ['wine_id' => $command->wineId],
+                    );
+
+                    foreach ($command->purchases as $purchase) {
+                        $placeId = (int) $connection->fetchOne(
+                            <<<'SQL'
+INSERT INTO place (place_type, name, address, city, country)
+VALUES (:place_type, :name, :address, :city, :country)
+RETURNING id
+SQL,
+                            [
+                                'place_type' => $purchase->place->placeType->value,
+                                'name' => $purchase->place->name,
+                                'address' => $purchase->place->address,
+                                'city' => $purchase->place->city,
+                                'country' => $purchase->place->country->value,
+                            ],
+                        );
+
+                        $connection->executeStatement(
+                            'INSERT INTO wine_purchase (wine_id, place_id, price_paid, purchased_at) VALUES (:wine_id, :place_id, :price_paid, :purchased_at)',
+                            [
+                                'wine_id' => $command->wineId,
+                                'place_id' => $placeId,
+                                'price_paid' => $purchase->pricePaid,
+                                'purchased_at' => $purchase->purchasedAt->format(\DateTimeInterface::ATOM),
+                            ],
+                        );
+                    }
+
+                    if ([] !== $oldPlaceIds) {
+                        $connection->executeStatement(
+                            <<<'SQL'
+DELETE FROM place p
+WHERE p.id IN (:place_ids)
+  AND NOT EXISTS (
+    SELECT 1
+    FROM wine_purchase wp
+    WHERE wp.place_id = p.id
+  )
+SQL,
+                            ['place_ids' => $oldPlaceIds],
+                            ['place_ids' => ArrayParameterType::INTEGER],
                         );
                     }
                 }

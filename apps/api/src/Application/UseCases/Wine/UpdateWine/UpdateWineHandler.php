@@ -6,6 +6,8 @@ namespace App\Application\UseCases\Wine\UpdateWine;
 
 use App\Domain\Model\Wine;
 use App\Domain\Model\Award;
+use App\Domain\Model\Place;
+use App\Domain\Model\WinePurchase;
 use App\Domain\Model\WineGrape;
 use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Repository\WineRepository;
@@ -77,6 +79,7 @@ final readonly class UpdateWineHandler
             provided: $provided,
             grapes: $command->grapes,
             awards: $command->awards,
+            purchases: $command->purchases,
         );
     }
 
@@ -110,6 +113,24 @@ final readonly class UpdateWineHandler
                     name: $award->name,
                     score: $award->score,
                     year: $award->year,
+                );
+            }
+        }
+
+        if ($command->isProvided('purchases')) {
+            foreach ($command->purchases as $purchase) {
+                $place = new Place(
+                    placeType: $purchase->place->placeType,
+                    name: $purchase->place->name,
+                    address: $purchase->place->address,
+                    city: $purchase->place->city,
+                    country: $purchase->place->country,
+                );
+
+                new WinePurchase(
+                    place: $place,
+                    pricePaid: $purchase->pricePaid,
+                    purchasedAt: $purchase->purchasedAt,
                 );
             }
         }

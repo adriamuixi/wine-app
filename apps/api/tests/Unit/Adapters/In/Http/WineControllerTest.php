@@ -326,6 +326,41 @@ final class WineControllerTest extends TestCase
         self::assertNull(SpyWineRepository::$lastUpdateCommand->awards[1]->year);
     }
 
+    public function testUpdatePersistsPurchasesPayloadInCommand(): void
+    {
+        $controller = $this->controller(updatableWineIds: [20]);
+        $request = Request::create(
+            '/api/wines/20',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Updated Name',
+                'purchases' => [
+                    [
+                        'place' => [
+                            'place_type' => 'supermarket',
+                            'name' => 'Mercat Central',
+                            'address' => 'Carrer Major 22',
+                            'city' => 'Barcelona',
+                            'country' => 'spain',
+                        ],
+                        'price_paid' => '14.95',
+                        'purchased_at' => '2026-03-15T10:00:00+00:00',
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(20, $request);
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+        self::assertNotNull(SpyWineRepository::$lastUpdateCommand);
+        self::assertCount(1, SpyWineRepository::$lastUpdateCommand->purchases);
+        self::assertSame('Carrer Major 22', SpyWineRepository::$lastUpdateCommand->purchases[0]->place->address);
+        self::assertSame('Barcelona', SpyWineRepository::$lastUpdateCommand->purchases[0]->place->city);
+        self::assertSame('14.95', SpyWineRepository::$lastUpdateCommand->purchases[0]->pricePaid);
+    }
+
     public function testUpdateReturnsNotFoundWhenWineDoesNotExist(): void
     {
         $controller = $this->controller(updatableWineIds: []);

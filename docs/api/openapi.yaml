@@ -1300,6 +1300,18 @@ components:
           minimum: 0
           maximum: 100
           nullable: true
+        grapes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateWineGrapeInput'
+        purchases:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateWinePurchaseInput'
+        awards:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateWineAwardInput'
     UpdateDoRequest:
       type: object
       properties:
