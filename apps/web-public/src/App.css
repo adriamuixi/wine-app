@@ -287,6 +287,81 @@
   border-color: var(--accent);
 }
 
+.about-hero-panel {
+  grid-template-columns: 1fr;
+}
+
+.about-hero-subtitle {
+  max-width: 72ch;
+}
+
+.about-team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.about-member-card {
+  border-radius: 1.25rem;
+  padding: 0.9rem;
+}
+
+.about-member-photo {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 4 / 3;
+  border-radius: 0.95rem;
+  border: 1px solid var(--line-soft);
+  object-fit: cover;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  margin-bottom: 0.65rem;
+}
+
+.about-member-card h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+}
+
+.about-member-role {
+  margin: 0.38rem 0 0.52rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.about-member-card p {
+  margin-top: 0;
+  color: var(--muted-strong);
+}
+
+.about-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.about-stat-card {
+  border-radius: 1rem;
+  padding: 0.72rem;
+  display: grid;
+  gap: 0.22rem;
+}
+
+.about-stat-card span {
+  font-size: 0.78rem;
+  color: var(--muted-strong);
+  letter-spacing: 0.01em;
+}
+
+.about-stat-card strong {
+  font-size: clamp(1.05rem, 2.4vw, 1.4rem);
+}
+
+.about-stat-card-accent {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line-soft));
+  background: color-mix(in srgb, var(--surface) 82%, var(--accent) 18%);
+}
+
 .do-map-shell {
   display: block;
 }
@@ -318,6 +393,16 @@
   .do-map-detail-card {
     max-height: none;
     overflow: auto;
+  }
+}
+
+@media (max-width: 980px) {
+  .about-team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

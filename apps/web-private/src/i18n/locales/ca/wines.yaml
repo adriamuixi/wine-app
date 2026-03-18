@@ -1,0 +1,96 @@
+wines:
+  title: Eines de catàleg
+  add:
+    eyebrow: Vins
+    title: Afegir vi al catàleg
+    badge: Formulari
+    name: Nom del vi
+    winery: Celler
+    type: Tipus de vi
+    vintage: Anyada
+    country: País
+    region: Regió / DO
+    place: Lloc de compra
+    price: Preu pagat
+    submit: Desar vi
+  edit:
+    eyebrow: Vins
+    title: Editar vi existent
+    countSuffix: vins
+    action: Editar
+ui:
+  not_could_load_wine: No s’ha pogut carregar el vi.
+  gallery_wine: Galeria del vi
+  not_could_identify_photo_wine: No s’ha pogut identificar la foto del vi.
+  not_could_delete_wine: No s’ha pogut eliminar el vi.
+  search_by_name_wine: Cerca per nom del vi
+  variety_grape: Varietat de raïm
+  country_wine: País del vi
+  search_do: Cerca D.O.
+  first_select_country: Primer selecciona país
+  do_name_or_region: Nom o regió de la D.O.
+  select_country_before: Selecciona país abans
+  all_dos: Totes les D.O.
+  clear_filters: Netejar filtres
+  apply_filters: Aplicar filtres
+  not_could_identify_wine_edit: No s’ha pogut identificar el vi a editar.
+  name_wine_required: El nom del vi és obligatori.
+  purchase_incomplete_place_price_and_date_are_required: 'Compra incompleta: lloc,
+    preu i data són obligatoris.'
+  type_place_invalid: Tipus de lloc invàlid.
+  country_purchase_invalid: País de compra invàlid.
+  not_could_update_wine: No s’ha pogut actualitzar el vi.
+  not_could_create_wine: No s’ha pogut crear el vi.
+  save_wine: Desar vi
+  wines: vins
+  award_label: Premi
+  create_new_wine: Crear nou vi
+  not_could_load_list_wines: No s’ha pogut carregar el llistat de vins.
+  country_production: País de fabricació
+  vintage_label: Anyada
+  crianza: Criança
+  edit_wine: Editar vi
+  delete_wine: Eliminar vi
+  loading_wines: Carregant vins...
+  not_found_wines: Cap vi trobat.
+  limit: Límit
+  order: Ordre
+  filter_by_name: Filtrar per nom
+  eg_rioja: Ex. Rioja
+  filter_by_country: Filtrar per país
+  all_countries: Tots els països
+  filter_by_region: Filtrar per regió
+  all_regions: Totes les regions
+  data_basic: Dades bàsiques
+  region: Regió
+  code_country: Codi país
+  sweet: Dolç
+  fortified: Fortificat
+  alcohol_content: Grau alcohòlic (%)
+  origin_and_do: Origen i DO
+  without_do: Sense D.O.
+  composition_and_grape: Composició i raïm
+  variety: Varietat
+  percentage: Percentatge (%)
+  percentage_label: Percentatge
+  delete_variety: Eliminar varietat
+  add_variety: Afegir varietat
+  purchase_and_place_tasting: Compra i lloc de la cata
+  type_place: Tipus de lloc
+  date_purchase: Data de la compra
+  address_place: Adreça del lloc
+  city: Ciutat
+  awards: Premis
+  score: Puntuació
+  year: Any
+  delete_award: Eliminar premi
+  add_award: Afegir premi
+  loading_data_wine: Carregant dades del vi...
+  sort_by_default_list_wines: Ordenació per defecte (llistat de vins)
+  score_most_high_first: Puntuació (més alta primer)
+  back_list_wines: Tornar al llistat de vins
+  filters_section: FILTRES
+  filter_wines: Filtrar vins
+  delete_wine_section: ELIMINAR VI
+  this_accion_eliminara_wine_and_its_photos_want_continuar: Aquesta acció eliminarà
+    el vi i les seves fotos. Vols continuar?

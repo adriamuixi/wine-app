@@ -1,0 +1,50 @@
+wineProfile:
+  pageTitle: Perfil del vino
+  backToDashboard: Volver al Dashboard
+  photosEyebrow: Fotos
+  photoRecordPreview: Vista previa PhotoRecord
+  filesSuffix: archivos
+  summaryEyebrow: Resumen
+  operationalProfile: Perfil operativo
+  filtersAria: Abrir dashboard con filtros
+  filterWine: Vino
+  filterType: Tipo
+  filterCountry: País
+  filterRegion: Región
+  statAvgScore: Punt. media
+  statPricePaid: Precio pagado
+  statVintage: Añada
+  pairingEyebrow: Maridaje
+  galleryEyebrow: Fotos del vino
+  closeGallery: Cerrar
+  closeGalleryAria: Cerrar visor de imágenes
+  imageViewsAria: Vistas de imágenes del vino
+  imageExampleCaption: Imagen de ejemplo. En el futuro, las fotos estarán asociadas
+    a cada vino (p. ej. `example_wine-hash.png`).
+  imageLabels:
+    bottle: Botella
+    front: Etiqueta frontal
+    back: Etiqueta trasera
+    situation: Situación
+  photoActions:
+    edit: Editar foto
+    delete: Eliminar foto
+ui:
+  not_could_load_sheet_wine: No se pudo cargar la ficha del vino.
+  profile_updated_successfully: Perfil actualizado correctamente.
+  preparing_sheet_wine: Preparando ficha del vino…
+  not_could_load_sheet: No se pudo cargar la ficha
+  without_varieties_listed: Sin variedades informadas.
+  sheet_technical: FICHA TÉCNICA
+  identity_wine_information: Identidad del vino + Información
+  updated: Actualizado
+  close: Cerrar
+  uploading_image: Subiendo imagen…
+  increase_zoom: Aumentar zoom
+  format_libre_without_crop_required: Formato libre (sin recorte obligatorio)
+  arrastra_for_move_and_pellizca_for_zoom: Arrastra para mover y pellizca para zoom
+  select_ratio_crop: Seleccionar relación de recorte
+  offset_x: Desplazamiento X
+  offset_and: Desplazamiento Y
+  saving_photo: Guardando…
+  close_gallery: Cerrar galería

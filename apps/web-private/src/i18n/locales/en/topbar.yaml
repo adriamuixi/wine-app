@@ -1,0 +1,22 @@
+topbar:
+  overview: Overview
+  wines: Wine tools
+  dos: Designations of origin
+  doCreate: Create DO
+  wineCreate: Create wine
+  wineEdit: Edit wine
+  reviews: My reviews
+  reviewCreate: Create review
+  reviewEdit: Edit review
+  admin: Admin Tools
+  apiDoc: API Documentation
+  settings: Settings
+  welcome: Welcome
+  signedInAs: Signed in as
+  shellReady: This shell is ready for dashboard modules.
+  authCardTitle: Authentication
+  authCardDesc: Session bootstrap with /api/auth/me (in the real version).
+  nextStepTitle: Next step
+  nextStepDesc: Add routes and modules for wines, reviews, and admin.
+  mobileReadyTitle: Mobile ready
+  mobileReadyDesc: Layout is responsive for mobile and tablet.

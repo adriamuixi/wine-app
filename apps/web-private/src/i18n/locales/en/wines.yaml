@@ -1,0 +1,96 @@
+wines:
+  title: Catalog tools
+  add:
+    eyebrow: Wines
+    title: Add wine to catalog
+    badge: Form
+    name: Wine name
+    winery: Winery
+    type: Wine type
+    vintage: Vintage
+    country: Country
+    region: Region / DO
+    place: Purchase place
+    price: Price paid
+    submit: Save wine
+  edit:
+    eyebrow: Wines
+    title: Edit existing wine
+    countSuffix: wines
+    action: Edit
+ui:
+  not_could_load_wine: Could not load wine
+  gallery_wine: Gallery wine
+  not_could_identify_photo_wine: Could not identify photo wine
+  not_could_delete_wine: Could not delete wine
+  search_by_name_wine: Search by name wine
+  variety_grape: Variety grape
+  country_wine: Country wine
+  search_do: Search do
+  first_select_country: First select country
+  do_name_or_region: Do name or region
+  select_country_before: Select country before
+  all_dos: All DOs
+  clear_filters: Clear filters
+  apply_filters: Apply filters
+  not_could_identify_wine_edit: Could not identify wine edit
+  name_wine_required: Name wine required
+  purchase_incomplete_place_price_and_date_are_required: Purchase incomplete place
+    price and date are required
+  type_place_invalid: Type place invalid
+  country_purchase_invalid: Country purchase invalid
+  not_could_update_wine: Could not update wine
+  not_could_create_wine: Could not create wine
+  save_wine: Save wine
+  wines: Wines
+  award_label: Award label
+  create_new_wine: Create new wine
+  not_could_load_list_wines: Could not load list wines
+  country_production: Country production
+  vintage_label: Vintage label
+  crianza: Crianza
+  edit_wine: Edit wine
+  delete_wine: Delete wine
+  loading_wines: Loading wines
+  not_found_wines: Not found wines
+  limit: Limit
+  order: Order
+  filter_by_name: Filter by name
+  eg_rioja: Eg rioja
+  filter_by_country: Filter by country
+  all_countries: All countries
+  filter_by_region: Filter by region
+  all_regions: All regions
+  data_basic: Data basic
+  region: Region
+  code_country: Code country
+  sweet: Sweet
+  fortified: Fortified
+  alcohol_content: Alcohol content
+  origin_and_do: Origin and do
+  without_do: Without do
+  composition_and_grape: Composition and grape
+  variety: Variety
+  percentage: Percentage
+  percentage_label: Percentage label
+  delete_variety: Delete variety
+  add_variety: Add variety
+  purchase_and_place_tasting: Purchase and place tasting
+  type_place: Type place
+  date_purchase: Date purchase
+  address_place: Address place
+  city: City
+  awards: Awards
+  score: Score
+  year: Year
+  delete_award: Delete award
+  add_award: Add award
+  loading_data_wine: Loading data wine
+  sort_by_default_list_wines: Sort by default list wines
+  score_most_high_first: Score most high first
+  back_list_wines: Back list wines
+  filters_section: Filters section
+  filter_wines: Filter wines
+  delete_wine_section: Delete wine section
+  this_accion_eliminara_wine_and_its_photos_want_continuar: This accion eliminara
+    wine and its photos want continuar

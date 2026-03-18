@@ -1,0 +1,7 @@
+sort:
+  score_desc: Score (high to low)
+  price_asc: Price (low to high)
+  price_desc: Price (high to low)
+  latest: Latest vintage
+  tasting_date_desc: Tasting date (desc)
+  tasting_date_asc: Tasting date (asc)

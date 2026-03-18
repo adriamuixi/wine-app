@@ -1,0 +1,86 @@
+common:
+  appName: Els nostres vins
+  menu: Menú
+  logout: Tanca sessió
+  expandSidebar: Expandeix la barra lateral
+  collapseSidebar: Col·lapsa la barra lateral
+  themeLight: Clar
+  themeDark: Fosc
+  themeSwitchToLight: Canvia a mode clar
+  themeSwitchToDark: Canvia a mode fosc
+  allCountries: Tots els països
+  allTypes: Tots els tipus
+  anyScore: Qualsevol puntuació
+  searchPlaceholder: Nom, celler, regió...
+  countries:
+    spain: Espanya
+    france: França
+    italy: Itàlia
+    portugal: Portugal
+    germany: Alemanya
+    argentina: Argentina
+    chile: Xile
+    united_states: Estats Units
+    south_africa: Sud-àfrica
+    australia: Austràlia
+  photoType:
+    bottle: Ampolla
+    front_label: Etiqueta frontal
+    back_label: Etiqueta posterior
+    situation: Situació
+    do_logo: Logo D.O.
+    default: Foto
+  placeType:
+    restaurant: Restaurant
+    supermarket: Mercat
+user:
+  backoffice: Backoffice
+  role: Administrador de Celler
+wineType:
+  red: Negre
+  white: Blanc
+  rose: Rosat
+  sparkling: Escumós
+  sweet: Dolç
+  fortified: Fortificat
+ui:
+  reds: Negres
+  whites: Blanques
+  locale_code_2: ca-ES
+  value_2_march_2026: 2 de març de 2026
+  name: Nom
+  actions: Accions
+  delete: Eliminar
+  uploaded: pujades
+  not_could_upload_photo: No s’ha pogut pujar la foto.
+  not_could_delete_photo: No s’ha pogut eliminar la foto.
+  all_varieties: Totes les varietats
+  creating: Creant...
+  saving: Desant...
+  back_list: Tornar al llistat
+  settings: Configuració
+  mine: Meves
+  type: PER TIPUS
+  award: amb premi
+  general: GENERALS
+  price: Preu
+  vintage: PER ANYADA
+  do: PER DO
+  minimum: σ mínim
+  evolution: EVOLUCIÓ
+  filters: Filtres
+  next: Següent
+  no_do_available: Cap D.O. disponible.
+  preferences: PREFERÈNCIES
+  locale_code: ' active'
+  loading: Carregant
+  try_again_retry_few_seconds: Torna-ho a provar en uns segons.
+  composition: Composició
+  by_type: Tipus
+  main_image: Imatge principal
+  cancel: Cancel·lar
+  saving_changes: Desant…
+  save_changes: Desar canvis
+  deleting: Eliminant…
+  save: Desar
+  date_must_use_dd_mm_yyyy: La data ha d'usar el format dd/mm/yyyy.

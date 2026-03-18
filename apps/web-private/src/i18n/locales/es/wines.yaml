@@ -1,0 +1,96 @@
+wines:
+  title: Herramientas de catálogo
+  add:
+    eyebrow: Vinos
+    title: Añadir vino al catálogo
+    badge: Formulario
+    name: Nombre del vino
+    winery: Bodega
+    type: Tipo de vino
+    vintage: Añada
+    country: País
+    region: Región / DO
+    place: Lugar de compra
+    price: Precio pagado
+    submit: Guardar vino
+  edit:
+    eyebrow: Vinos
+    title: Editar vino existente
+    countSuffix: vinos
+    action: Editar
+ui:
+  not_could_load_wine: No se pudo cargar el vino.
+  gallery_wine: Galería del vino
+  not_could_identify_photo_wine: No se pudo identificar la foto del vino.
+  not_could_delete_wine: No se pudo eliminar el vino.
+  search_by_name_wine: Buscar por nombre del vino
+  variety_grape: Variedad de uva
+  country_wine: País del vino
+  search_do: Buscar D.O.
+  first_select_country: Primero selecciona país
+  do_name_or_region: Nombre o región de la D.O.
+  select_country_before: Selecciona país antes
+  all_dos: Todas las D.O.
+  clear_filters: Limpiar filtros
+  apply_filters: Aplicar filtros
+  not_could_identify_wine_edit: No se pudo identificar el vino a editar.
+  name_wine_required: El nombre del vino es obligatorio.
+  purchase_incomplete_place_price_and_date_are_required: 'Compra incompleta: lugar,
+    precio y fecha son obligatorios.'
+  type_place_invalid: Tipo de lugar inválido.
+  country_purchase_invalid: País de compra inválido.
+  not_could_update_wine: No se pudo actualizar el vino.
+  not_could_create_wine: No se pudo crear el vino.
+  save_wine: Guardar vino
+  wines: vinos
+  award_label: Premio
+  create_new_wine: Crear nuevo vino
+  not_could_load_list_wines: No se pudo cargar el listado de vinos.
+  country_production: País de fabricación
+  vintage_label: Añada
+  crianza: Crianza
+  edit_wine: Editar vino
+  delete_wine: Eliminar vino
+  loading_wines: Cargando vinos...
+  not_found_wines: No se encontraron vinos.
+  limit: Límite
+  order: Orden
+  filter_by_name: Filtrar por nombre
+  eg_rioja: Ej. Rioja
+  filter_by_country: Filtrar por país
+  all_countries: Todos los países
+  filter_by_region: Filtrar por región
+  all_regions: Todas las regiones
+  data_basic: Datos básicos
+  region: Región
+  code_country: Código país
+  sweet: Dulce
+  fortified: Fortificado
+  alcohol_content: Graduación alcohólica (%)
+  origin_and_do: Origen y DO
+  without_do: Sin D.O.
+  composition_and_grape: Composición y uva
+  variety: Variedad
+  percentage: Porcentaje (%)
+  percentage_label: Porcentaje
+  delete_variety: Eliminar variedad
+  add_variety: Añadir variedad
+  purchase_and_place_tasting: Compra y lugar de la cata
+  type_place: Tipo de lugar
+  date_purchase: Fecha de la compra
+  address_place: Dirección del lugar
+  city: Ciudad
+  awards: Premios
+  score: Puntuación
+  year: Año
+  delete_award: Eliminar premio
+  add_award: Añadir premio
+  loading_data_wine: Cargando datos del vino...
+  sort_by_default_list_wines: Ordenación por defecto (listado de vinos)
+  score_most_high_first: Puntuación (más alta primero)
+  back_list_wines: Volver al listado de vinos
+  filters_section: FILTROS
+  filter_wines: Filtrar vinos
+  delete_wine_section: ELIMINAR VINO
+  this_accion_eliminara_wine_and_its_photos_want_continuar: Esta acción eliminará
+    el vino y sus fotos. ¿Quieres continuar?

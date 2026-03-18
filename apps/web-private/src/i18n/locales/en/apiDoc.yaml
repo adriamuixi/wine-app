@@ -1,0 +1,7 @@
+apiDoc:
+  eyebrow: API
+  title: API Guide (Markdown)
+  description: Content loaded from backend `/guide.md`.
+  loading: Loading API guide...
+  error: Could not load API guide.
+  refresh: Reload

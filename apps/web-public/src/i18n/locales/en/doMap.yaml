@@ -1,0 +1,19 @@
+doMap:
+  eyebrow: ''
+  title: DO Map
+  subtitle: ''
+  tip: ''
+  listTitle: Featured designations
+  worldMapLabel: World DO map
+  openCatalog: ''
+  filterCountry: Country
+  chooseDo: Select DO
+  chooseCountryFirst: First select a country.
+  chooseDoPlaceholder: Choose a designation
+  closeSelector: Close selector
+  allWorld: All world
+  fullscreenOpen: Open map fullscreen
+  fullscreenClose: Close fullscreen
+  allWorldShort: World
+  loadError: Could not load the map. Reload the page.
+  noCoordinates: No DO entries with available coordinates.

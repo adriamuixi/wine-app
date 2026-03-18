@@ -1,0 +1,17 @@
+topbar:
+  resultCount: vins
+  dark: Fosc
+  light: Clar
+  language: Idioma
+  menu: Menú
+  navigation: Navegació
+  winesCatalog: Els nostres vins
+  doMap: Mapa DO
+  whoWeAre: Qui som
+  backoffice: Àrea privada
+  openFilters: Obre filtres
+  closeFilters: Tanca filtres
+  switchToList: Canvia a vista de llista
+  switchToCards: Canvia a vista de targetes
+  listView: Vista llista
+  cardView: Vista targetes

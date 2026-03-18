@@ -1,0 +1,50 @@
+wineProfile:
+  pageTitle: Wine profile
+  backToDashboard: Back to Dashboard
+  photosEyebrow: Photos
+  photoRecordPreview: PhotoRecord preview
+  filesSuffix: files
+  summaryEyebrow: Summary
+  operationalProfile: Operational profile
+  filtersAria: Open dashboard with filters
+  filterWine: Wine
+  filterType: Type
+  filterCountry: Country
+  filterRegion: Region
+  statAvgScore: Avg. score
+  statPricePaid: Price paid
+  statVintage: Vintage
+  pairingEyebrow: Pairing
+  galleryEyebrow: Wine photos
+  closeGallery: Close
+  closeGalleryAria: Close image viewer
+  imageViewsAria: Wine image views
+  imageExampleCaption: Example image. In the future, photos will be linked to each
+    wine (e.g. `example_wine-hash.png`).
+  imageLabels:
+    bottle: Bottle
+    front: Front label
+    back: Back label
+    situation: Context
+  photoActions:
+    edit: Edit photo
+    delete: Delete photo
+ui:
+  not_could_load_sheet_wine: Could not load sheet wine
+  profile_updated_successfully: Profile updated successfully
+  preparing_sheet_wine: Preparing sheet wine
+  not_could_load_sheet: Could not load sheet
+  without_varieties_listed: Without varieties listed
+  sheet_technical: Sheet technical
+  identity_wine_information: Identity wine information
+  updated: Updated
+  close: Close
+  uploading_image: Uploading image
+  increase_zoom: Increase zoom
+  format_libre_without_crop_required: Format libre without crop required
+  arrastra_for_move_and_pellizca_for_zoom: Arrastra for move and pellizca for zoom
+  select_ratio_crop: Select ratio crop
+  offset_x: Offset x
+  offset_and: Offset and
+  saving_photo: Saving photo
+  close_gallery: Close gallery

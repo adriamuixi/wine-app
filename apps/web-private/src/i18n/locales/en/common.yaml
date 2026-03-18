@@ -1,0 +1,86 @@
+common:
+  appName: Our wines
+  menu: Menu
+  logout: Log out
+  expandSidebar: Expand sidebar
+  collapseSidebar: Collapse sidebar
+  themeLight: Light
+  themeDark: Dark
+  themeSwitchToLight: Switch to light mode
+  themeSwitchToDark: Switch to dark mode
+  allCountries: All countries
+  allTypes: All types
+  anyScore: Any score
+  searchPlaceholder: Name, winery, region...
+  countries:
+    spain: Spain
+    france: France
+    italy: Italy
+    portugal: Portugal
+    germany: Germany
+    argentina: Argentina
+    chile: Chile
+    united_states: United States
+    south_africa: South Africa
+    australia: Australia
+  photoType:
+    bottle: Bottle
+    front_label: Front label
+    back_label: Back label
+    situation: Context
+    do_logo: DO logo
+    default: Photo
+  placeType:
+    restaurant: Restaurant
+    supermarket: Supermarket
+user:
+  backoffice: Backoffice
+  role: Winery Administrator
+wineType:
+  red: Red
+  white: White
+  rose: Rosé
+  sparkling: Sparkling
+  sweet: Sweet
+  fortified: Fortified
+ui:
+  reds: Reds
+  whites: Whites
+  locale_code_2: en-US
+  value_2_march_2026: March 2, 2026
+  name: Name
+  actions: Actions
+  delete: Delete
+  uploaded: Uploaded
+  not_could_upload_photo: Could not upload photo
+  not_could_delete_photo: Could not delete photo
+  all_varieties: All varieties
+  creating: Creating
+  saving: Saving
+  back_list: Back list
+  settings: Settings
+  mine: Mine
+  type: Type
+  award: Award
+  general: General
+  price: Price
+  vintage: Vintage
+  do: Do
+  minimum: Minimum
+  evolution: Evolution
+  filters: Filters
+  next: Next
+  no_do_available: No DO available
+  preferences: Preferences
+  locale_code: ca-ES
+  loading: Loading
+  try_again_retry_few_seconds: Try again retry few seconds
+  composition: Composition
+  by_type: By type
+  main_image: Main image
+  cancel: Cancel
+  saving_changes: Saving changes
+  save_changes: Save changes
+  deleting: Deleting
+  save: Save
+  date_must_use_dd_mm_yyyy: Date must use dd/mm/yyyy format.

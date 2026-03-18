@@ -14,9 +14,9 @@ if (!i18n.isInitialized) {
       resources: {
         es: { translation: messages.es },
         ca: { translation: messages.ca },
+        en: { translation: messages.en },
       },
     })
 }
 
 export { i18n }
-

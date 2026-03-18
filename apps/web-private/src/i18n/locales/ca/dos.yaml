@@ -1,0 +1,39 @@
+dos:
+  title: Denominacions d'Origen
+  list:
+    eyebrow: Catàleg DO
+    title: Llistat de denominacions d'origen
+    results: elements
+    createAction: Crear DO
+  create:
+    eyebrow: Denominacions d'origen
+    title: Crear nova denominació d'origen
+    submit: Desar DO
+ui:
+  country_region_name: País, regió, nom
+  name_country_region: Nom, país, regió
+  region_name_country: Regió, nom, país
+  name_region_country_and_code_country_2_characters_are_required: Nom, regió, país
+    i codi de país (2 caràcters) són obligatoris.
+  not_received_id_do_created_for_upload_logo: No s’ha rebut l'ID de la D.O. creada
+    per pujar el logo.
+  not_could_create_do: No s’ha pogut crear la D.O.
+  not_could_update_do: No s’ha pogut actualitzar la D.O.
+  not_could_delete_do: No s’ha pogut eliminar la D.O.
+  not_could_identify_do: No s’ha pogut identificar la D.O.
+  creating_do: Creant…
+  logo_do: Logo D.O.
+  image_main: IMATGE PRINCIPAL
+  free_crop_zoom: Retall lliure + zoom
+  edit_logo_do: Editar logo D.O.
+  delete_logo_do: Eliminar logo D.O.
+  without_logo_assigned: Sense logo assignat
+  edit_do: EDITAR D.O.
+  do_logo_section: LOGO D.O.
+  logo_region: LOGO REGIÓ
+  image_territorial: Imatge territorial
+  delete_do: ELIMINAR D.O.
+  this_accion_eliminara_do_yes_not_has_wines_linked_want_continuar: Aquesta acció
+    eliminarà la D.O. si no té vins associats. Vols continuar?
+  logo_do_choose_ratio_arrastra_and_pellizca_for_adjust: Logo D.O. · tria relació,
+    arrossega i fes pinça per ajustar

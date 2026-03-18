@@ -1,0 +1,19 @@
+doMap:
+  eyebrow: ''
+  title: Mapa DO
+  subtitle: ''
+  tip: ''
+  listTitle: Denominacions destacades
+  worldMapLabel: Mapa mundi de DO
+  openCatalog: ''
+  filterCountry: País
+  chooseDo: Seleccionar DO
+  chooseCountryFirst: Primer selecciona un país.
+  chooseDoPlaceholder: Escull una denominació
+  closeSelector: Tancar selector
+  allWorld: Tot el món
+  fullscreenOpen: Obrir mapa a pantalla completa
+  fullscreenClose: Tancar pantalla completa
+  allWorldShort: Món
+  loadError: No s ha pogut carregar el mapa. Recarrega la pàgina.
+  noCoordinates: No hi ha DO amb coordenades disponibles.

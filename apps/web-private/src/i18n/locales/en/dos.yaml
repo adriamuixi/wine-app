@@ -1,0 +1,39 @@
+dos:
+  title: Designations of Origin
+  list:
+    eyebrow: DO Catalog
+    title: List of designations of origin
+    results: items
+    createAction: Create DO
+  create:
+    eyebrow: Designations of origin
+    title: Create new designation of origin
+    submit: Save DO
+ui:
+  country_region_name: Country region name
+  name_country_region: Name country region
+  region_name_country: Region name country
+  name_region_country_and_code_country_2_characters_are_required: Name region country
+    and code country 2 characters are required
+  not_received_id_do_created_for_upload_logo: Not received ID DO created for upload
+    logo
+  not_could_create_do: Could not create do
+  not_could_update_do: Could not update do
+  not_could_delete_do: Could not delete do
+  not_could_identify_do: Could not identify do
+  creating_do: Creating do
+  logo_do: Logo do
+  image_main: Image main
+  free_crop_zoom: Free crop zoom
+  edit_logo_do: Edit logo do
+  delete_logo_do: Delete logo do
+  without_logo_assigned: Without logo assigned
+  edit_do: Edit do
+  do_logo_section: Do logo section
+  logo_region: Logo region
+  image_territorial: Image territorial
+  delete_do: Delete do
+  this_accion_eliminara_do_yes_not_has_wines_linked_want_continuar: This accion eliminara
+    DO yes not has wines linked want continuar
+  logo_do_choose_ratio_arrastra_and_pellizca_for_adjust: Logo DO choose ratio arrastra
+    and pellizca for adjust

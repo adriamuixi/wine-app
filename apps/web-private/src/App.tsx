@@ -6,6 +6,8 @@ import ReactMarkdown from 'react-markdown'
 import { LanguageSelector } from './components/LanguageSelector'
 import './App.css'
 import { useI18n } from './i18n/I18nProvider'
+import { i18n } from './i18n/i18n'
+import type { Locale } from './i18n/messages'
 
 type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'sweet' | 'fortified'
 type CountryFilterValue =
@@ -330,10 +332,6 @@ const DEFAULT_USER_PLACEHOLDER: AppUser = {
 
 const AGING_OPTIONS = ['young', 'crianza', 'reserve', 'grand_reserve'] as const
 const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket'] as const
-const PLACE_TYPE_LABELS: Record<(typeof PLACE_TYPE_OPTIONS)[number], { ca: string; es: string }> = {
-  restaurant: { ca: 'Restaurant', es: 'Restaurante' },
-  supermarket: { ca: 'Mercat', es: 'Mercado' },
-}
 const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker', 'james_suckling', 'guia_proensa'] as const
 const REVIEW_TAG_OPTIONS = ['AFRUTADO', 'FLORAL', 'MINERAL', 'MADERA MARCADA', 'POTENTE'] as const
 const REVIEW_TAG_TO_ENUM: Record<(typeof REVIEW_TAG_OPTIONS)[number], WineDetailsApiReview['bullets'][number]> = {
@@ -352,7 +350,10 @@ const REVIEW_ENUM_TO_TAG: Record<WineDetailsApiReview['bullets'][number], (typeo
 }
 const SCORE_OPTIONS_0_TO_10 = Array.from({ length: 11 }, (_, value) => value)
 const SCORE_OPTIONS_0_TO_100 = Array.from({ length: 101 }, (_, value) => value)
-const VINTAGE_YEAR_OPTIONS = Array.from({ length: 76 }, (_, index) => String(2026 - index))
+const CURRENT_DATE = new Date()
+const CURRENT_YEAR = CURRENT_DATE.getFullYear()
+const CURRENT_DATE_INPUT = `${CURRENT_YEAR}-${String(CURRENT_DATE.getMonth() + 1).padStart(2, '0')}-${String(CURRENT_DATE.getDate()).padStart(2, '0')}`
+const VINTAGE_YEAR_OPTIONS = Array.from({ length: 76 }, (_, index) => String(CURRENT_YEAR - index))
 const WINE_COUNTRY_FILTER_VALUES: Exclude<CountryFilterValue, 'all'>[] = [
   'spain',
   'france',
@@ -376,7 +377,7 @@ function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
   if (review == null) {
     return {
       wineId: '',
-      tastingDate: '2026-02-27',
+      tastingDate: CURRENT_DATE_INPUT,
       overallScore: 85,
       aroma: 5,
       appearance: 5,
@@ -493,6 +494,12 @@ function createSeededRandom(seed: number): () => number {
   }
 }
 
+function localeToIntl(locale: string): string {
+  if (locale === 'ca') return 'ca-ES'
+  if (locale === 'en') return 'en-US'
+  return 'es-ES'
+}
+
 function countryFlagEmoji(country: string): string {
   const code = countryCodeFromAny(country)
   if (code == null) {
@@ -547,32 +554,7 @@ function countryCodeToLabel(countryCode: Exclude<CountryFilterValue, 'all'> | nu
     return '-'
   }
 
-  const mapCa: Record<Exclude<CountryFilterValue, 'all'>, string> = {
-    spain: 'Espanya',
-    france: 'França',
-    italy: 'Itàlia',
-    portugal: 'Portugal',
-    germany: 'Alemanya',
-    argentina: 'Argentina',
-    chile: 'Xile',
-    united_states: 'Estats Units',
-    south_africa: 'Sud-àfrica',
-    australia: 'Austràlia',
-  }
-  const mapEs: Record<Exclude<CountryFilterValue, 'all'>, string> = {
-    spain: 'España',
-    france: 'Francia',
-    italy: 'Italia',
-    portugal: 'Portugal',
-    germany: 'Alemania',
-    argentina: 'Argentina',
-    chile: 'Chile',
-    united_states: 'Estados Unidos',
-    south_africa: 'Sudáfrica',
-    australia: 'Australia',
-  }
-
-  return locale === 'ca' ? mapCa[countryCode] : mapEs[countryCode]
+  return i18n.getFixedT(locale)(`common.countries.${countryCode}`)
 }
 
 function countryLabelToFilterValue(country: string): CountryFilterValue {
@@ -814,20 +796,59 @@ function formatApiDate(dateIso: string, locale: string): string {
   if (Number.isNaN(date.getTime())) {
     return dateIso
   }
-  return new Intl.DateTimeFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', {
+  return new Intl.DateTimeFormat(localeToIntl(locale), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   }).format(date)
 }
 
+function formatIsoDateToDdMmYyyy(value: string | null | undefined): string {
+  if (value == null || value.trim() === '') {
+    return ''
+  }
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch
+    return `${day}/${month}/${year}`
+  }
+  return value
+}
+
+function parseDateInputToIso(value: string): string | null {
+  const trimmed = value.trim()
+  if (trimmed === '') {
+    return null
+  }
+
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (isoMatch) {
+    return trimmed
+  }
+
+  const displayMatch = trimmed.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/)
+  if (!displayMatch) {
+    return null
+  }
+
+  const day = Number(displayMatch[1])
+  const month = Number(displayMatch[2])
+  const year = Number(displayMatch[3])
+  const candidate = new Date(Date.UTC(year, month - 1, day))
+  const isValid = candidate.getUTCFullYear() === year
+    && candidate.getUTCMonth() === month - 1
+    && candidate.getUTCDate() === day
+
+  if (!isValid) {
+    return null
+  }
+
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
 function labelForPhotoType(type: WineDetailsApiPhoto['type'] | 'do_logo', locale: string): string {
-  if (type === 'bottle') return locale === 'ca' ? 'Ampolla' : 'Botella'
-  if (type === 'front_label') return locale === 'ca' ? 'Etiqueta frontal' : 'Etiqueta frontal'
-  if (type === 'back_label') return locale === 'ca' ? 'Etiqueta posterior' : 'Etiqueta trasera'
-  if (type === 'situation') return locale === 'ca' ? 'Situació' : 'Situación'
-  if (type === 'do_logo') return locale === 'ca' ? 'Logo D.O.' : 'Logo DO'
-  return locale === 'ca' ? 'Foto' : 'Foto'
+  const key = type == null ? 'default' : type
+  return i18n.getFixedT(locale)(`common.photoType.${key}`)
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -858,19 +879,7 @@ function medalToneFromScore(value: number | null): 'gold' | 'silver' | 'bronze' 
 
 function labelForAgingType(agingType: WineDetailsApiWine['aging_type'], locale: string): string {
   if (agingType == null) return '-'
-  const ca: Record<Exclude<WineDetailsApiWine['aging_type'], null>, string> = {
-    young: 'Jove',
-    crianza: 'Criança',
-    reserve: 'Reserva',
-    grand_reserve: 'Gran reserva',
-  }
-  const es: Record<Exclude<WineDetailsApiWine['aging_type'], null>, string> = {
-    young: 'Joven',
-    crianza: 'Crianza',
-    reserve: 'Reserva',
-    grand_reserve: 'Gran reserva',
-  }
-  return locale === 'ca' ? ca[agingType] : es[agingType]
+  return i18n.getFixedT(locale)(`common.agingType.${agingType}`)
 }
 
 function labelForAwardName(awardName: WineDetailsApiAward['name']): string {
@@ -895,7 +904,7 @@ function formatReviewTimelineLabel(monthKey: string, locale: string): string {
     return monthKey
   }
 
-  return new Intl.DateTimeFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', {
+  return new Intl.DateTimeFormat(localeToIntl(locale), {
     month: 'short',
     year: '2-digit',
     timeZone: 'UTC',
@@ -940,13 +949,13 @@ function buildBiMonthlyReviewTimeline(
         return `${formatReviewTimelineLabel(firstMonth, locale)} · ${formatReviewTimelineLabel(secondMonth, locale)}`
       }
 
-      const monthFormatter = new Intl.DateTimeFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', {
+      const monthFormatter = new Intl.DateTimeFormat(localeToIntl(locale), {
         month: 'short',
         timeZone: 'UTC',
       })
       const firstMonthLabel = monthFormatter.format(firstDate).replace('.', '')
       const secondMonthLabel = monthFormatter.format(secondDate).replace('.', '')
-      const connector = locale === 'ca' ? 'del' : 'del'
+      const connector = 'del'
 
       if (firstYear === secondYear) {
         return `${firstMonthLabel}-${secondMonthLabel} ${connector} ${firstYear}`
@@ -1251,8 +1260,8 @@ function App() {
       .sort((a, b) => a.name.localeCompare(b.name))
 
     return [
-      { key: 'red', label: locale === 'ca' ? 'Negres' : 'Tintas', grapes: reds },
-      { key: 'white', label: locale === 'ca' ? 'Blanques' : 'Blancas', grapes: whites },
+      { key: 'red', label: t('ui.reds'), grapes: reds },
+      { key: 'white', label: t('ui.whites'), grapes: whites },
     ]
   }, [grapeOptions, locale])
 
@@ -1330,22 +1339,22 @@ function App() {
     () => [
       {
         key: 'country_region_name',
-        label: locale === 'ca' ? 'País, regió, nom' : 'País, región, nombre',
+        label: t('ui.country_region_name'),
       },
       {
         key: 'name_country_region',
-        label: locale === 'ca' ? 'Nom, país, regió' : 'Nombre, país, región',
+        label: t('ui.name_country_region'),
       },
       {
         key: 'region_name_country',
-        label: locale === 'ca' ? 'Regió, nom, país' : 'Región, nombre, país',
+        label: t('ui.region_name_country'),
       },
     ],
     [locale],
   )
   const doDirectoryItems = useMemo(() => {
     const items = [...doOptions]
-    const collator = new Intl.Collator(locale === 'ca' ? 'ca-ES' : 'es-ES', { sensitivity: 'base' })
+    const collator = new Intl.Collator(localeToIntl(locale), { sensitivity: 'base' })
 
     return items.sort((left, right) => {
       for (const field of doSortFields) {
@@ -1368,7 +1377,7 @@ function App() {
     })
   }, [doOptions, doSortFields, locale])
   const sortedDoRegionFilterOptions = useMemo(() => {
-    const collator = new Intl.Collator(locale === 'ca' ? 'ca-ES' : 'es-ES', { sensitivity: 'base' })
+    const collator = new Intl.Collator(localeToIntl(locale), { sensitivity: 'base' })
     const regionOptions = [...new Set(
       doOptions
         .map((item) => item.region.trim())
@@ -1618,7 +1627,7 @@ function App() {
   }, [dashboardSeed, locale, metrics.averageRed, metrics.averageWhite, reviewsPerMonthStats, scoringGenericStats, wineItems])
 
   const priceFormatter = useMemo(
-    () => new Intl.NumberFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', { style: 'currency', currency: 'EUR' }),
+    () => new Intl.NumberFormat(localeToIntl(locale), { style: 'currency', currency: 'EUR' }),
     [locale],
   )
 
@@ -1626,15 +1635,15 @@ function App() {
     dashboard: labels.topbar.overview,
     wines: labels.topbar.wines,
     dos: labels.topbar.dos,
-    doCreate: locale === 'ca' ? 'Crear D.O.' : 'Crear DO',
-    wineCreate: locale === 'ca' ? 'Crear vi' : 'Crear vino',
-    wineEdit: locale === 'ca' ? 'Editar vi' : 'Editar vino',
+    doCreate: labels.topbar.doCreate,
+    wineCreate: labels.topbar.wineCreate,
+    wineEdit: labels.topbar.wineEdit,
     reviews: labels.topbar.reviews,
-    reviewCreate: locale === 'ca' ? 'Crear ressenya' : 'Crear reseña',
-    reviewEdit: locale === 'ca' ? 'Editar ressenya' : 'Editar reseña',
+    reviewCreate: labels.topbar.reviewCreate,
+    reviewEdit: labels.topbar.reviewEdit,
     admin: labels.topbar.admin,
     apiDocs: labels.topbar.apiDoc,
-    settings: locale === 'ca' ? 'Configuració' : 'Configuración',
+    settings: labels.topbar.settings,
     wineProfile: selectedWineSheet ? `${t('wineProfile.pageTitle')} · ${selectedWineSheet.name}` : t('wineProfile.pageTitle'),
   }[menu]
   const doEditDoLogoPath = doLogoPathFromImageName(doEditDraft?.do_logo ?? null)
@@ -1647,8 +1656,7 @@ function App() {
       return localized
     }
 
-    if (type === 'sweet') return locale === 'ca' ? 'Dolç' : 'Dulce'
-    if (type === 'fortified') return locale === 'ca' ? 'Fortificat' : 'Fortificado'
+    if (type === 'sweet' || type === 'fortified') return labels.wineType[type]
     return type
   }
   const galleryLabels = labels.wineProfile.imageLabels
@@ -1670,7 +1678,7 @@ function App() {
       return {
         totalReviews: 18,
         averageScore: 87.6,
-        lastReview: locale === 'ca' ? '2 de març de 2026' : '2 de marzo de 2026',
+        lastReview: t('ui.value_2_march_2026'),
         highestScore: 94,
         lowestScore: 79,
       }
@@ -2003,9 +2011,7 @@ function App() {
 
     if (name === '' || region === '' || countryCode.length !== 2) {
       setDoCreateError(
-        locale === 'ca'
-          ? 'Nom, regió, país i codi de país (2 caràcters) són obligatoris.'
-          : 'Nombre, región, país y código de país (2 caracteres) son obligatorios.',
+        t('ui.name_region_country_and_code_country_2_characters_are_required'),
       )
       return
     }
@@ -2054,7 +2060,7 @@ function App() {
         }
 
         if (!Number.isInteger(createdDoId) || (createdDoId as number) < 1) {
-          throw new Error(locale === 'ca' ? 'No s’ha rebut l\'ID de la D.O. creada per pujar el logo.' : 'No se recibió el ID de la DO creada para subir el logo.')
+          throw new Error(t('ui.not_received_id_do_created_for_upload_logo'))
         }
 
         const body = new FormData()
@@ -2097,7 +2103,7 @@ function App() {
       setMenu('dos')
       setDoCreateSubmitting(false)
     } catch (error: unknown) {
-      setDoCreateError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut crear la D.O.' : 'No se pudo crear la DO.'))
+      setDoCreateError(error instanceof Error ? error.message : (t('ui.not_could_create_do')))
       setDoCreateSubmitting(false)
     }
   }
@@ -2170,13 +2176,13 @@ function App() {
               ) : null}
             </div>
           </td>
-          <td className="do-directory-name-cell" data-label={locale === 'ca' ? 'Nom' : 'Nombre'}>
+          <td className="do-directory-name-cell" data-label={t('ui.name')}>
             <strong>{item.name}</strong>
           </td>
           <td className="do-directory-region-cell" data-label={labels.dashboard.table.region}>
             <span className="wine-cell-value">{item.region}</span>
           </td>
-          <td className="do-directory-country-cell" data-label={locale === 'ca' ? 'País' : 'País'}>
+          <td className="do-directory-country-cell" data-label={'País'}>
             <span className="wine-country-chip">
               {countryFlagPath(item.country) ? (
                 <img
@@ -2192,13 +2198,13 @@ function App() {
               <span className="wine-country-name">{countryCodeToLabel(item.country, locale)}</span>
             </span>
           </td>
-          <td className="wine-col-actions do-directory-actions-cell" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
+          <td className="wine-col-actions do-directory-actions-cell" data-label={t('ui.actions')}>
             <div className="do-directory-actions">
               <button type="button" className="ghost-button small" onClick={() => openDoEdit(item)}>
-                {locale === 'ca' ? 'Editar' : 'Editar'}
+                {'Editar'}
               </button>
               <button type="button" className="ghost-button small danger-text-button" onClick={() => openDoDeleteConfirm(item)}>
-                {locale === 'ca' ? 'Eliminar' : 'Borrar'}
+                {t('ui.delete')}
               </button>
             </div>
           </td>
@@ -2221,9 +2227,7 @@ function App() {
     const doLogoRaw = doEditDraft.do_logo.trim()
     if (name === '' || region === '' || countryCode.length !== 2) {
       setDoEditError(
-        locale === 'ca'
-          ? 'Nom, regió, país i codi de país (2 caràcters) són obligatoris.'
-          : 'Nombre, región, país y código de país (2 caracteres) son obligatorios.',
+        t('ui.name_region_country_and_code_country_2_characters_are_required'),
       )
       return
     }
@@ -2280,7 +2284,7 @@ function App() {
       )
       closeDoEdit()
     } catch (error: unknown) {
-      setDoEditError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut actualitzar la D.O.' : 'No se pudo actualizar la DO.'))
+      setDoEditError(error instanceof Error ? error.message : (t('ui.not_could_update_do')))
       setDoEditSubmitting(false)
     }
   }
@@ -2324,7 +2328,7 @@ function App() {
       )
       closeDoDeleteConfirm()
     } catch (error: unknown) {
-      setDoDeleteError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut eliminar la D.O.' : 'No se pudo eliminar la DO.'))
+      setDoDeleteError(error instanceof Error ? error.message : (t('ui.not_could_delete_do')))
       setDoDeleteSubmitting(false)
     }
   }
@@ -2512,7 +2516,7 @@ function App() {
           return
         }
         setWineEditStatus('error')
-        setWineFormError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut carregar el vi.' : 'No se pudo cargar el vino.'))
+        setWineFormError(error instanceof Error ? error.message : (t('ui.not_could_load_wine')))
       })
 
     return () => {
@@ -2551,7 +2555,7 @@ function App() {
           return
         }
         setSelectedWineSheetStatus('error')
-        setSelectedWineSheetError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut carregar la fitxa del vi.' : 'No se pudo cargar la ficha del vino.'))
+        setSelectedWineSheetError(error instanceof Error ? error.message : (t('ui.not_could_load_sheet_wine')))
       })
 
     return () => {
@@ -2875,7 +2879,7 @@ function App() {
         }
 
         setMyReviewSummaryStatus('error')
-        setMyReviewSummaryError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’han pogut carregar les teves ressenyes.' : 'No se pudieron cargar tus reseñas.'))
+        setMyReviewSummaryError(error instanceof Error ? error.message : (t('ui.not_could_load_your_reviews')))
       }
     }
 
@@ -2915,7 +2919,7 @@ function App() {
     })
       .then(async (response) => {
         if (response.status === 401) {
-          throw new Error(locale === 'ca' ? 'Credencials invàlides.' : 'Credenciales inválidas.')
+          throw new Error(t('ui.credentials_invalid'))
         }
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`)
@@ -2935,7 +2939,7 @@ function App() {
       .catch((error: unknown) => {
         setLoggedIn(false)
         setCurrentUser(null)
-        setLoginError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut iniciar sessió.' : 'No se pudo iniciar sesión.'))
+        setLoginError(error instanceof Error ? error.message : (t('ui.not_could_start_session')))
       })
       .finally(() => {
         setLoginSubmitting(false)
@@ -2991,7 +2995,10 @@ function App() {
   }
 
   const toggleLocale = () => {
-    setLocale(locale === 'ca' ? 'es' : 'ca')
+    const cycle: Locale[] = ['es', 'ca', 'en']
+    const currentIndex = cycle.indexOf(locale)
+    const nextLocale = cycle[(currentIndex + 1) % cycle.length]
+    setLocale(nextLocale)
   }
 
   const toggleSidebarCollapsed = () => {
@@ -3132,11 +3139,11 @@ function App() {
     <section className="panel wine-profile-photos-panel">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">{locale === 'ca' ? 'FOTOS' : 'FOTOS'}</p>
-          <h3>{locale === 'ca' ? 'Galeria del vi' : 'Galería del vino'}</h3>
+          <p className="eyebrow">{'FOTOS'}</p>
+          <h3>{t('ui.gallery_wine')}</h3>
         </div>
         <div className="panel-header-actions">
-          <span className="pill">{slots.filter((slot) => slot.uploaded).length}/4 {locale === 'ca' ? 'pujades' : 'subidas'}</span>
+          <span className="pill">{slots.filter((slot) => slot.uploaded).length}/4 {t('ui.uploaded')}</span>
         </div>
       </div>
       <div className="wine-sheet-thumbnail-row">
@@ -3154,8 +3161,8 @@ function App() {
                 type="button"
                 className="ghost-button tiny photo-icon-button"
                 onClick={() => startPhotoPick(wineId, photo.type)}
-                title={locale === 'ca' ? 'Editar foto' : 'Editar foto'}
-                aria-label={locale === 'ca' ? 'Editar foto' : 'Editar foto'}
+                title={t('wineProfile.photoActions.edit')}
+                aria-label={t('wineProfile.photoActions.edit')}
               >
                 <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                   <path
@@ -3171,8 +3178,8 @@ function App() {
                   void resetWinePhotoToDefault(wineId, photo.type)
                 }}
                 disabled={photoDeleteBusyType === photo.type}
-                title={locale === 'ca' ? 'Eliminar foto' : 'Eliminar foto'}
-                aria-label={locale === 'ca' ? 'Eliminar foto' : 'Eliminar foto'}
+                title={t('wineProfile.photoActions.delete')}
+                aria-label={t('wineProfile.photoActions.delete')}
               >
                 🗑
               </button>
@@ -3583,7 +3590,7 @@ function App() {
         closePhotoEditor()
       } else if (photoPickerContext === 'doEdit' && photoEditorType === 'do_logo') {
         if (photoEditorWineId == null) {
-          throw new Error(locale === 'ca' ? 'No s’ha pogut identificar la D.O.' : 'No se pudo identificar la DO.')
+          throw new Error(t('ui.not_could_identify_do'))
         }
 
         setDoAssetUploadingType('do_logo')
@@ -3596,7 +3603,7 @@ function App() {
         setDoAssetUploadingType(null)
       } else {
         if (photoEditorWineId == null || (photoEditorType !== 'bottle' && photoEditorType !== 'front_label' && photoEditorType !== 'back_label' && photoEditorType !== 'situation')) {
-          throw new Error(locale === 'ca' ? 'No s’ha pogut identificar la foto del vi.' : 'No se pudo identificar la foto del vino.')
+          throw new Error(t('ui.not_could_identify_photo_wine'))
         }
         const uploadedUrl = await uploadWinePhoto(photoEditorWineId, photoEditorType, file)
         closePhotoEditor()
@@ -3626,7 +3633,7 @@ function App() {
       }
     } catch (error: unknown) {
       setDoAssetUploadingType(null)
-      setPhotoEditorError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut pujar la foto.' : 'No se pudo subir la foto.'))
+      setPhotoEditorError(error instanceof Error ? error.message : (t('ui.not_could_upload_photo')))
     } finally {
       setPhotoEditorSaving(false)
     }
@@ -3666,7 +3673,7 @@ function App() {
         })
       }
     } catch {
-      setPhotoEditorError(locale === 'ca' ? 'No s’ha pogut eliminar la foto.' : 'No se pudo eliminar la foto.')
+      setPhotoEditorError(t('ui.not_could_delete_photo'))
     } finally {
       setPhotoDeleteBusyType(null)
     }
@@ -3678,7 +3685,7 @@ function App() {
     }
 
     void drawPhotoEditorPreview().catch(() => {
-      setPhotoEditorError(locale === 'ca' ? 'No s’ha pogut previsualitzar la foto.' : 'No se pudo previsualizar la foto.')
+      setPhotoEditorError(t('ui.not_could_preview_photo'))
     })
   }, [photoEditorSource, photoEditorType, photoEditorZoom, photoEditorOffsetX, photoEditorOffsetY, photoEditorDoLogoCropRatio, locale])
 
@@ -3708,9 +3715,7 @@ function App() {
   }
 
   const deleteReview = async (wine: WineItem, review: WineDetailsApiReview) => {
-    const confirmMessage = locale === 'ca'
-      ? 'Vols eliminar aquesta ressenya?'
-      : '¿Quieres eliminar esta reseña?'
+    const confirmMessage = t('ui.want_delete_this_review')
     if (!window.confirm(confirmMessage)) {
       return
     }
@@ -3741,9 +3746,9 @@ function App() {
       }
 
       setReviewListReloadToken((current) => current + 1)
-      setReviewSuccessToast(locale === 'ca' ? 'Ressenya eliminada correctament.' : 'Reseña eliminada correctamente.')
+      setReviewSuccessToast(t('ui.review_deleted_successfully'))
     } catch (error: unknown) {
-      setReviewActionError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut eliminar la ressenya.' : 'No se pudo eliminar la reseña.'))
+      setReviewActionError(error instanceof Error ? error.message : (t('ui.not_could_delete_review')))
     } finally {
       setReviewDeleteBusyId(null)
     }
@@ -3859,7 +3864,7 @@ function App() {
         setWineListReloadToken((current) => current + 1)
       }
     } catch (error: unknown) {
-      setWineDeleteError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut eliminar el vi.' : 'No se pudo eliminar el vino.'))
+      setWineDeleteError(error instanceof Error ? error.message : (t('ui.not_could_delete_wine')))
       setWineDeleteSubmitting(false)
     }
   }
@@ -3900,7 +3905,7 @@ function App() {
               setSearchText(event.target.value)
               setWinePage(1)
             }}
-            placeholder={locale === 'ca' ? 'Cerca per nom del vi' : 'Buscar por nombre del vino'}
+            placeholder={t('ui.search_by_name_wine')}
           />
         </label>
 
@@ -3924,7 +3929,7 @@ function App() {
         </label>
 
         <label>
-          {locale === 'ca' ? 'Varietat de raïm' : 'Variedad de uva'}
+          {t('ui.variety_grape')}
           <select
             value={grapeFilter === 'all' ? 'all' : String(grapeFilter)}
             onChange={(event) => {
@@ -3932,7 +3937,7 @@ function App() {
               setWinePage(1)
             }}
           >
-            <option value="all">{locale === 'ca' ? 'Totes les varietats' : 'Todas las variedades'}</option>
+            <option value="all">{t('ui.all_varieties')}</option>
             {grapesByColor.map((group) => (
               <optgroup key={group.key} label={group.label}>
                 {group.grapes.map((grape) => (
@@ -3964,7 +3969,7 @@ function App() {
 
       <div className="filter-grid">
         <label>
-          {locale === 'ca' ? 'País del vi' : 'País del vino'}
+          {t('ui.country_wine')}
           <select
             value={wineCountryFilter}
             onChange={(event) => {
@@ -3981,7 +3986,7 @@ function App() {
         </label>
 
         <label>
-          {locale === 'ca' ? 'País D.O.' : 'País D.O.'}
+          {'País D.O.'}
           <select
             value={doCountryFilter}
             onChange={(event) => {
@@ -4001,7 +4006,7 @@ function App() {
         </label>
 
         <label>
-          {locale === 'ca' ? 'Cerca D.O.' : 'Buscar D.O.'}
+          {t('ui.search_do')}
           <input
             type="search"
             value={doSearchText}
@@ -4010,8 +4015,8 @@ function App() {
             }}
             placeholder={
               doCountryFilter === 'all'
-                ? (locale === 'ca' ? 'Primer selecciona país' : 'Primero selecciona país')
-                : (locale === 'ca' ? 'Nom o regió de la D.O.' : 'Nombre o región de la D.O.')
+                ? (t('ui.first_select_country'))
+                : (t('ui.do_name_or_region'))
             }
             disabled={doCountryFilter === 'all'}
           />
@@ -4055,8 +4060,8 @@ function App() {
                     {selectedDoOption
                       ? `${selectedDoOption.region} · ${selectedDoOption.name}`
                       : (doCountryFilter === 'all'
-                        ? (locale === 'ca' ? 'Selecciona país abans' : 'Selecciona país antes')
-                        : (locale === 'ca' ? 'Totes les D.O.' : 'Todas las D.O.'))}
+                        ? (t('ui.select_country_before'))
+                        : (t('ui.all_dos')))}
                   </span>
                 )}
               </span>
@@ -4076,7 +4081,7 @@ function App() {
                     setIsDoDropdownOpen(false)
                   }}
                 >
-                  <span>{locale === 'ca' ? 'Totes les D.O.' : 'Todas las D.O.'}</span>
+                  <span>{t('ui.all_dos')}</span>
                 </button>
                 {filteredDosBySearch.map((item) => {
                   const isSpanishDo = item.country === 'spain'
@@ -4127,7 +4132,7 @@ function App() {
               resetWineFilters()
             }}
           >
-            {locale === 'ca' ? 'Netejar filtres' : 'Limpiar filtros'}
+            {t('ui.clear_filters')}
           </button>
           <button
             type="button"
@@ -4137,7 +4142,7 @@ function App() {
               setIsWineFiltersMobileOpen(false)
             }}
           >
-            {locale === 'ca' ? 'Aplicar filtres' : 'Aplicar filtros'}
+            {t('ui.apply_filters')}
           </button>
         </div>
       ) : null}
@@ -4149,14 +4154,14 @@ function App() {
 
     const isEditing = menu === 'wineEdit'
     if (isEditing && !selectedWineForEdit) {
-      setWineFormError(locale === 'ca' ? 'No s’ha pogut identificar el vi a editar.' : 'No se pudo identificar el vino a editar.')
+      setWineFormError(t('ui.not_could_identify_wine_edit'))
       return
     }
 
     const form = new FormData(event.currentTarget)
     const name = String(form.get('name') ?? '').trim()
     if (name === '') {
-      setWineFormError(locale === 'ca' ? 'El nom del vi és obligatori.' : 'El nombre del vino es obligatorio.')
+      setWineFormError(t('ui.name_wine_required'))
       return
     }
 
@@ -4174,22 +4179,24 @@ function App() {
     const placeCountryRaw = String(form.get('place_country') ?? '').trim()
     const pricePaidRaw = String(form.get('price_paid') ?? '').trim()
     const purchasedAtRaw = String(form.get('purchased_at') ?? '').trim()
+    const purchasedAtIso = parseDateInputToIso(purchasedAtRaw)
 
     if (placeName === '' || pricePaidRaw === '' || purchasedAtRaw === '') {
       setWineFormError(
-        locale === 'ca'
-          ? 'Compra incompleta: lloc, preu i data són obligatoris.'
-          : 'Compra incompleta: lugar, precio y fecha son obligatorios.',
+        t('ui.purchase_incomplete_place_price_and_date_are_required'),
       )
+      return
+    }
+
+    if (purchasedAtIso == null) {
+      setWineFormError(t('ui.date_must_use_dd_mm_yyyy'))
       return
     }
 
     const placeType = PLACE_TYPE_OPTIONS.includes(placeTypeRaw as (typeof PLACE_TYPE_OPTIONS)[number]) ? placeTypeRaw : null
     if (placeType === null) {
       setWineFormError(
-        locale === 'ca'
-          ? 'Tipus de lloc invàlid.'
-          : 'Tipo de lugar inválido.',
+        t('ui.type_place_invalid'),
       )
       return
     }
@@ -4199,9 +4206,7 @@ function App() {
       : null
     if (placeCountry === null) {
       setWineFormError(
-        locale === 'ca'
-          ? 'País de compra invàlid.'
-          : 'País de compra inválido.',
+        t('ui.country_purchase_invalid'),
       )
       return
     }
@@ -4256,7 +4261,7 @@ function App() {
             country: placeCountry,
           },
           price_paid: pricePaidRaw,
-          purchased_at: purchasedAtRaw,
+          purchased_at: purchasedAtIso,
         },
       ],
       awards,
@@ -4317,8 +4322,8 @@ function App() {
         }
         setWineFormError(
           isEditing
-            ? (locale === 'ca' ? 'No s’ha pogut actualitzar el vi.' : 'No se pudo actualizar el vino.')
-            : (locale === 'ca' ? 'No s’ha pogut crear el vi.' : 'No se pudo crear el vino.'),
+            ? (t('ui.not_could_update_wine'))
+            : (t('ui.not_could_create_wine')),
         )
       })
       .finally(() => {
@@ -4412,6 +4417,7 @@ function App() {
     const persistenceRaw = String(data.get('persistence') ?? '').trim()
     const bulletsRaw = data.getAll('bullets').map((value) => String(value)) as Array<(typeof REVIEW_TAG_OPTIONS)[number]>
     const createdAtRaw = String(data.get('created_at') ?? '').trim()
+    const createdAtIso = parseDateInputToIso(createdAtRaw)
 
     const wineId = Number(wineIdRaw)
     const score = Number(scoreRaw)
@@ -4422,13 +4428,19 @@ function App() {
     const persistence = Number(persistenceRaw)
 
     if (!Number.isInteger(wineId) || wineId < 1) {
-      setReviewFormError(locale === 'ca' ? 'Has de seleccionar un vi.' : 'Debes seleccionar un vino.')
+      setReviewFormError(t('ui.must_select_a_wine'))
       setReviewFormSubmitting(false)
       return
     }
 
     if (mode === 'create' && reviewedWineIdSet.has(wineId)) {
-      setReviewFormError(locale === 'ca' ? 'Aquest vi ja està ressenyat i no es pot tornar a seleccionar.' : 'Este vino ya está reseñado y no se puede volver a seleccionar.')
+      setReviewFormError(t('ui.this_wine_already_this_reviewed_and_not_can_back_select'))
+      setReviewFormSubmitting(false)
+      return
+    }
+
+    if (createdAtRaw !== '' && createdAtIso == null) {
+      setReviewFormError(t('ui.date_must_use_dd_mm_yyyy'))
       setReviewFormSubmitting(false)
       return
     }
@@ -4441,7 +4453,7 @@ function App() {
       body: Math.max(0, Math.min(10, Math.round(body))),
       persistence: Math.max(0, Math.min(10, Math.round(persistence))),
       bullets: bulletsRaw.map((tag) => REVIEW_TAG_TO_ENUM[tag]),
-      created_at: createdAtRaw === '' ? undefined : createdAtRaw,
+      created_at: createdAtRaw === '' ? undefined : createdAtIso ?? undefined,
     }
 
     const endpoint = mode === 'create'
@@ -4477,11 +4489,11 @@ function App() {
       setReviewListReloadToken((current) => current + 1)
       setReviewSuccessToast(
         mode === 'create'
-          ? (locale === 'ca' ? 'Ressenya creada correctament.' : 'Reseña creada correctamente.')
-          : (locale === 'ca' ? 'Ressenya actualitzada correctament.' : 'Reseña actualizada correctamente.'),
+          ? (t('ui.review_created_successfully'))
+          : (t('ui.review_updated_successfully')),
       )
     } catch (error: unknown) {
-      setReviewFormError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut desar la ressenya.' : 'No se pudo guardar la reseña.'))
+      setReviewFormError(error instanceof Error ? error.message : (t('ui.not_could_save_review')))
     } finally {
       setReviewFormSubmitting(false)
     }
@@ -4496,7 +4508,7 @@ function App() {
     const trimmedLastname = settingsLastname.trim()
 
     if (trimmedName === '' || trimmedLastname === '') {
-      setSettingsProfileError(locale === 'ca' ? 'Nom i cognom són obligatoris.' : 'Nombre y apellido son obligatorios.')
+      setSettingsProfileError(t('ui.name_and_surname_are_required'))
       return
     }
 
@@ -4538,9 +4550,9 @@ function App() {
         lastname: payload.user.lastname,
       })
       setSettingsPassword('')
-      setSettingsProfileSuccess(locale === 'ca' ? 'Perfil actualitzat correctament.' : 'Perfil actualizado correctamente.')
+      setSettingsProfileSuccess(t('ui.profile_updated_successfully'))
     } catch (error: unknown) {
-      setSettingsProfileError(error instanceof Error ? error.message : (locale === 'ca' ? 'No s’ha pogut actualitzar el perfil.' : 'No se pudo actualizar el perfil.'))
+      setSettingsProfileError(error instanceof Error ? error.message : (t('ui.not_could_update_profile')))
     } finally {
       setSettingsProfileSubmitting(false)
     }
@@ -4549,10 +4561,10 @@ function App() {
   const renderReviewEditor = (mode: 'create' | 'edit', preset: ReviewFormPreset) => {
     const reviewFormId = `review-form-${mode}-${selectedReviewForEdit?.id ?? 'new'}`
     const reviewSubmitLabel = mode === 'create'
-      ? (reviewFormSubmitting ? (locale === 'ca' ? 'Creant...' : 'Creando...') : labels.reviews.create.submit)
+      ? (reviewFormSubmitting ? (t('ui.creating')) : labels.reviews.create.submit)
       : (reviewFormSubmitting
-        ? (locale === 'ca' ? 'Desant...' : 'Guardando...')
-        : (locale === 'ca' ? 'Desar canvis de la ressenya' : 'Guardar cambios de la reseña'))
+        ? (t('ui.saving'))
+        : (t('ui.save_changes_review')))
 
     return (
       <section className="screen-grid">
@@ -4560,7 +4572,7 @@ function App() {
           <div className="panel-header wine-create-header">
           <div>
             <p className="eyebrow">{labels.reviews.create.eyebrow}</p>
-            <h3>{mode === 'create' ? (locale === 'ca' ? 'Crear ressenya' : 'Crear reseña') : (locale === 'ca' ? 'Editar ressenya' : 'Editar reseña')}</h3>
+            <h3>{mode === 'create' ? (t('ui.create_review')) : (t('ui.edit_review'))}</h3>
           </div>
           <div className="panel-header-actions">
             <button type="button" className="ghost-button small review-editor-back-button" onClick={() => setMenu('reviews')}>
@@ -4570,7 +4582,7 @@ function App() {
                   fill="currentColor"
                 />
               </svg>
-              <span className="review-editor-back-text">{locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}</span>
+              <span className="review-editor-back-text">{t('ui.back_list')}</span>
             </button>
             <button
               type="submit"
@@ -4601,36 +4613,39 @@ function App() {
                 >
                   {wine.name} · {wine.winery}
                   {mode === 'create' && reviewedWineIdSet.has(wine.id)
-                    ? ` ${locale === 'ca' ? '(ja ressenyat)' : '(ya reseñado)'}`
+                    ? ` ${t('ui.already_reviewed')}`
                     : ''}
                 </option>
               ))}
             </select>
             {mode === 'create' ? (
               <small className="muted">
-                {locale === 'ca'
-                  ? 'Els vins ja ressenyats apareixen en gris i no es poden seleccionar.'
-                  : 'Los vinos ya reseñados aparecen en gris y no se pueden seleccionar.'}
+                {t('ui.wines_already_reviewed_appear_gray_and_not_can_select')}
               </small>
             ) : null}
             {mode === 'create' && creatableWineItems.length === 0 ? (
               <small className="muted">
-                {locale === 'ca'
-                  ? 'Ja has ressenyat tots els vins disponibles.'
-                  : 'Ya has reseñado todos los vinos disponibles.'}
+                {t('ui.already_has_reviewed_all_wines_available')}
               </small>
             ) : null}
           </label>
 
           <label>
-            {locale === 'ca' ? 'Data de la ressenya' : 'Fecha de la reseña'}
-            <input type="date" name="created_at" defaultValue={preset.tastingDate} />
+            {t('ui.date_review')}
+            <input
+              type="text"
+              name="created_at"
+              inputMode="numeric"
+              placeholder="dd/mm/yyyy"
+              pattern="\\d{2}/\\d{2}/\\d{4}"
+              defaultValue={formatIsoDateToDdMmYyyy(preset.tastingDate)}
+            />
           </label>
 
           <fieldset className="form-block">
-            <legend>{locale === 'ca' ? 'Valoració del Vi' : 'Valoración del Vino'}</legend>
+            <legend>{t('ui.rating_wine')}</legend>
             <label className="important-rating-field">
-              <span>{locale === 'ca' ? 'Valoració General (0-100)' : 'Valoración General (0-100)'}</span>
+              <span>{t('ui.rating_general_0_100')}</span>
               <select name="score" defaultValue={String(preset.overallScore)}>
                 {SCORE_OPTIONS_0_TO_100.map((score) => (
                   <option key={score} value={score}>{score}</option>
@@ -4639,7 +4654,7 @@ function App() {
             </label>
             <div className="inline-grid triple">
               <label>
-                {locale === 'ca' ? 'Aroma' : 'Aroma'}
+                {'Aroma'}
                 <select name="aroma" defaultValue={String(preset.aroma)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
@@ -4647,7 +4662,7 @@ function App() {
                 </select>
               </label>
               <label>
-                {locale === 'ca' ? 'Aspecte' : 'Aspecto'}
+                {t('ui.appearance')}
                 <select name="appearance" defaultValue={String(preset.appearance)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
@@ -4655,7 +4670,7 @@ function App() {
                 </select>
               </label>
               <label>
-                {locale === 'ca' ? 'Entrada en boca' : 'Entrada en boca'}
+                {'Entrada en boca'}
                 <select name="palate_entry" defaultValue={String(preset.palateEntry)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
@@ -4665,7 +4680,7 @@ function App() {
             </div>
             <div className="inline-grid triple">
               <label>
-                {locale === 'ca' ? 'Cos' : 'Cuerpo'}
+                {t('ui.body')}
                 <select name="body" defaultValue={String(preset.body)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
@@ -4673,7 +4688,7 @@ function App() {
                 </select>
               </label>
               <label>
-                {locale === 'ca' ? 'Persistència' : 'Persistencia'}
+                {t('ui.persistence')}
                 <select name="persistence" defaultValue={String(preset.persistence)}>
                   {SCORE_OPTIONS_0_TO_10.map((score) => (
                     <option key={score} value={score}>{score}</option>
@@ -4682,7 +4697,7 @@ function App() {
               </label>
             </div>
             <div className="field-stack">
-              <span className="field-label">{locale === 'ca' ? 'Tags de tast' : 'Tags de cata'}</span>
+              <span className="field-label">{t('ui.tags_tasting')}</span>
               <div className="tag-checkbox-grid">
                 {REVIEW_TAG_OPTIONS.map((tag) => (
                   <label key={tag} className="tag-checkbox-item">
@@ -4703,15 +4718,15 @@ function App() {
 
   const wineFormId = `wine-form-${menu}-${selectedWineForEdit?.id ?? 'new'}-${wineEditDetails?.id ?? 'none'}-${wineEditStatus}`
   const wineSubmitLabel = menu === 'wineEdit'
-    ? (wineFormSubmitting ? (locale === 'ca' ? 'Desant...' : 'Guardando...') : (locale === 'ca' ? 'Desar vi' : 'Guardar vino'))
-    : (wineFormSubmitting ? (locale === 'ca' ? 'Creant...' : 'Creando...') : labels.wines.add.submit)
+    ? (wineFormSubmitting ? (t('ui.saving')) : (t('ui.save_wine')))
+    : (wineFormSubmitting ? (t('ui.creating')) : labels.wines.add.submit)
 
   if (!authBootstrapped) {
     return (
       <main className="login-shell">
         <section className="login-stage">
           <section className="login-panel">
-            <p className="muted">{locale === 'ca' ? 'Comprovant sessió...' : 'Comprobando sesión...'}</p>
+            <p className="muted">{t('ui.checking_session')}</p>
           </section>
         </section>
       </main>
@@ -4727,7 +4742,7 @@ function App() {
           className="ghost-button small return-web-link return-web-top-link return-web-top-link-right"
           href={publicWebUrl}
         >
-          {locale === 'ca' ? 'Web pública' : 'Web pública'}
+          {'Web pública'}
         </a>
         <section className="login-stage">
           <section className="login-panel" aria-labelledby="login-title">
@@ -4788,7 +4803,7 @@ function App() {
               ) : null}
 
               <button type="submit" className="primary-button" disabled={loginSubmitting}>
-                {loginSubmitting ? (locale === 'ca' ? 'Entrant...' : 'Entrando...') : labels.login.submit}
+                {loginSubmitting ? (t('ui.signing_in')) : labels.login.submit}
               </button>
             </form>
           </section>
@@ -4935,8 +4950,8 @@ function App() {
                   setMenu('settings')
                   setShowMobileMenu(false)
                 }}
-                aria-label={locale === 'ca' ? 'Configuració' : 'Configuración'}
-                title={locale === 'ca' ? 'Configuració' : 'Configuración'}
+                aria-label={t('ui.settings')}
+                title={t('ui.settings')}
               >
                 <span className="topbar-mobile-icon" aria-hidden="true">
                   <svg viewBox="0 0 20 20" fill="none" role="presentation">
@@ -5017,7 +5032,7 @@ function App() {
             </div>
             {genericStatsStatus === 'error' ? (
               <p className="panel-inline-error">
-                {locale === 'ca' ? 'No s’han pogut carregar els indicadors generals.' : 'No se han podido cargar los indicadores generales.'}
+                {t('ui.not_have_could_load_indicators_general')}
                 {genericStatsError ? ` (${genericStatsError})` : ''}
               </p>
             ) : null}
@@ -5026,14 +5041,14 @@ function App() {
               <section className="panel dashboard-hero-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'ACTIVITAT' : 'ACTIVIDAD'}</p>
-                    <h3>{locale === 'ca' ? 'Ritme de ressenyes i qualitat' : 'Ritmo de reseñas y calidad'}</h3>
+                    <p className="eyebrow">{t('ui.activity')}</p>
+                    <h3>{t('ui.pace_reviews_and_quality')}</h3>
                   </div>
                   <button type="button" className="secondary-button small" onClick={() => setMenu('reviews')}>
-                    {locale === 'ca' ? 'Anar a ressenyes' : 'Ir a reseñas'}
+                    {t('ui.go_to_reviews')}
                   </button>
                 </div>
-                <div className="chart-shell chart-shell-tall" aria-label={locale === 'ca' ? 'Gràfica de ritme de ressenyes i puntuació' : 'Gráfica de ritmo de reseñas y puntuación'}>
+                <div className="chart-shell chart-shell-tall" aria-label={t('ui.chart_pace_reviews_and_score')}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={dashboardAnalytics.reviewTimeline} margin={{ top: 8, right: 10, left: -20, bottom: 2 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.18)" vertical={false} />
@@ -5053,28 +5068,28 @@ function App() {
                         cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }}
                         contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
                       />
-                      <Bar yAxisId="reviews" dataKey="reviews" name={locale === 'ca' ? 'Ressenyes' : 'Reseñas'} fill="#c39a7f" radius={[6, 6, 0, 0]} />
-                      <Line yAxisId="avg" type="monotone" dataKey="median" name={locale === 'ca' ? 'Mediana score' : 'Mediana score'} stroke="#8f3851" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                      <Bar yAxisId="reviews" dataKey="reviews" name={t('ui.reviews')} fill="#c39a7f" radius={[6, 6, 0, 0]} />
+                      <Line yAxisId="avg" type="monotone" dataKey="median" name={'Mediana score'} stroke="#8f3851" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
                 {reviewsPerMonthStatus === 'error' ? (
                   <p className="panel-inline-error">
-                    {locale === 'ca' ? 'No s\'han pogut carregar les estadístiques del gràfic.' : 'No se han podido cargar las estadísticas del gráfico.'}
+                    {t('ui.not_have_could_load_stats_chart')}
                     {reviewsPerMonthError ? ` (${reviewsPerMonthError})` : ''}
                   </p>
                 ) : null}
                 <div className="dashboard-hero-footnote">
-                  <span>{locale === 'ca' ? 'Barra clara: ressenyes' : 'Barra clara: reseñas'}</span>
-                  <span>{locale === 'ca' ? 'Línia vi: mediana de score' : 'Línea vino: mediana de score'}</span>
+                  <span>{t('ui.bar_light_reviews')}</span>
+                  <span>{t('ui.line_wine_median_score')}</span>
                 </div>
               </section>
 
               <section className="panel dashboard-distribution-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'DISTRIBUCIÓ' : 'DISTRIBUCIÓN'}</p>
-                    <h3>{locale === 'ca' ? 'Qualitat del celler' : 'Calidad del catálogo'}</h3>
+                    <p className="eyebrow">{t('ui.distribution')}</p>
+                    <h3>{t('ui.quality_catalog')}</h3>
                   </div>
                 </div>
                 <div className="bucket-stack">
@@ -5101,7 +5116,7 @@ function App() {
                 </div>
                 {scoringGenericStatsStatus === 'error' ? (
                   <p className="panel-inline-error">
-                    {locale === 'ca' ? 'No s’ha pogut carregar la distribució de score.' : 'No se ha podido cargar la distribución de score.'}
+                    {t('ui.not_has_could_load_distribution_score')}
                     {scoringGenericStatsError ? ` (${scoringGenericStatsError})` : ''}
                   </p>
                 ) : null}
@@ -5110,11 +5125,11 @@ function App() {
               <section className="panel dashboard-frequency-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'FREQÜÈNCIA' : 'FRECUENCIA'}</p>
-                    <h3>{locale === 'ca' ? 'Ressenyes web vs meves' : 'Reseñas web vs mías'}</h3>
+                    <p className="eyebrow">{t('ui.frequency')}</p>
+                    <h3>{t('ui.reviews_web_vs_mine')}</h3>
                   </div>
                 </div>
-                <div className="chart-shell" aria-label={locale === 'ca' ? 'Comparativa de ressenyes web versus meves' : 'Comparativa de reseñas web versus mías'}>
+                <div className="chart-shell" aria-label={t('ui.comparison_reviews_web_vs_mine')}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dashboardAnalytics.webVsMyTimeline} margin={{ top: 8, right: 8, left: -20, bottom: 2 }} barGap={4}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" vertical={false} />
@@ -5124,43 +5139,43 @@ function App() {
                         cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }}
                         contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
                       />
-                      <Bar dataKey="web" name={locale === 'ca' ? 'Web' : 'Web'} fill="#c39a7f" radius={[5, 5, 0, 0]} />
-                      <Bar dataKey="mine" name={locale === 'ca' ? 'Meves' : 'Mías'} fill="#8f3851" radius={[5, 5, 0, 0]} />
+                      <Bar dataKey="web" name={'Web'} fill="#c39a7f" radius={[5, 5, 0, 0]} />
+                      <Bar dataKey="mine" name={t('ui.mine')} fill="#8f3851" radius={[5, 5, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="dashboard-hero-footnote">
-                  <span>{locale === 'ca' ? 'Web (global)' : 'Web (global)'}</span>
-                  <span>{locale === 'ca' ? 'Les meves' : 'Las mías'}</span>
+                  <span>{'Web (global)'}</span>
+                  <span>{t('ui.mine_label')}</span>
                 </div>
               </section>
 
               <section className="panel dashboard-kpi-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'INDICADORS' : 'INDICADORES'}</p>
+                    <p className="eyebrow">{t('ui.indicators')}</p>
                     <h3>Qualifications</h3>
                   </div>
                 </div>
                 <div className="dashboard-kpi-list">
                   <article>
-                    <span>{locale === 'ca' ? 'Vins >= 80' : 'Vinos >= 80'}</span>
+                    <span>{t('ui.wines_80')}</span>
                     <strong>{dashboardAnalytics.highScoreCount}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Vins < 65' : 'Vinos < 65'}</span>
+                    <span>{t('ui.wines_65')}</span>
                     <strong>{dashboardAnalytics.lowScoreCount}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Dispersió score' : 'Dispersión score'}</span>
+                    <span>{t('ui.dispersion_score')}</span>
                     <strong>{dashboardAnalytics.scoreSpread.toFixed(1)}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Preu mitjà' : 'Precio medio'}</span>
+                    <span>{t('ui.average_price')}</span>
                     <strong>{priceFormatter.format(dashboardAnalytics.averagePrice)}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Índex qualitat/preu' : 'Índice calidad/precio'}</span>
+                    <span>{t('ui.index_quality_price')}</span>
                     <strong>{dashboardAnalytics.qualityIndex.toFixed(2)}</strong>
                   </article>
                 </div>
@@ -5169,8 +5184,8 @@ function App() {
               <section className="panel dashboard-type-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'PER TIPUS' : 'POR TIPO'}</p>
-                    <h3>{locale === 'ca' ? 'Notes mitjanes per tipus de vi' : 'Notas medias por tipo de vino'}</h3>
+                    <p className="eyebrow">{t('ui.by_type')}</p>
+                    <h3>{t('ui.scores_average_by_type_wine')}</h3>
                   </div>
                 </div>
                 <div className="type-performance-grid">
@@ -5183,7 +5198,7 @@ function App() {
                       <div className="type-performance-track" aria-hidden="true">
                         <div className="type-performance-fill" style={{ width: `${Math.max(6, (row.avg / 100) * 100)}%` }} />
                       </div>
-                      <small>{row.count} {locale === 'ca' ? 'vins' : 'vinos'}</small>
+                      <small>{row.count} {t('ui.wines')}</small>
                     </article>
                   ))}
                 </div>
@@ -5193,7 +5208,7 @@ function App() {
                 <div className="panel-header">
                   <div>
                     <p className="eyebrow">AWARDS</p>
-                    <h3>{locale === 'ca' ? 'Amb premi vs sense premi' : 'Con premio vs sin premio'}</h3>
+                    <h3>{t('ui.award_vs_without_award')}</h3>
                   </div>
                 </div>
                 <div className="awards-split">
@@ -5206,16 +5221,16 @@ function App() {
                     />
                     <div className="awards-donut-center">
                       <strong>{dashboardAnalytics.awardsWith}</strong>
-                      <span>{locale === 'ca' ? 'amb premi' : 'con premio'}</span>
+                      <span>{t('ui.award_label')}</span>
                     </div>
                   </div>
                   <div className="awards-breakdown">
                     <div className="awards-breakdown-row">
-                      <span>{locale === 'ca' ? 'Amb award' : 'Con award'}</span>
+                      <span>{t('ui.award_label')}</span>
                       <strong>{dashboardAnalytics.awardsWith}</strong>
                     </div>
                     <div className="awards-breakdown-row">
-                      <span>{locale === 'ca' ? 'Sense award' : 'Sin award'}</span>
+                      <span>{t('ui.without_award')}</span>
                       <strong>{dashboardAnalytics.awardsWithout}</strong>
                     </div>
                     {dashboardAnalytics.awardTypes.map((award) => (
@@ -5231,29 +5246,29 @@ function App() {
               <section className="panel dashboard-general-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'GENERALS' : 'GENERALES'}</p>
-                    <h3>{locale === 'ca' ? 'Estadístiques base de tast' : 'Estadísticas base de cata'}</h3>
+                    <p className="eyebrow">{t('ui.general')}</p>
+                    <h3>{t('ui.stats_base_tasting')}</h3>
                   </div>
                 </div>
                 <div className="dashboard-kpi-list">
                   <article>
-                    <span>{locale === 'ca' ? 'Mediana puntuació' : 'Mediana puntuación'}</span>
+                    <span>{t('ui.median_score')}</span>
                     <strong>{dashboardAnalytics.scoreMedian.toFixed(1)}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Desviació estàndard' : 'Desviación estándar'}</span>
+                    <span>{t('ui.deviation_standard')}</span>
                     <strong>{dashboardAnalytics.scoreStdDev.toFixed(2)}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Aprovats (>7)' : 'Aprobados (>7)'}</span>
+                    <span>{t('ui.passed_7')}</span>
                     <strong>{dashboardAnalytics.approvedRate.toFixed(1)}%</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Nota màx / mín' : 'Nota máx / mín'}</span>
+                    <span>{t('ui.score_max_min')}</span>
                     <strong>{dashboardAnalytics.maxScore.toFixed(1)} · {dashboardAnalytics.minScore.toFixed(1)}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Rang de preus tastats' : 'Rango de precios catados'}</span>
+                    <span>{t('ui.range_prices_tasted')}</span>
                     <strong>{priceFormatter.format(dashboardAnalytics.minPrice)} - {priceFormatter.format(dashboardAnalytics.maxPrice)}</strong>
                   </article>
                 </div>
@@ -5262,16 +5277,16 @@ function App() {
               <section className="panel dashboard-price-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'PREU VS QUALITAT' : 'PRECIO VS CALIDAD'}</p>
-                    <h3>{locale === 'ca' ? 'Relació preu/puntuació' : 'Relación precio/puntuación'}</h3>
+                    <p className="eyebrow">{t('ui.price_vs_quality')}</p>
+                    <h3>{t('ui.ratio_price_score')}</h3>
                   </div>
                 </div>
-                <div className="chart-shell" aria-label={locale === 'ca' ? 'Scatter de preu i puntuació' : 'Scatter de precio y puntuación'}>
+                <div className="chart-shell" aria-label={t('ui.scatter_price_and_score')}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" />
-                      <XAxis type="number" dataKey="price" name={locale === 'ca' ? 'Preu' : 'Precio'} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
-                      <YAxis type="number" dataKey="score" name={locale === 'ca' ? 'Score' : 'Score'} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <XAxis type="number" dataKey="price" name={t('ui.price')} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                      <YAxis type="number" dataKey="score" name={'Score'} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
                       <Tooltip
                         cursor={{ strokeDasharray: '3 3' }}
                         contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }}
@@ -5282,9 +5297,9 @@ function App() {
                   </ResponsiveContainer>
                 </div>
                 <div className="dashboard-hero-footnote">
-                  <span>{locale === 'ca' ? 'Pendent regressió' : 'Pendiente regresión'}: {dashboardAnalytics.regressionSlope.toFixed(3)}</span>
-                  <span>{locale === 'ca' ? 'Preu dolç estimat' : 'Precio dulce estimado'}: {priceFormatter.format(dashboardAnalytics.sweetSpotPrice)}</span>
-                  <span>{locale === 'ca' ? '<10€ amb nota >8' : '<10€ con nota >8'}: {dashboardAnalytics.underTenGreatCount} ({dashboardAnalytics.underTenGreatPct.toFixed(1)}%)</span>
+                  <span>{t('ui.slope_regression')}: {dashboardAnalytics.regressionSlope.toFixed(3)}</span>
+                  <span>{t('ui.price_sweet_estimated')}: {priceFormatter.format(dashboardAnalytics.sweetSpotPrice)}</span>
+                  <span>{t('ui.value_10_with_score_8')}: {dashboardAnalytics.underTenGreatCount} ({dashboardAnalytics.underTenGreatPct.toFixed(1)}%)</span>
                 </div>
                 <div className="mini-table">
                   {dashboardAnalytics.topValueWines.slice(0, 5).map((wine) => (
@@ -5297,7 +5312,7 @@ function App() {
                 <div className="mini-table">
                   {dashboardAnalytics.scoreBands.map((band) => (
                     <div key={band.label} className="mini-table-row">
-                      <span>{locale === 'ca' ? 'Franja' : 'Franja'} {band.label}</span>
+                      <span>{'Franja'} {band.label}</span>
                       <strong>{band.count > 0 ? priceFormatter.format(band.avgPrice) : '-'}</strong>
                     </div>
                   ))}
@@ -5307,11 +5322,11 @@ function App() {
               <section className="panel dashboard-vintage-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'PER ANYADA' : 'POR AÑADA'}</p>
-                    <h3>{locale === 'ca' ? 'Evolució per anyada' : 'Evolución por añada'}</h3>
+                    <p className="eyebrow">{t('ui.vintage_label')}</p>
+                    <h3>{t('ui.evolution_by_vintage')}</h3>
                   </div>
                 </div>
-                <div className="chart-shell" aria-label={locale === 'ca' ? 'Mitjana per anyada' : 'Media por añada'}>
+                <div className="chart-shell" aria-label={t('ui.average_by_vintage')}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dashboardAnalytics.byVintage} margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" vertical={false} />
@@ -5326,17 +5341,17 @@ function App() {
                   </ResponsiveContainer>
                 </div>
                 <div className="dashboard-hero-footnote">
-                  <span>{locale === 'ca' ? 'Millor anyada' : 'Mejor añada'}: {dashboardAnalytics.bestVintage?.year ?? '-'} ({dashboardAnalytics.bestVintage?.avgScore.toFixed(1) ?? '-'})</span>
-                  <span>{locale === 'ca' ? 'Antigues (<=2018)' : 'Antiguas (<=2018)'}: {dashboardAnalytics.oldVsRecent.oldAvg.toFixed(1)}</span>
-                  <span>{locale === 'ca' ? 'Recents (>=2019)' : 'Recientes (>=2019)'}: {dashboardAnalytics.oldVsRecent.recentAvg.toFixed(1)}</span>
+                  <span>{t('ui.best_vintage')}: {dashboardAnalytics.bestVintage?.year ?? '-'} ({dashboardAnalytics.bestVintage?.avgScore.toFixed(1) ?? '-'})</span>
+                  <span>{t('ui.old_2018')}: {dashboardAnalytics.oldVsRecent.oldAvg.toFixed(1)}</span>
+                  <span>{t('ui.recent_2019')}: {dashboardAnalytics.oldVsRecent.recentAvg.toFixed(1)}</span>
                 </div>
               </section>
 
               <section className="panel dashboard-do-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'PER DO' : 'POR DO'}</p>
-                    <h3>{locale === 'ca' ? 'Rànquing de DOs' : 'Ranking de DOs'}</h3>
+                    <p className="eyebrow">{t('ui.do')}</p>
+                    <h3>{t('ui.ranking_dos')}</h3>
                   </div>
                 </div>
                 <div className="mini-table">
@@ -5348,19 +5363,19 @@ function App() {
                   ))}
                 </div>
                 <div className="dashboard-hero-footnote">
-                  <span>{locale === 'ca' ? 'DO més regular' : 'DO más regular'}: {dashboardAnalytics.doMostConsistent?.region ?? '-'}</span>
-                  <span>{locale === 'ca' ? 'σ mínim' : 'σ mínimo'}: {dashboardAnalytics.doMostConsistent?.consistency.toFixed(2) ?? '-'}</span>
+                  <span>{t('ui.do_most_consistent')}: {dashboardAnalytics.doMostConsistent?.region ?? '-'}</span>
+                  <span>{t('ui.minimum')}: {dashboardAnalytics.doMostConsistent?.consistency.toFixed(2) ?? '-'}</span>
                 </div>
               </section>
 
               <section className="panel dashboard-couple-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'COMPARATIVA' : 'COMPARATIVA'}</p>
-                    <h3>{locale === 'ca' ? 'Maria vs Adrià' : 'Maria vs Adrià'}</h3>
+                    <p className="eyebrow">{'COMPARATIVA'}</p>
+                    <h3>{'Maria vs Adrià'}</h3>
                   </div>
                 </div>
-                <div className="chart-shell" aria-label={locale === 'ca' ? 'Scatter Maria versus Adrià' : 'Scatter Maria versus Adrià'}>
+                <div className="chart-shell" aria-label={'Scatter Maria versus Adrià'}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" />
@@ -5377,23 +5392,23 @@ function App() {
                 </div>
                 <div className="dashboard-kpi-list">
                   <article>
-                    <span>{locale === 'ca' ? 'Mitjana Maria' : 'Media Maria'}</span>
+                    <span>{t('ui.average_maria')}</span>
                     <strong>{dashboardAnalytics.mariaAvg.toFixed(2)}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Mitjana Adrià' : 'Media Adrià'}</span>
+                    <span>{t('ui.average_adria')}</span>
                     <strong>{dashboardAnalytics.adriaAvg.toFixed(2)}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Diferència mitjana' : 'Diferencia media'}</span>
+                    <span>{t('ui.difference_average')}</span>
                     <strong>{dashboardAnalytics.avgDifference.toFixed(2)}</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Desacords (>2)' : 'Desacuerdos (>2)'}</span>
+                    <span>{t('ui.disagreements_2')}</span>
                     <strong>{dashboardAnalytics.disagreementPct.toFixed(1)}%</strong>
                   </article>
                   <article>
-                    <span>{locale === 'ca' ? 'Índex sincronització' : 'Índice sincronización'}</span>
+                    <span>{t('ui.index_sync')}</span>
                     <strong>{dashboardAnalytics.syncIndex.toFixed(1)}</strong>
                   </article>
                 </div>
@@ -5410,11 +5425,11 @@ function App() {
               <section className="panel dashboard-temporal-panel">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'EVOLUCIÓ' : 'EVOLUCIÓN'}</p>
-                    <h3>{locale === 'ca' ? 'Rolling average (10 vins)' : 'Rolling average (10 vinos)'}</h3>
+                    <p className="eyebrow">{t('ui.evolution')}</p>
+                    <h3>{t('ui.rolling_average_10_wines')}</h3>
                   </div>
                 </div>
-                <div className="chart-shell" aria-label={locale === 'ca' ? 'Mitjana mòbil de 10 vins' : 'Media móvil de 10 vinos'}>
+                <div className="chart-shell" aria-label={t('ui.average_rolling_10_wines')}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={dashboardAnalytics.rollingAverage10} margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" vertical={false} />
@@ -5429,8 +5444,8 @@ function App() {
                   </ResponsiveContainer>
                 </div>
                 <div className="dashboard-hero-footnote">
-                  <span>{locale === 'ca' ? 'Restaurant: nota/preu' : 'Restaurante: nota/precio'} {dashboardAnalytics.placeComparison.restaurantAvgScore.toFixed(1)} / {priceFormatter.format(dashboardAnalytics.placeComparison.restaurantAvgPrice)}</span>
-                  <span>{locale === 'ca' ? 'Supermercat: nota/preu' : 'Supermercado: nota/precio'} {dashboardAnalytics.placeComparison.supermarketAvgScore.toFixed(1)} / {priceFormatter.format(dashboardAnalytics.placeComparison.supermarketAvgPrice)}</span>
+                  <span>{t('ui.restaurant_score_price')} {dashboardAnalytics.placeComparison.restaurantAvgScore.toFixed(1)} / {priceFormatter.format(dashboardAnalytics.placeComparison.restaurantAvgPrice)}</span>
+                  <span>{t('ui.supermarket_score_price')} {dashboardAnalytics.placeComparison.supermarketAvgScore.toFixed(1)} / {priceFormatter.format(dashboardAnalytics.placeComparison.supermarketAvgPrice)}</span>
                 </div>
               </section>
 
@@ -5458,14 +5473,14 @@ function App() {
                         setIsWineFiltersMobileOpen(true)
                       }}
                     >
-                      {locale === 'ca' ? 'Filtres' : 'Filtros'}
+                      {t('ui.filters')}
                       <span className="wine-mobile-filters-trigger-count">
                         {wineActiveFiltersCount}
                       </span>
                     </button>
                   ) : null}
                   <button type="button" className="primary-button" onClick={openWineCreate}>
-                    {locale === 'ca' ? 'Crear nou vi' : 'Crear nuevo vino'}
+                    {t('ui.create_new_wine')}
                   </button>
                 </div>
               </div>
@@ -5478,7 +5493,7 @@ function App() {
 
               {wineListStatus === 'error' ? (
                 <div className="api-doc-state api-doc-state-error">
-                  <p>{locale === 'ca' ? 'No s’ha pogut carregar el llistat de vins.' : 'No se pudo cargar el listado de vinos.'}</p>
+                  <p>{t('ui.not_could_load_list_wines')}</p>
                   {wineListError ? <p className="api-doc-error-detail">{wineListError}</p> : null}
                 </div>
               ) : null}
@@ -5490,11 +5505,11 @@ function App() {
                       <th aria-label="Photo" />
                       <th>{labels.dashboard.table.wine}</th>
                       <th>{labels.dashboard.table.type}</th>
-                      <th className="wine-col-region-header">{locale === 'ca' ? 'País de fabricació' : 'País de fabricación'}</th>
-                      <th>{locale === 'ca' ? 'Anyada' : 'Añada'}</th>
+                      <th className="wine-col-region-header">{t('ui.country_production')}</th>
+                      <th>{t('ui.vintage_label')}</th>
                       <th className="wine-col-do-header">D.O.</th>
                       <th>{labels.dashboard.table.avg}</th>
-                      <th>{locale === 'ca' ? 'Accions' : 'Acciones'}</th>
+                      <th>{t('ui.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -5550,7 +5565,7 @@ function App() {
                         <td className="wine-col-type" data-label={labels.dashboard.table.type}>
                           <span className="wine-cell-value">{wineTypeLabel(wine.type)}</span>
                         </td>
-                        <td className="wine-col-region" data-label={locale === 'ca' ? 'País de fabricació' : 'País de fabricación'}>
+                        <td className="wine-col-region" data-label={t('ui.country_production')}>
                           <span className="wine-country-chip">
                             {countryFlagPath(wine.country) ? (
                               <img
@@ -5566,10 +5581,10 @@ function App() {
                             <span className="wine-country-name">{localizedCountryName(wine.country, locale)}</span>
                           </span>
                         </td>
-                        <td className="wine-col-vintage" data-label={locale === 'ca' ? 'Anyada' : 'Añada'}>
+                        <td className="wine-col-vintage" data-label={t('ui.vintage_label')}>
                           <span className="wine-cell-value">{wine.vintageYear ?? '-'}</span>
                         </td>
-                        <td className="wine-col-aging" data-label={locale === 'ca' ? 'Criança' : 'Crianza'}>
+                        <td className="wine-col-aging" data-label={t('ui.crianza')}>
                           <span className="wine-cell-value">{labelForAgingType(wine.agingType, locale)}</span>
                         </td>
                         <td className="wine-col-do" data-label="D.O.">
@@ -5609,7 +5624,7 @@ function App() {
                             </span>
                           )}
                         </td>
-                        <td className="wine-col-actions" data-label={locale === 'ca' ? 'Accions' : 'Acciones'}>
+                        <td className="wine-col-actions" data-label={t('ui.actions')}>
                           <div className="wine-actions-wrap">
                             <button
                               type="button"
@@ -5618,8 +5633,8 @@ function App() {
                                 event.stopPropagation()
                                 openWineEdit(wine)
                               }}
-                              title={locale === 'ca' ? 'Editar vi' : 'Editar vino'}
-                              aria-label={locale === 'ca' ? 'Editar vi' : 'Editar vino'}
+                              title={t('ui.edit_wine')}
+                              aria-label={t('ui.edit_wine')}
                             >
                               <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path
@@ -5635,8 +5650,8 @@ function App() {
                                 event.stopPropagation()
                                 openWineDeleteConfirm(wine)
                               }}
-                              title={locale === 'ca' ? 'Eliminar vi' : 'Eliminar vino'}
-                              aria-label={locale === 'ca' ? 'Eliminar vi' : 'Eliminar vino'}
+                              title={t('ui.delete_wine')}
+                              aria-label={t('ui.delete_wine')}
                             >
                               <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path
@@ -5652,12 +5667,12 @@ function App() {
                     })}
                     {wineListStatus === 'loading' ? (
                       <tr>
-                        <td colSpan={8}>{locale === 'ca' ? 'Carregant vins...' : 'Cargando vinos...'}</td>
+                        <td colSpan={8}>{t('ui.loading_wines')}</td>
                       </tr>
                     ) : null}
                     {wineListStatus === 'ready' && wineItems.length === 0 ? (
                       <tr>
-                        <td colSpan={8}>{locale === 'ca' ? 'Cap vi trobat.' : 'No se encontraron vinos.'}</td>
+                        <td colSpan={8}>{t('ui.not_found_wines')}</td>
                       </tr>
                     ) : null}
                   </tbody>
@@ -5672,7 +5687,7 @@ function App() {
                 </div>
                 <div className="pagination-actions">
                   <label className="pagination-limit-inline">
-                    <span>{locale === 'ca' ? 'Límit' : 'Límite'}</span>
+                    <span>{t('ui.limit')}</span>
                     <select
                       value={String(wineLimit)}
                       onChange={(event) => {
@@ -5692,7 +5707,7 @@ function App() {
                     disabled={!wineHasPrev || wineListStatus === 'loading'}
                     onClick={() => setWinePage((current) => Math.max(1, current - 1))}
                   >
-                    {locale === 'ca' ? 'Anterior' : 'Anterior'}
+                    {'Anterior'}
                   </button>
                   <button
                     type="button"
@@ -5700,7 +5715,7 @@ function App() {
                     disabled={!wineHasNext || wineListStatus === 'loading'}
                     onClick={() => setWinePage((current) => current + 1)}
                   >
-                    {locale === 'ca' ? 'Següent' : 'Siguiente'}
+                    {t('ui.next')}
                   </button>
                 </div>
               </div>
@@ -5721,7 +5736,7 @@ function App() {
                     {doDirectoryItems.length} {labels.dos.list.results}
                   </span>
                   <label className="do-sort-select">
-                    <span className="do-sort-label">{locale === 'ca' ? 'Ordre' : 'Orden'}</span>
+                    <span className="do-sort-label">{t('ui.order')}</span>
                     <span className="do-sort-field" aria-hidden="true">
                       <svg viewBox="0 0 24 24" focusable="false">
                         <path d="M7 6h10" />
@@ -5750,33 +5765,33 @@ function App() {
 
               <div className="inline-grid triple do-directory-filter-grid">
                 <label className="do-directory-filter-field">
-                  {locale === 'ca' ? 'Filtrar per nom' : 'Filtrar por nombre'}
+                  {t('ui.filter_by_name')}
                   <input
                     type="search"
                     value={doListNameFilter}
-                    placeholder={locale === 'ca' ? 'Ex. Rioja' : 'Ej. Rioja'}
+                    placeholder={t('ui.eg_rioja')}
                     onChange={(event) => setDoListNameFilter(event.target.value)}
                   />
                 </label>
                 <label className="do-directory-filter-field">
-                  {locale === 'ca' ? 'Filtrar per país' : 'Filtrar por país'}
+                  {t('ui.filter_by_country')}
                   <select
                     value={doListCountryFilter}
                     onChange={(event) => setDoListCountryFilter(event.target.value as CountryFilterValue)}
                   >
-                    <option value="all">{locale === 'ca' ? 'Tots els països' : 'Todos los países'}</option>
+                    <option value="all">{t('ui.all_countries')}</option>
                     {WINE_COUNTRY_FILTER_VALUES.map((countryCode) => (
                       <option key={countryCode} value={countryCode}>{countryCodeToLabel(countryCode, locale)}</option>
                     ))}
                   </select>
                 </label>
                 <label className="do-directory-filter-field">
-                  {locale === 'ca' ? 'Filtrar per regió' : 'Filtrar por región'}
+                  {t('ui.filter_by_region')}
                   <select
                     value={doListRegionFilter}
                     onChange={(event) => setDoListRegionFilter(event.target.value)}
                   >
-                    <option value="">{locale === 'ca' ? 'Totes les regions' : 'Todas las regiones'}</option>
+                    <option value="">{t('ui.all_regions')}</option>
                     {sortedDoRegionFilterOptions.map((region) => (
                       <option key={region} value={region}>{region}</option>
                     ))}
@@ -5788,18 +5803,18 @@ function App() {
                 <table className="wine-table do-directory-table">
                   <thead>
                     <tr>
-                      <th>{locale === 'ca' ? 'Logo' : 'Logo'}</th>
-                      <th>{locale === 'ca' ? 'Nom' : 'Nombre'}</th>
+                      <th>{'Logo'}</th>
+                      <th>{t('ui.name')}</th>
                       <th>{labels.dashboard.table.region}</th>
-                      <th>{locale === 'ca' ? 'País' : 'País'}</th>
-                      <th>{locale === 'ca' ? 'Accions' : 'Acciones'}</th>
+                      <th>{'País'}</th>
+                      <th>{t('ui.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {doDirectoryRows}
                     {doDirectoryItems.length === 0 ? (
                       <tr>
-                        <td colSpan={5}>{locale === 'ca' ? 'Cap D.O. disponible.' : 'No hay DO disponibles.'}</td>
+                        <td colSpan={5}>{t('ui.no_do_available')}</td>
                       </tr>
                     ) : null}
                   </tbody>
@@ -5825,20 +5840,20 @@ function App() {
                         fill="currentColor"
                       />
                     </svg>
-                    <span className="review-editor-back-text">{locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}</span>
+                    <span className="review-editor-back-text">{t('ui.back_list')}</span>
                   </button>
                   <button type="submit" className="primary-button small" form="do-create-form" disabled={doCreateSubmitting}>
-                    {doCreateSubmitting ? (locale === 'ca' ? 'Creant…' : 'Creando…') : labels.dos.create.submit}
+                    {doCreateSubmitting ? (t('ui.creating_do')) : labels.dos.create.submit}
                   </button>
                 </div>
               </div>
 
               <form id="do-create-form" className="stack-form wine-create-form" onSubmit={(event) => { void handleDoCreateSubmit(event) }}>
                 <fieldset className="form-block">
-                  <legend>{locale === 'ca' ? 'Dades bàsiques' : 'Datos básicos'}</legend>
+                  <legend>{t('ui.data_basic')}</legend>
                   <div className="inline-grid triple">
                     <label>
-                      {locale === 'ca' ? 'Nom' : 'Nombre'}
+                      {t('ui.name')}
                       <input
                         name="name"
                         type="text"
@@ -5852,7 +5867,7 @@ function App() {
                       />
                     </label>
                     <label>
-                      {locale === 'ca' ? 'Regió' : 'Región'}
+                      {t('ui.region')}
                       <input
                         name="region"
                         type="text"
@@ -5866,7 +5881,7 @@ function App() {
                       />
                     </label>
                     <label>
-                      {locale === 'ca' ? 'País' : 'País'}
+                      {'País'}
                       <select
                         name="country"
                         value={doCreateDraft.country}
@@ -5895,7 +5910,7 @@ function App() {
                   </div>
                   <div className="inline-grid triple">
                     <label>
-                      {locale === 'ca' ? 'Codi país' : 'Código país'}
+                      {t('ui.code_country')}
                       <input
                         name="country_code"
                         type="text"
@@ -5913,19 +5928,19 @@ function App() {
                   </div>
                 </fieldset>
                 <fieldset className="form-block">
-                  <legend>{locale === 'ca' ? 'Logo D.O.' : 'Logo DO'}</legend>
+                  <legend>{t('ui.logo_do')}</legend>
                   <div className="do-edit-image-grid">
                     <section className="do-edit-image-card">
                       <header className="do-edit-image-head">
                         <div>
-                          <p className="eyebrow">{locale === 'ca' ? 'IMATGE PRINCIPAL' : 'IMAGEN PRINCIPAL'}</p>
-                          <h4>{locale === 'ca' ? 'Retall lliure + zoom' : 'Recorte libre + zoom'}</h4>
+                          <p className="eyebrow">{t('ui.image_main')}</p>
+                          <h4>{t('ui.free_crop_zoom')}</h4>
                         </div>
                         <div className="wine-photo-actions">
                           <button
                             type="button"
                             className="ghost-button tiny photo-icon-button"
-                            aria-label={locale === 'ca' ? 'Editar logo D.O.' : 'Editar logo DO'}
+                            aria-label={t('ui.edit_logo_do')}
                             disabled={doCreateSubmitting || photoEditorSaving}
                             onClick={startDoCreateLogoPick}
                           >
@@ -5937,7 +5952,7 @@ function App() {
                           <button
                             type="button"
                             className="ghost-button tiny danger photo-icon-button"
-                            aria-label={locale === 'ca' ? 'Eliminar logo D.O.' : 'Eliminar logo DO'}
+                            aria-label={t('ui.delete_logo_do')}
                             disabled={doCreateSubmitting || photoEditorSaving}
                             onClick={() => {
                               if (doCreateLogoPreviewSrc != null) {
@@ -5965,7 +5980,7 @@ function App() {
                       <p className="muted do-edit-image-caption">
                         {doCreateLogoFile != null
                           ? doCreateLogoFile.name
-                          : (doCreateDraft.do_logo.trim() !== '' ? doCreateDraft.do_logo : (locale === 'ca' ? 'Sense logo assignat' : 'Sin logo asignado'))}
+                          : (doCreateDraft.do_logo.trim() !== '' ? doCreateDraft.do_logo : (t('ui.without_logo_assigned')))}
                       </p>
                     </section>
                   </div>
@@ -5982,7 +5997,7 @@ function App() {
               <div className="panel-header wine-create-header">
                 <div>
                   <p className="eyebrow">{labels.wines.add.eyebrow}</p>
-                  <h3>{menu === 'wineEdit' ? (locale === 'ca' ? 'Editar vi' : 'Editar vino') : labels.wines.add.title}</h3>
+                  <h3>{menu === 'wineEdit' ? (t('ui.edit_wine')) : labels.wines.add.title}</h3>
                 </div>
                 <div className="panel-header-actions">
                   <button type="button" className="ghost-button small review-editor-back-button" onClick={() => setMenu('wines')}>
@@ -5992,7 +6007,7 @@ function App() {
                         fill="currentColor"
                       />
                     </svg>
-                    <span className="review-editor-back-text">{locale === 'ca' ? 'Tornar al llistat' : 'Volver al listado'}</span>
+                    <span className="review-editor-back-text">{t('ui.back_list')}</span>
                   </button>
                   <button type="submit" className="primary-button small" form={wineFormId} disabled={wineFormSubmitting}>
                     {wineSubmitLabel}
@@ -6008,7 +6023,7 @@ function App() {
               >
                 <div className={`wine-edit-basic-row${menu === 'wineEdit' && selectedWineForEdit ? ' is-edit' : ''}`}>
                   <fieldset className="form-block wine-edit-basic-main">
-                    <legend>{locale === 'ca' ? 'Dades bàsiques' : 'Datos básicos'}</legend>
+                    <legend>{t('ui.data_basic')}</legend>
                     <label>
                       {labels.wines.add.name}
                       <input name="name" type="text" placeholder="Clos de la Serra" defaultValue={wineEditDetails?.name ?? selectedWineForEdit?.name ?? ''} required />
@@ -6021,12 +6036,12 @@ function App() {
                           <option value="white">{labels.wineType.white}</option>
                           <option value="rose">{labels.wineType.rose}</option>
                           <option value="sparkling">{labels.wineType.sparkling}</option>
-                          <option value="sweet">{locale === 'ca' ? 'Dolç' : 'Dulce'}</option>
-                          <option value="fortified">{locale === 'ca' ? 'Fortificat' : 'Fortificado'}</option>
+                          <option value="sweet">{t('ui.sweet')}</option>
+                          <option value="fortified">{t('ui.fortified')}</option>
                         </select>
                       </label>
                       <label>
-                        {locale === 'ca' ? 'Criança' : 'Crianza'}
+                        {t('ui.crianza')}
                         <select name="aging_type" defaultValue={wineEditDetails?.aging_type ?? 'crianza'}>
                           {AGING_OPTIONS.map((aging) => (
                             <option key={aging} value={aging}>{aging}</option>
@@ -6035,7 +6050,7 @@ function App() {
                       </label>
                       <label>
                         {labels.wines.add.vintage}
-                        <select name="vintage_year" defaultValue={String(wineEditDetails?.vintage_year ?? selectedWineForEdit?.vintageYear ?? 2021)}>
+                        <select name="vintage_year" defaultValue={String(wineEditDetails?.vintage_year ?? selectedWineForEdit?.vintageYear ?? CURRENT_YEAR)}>
                           {VINTAGE_YEAR_OPTIONS.map((year) => (
                             <option key={year} value={year}>{year}</option>
                           ))}
@@ -6044,7 +6059,7 @@ function App() {
                     </div>
                     <div className="inline-grid triple">
                       <label>
-                        {locale === 'ca' ? 'Grau alcohòlic (%)' : 'Graduación alcohólica (%)'}
+                        {t('ui.alcohol_content')}
                         <input
                           name="alcohol_percentage"
                           type="number"
@@ -6062,7 +6077,7 @@ function App() {
                         <input name="winery" type="text" placeholder="Bodega Nova" defaultValue={wineEditDetails?.winery ?? selectedWineForEdit?.winery ?? ''} />
                       </label>
                       <label>
-                        {locale === 'ca' ? 'País de fabricació' : 'País de fabricación'}
+                        {t('ui.country_production')}
                         <select
                           value={manufacturingCountry}
                           onChange={(event) => {
@@ -6086,10 +6101,10 @@ function App() {
                 </div>
 
                 <fieldset className="form-block form-block-half">
-                  <legend>{locale === 'ca' ? 'Origen i DO' : 'Origen y DO'}</legend>
+                  <legend>{t('ui.origin_and_do')}</legend>
                   <div className="inline-grid">
                     <label>
-                      {locale === 'ca' ? 'País D.O.' : 'País D.O.'}
+                      {'País D.O.'}
                       <select
                         value={createDoCountryFilter}
                         onChange={(event) => {
@@ -6106,15 +6121,15 @@ function App() {
                       </select>
                     </label>
                     <label>
-                      {locale === 'ca' ? 'Cerca D.O.' : 'Buscar D.O.'}
+                      {t('ui.search_do')}
                       <input
                         type="search"
                         value={createDoSearchText}
                         onChange={(event) => setCreateDoSearchText(event.target.value)}
                         placeholder={
                           createDoCountryFilter === 'all'
-                            ? (locale === 'ca' ? 'Primer selecciona país' : 'Primero selecciona país')
-                            : (locale === 'ca' ? 'Nom o regió de la D.O.' : 'Nombre o región de la D.O.')
+                            ? (t('ui.first_select_country'))
+                            : (t('ui.do_name_or_region'))
                         }
                         disabled={createDoCountryFilter === 'all'}
                       />
@@ -6159,8 +6174,8 @@ function App() {
                                 {selectedCreateDoOption
                                   ? `${selectedCreateDoOption.region} · ${selectedCreateDoOption.name}`
                                   : (createDoCountryFilter === 'all'
-                                    ? (locale === 'ca' ? 'Selecciona país abans' : 'Selecciona país antes')
-                                    : (locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.'))}
+                                    ? (t('ui.select_country_before'))
+                                    : (t('ui.without_do')))}
                               </span>
                             )}
                           </span>
@@ -6179,7 +6194,7 @@ function App() {
                                 setIsCreateDoDropdownOpen(false)
                               }}
                             >
-                              <span>{locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.'}</span>
+                              <span>{t('ui.without_do')}</span>
                             </button>
                             {createFilteredDosBySearch.map((item) => {
                               const isSpanishDo = item.country === 'spain'
@@ -6223,16 +6238,16 @@ function App() {
                 </fieldset>
 
                 <fieldset className="form-block form-block-half">
-                  <legend>{locale === 'ca' ? 'Composició i raïm' : 'Composición y uva'}</legend>
+                  <legend>{t('ui.composition_and_grape')}</legend>
                   <div className="grape-blend-head">
-                    <span>{locale === 'ca' ? 'Varietat' : 'Variedad'}</span>
-                    <span>{locale === 'ca' ? 'Percentatge (%)' : 'Porcentaje (%)'}</span>
+                    <span>{t('ui.variety')}</span>
+                    <span>{t('ui.percentage')}</span>
                     <span aria-hidden="true" />
                   </div>
                   <div className="grape-blend-list">
                     {grapeBlendRows.map((row) => (
                       <div key={row.id} className="grape-blend-row">
-                        <label className="sr-only" htmlFor={`grape-row-${row.id}`}>{locale === 'ca' ? 'Varietat' : 'Variedad'}</label>
+                        <label className="sr-only" htmlFor={`grape-row-${row.id}`}>{t('ui.variety')}</label>
                         <select
                           id={`grape-row-${row.id}`}
                           value={row.grapeId}
@@ -6246,7 +6261,7 @@ function App() {
                             </optgroup>
                           ))}
                         </select>
-                        <label className="sr-only" htmlFor={`grape-row-pct-${row.id}`}>{locale === 'ca' ? 'Percentatge' : 'Porcentaje'}</label>
+                        <label className="sr-only" htmlFor={`grape-row-pct-${row.id}`}>{t('ui.percentage_label')}</label>
                         <input
                           id={`grape-row-pct-${row.id}`}
                           type="number"
@@ -6262,8 +6277,8 @@ function App() {
                           className="icon-square-button"
                           onClick={() => removeGrapeBlendRow(row.id)}
                           disabled={grapeBlendRows.length === 1}
-                          aria-label={locale === 'ca' ? 'Eliminar varietat' : 'Eliminar variedad'}
-                          title={locale === 'ca' ? 'Eliminar varietat' : 'Eliminar variedad'}
+                          aria-label={t('ui.delete_variety')}
+                          title={t('ui.delete_variety')}
                         >
                           <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
                             <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2v8H7v-8Z" fill="currentColor" />
@@ -6274,20 +6289,20 @@ function App() {
                   </div>
                   <div className="grape-blend-actions">
                     <button type="button" className="secondary-button small" onClick={addGrapeBlendRow}>
-                      {locale === 'ca' ? 'Afegir varietat' : 'Añadir variedad'}
+                      {t('ui.add_variety')}
                     </button>
                   </div>
                 </fieldset>
 
                 <fieldset className="form-block">
-                  <legend>{locale === 'ca' ? 'Compra i lloc de la cata' : 'Compra y lugar de la cata'}</legend>
+                  <legend>{t('ui.purchase_and_place_tasting')}</legend>
                   <div className="inline-grid triple">
                     <label>
-                      {locale === 'ca' ? 'Tipus de lloc' : 'Tipo de lugar'}
+                      {t('ui.type_place')}
                       <select name="place_type" defaultValue={primaryEditPurchase?.place.place_type ?? 'restaurant'}>
                         {PLACE_TYPE_OPTIONS.map((placeType) => (
                           <option key={placeType} value={placeType}>
-                            {locale === 'ca' ? PLACE_TYPE_LABELS[placeType].ca : PLACE_TYPE_LABELS[placeType].es}
+                            {t(`common.placeType.${placeType}`)}
                           </option>
                         ))}
                       </select>
@@ -6317,16 +6332,19 @@ function App() {
                   </div>
                   <div className="inline-grid">
                     <label>
-                      {locale === 'ca' ? 'Data de la compra' : 'Fecha de la compra'}
+                      {t('ui.date_purchase')}
                       <input
                         name="purchased_at"
-                        type="date"
-                        defaultValue={primaryEditPurchase?.purchased_at?.slice(0, 10) ?? '2026-02-27'}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="dd/mm/yyyy"
+                        pattern="\\d{2}/\\d{2}/\\d{4}"
+                        defaultValue={formatIsoDateToDdMmYyyy(primaryEditPurchase?.purchased_at?.slice(0, 10) ?? CURRENT_DATE_INPUT)}
                         required
                       />
                     </label>
                     <label>
-                      {locale === 'ca' ? 'País de compra' : 'País de compra'}
+                      {'País de compra'}
                       <select name="place_country" defaultValue={primaryEditPurchase?.place.country ?? manufacturingCountry}>
                         {WINE_COUNTRY_FILTER_VALUES.map((countryCode) => (
                           <option key={countryCode} value={countryCode}>{countryCodeToLabel(countryCode, locale)}</option>
@@ -6336,29 +6354,29 @@ function App() {
                   </div>
                   <div className="inline-grid">
                     <label>
-                      {locale === 'ca' ? 'Adreça del lloc' : 'Dirección del lugar'}
+                      {t('ui.address_place')}
                       <input name="place_address" type="text" placeholder="Carrer Major 12" defaultValue={primaryEditPurchase?.place.address ?? ''} />
                     </label>
                     <label>
-                      {locale === 'ca' ? 'Ciutat' : 'Ciudad'}
+                      {t('ui.city')}
                       <input name="place_city" type="text" placeholder="Barcelona" defaultValue={primaryEditPurchase?.place.city ?? ''} />
                     </label>
                   </div>
                 </fieldset>
 
                 <fieldset className="form-block">
-                  <legend>{locale === 'ca' ? 'Premis' : 'Premios'}</legend>
+                  <legend>{t('ui.awards')}</legend>
                   <div className="award-rows-scroll">
                     <div className="award-rows-head">
-                      <span>{locale === 'ca' ? 'Premi' : 'Premio'}</span>
-                      <span>{locale === 'ca' ? 'Puntuació' : 'Puntuación'}</span>
-                      <span>{locale === 'ca' ? 'Any' : 'Año'}</span>
+                      <span>{t('ui.award_label')}</span>
+                      <span>{t('ui.score')}</span>
+                      <span>{t('ui.year')}</span>
                       <span aria-hidden="true" />
                     </div>
                     <div className="award-rows-list">
                       {awardRows.map((row) => (
                         <div key={row.id} className="award-row">
-                        <label className="sr-only" htmlFor={`award-name-${row.id}`}>{locale === 'ca' ? 'Premi' : 'Premio'}</label>
+                        <label className="sr-only" htmlFor={`award-name-${row.id}`}>{t('ui.award_label')}</label>
                         <select
                           id={`award-name-${row.id}`}
                           value={row.award}
@@ -6368,7 +6386,7 @@ function App() {
                             <option key={award} value={award}>{award}</option>
                           ))}
                         </select>
-                        <label className="sr-only" htmlFor={`award-score-${row.id}`}>{locale === 'ca' ? 'Puntuació' : 'Puntuación'}</label>
+                        <label className="sr-only" htmlFor={`award-score-${row.id}`}>{t('ui.score')}</label>
                         <input
                           id={`award-score-${row.id}`}
                           type="number"
@@ -6379,7 +6397,7 @@ function App() {
                           value={row.score}
                           onChange={(event) => updateAwardRow(row.id, { score: event.target.value })}
                         />
-                        <label className="sr-only" htmlFor={`award-year-${row.id}`}>{locale === 'ca' ? 'Any' : 'Año'}</label>
+                        <label className="sr-only" htmlFor={`award-year-${row.id}`}>{t('ui.year')}</label>
                         <input
                           id={`award-year-${row.id}`}
                           type="number"
@@ -6393,8 +6411,8 @@ function App() {
                           type="button"
                           className="icon-square-button"
                           onClick={() => removeAwardRow(row.id)}
-                          aria-label={locale === 'ca' ? 'Eliminar premi' : 'Eliminar premio'}
-                          title={locale === 'ca' ? 'Eliminar premi' : 'Eliminar premio'}
+                          aria-label={t('ui.delete_award')}
+                          title={t('ui.delete_award')}
                         >
                           <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
                             <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2v8H7v-8Z" fill="currentColor" />
@@ -6406,13 +6424,13 @@ function App() {
                   </div>
                   <div className="award-rows-actions">
                     <button type="button" className="secondary-button small" onClick={addAwardRow}>
-                      {locale === 'ca' ? 'Afegir premi' : 'Añadir premio'}
+                      {t('ui.add_award')}
                     </button>
                   </div>
                 </fieldset>
 
                 {menu === 'wineEdit' && wineEditStatus === 'loading' ? (
-                  <p className="muted">{locale === 'ca' ? 'Carregant dades del vi...' : 'Cargando datos del vino...'}</p>
+                  <p className="muted">{t('ui.loading_data_wine')}</p>
                 ) : null}
                 {wineFormError ? <p className="error-message">{wineFormError}</p> : null}
               </form>
@@ -6426,50 +6444,50 @@ function App() {
               <div className="panel-header review-summary-header">
                 <div>
                   <p className="eyebrow">{labels.reviews.edit.title}</p>
-                  <h3>{locale === 'ca' ? 'Resum de ressenyes' : 'Resumen de reseñas'}</h3>
+                  <h3>{t('ui.summary_reviews')}</h3>
                 </div>
                 <div className="panel-header-actions">
                   <button type="button" className="primary-button" onClick={openReviewCreate}>
-                    {locale === 'ca' ? 'Crear ressenya' : 'Crear reseña'}
+                    {t('ui.create_review')}
                   </button>
                 </div>
               </div>
 
               <div className="review-kpi-strip">
                 <article className="review-kpi-card">
-                  <p>{locale === 'ca' ? 'Vins totals' : 'Vinos totales'}</p>
+                  <p>{t('ui.wines_total')}</p>
                   <strong>{reviewTotalWines}</strong>
-                  <span>{locale === 'ca' ? 'Catàleg global' : 'Catálogo global'}</span>
+                  <span>{t('ui.catalog_global')}</span>
                 </article>
                 <article className="review-kpi-card review-kpi-card-mine">
-                  <p>{locale === 'ca' ? 'Les meves ressenyes' : 'Mis reseñas'}</p>
+                  <p>{t('ui.my_reviews')}</p>
                   <strong>{myReviewEntries.length}</strong>
-                  <span>{locale === 'ca' ? 'Compte actual' : 'Cuenta actual'}</span>
+                  <span>{t('ui.current_account')}</span>
                 </article>
                 <article className="review-kpi-card review-kpi-card-pending">
-                  <p>{locale === 'ca' ? 'Pendents' : 'Pendientes'}</p>
+                  <p>{t('ui.pending')}</p>
                   <strong>{Math.max(0, reviewTotalWines - myReviewEntries.length)}</strong>
-                  <span>{locale === 'ca' ? 'Vins per ressenyar' : 'Vinos por reseñar'}</span>
+                  <span>{t('ui.wines_by_to_review')}</span>
                 </article>
               </div>
 
               {myReviewSummaryStatus === 'loading' ? (
-                <p className="muted">{locale === 'ca' ? 'Calculant resum de ressenyes...' : 'Calculando resumen de reseñas...'}</p>
+                <p className="muted">{t('ui.calculating_summary_reviews')}</p>
               ) : null}
 
               {myReviewSummaryStatus === 'error' ? (
-                <p className="error-message">{myReviewSummaryError ?? (locale === 'ca' ? 'No s’ha pogut calcular el resum.' : 'No se pudo calcular el resumen.')}</p>
+                <p className="error-message">{myReviewSummaryError ?? (t('ui.not_could_calculate_summary'))}</p>
               ) : null}
               {reviewActionError ? <p className="error-message">{reviewActionError}</p> : null}
 
               <section className="review-my-list">
                 <div className="panel-header">
                   <div>
-                    <p className="eyebrow">{locale === 'ca' ? 'MEVES RESSENYES' : 'MIS RESEÑAS'}</p>
-                    <h3>{locale === 'ca' ? 'Llistat de ressenyes de la teva compte' : 'Listado de reseñas de tu cuenta'}</h3>
+                    <p className="eyebrow">{t('ui.my_reviews_section')}</p>
+                    <h3>{t('ui.list_reviews_your_cuenta')}</h3>
                   </div>
                   <label className="review-list-filter">
-                    <span>{locale === 'ca' ? 'Filtrar per vi' : 'Filtrar por vino'}</span>
+                    <span>{t('ui.filter_by_wine')}</span>
                     <select
                       value={reviewWineFilter === 'all' ? 'all' : String(reviewWineFilter)}
                       onChange={(event) => {
@@ -6477,7 +6495,7 @@ function App() {
                         setReviewWineFilter(value === 'all' ? 'all' : Number(value))
                       }}
                     >
-                      <option value="all">{locale === 'ca' ? 'Tots els vins' : 'Todos los vinos'}</option>
+                      <option value="all">{t('ui.all_wines')}</option>
                       {reviewWineFilterOptions.map((option) => (
                         <option key={`review-filter-${option.id}`} value={option.id}>{option.name}</option>
                       ))}
@@ -6490,7 +6508,7 @@ function App() {
                     const doRegion = entry.wine.doName ?? entry.wine.region
                     const doLabel = doRegion && doRegion !== '-'
                       ? doRegion
-                      : (locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.')
+                      : (t('ui.without_do'))
                     const doLogoPath = doLogoPathFromImageName(entry.wine.doLogo)
                     const countryFlagPathValue = countryFlagPath(entry.wine.country)
 
@@ -6537,23 +6555,23 @@ function App() {
                       <div className="review-metrics-col">
                         <dl className="review-metrics-grid review-metrics-grid-inline">
                           <div>
-                            <dt>{locale === 'ca' ? 'Aroma' : 'Aroma'}</dt>
+                            <dt>{'Aroma'}</dt>
                             <dd className={`review-metric-value ${medalToneFromTen(entry.review.aroma)}`}>{entry.review.aroma}/10</dd>
                           </div>
                           <div>
-                            <dt>{locale === 'ca' ? 'Aspecte' : 'Aspecto'}</dt>
+                            <dt>{t('ui.appearance')}</dt>
                             <dd className={`review-metric-value ${medalToneFromTen(entry.review.appearance)}`}>{entry.review.appearance}/10</dd>
                           </div>
                           <div>
-                            <dt>{locale === 'ca' ? 'Entrada en boca' : 'Entrada en boca'}</dt>
+                            <dt>{'Entrada en boca'}</dt>
                             <dd className={`review-metric-value ${medalToneFromTen(entry.review.palate_entry)}`}>{entry.review.palate_entry}/10</dd>
                           </div>
                           <div>
-                            <dt>{locale === 'ca' ? 'Cos' : 'Cuerpo'}</dt>
+                            <dt>{t('ui.body')}</dt>
                             <dd className={`review-metric-value ${medalToneFromTen(entry.review.body)}`}>{entry.review.body}/10</dd>
                           </div>
                           <div>
-                            <dt>{locale === 'ca' ? 'Persistència' : 'Persistencia'}</dt>
+                            <dt>{t('ui.persistence')}</dt>
                             <dd className={`review-metric-value ${medalToneFromTen(entry.review.persistence)}`}>{entry.review.persistence}/10</dd>
                           </div>
                         </dl>
@@ -6562,7 +6580,7 @@ function App() {
                         <div className="review-card-header-right">
                           <div className="review-score-summary">
                             <span className={`score-pill ${medalToneFromHundred(entry.review.score)}`}>{entry.review.score == null ? '-' : `${entry.review.score}/100`}</span>
-                            <small>{locale === 'ca' ? 'Puntuació total (100)' : 'Puntuación total (100)'}</small>
+                            <small>{t('ui.score_total_100')}</small>
                           </div>
                           <div className="review-actions review-actions-inline review-actions-end">
                             <button
@@ -6579,8 +6597,8 @@ function App() {
                             <button
                               type="button"
                               className="table-icon-button danger"
-                              aria-label={locale === 'ca' ? 'Eliminar ressenya' : 'Eliminar reseña'}
-                              title={locale === 'ca' ? 'Eliminar ressenya' : 'Eliminar reseña'}
+                              aria-label={t('ui.delete_review')}
+                              title={t('ui.delete_review')}
                               disabled={reviewDeleteBusyId === entry.review.id}
                               onClick={() => { void deleteReview(entry.wine, entry.review) }}
                             >
@@ -6596,8 +6614,8 @@ function App() {
                   }) : (
                     <p className="muted">
                       {reviewWineFilter === 'all'
-                        ? (locale === 'ca' ? 'Encara no has creat ressenyes.' : 'Todavía no has creado reseñas.')
-                        : (locale === 'ca' ? 'No hi ha ressenyes per aquest vi.' : 'No hay reseñas para este vino.')}
+                        ? (t('ui.yet_not_has_created_reviews'))
+                        : (t('ui.no_reviews_for_this_wine'))}
                     </p>
                   )}
                 </div>
@@ -6789,14 +6807,14 @@ function App() {
             <section className="panel">
               <div className="panel-header">
                 <div>
-                  <p className="eyebrow">{locale === 'ca' ? 'PREFERÈNCIES' : 'PREFERENCIAS'}</p>
-                  <h3>{locale === 'ca' ? 'Configuració del backoffice' : 'Configuración del backoffice'}</h3>
+                  <p className="eyebrow">{t('ui.preferences')}</p>
+                  <h3>{t('ui.settings_backoffice')}</h3>
                 </div>
               </div>
 
               <form className="stack-form settings-form" onSubmit={handleSettingsProfileSubmit}>
                 <label>
-                  {locale === 'ca' ? 'Nom' : 'Nombre'}
+                  {t('ui.name')}
                   <input
                     type="text"
                     value={settingsName}
@@ -6806,7 +6824,7 @@ function App() {
                 </label>
 
                 <label>
-                  {locale === 'ca' ? 'Cognom' : 'Apellido'}
+                  {t('ui.surname')}
                   <input
                     type="text"
                     value={settingsLastname}
@@ -6816,13 +6834,13 @@ function App() {
                 </label>
 
                 <label>
-                  {locale === 'ca' ? 'Nova contrasenya' : 'Nueva contraseña'}
+                  {t('ui.new_password')}
                   <input
                     type="password"
                     value={settingsPassword}
                     onChange={(event) => setSettingsPassword(event.target.value)}
                     autoComplete="new-password"
-                    placeholder={locale === 'ca' ? 'Deixa-ho buit per conservar-la' : 'Déjalo vacío para conservarla'}
+                    placeholder={t('ui.leave_empty_for_keep_it')}
                   />
                 </label>
 
@@ -6831,8 +6849,8 @@ function App() {
 
                 <button type="submit" className="primary-button" disabled={settingsProfileSubmitting || !loggedIn}>
                   {settingsProfileSubmitting
-                    ? (locale === 'ca' ? 'Desant...' : 'Guardando...')
-                    : (locale === 'ca' ? 'Desar perfil' : 'Guardar perfil')}
+                    ? (t('ui.saving'))
+                    : (t('ui.save_profile'))}
                 </button>
               </form>
 
@@ -6840,8 +6858,8 @@ function App() {
 
               <form className="stack-form settings-form" onSubmit={(event) => event.preventDefault()}>
                 <label>
-                  {locale === 'ca' ? 'Llengua' : 'Idioma'}
-                  <div className="settings-segmented" role="group" aria-label={locale === 'ca' ? 'Llengua' : 'Idioma'}>
+                  {t('ui.language')}
+                  <div className="settings-segmented" role="group" aria-label={t('ui.language')}>
                     <button
                       type="button"
                       className={`settings-chip${locale === 'ca' ? ' active' : ''}`}
@@ -6856,43 +6874,50 @@ function App() {
                     >
                       ES
                     </button>
+                    <button
+                      type="button"
+                      className={`settings-chip${locale === 'en' ? ' active' : ''}`}
+                      onClick={() => setLocale('en')}
+                    >
+                      EN
+                    </button>
                   </div>
                 </label>
 
                 <label>
-                  {locale === 'ca' ? 'Tema' : 'Tema'}
-                  <div className="settings-segmented" role="group" aria-label={locale === 'ca' ? 'Tema' : 'Tema'}>
+                  {'Tema'}
+                  <div className="settings-segmented" role="group" aria-label={'Tema'}>
                     <button
                       type="button"
                       className={`settings-chip${themeMode === 'light' ? ' active' : ''}`}
                       onClick={() => setThemeMode('light')}
                     >
-                      {locale === 'ca' ? 'Clar' : 'Claro'}
+                      {t('ui.light')}
                     </button>
                     <button
                       type="button"
                       className={`settings-chip${themeMode === 'dark' ? ' active' : ''}`}
                       onClick={() => setThemeMode('dark')}
                     >
-                      {locale === 'ca' ? 'Fosc' : 'Oscuro'}
+                      {t('ui.dark')}
                     </button>
                   </div>
                 </label>
 
                 <label>
-                  {locale === 'ca' ? 'Ordenació per defecte (llistat de vins)' : 'Ordenación por defecto (listado de vinos)'}
+                  {t('ui.sort_by_default_list_wines')}
                   <select
                     value={defaultSortPreference}
                     onChange={(event) => setDefaultSortPreference(event.target.value as 'score_desc' | 'recent' | 'price_asc')}
                   >
-                    <option value="score_desc">{locale === 'ca' ? 'Puntuació (més alta primer)' : 'Puntuación (más alta primero)'}</option>
-                    <option value="recent">{locale === 'ca' ? 'Afegits recentment' : 'Añadidos recientemente'}</option>
-                    <option value="price_asc">{locale === 'ca' ? 'Preu (més baix primer)' : 'Precio (más bajo primero)'}</option>
+                    <option value="score_desc">{t('ui.score_most_high_first')}</option>
+                    <option value="recent">{t('ui.added_recently')}</option>
+                    <option value="price_asc">{t('ui.price_most_low_first')}</option>
                   </select>
                 </label>
 
                 <label>
-                  {locale === 'ca' ? 'Pantalla inicial per defecte' : 'Pantalla inicial por defecto'}
+                  {t('ui.screen_home_by_default')}
                   <select
                     value={defaultLandingPage}
                     onChange={(event) => setDefaultLandingPage(event.target.value as 'dashboard' | 'wines' | 'dos' | 'reviews')}
@@ -6909,16 +6934,16 @@ function App() {
             <section className="panel">
               <div className="panel-header">
                 <div>
-                  <p className="eyebrow">{locale === 'ca' ? 'EXPERIÈNCIA' : 'EXPERIENCIA'}</p>
-                  <h3>{locale === 'ca' ? 'Preferències extra' : 'Preferencias extra'}</h3>
+                  <p className="eyebrow">{t('ui.experience')}</p>
+                  <h3>{t('ui.preferencias_extra')}</h3>
                 </div>
               </div>
 
               <div className="list-stack">
                 <article className="list-card settings-toggle-row">
                   <div>
-                    <h4>{locale === 'ca' ? 'Filtrar Espanya per defecte' : 'Filtrar España por defecto'}</h4>
-                    <p>{locale === 'ca' ? 'Aplica el filtre de país “Espanya” quan obres el cercador.' : 'Aplica el filtro de país “España” al abrir el buscador.'}</p>
+                    <h4>{t('ui.filter_espana_by_default')}</h4>
+                    <p>{t('ui.aplica_filter_country_espana_open_searcher')}</p>
                   </div>
                   <button
                     type="button"
@@ -6926,14 +6951,14 @@ function App() {
                     onClick={() => setShowOnlySpainByDefault((current) => !current)}
                     aria-pressed={showOnlySpainByDefault}
                   >
-                    {showOnlySpainByDefault ? (locale === 'ca' ? 'Activat' : 'Activo') : (locale === 'ca' ? 'Desactivat' : 'Inactivo')}
+                    {showOnlySpainByDefault ? (t('ui.active')) : (t('ui.inactive'))}
                   </button>
                 </article>
 
                 <article className="list-card settings-toggle-row">
                   <div>
-                    <h4>{locale === 'ca' ? 'Targetes compactes' : 'Tarjetas compactas'}</h4>
-                    <p>{locale === 'ca' ? 'Mode amb menys espai vertical per les llistes.' : 'Modo con menos espacio vertical para listas.'}</p>
+                    <h4>{t('ui.cards_compact')}</h4>
+                    <p>{t('ui.mode_with_less_space_vertical_for_lists')}</p>
                   </div>
                   <button
                     type="button"
@@ -6941,21 +6966,19 @@ function App() {
                     onClick={() => setCompactCardsPreference((current) => !current)}
                     aria-pressed={compactCardsPreference}
                   >
-                    {compactCardsPreference ? (locale === 'ca' ? 'Sí' : 'Sí') : 'No'}
+                    {compactCardsPreference ? ('Sí') : 'No'}
                   </button>
                 </article>
 
                 <article className="list-card">
                   <div>
-                    <h4>{locale === 'ca' ? 'Properes idees' : 'Próximas ideas'}</h4>
+                    <h4>{t('ui.upcoming_ideas')}</h4>
                     <p>
-                      {locale === 'ca'
-                        ? 'Notificacions de noves ressenyes, exportació CSV i preferència de decimals a la puntuació.'
-                        : 'Notificaciones de nuevas reseñas, exportación CSV y preferencia de decimales en la puntuación.'}
+                      {t('ui.notifications_new_reviews_export_csv_and_preference_decimals_score')}
                     </p>
                   </div>
                   <button type="button" className="ghost-button small" disabled>
-                    {locale === 'ca' ? 'Aviat' : 'Pronto'}
+                    {t('ui.soon')}
                   </button>
                 </article>
               </div>
@@ -6976,26 +6999,26 @@ function App() {
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="wine-profile-back-text">{locale === 'ca' ? 'Tornar al llistat de vins' : 'Volver al listado de vinos'}</span>
+                  <span className="wine-profile-back-text">{t('ui.back_list_wines')}</span>
                 </button>
                 <button type="button" className="primary-button" onClick={() => openWineEdit(selectedWineSheet)}>
-                  {locale === 'ca' ? 'Editar vi' : 'Editar vino'}
+                  {t('ui.edit_wine')}
                 </button>
               </div>
             </header>
 
             {selectedWineSheetStatus === 'loading' ? (
               <section className="panel">
-                <p className="eyebrow">{locale === 'ca' ? 'Carregant' : 'Cargando'}</p>
-                <h3>{locale === 'ca' ? 'Preparant fitxa del vi…' : 'Preparando ficha del vino…'}</h3>
+                <p className="eyebrow">{t('ui.loading')}</p>
+                <h3>{t('ui.preparing_sheet_wine')}</h3>
               </section>
             ) : null}
 
             {selectedWineSheetStatus === 'error' ? (
               <section className="panel">
-                <p className="eyebrow">{locale === 'ca' ? 'Error' : 'Error'}</p>
-                <h3>{locale === 'ca' ? 'No s’ha pogut carregar la fitxa' : 'No se pudo cargar la ficha'}</h3>
-                <p className="muted">{selectedWineSheetError ?? (locale === 'ca' ? 'Torna-ho a provar en uns segons.' : 'Vuelve a intentarlo en unos segundos.')}</p>
+                <p className="eyebrow">{'Error'}</p>
+                <h3>{t('ui.not_could_load_sheet')}</h3>
+                <p className="muted">{selectedWineSheetError ?? (t('ui.try_again_retry_few_seconds'))}</p>
               </section>
             ) : null}
 
@@ -7007,12 +7030,12 @@ function App() {
                   <section className="wine-sheet-card wine-profile-card-composition">
                     <h4>
                       <span className="wine-sheet-section-icon" aria-hidden="true">🍇</span>
-                      <span>{locale === 'ca' ? 'Composició' : 'Composición'}</span>
+                      <span>{t('ui.composition')}</span>
                     </h4>
                     <div className="wine-profile-grape-layout">
                       {selectedWineGrapePie !== '' ? (
                         <div className="wine-profile-grape-pie" style={{ background: selectedWineGrapePie }}>
-                          <span>{locale === 'ca' ? 'Blend' : 'Blend'}</span>
+                          <span>{'Blend'}</span>
                         </div>
                       ) : null}
                       <div className="wine-profile-grape-list">
@@ -7021,7 +7044,7 @@ function App() {
                             <span>{grape.name}</span>
                             <strong>{grape.percentage == null ? '-' : `${grape.percentage}%`}</strong>
                           </div>
-                        )) : <p className="muted">{locale === 'ca' ? 'Sense varietats informades.' : 'Sin variedades informadas.'}</p>}
+                        )) : <p className="muted">{t('ui.without_varieties_listed')}</p>}
                       </div>
                     </div>
                   </section>
@@ -7031,9 +7054,9 @@ function App() {
                   <section className="panel wine-profile-summary-panel wine-profile-card-maininfo">
                     <div className="panel-header">
                       <div>
-                        <p className="eyebrow">{locale === 'ca' ? 'FITXA TÈCNICA' : 'FICHA TÉCNICA'}</p>
+                        <p className="eyebrow">{t('ui.sheet_technical')}</p>
                         <h3>{selectedWineSheetDetails.name}</h3>
-                        <p className="wine-profile-maininfo-subtitle">{locale === 'ca' ? 'Identitat del vi + Informació' : 'Identidad del vino + Información'}</p>
+                        <p className="wine-profile-maininfo-subtitle">{t('ui.identity_wine_information')}</p>
                       </div>
                       <div className="wine-profile-card-actions">
                         <button type="button" className="ghost-button small wine-profile-back-button" onClick={closeWineSheet}>
@@ -7043,10 +7066,10 @@ function App() {
                               fill="currentColor"
                             />
                           </svg>
-                          <span className="wine-profile-back-text">{locale === 'ca' ? 'Tornar al llistat de vins' : 'Volver al listado de vinos'}</span>
+                          <span className="wine-profile-back-text">{t('ui.back_list_wines')}</span>
                         </button>
                         <button type="button" className="primary-button small" onClick={() => openWineEdit(selectedWineSheet)}>
-                          {locale === 'ca' ? 'Editar vi' : 'Editar vino'}
+                          {t('ui.edit_wine')}
                         </button>
                       </div>
                     </div>
@@ -7057,7 +7080,7 @@ function App() {
                         <strong>{selectedWineAverageScore ?? '-'}</strong>
                       </article>
                       <article>
-                        <span>{locale === 'ca' ? 'Anyada' : 'Añada'}</span>
+                        <span>{t('ui.vintage_label')}</span>
                         <strong>{selectedWineSheetDetails.vintage_year ?? '-'}</strong>
                       </article>
                     </div>
@@ -7103,31 +7126,31 @@ function App() {
 
                     <dl className="wine-profile-facts-grid">
                       <div>
-                        <dt>{locale === 'ca' ? 'Bodega' : 'Bodega'}</dt>
+                        <dt>{'Bodega'}</dt>
                         <dd>{selectedWineSheetDetails.winery ?? '-'}</dd>
                       </div>
                       <div>
-                        <dt>{locale === 'ca' ? 'D.O.' : 'D.O.'}</dt>
-                        <dd>{selectedWineSheetDetails.do?.name ?? (locale === 'ca' ? 'Sense D.O.' : 'Sin D.O.')}</dd>
+                        <dt>{'D.O.'}</dt>
+                        <dd>{selectedWineSheetDetails.do?.name ?? (t('ui.without_do'))}</dd>
                       </div>
                       <div>
-                        <dt>{locale === 'ca' ? 'Regió' : 'Región'}</dt>
+                        <dt>{t('ui.region')}</dt>
                         <dd>{selectedWineSheetDetails.do?.region ?? '-'}</dd>
                       </div>
                       <div>
-                        <dt>{locale === 'ca' ? 'Tipus' : 'Tipo'}</dt>
+                        <dt>{t('ui.by_type')}</dt>
                         <dd>{wineTypeLabel(selectedWineSheetDetails.wine_type ?? selectedWineSheet.type)}</dd>
                       </div>
                       <div>
-                        <dt>{locale === 'ca' ? 'Criança' : 'Crianza'}</dt>
+                        <dt>{t('ui.crianza')}</dt>
                         <dd>{labelForAgingType(selectedWineSheetDetails.aging_type, locale)}</dd>
                       </div>
                       <div>
-                        <dt>{locale === 'ca' ? 'Alcohol (%)' : 'Alcohol (%)'}</dt>
+                        <dt>{'Alcohol (%)'}</dt>
                         <dd>{selectedWineSheetDetails.alcohol_percentage ?? '-'}</dd>
                       </div>
                       <div>
-                        <dt>{locale === 'ca' ? 'Actualitzat' : 'Actualizado'}</dt>
+                        <dt>{t('ui.updated')}</dt>
                         <dd>{formatApiDate(selectedWineSheetDetails.updated_at, locale)}</dd>
                       </div>
                     </dl>
@@ -7136,7 +7159,7 @@ function App() {
                   <section className="wine-sheet-card wine-profile-card-awards">
                     <h4>
                       <span className="wine-sheet-section-icon" aria-hidden="true">🏅</span>
-                      <span>{locale === 'ca' ? 'Premis' : 'Premios'}</span>
+                      <span>{t('ui.awards')}</span>
                     </h4>
                     <div className="wine-profile-list-block">
                       {selectedWineSheetDetails.awards.length > 0 ? selectedWineSheetDetails.awards.map((award) => (
@@ -7144,14 +7167,14 @@ function App() {
                           <span>{labelForAwardName(award.name)}</span>
                           <strong>{award.score != null ? `${award.score}/100` : '-'} · {award.year ?? '-'}</strong>
                         </article>
-                      )) : <p className="muted">{locale === 'ca' ? 'Sense premis registrats.' : 'Sin premios registrados.'}</p>}
+                      )) : <p className="muted">{t('ui.without_awards_registered')}</p>}
                     </div>
                   </section>
 
                   <section className="wine-sheet-card wine-profile-card-reviews">
                     <h4>
                       <span className="wine-sheet-section-icon" aria-hidden="true">✍️</span>
-                      <span>{locale === 'ca' ? 'Ressenyes' : 'Reseñas'}</span>
+                      <span>{t('ui.reviews')}</span>
                     </h4>
                     <div className="wine-profile-list-block">
                       {selectedWineSheetDetails.reviews.length > 0 ? selectedWineSheetDetails.reviews.slice(0, 5).map((review) => (
@@ -7175,7 +7198,7 @@ function App() {
                               : <span className="review-bullet-chip muted">-</span>}
                           </div>
                         </article>
-                      )) : <p className="muted">{locale === 'ca' ? 'Sense ressenyes registrades.' : 'Sin reseñas registradas.'}</p>}
+                      )) : <p className="muted">{t('ui.without_reviews_registered')}</p>}
                     </div>
                   </section>
                 </section>
@@ -7222,8 +7245,8 @@ function App() {
           >
             <header className="wine-mobile-filters-header">
               <div>
-                <p className="eyebrow">{locale === 'ca' ? 'FILTRES' : 'FILTROS'}</p>
-                <h3 id="wine-mobile-filters-title">{locale === 'ca' ? 'Filtrar vins' : 'Filtrar vinos'}</h3>
+                <p className="eyebrow">{t('ui.filters_section')}</p>
+                <h3 id="wine-mobile-filters-title">{t('ui.filter_wines')}</h3>
               </div>
               <button
                 type="button"
@@ -7233,7 +7256,7 @@ function App() {
                   setIsWineFiltersMobileOpen(false)
                 }}
               >
-                {locale === 'ca' ? 'Tancar' : 'Cerrar'}
+                {t('ui.close')}
               </button>
             </header>
             <div className="wine-mobile-filters-content">
@@ -7252,7 +7275,7 @@ function App() {
             onClick={(event) => event.stopPropagation()}
           >
             <header className="confirm-modal-header">
-              <p className="eyebrow">{locale === 'ca' ? 'EDITAR D.O.' : 'EDITAR DO'}</p>
+              <p className="eyebrow">{t('ui.edit_do')}</p>
               <h3 id="edit-do-title">{doEditTarget.name}</h3>
             </header>
             <form className="stack-form do-edit-form" onSubmit={(event) => { void handleDoEditSubmit(event) }}>
@@ -7260,14 +7283,14 @@ function App() {
                 <section className="do-edit-image-card">
                   <header className="do-edit-image-head">
                     <div>
-                      <p className="eyebrow">{locale === 'ca' ? 'LOGO D.O.' : 'LOGO DO'}</p>
-                      <h4>{locale === 'ca' ? 'Imatge principal' : 'Imagen principal'}</h4>
+                      <p className="eyebrow">{t('ui.do_logo_section')}</p>
+                      <h4>{t('ui.main_image')}</h4>
                     </div>
                     <div className="wine-photo-actions">
                       <button
                         type="button"
                         className="ghost-button tiny photo-icon-button"
-                        aria-label={locale === 'ca' ? 'Editar logo D.O.' : 'Editar logo DO'}
+                        aria-label={t('ui.edit_logo_do')}
                         disabled={doAssetUploadingType != null || doEditSubmitting || photoEditorSaving}
                         onClick={startDoEditLogoPick}
                       >
@@ -7279,7 +7302,7 @@ function App() {
                       <button
                         type="button"
                         className="ghost-button tiny danger photo-icon-button"
-                        aria-label={locale === 'ca' ? 'Eliminar logo D.O.' : 'Eliminar logo DO'}
+                        aria-label={t('ui.delete_logo_do')}
                         disabled={doAssetUploadingType != null || doEditSubmitting}
                         onClick={() => {
                           setDoEditDraft((current) => (current == null ? current : { ...current, do_logo: '' }))
@@ -7301,18 +7324,18 @@ function App() {
                   </div>
                   <p className="muted do-edit-image-caption">
                     {doAssetUploadingType === 'do_logo'
-                      ? (locale === 'ca' ? 'Pujant imatge…' : 'Subiendo imagen…')
-                      : (doEditDraft?.do_logo?.trim() !== '' ? doEditDraft?.do_logo : (locale === 'ca' ? 'Sense logo assignat' : 'Sin logo asignado'))}
+                      ? (t('ui.uploading_image'))
+                      : (doEditDraft?.do_logo?.trim() !== '' ? doEditDraft?.do_logo : (t('ui.without_logo_assigned')))}
                   </p>
                 </section>
 
                 <section className="do-edit-image-card">
                   <header className="do-edit-image-head">
                     <div>
-                      <p className="eyebrow">{locale === 'ca' ? 'LOGO REGIÓ' : 'LOGO REGIÓN'}</p>
-                      <h4>{locale === 'ca' ? 'Imatge territorial' : 'Imagen territorial'}</h4>
+                      <p className="eyebrow">{t('ui.logo_region')}</p>
+                      <h4>{t('ui.image_territorial')}</h4>
                     </div>
-                    <span className="muted">{locale === 'ca' ? 'No editable' : 'No editable'}</span>
+                    <span className="muted">{'No editable'}</span>
                   </header>
                   <div className="do-edit-image-preview do-edit-image-preview-region">
                     {doEditRegionLogoPath ? (
@@ -7322,14 +7345,14 @@ function App() {
                     )}
                   </div>
                   <p className="muted do-edit-image-caption">
-                    {doEditDraft?.region_logo?.trim() !== '' ? doEditDraft?.region_logo : (locale === 'ca' ? 'Sense logo assignat' : 'Sin logo asignado')}
+                    {doEditDraft?.region_logo?.trim() !== '' ? doEditDraft?.region_logo : (t('ui.without_logo_assigned'))}
                   </p>
                 </section>
               </div>
 
               <div className="inline-grid triple">
                 <label>
-                  {locale === 'ca' ? 'Nom' : 'Nombre'}
+                  {t('ui.name')}
                   <input
                     name="name"
                     type="text"
@@ -7342,7 +7365,7 @@ function App() {
                   />
                 </label>
                 <label>
-                  {locale === 'ca' ? 'Regió' : 'Región'}
+                  {t('ui.region')}
                   <input
                     name="region"
                     type="text"
@@ -7355,7 +7378,7 @@ function App() {
                   />
                 </label>
                 <label>
-                  {locale === 'ca' ? 'País' : 'País'}
+                  {'País'}
                   <select
                     name="country"
                     value={doEditDraft?.country ?? 'spain'}
@@ -7372,7 +7395,7 @@ function App() {
               </div>
               <div className="inline-grid triple do-edit-meta-grid">
                 <label>
-                  {locale === 'ca' ? 'Codi país' : 'Código país'}
+                  {t('ui.code_country')}
                   <input
                     name="country_code"
                     type="text"
@@ -7390,10 +7413,10 @@ function App() {
               {doEditError ? <p className="error-message">{doEditError}</p> : null}
               <footer className="confirm-modal-actions">
                 <button type="button" className="ghost-button" onClick={closeDoEdit} disabled={doEditSubmitting}>
-                  {locale === 'ca' ? 'Cancel·lar' : 'Cancelar'}
+                  {t('ui.cancel')}
                 </button>
                 <button type="submit" className="primary-button" disabled={doEditSubmitting}>
-                  {doEditSubmitting ? (locale === 'ca' ? 'Desant…' : 'Guardando…') : (locale === 'ca' ? 'Desar canvis' : 'Guardar cambios')}
+                  {doEditSubmitting ? (t('ui.saving_changes')) : (t('ui.save_changes'))}
                 </button>
               </footer>
             </form>
@@ -7411,21 +7434,19 @@ function App() {
             onClick={(event) => event.stopPropagation()}
           >
             <header className="confirm-modal-header">
-              <p className="eyebrow">{locale === 'ca' ? 'ELIMINAR D.O.' : 'ELIMINAR DO'}</p>
+              <p className="eyebrow">{t('ui.delete_do')}</p>
               <h3 id="delete-do-title">{doDeleteTarget.name}</h3>
               <p className="muted">
-                {locale === 'ca'
-                  ? 'Aquesta acció eliminarà la D.O. si no té vins associats. Vols continuar?'
-                  : 'Esta acción eliminará la DO si no tiene vinos asociados. ¿Quieres continuar?'}
+                {t('ui.this_accion_eliminara_do_yes_not_has_wines_linked_want_continuar')}
               </p>
             </header>
             {doDeleteError ? <p className="error-message">{doDeleteError}</p> : null}
             <footer className="confirm-modal-actions">
               <button type="button" className="ghost-button" onClick={closeDoDeleteConfirm} disabled={doDeleteSubmitting}>
-                {locale === 'ca' ? 'Cancel·lar' : 'Cancelar'}
+                {t('ui.cancel')}
               </button>
               <button type="button" className="secondary-button" onClick={() => { void confirmDeleteDo() }} disabled={doDeleteSubmitting}>
-                {doDeleteSubmitting ? (locale === 'ca' ? 'Eliminant…' : 'Eliminando…') : (locale === 'ca' ? 'Eliminar' : 'Eliminar')}
+                {doDeleteSubmitting ? (t('ui.deleting')) : ('Eliminar')}
               </button>
             </footer>
           </section>
@@ -7442,21 +7463,19 @@ function App() {
             onClick={(event) => event.stopPropagation()}
           >
             <header className="confirm-modal-header">
-              <p className="eyebrow">{locale === 'ca' ? 'ELIMINAR VI' : 'ELIMINAR VINO'}</p>
+              <p className="eyebrow">{t('ui.delete_wine_section')}</p>
               <h3 id="delete-wine-title">{wineDeleteTarget.name}</h3>
               <p className="muted">
-                {locale === 'ca'
-                  ? 'Aquesta acció eliminarà el vi i les seves fotos. Vols continuar?'
-                  : 'Esta acción eliminará el vino y sus fotos. ¿Quieres continuar?'}
+                {t('ui.this_accion_eliminara_wine_and_its_photos_want_continuar')}
               </p>
             </header>
             {wineDeleteError ? <p className="error-message">{wineDeleteError}</p> : null}
             <footer className="confirm-modal-actions">
               <button type="button" className="ghost-button" onClick={closeWineDeleteConfirm} disabled={wineDeleteSubmitting}>
-                {locale === 'ca' ? 'Cancel·lar' : 'Cancelar'}
+                {t('ui.cancel')}
               </button>
               <button type="button" className="secondary-button" onClick={() => { void confirmDeleteWine() }} disabled={wineDeleteSubmitting}>
-                {wineDeleteSubmitting ? (locale === 'ca' ? 'Eliminant…' : 'Eliminando…') : (locale === 'ca' ? 'Eliminar' : 'Eliminar')}
+                {wineDeleteSubmitting ? (t('ui.deleting')) : ('Eliminar')}
               </button>
             </footer>
           </section>
@@ -7474,11 +7493,11 @@ function App() {
           >
             <header className="photo-editor-header">
               <div>
-                <p className="eyebrow">{locale === 'ca' ? 'EDITOR FOTO' : 'EDITOR FOTO'}</p>
+                <p className="eyebrow">{'EDITOR FOTO'}</p>
                 <h3 id="photo-editor-title">{labelForPhotoType(photoEditorType, locale)}</h3>
               </div>
               <button type="button" className="ghost-button small" onClick={closePhotoEditor}>
-                {locale === 'ca' ? 'Tancar' : 'Cerrar'}
+                {t('ui.close')}
               </button>
             </header>
 
@@ -7497,7 +7516,7 @@ function App() {
                       type="button"
                       className="ghost-button tiny photo-editor-zoom-button"
                       onClick={() => setPhotoEditorZoom((current) => clamp(current - 0.1, 1, 3))}
-                      aria-label={locale === 'ca' ? 'Disminuir zoom' : 'Disminuir zoom'}
+                      aria-label={'Disminuir zoom'}
                     >
                       -
                     </button>
@@ -7505,7 +7524,7 @@ function App() {
                       type="button"
                       className="ghost-button tiny photo-editor-zoom-button"
                       onClick={() => setPhotoEditorZoom((current) => clamp(current + 0.1, 1, 3))}
-                      aria-label={locale === 'ca' ? 'Augmentar zoom' : 'Aumentar zoom'}
+                      aria-label={t('ui.increase_zoom')}
                     >
                       +
                     </button>
@@ -7515,15 +7534,15 @@ function App() {
               <div className="photo-editor-controls">
                 <p className="muted">
                   {photoEditorType === 'situation'
-                    ? (locale === 'ca' ? 'Format lliure (sense retall obligatori)' : 'Formato libre (sin recorte obligatorio)')
+                    ? (t('ui.format_libre_without_crop_required'))
                     : photoEditorType === 'do_logo'
-                      ? (locale === 'ca' ? 'Logo D.O. · tria relació, arrossega i fes pinça per ajustar' : 'Logo DO · elige relación, arrastra y pellizca para ajustar')
-                      : `Format ${photoEditorType === 'bottle' ? '9:16' : '3:4'} · ${locale === 'ca' ? 'Arrossega per moure i fes pinça per zoom' : 'Arrastra para mover y pellizca para zoom'}`}
+                      ? (t('ui.logo_do_choose_ratio_arrastra_and_pellizca_for_adjust'))
+                      : `Format ${photoEditorType === 'bottle' ? '9:16' : '3:4'} · ${t('ui.arrastra_for_move_and_pellizca_for_zoom')}`}
                 </p>
                 {photoEditorType === 'do_logo' ? (
                   <label>
-                    {locale === 'ca' ? 'Crop' : 'Crop'}
-                    <div className="photo-editor-crop-buttons" role="group" aria-label={locale === 'ca' ? 'Seleccionar relació de retall' : 'Seleccionar relación de recorte'}>
+                    {'Crop'}
+                    <div className="photo-editor-crop-buttons" role="group" aria-label={t('ui.select_ratio_crop')}>
                       {(['photo', '1:1', '3:4', '4:3', '16:9', '9:16'] as DoLogoCropRatio[]).map((ratio) => (
                         <button
                           key={ratio}
@@ -7531,7 +7550,7 @@ function App() {
                           className={`ghost-button tiny${photoEditorDoLogoCropRatio === ratio ? ' is-active' : ''}`}
                           onClick={() => setPhotoEditorDoLogoCropRatio(ratio)}
                         >
-                          {ratio === 'photo' ? (locale === 'ca' ? 'Foto' : 'Foto') : ratio}
+                          {ratio === 'photo' ? ('Foto') : ratio}
                         </button>
                       ))}
                     </div>
@@ -7540,7 +7559,7 @@ function App() {
                 {photoEditorType !== 'situation' ? (
                   <>
                     <label>
-                      {locale === 'ca' ? 'Zoom' : 'Zoom'}
+                      {'Zoom'}
                       <input
                         type="range"
                         min="1"
@@ -7553,7 +7572,7 @@ function App() {
                     {!isMobileViewport ? (
                       <>
                         <label>
-                          {locale === 'ca' ? 'Desplaçament X' : 'Desplazamiento X'}
+                          {t('ui.offset_x')}
                           <input
                             type="range"
                             min="-100"
@@ -7564,7 +7583,7 @@ function App() {
                           />
                         </label>
                         <label>
-                          {locale === 'ca' ? 'Desplaçament Y' : 'Desplazamiento Y'}
+                          {t('ui.offset_and')}
                           <input
                             type="range"
                             min="-100"
@@ -7584,10 +7603,10 @@ function App() {
 
             <footer className="photo-editor-footer">
               <button type="button" className="ghost-button" onClick={closePhotoEditor}>
-                {locale === 'ca' ? 'Cancelar' : 'Cancelar'}
+                {'Cancelar'}
               </button>
               <button type="button" className="secondary-button" disabled={photoEditorSaving} onClick={() => { void savePhotoEditor() }}>
-                {photoEditorSaving ? (locale === 'ca' ? 'Guardant…' : 'Guardando…') : (locale === 'ca' ? 'Guardar' : 'Guardar')}
+                {photoEditorSaving ? (t('ui.saving_photo')) : (t('ui.save'))}
               </button>
             </footer>
           </section>
@@ -7631,8 +7650,8 @@ function App() {
                               : 'bottle'
                         startPhotoPick(selectedWineGallery.id, activePhotoType)
                       }}
-                      title={locale === 'ca' ? 'Editar foto' : 'Editar foto'}
-                      aria-label={locale === 'ca' ? 'Editar foto' : 'Editar foto'}
+                      title={t('wineProfile.photoActions.edit')}
+                      aria-label={t('wineProfile.photoActions.edit')}
                     >
                       <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path
@@ -7666,8 +7685,8 @@ function App() {
                               : 'bottle'
                         )
                       }
-                      title={locale === 'ca' ? 'Eliminar foto' : 'Eliminar foto'}
-                      aria-label={locale === 'ca' ? 'Eliminar foto' : 'Eliminar foto'}
+                      title={t('wineProfile.photoActions.delete')}
+                      aria-label={t('wineProfile.photoActions.delete')}
                     >
                       🗑
                     </button>
@@ -7675,7 +7694,7 @@ function App() {
                       type="button"
                       className="ghost-button small image-modal-icon-button image-modal-close-button"
                       onClick={closeWineGallery}
-                      title={locale === 'ca' ? 'Tancar galeria' : 'Cerrar galería'}
+                      title={t('ui.close_gallery')}
                       aria-label={t('wineProfile.closeGalleryAria')}
                     >
                       ✕

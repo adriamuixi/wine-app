@@ -1,0 +1,21 @@
+login:
+  eyebrow: Private Winery
+  title: Wine Backoffice
+  promo: Manage labels, tasting notes, and your personal reviews from one place. Ready
+    for mobile and desktop.
+  bullets:
+  - Organize wines by region and style
+  - Track your tasting and review history
+  - Keep a clean admin workflow
+  panelTitle: Sign in to /admin
+  email: Email
+  password: Password
+  submit: Enter Backoffice
+  requiredError: Email and password are required.
+  demoTitle: Demo
+  demoDescription: Use any email/password to enter the dashboard.
+ui:
+  credentials_invalid: Credentials invalid
+  not_could_start_session: Could not start session
+  checking_session: Checking session
+  signing_in: Signing in

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { localeLabels, messages, type Locale } from './i18n/messages'
 import './App.css'
 
-type Locale = 'ca' | 'es'
 type ThemeMode = 'light' | 'dark'
 type WineType = 'red' | 'white' | 'rose' | 'sparkling'
 type SortKey = 'score_desc' | 'price_asc' | 'price_desc' | 'latest' | 'tasting_date_desc' | 'tasting_date_asc'
@@ -211,114 +211,6 @@ type WineDetailsApiResponse = {
   }
 }
 
-type Dictionary = {
-  appName: string
-  title: string
-  subtitle: string
-  searchPlaceholder: string
-  filters: {
-    title: string
-    search: string
-    type: string
-    country: string
-    region: string
-    grape: string
-    minScore: string
-    sort: string
-    allTypes: string
-    allCountries: string
-    allRegions: string
-    anyScore: string
-    clear: string
-  }
-  topbar: {
-    resultCount: string
-    dark: string
-    light: string
-    language: string
-    menu: string
-    navigation: string
-    winesCatalog: string
-    doMap: string
-    whoWeAre: string
-    backoffice: string
-    openFilters: string
-    closeFilters: string
-  }
-  doMap: {
-    eyebrow: string
-    title: string
-    subtitle: string
-    tip: string
-    listTitle: string
-    worldMapLabel: string
-    openCatalog: string
-    filterCountry: string
-    chooseDo: string
-    chooseCountryFirst: string
-    chooseDoPlaceholder: string
-    closeSelector: string
-    allWorld: string
-    fullscreenOpen: string
-    fullscreenClose: string
-  }
-  card: {
-    avgScore: string
-    priceFrom: string
-    reward: string
-    noReward: string
-    region: string
-    vintage: string
-    points: string
-    featured90: string
-    viewDetails: string
-    viewProfile: string
-  }
-  icons: {
-    filters: string
-    search: string
-    type: string
-    country: string
-    region: string
-    grape: string
-    minScore: string
-    sort: string
-    results: string
-    avgScore: string
-    rewards: string
-    winery: string
-    origin: string
-    vintage: string
-    price: string
-    reward: string
-    details: string
-    gallery: string
-    tasting: string
-    tags: string
-  }
-  sort: Record<SortKey, string>
-  modal: {
-    close: string
-    gallery: string
-    details: string
-    winery: string
-    origin: string
-    style: string
-    grapes: string
-    aging: string
-    alcohol: string
-    tastedAt: string
-    month: string
-    place: string
-    mariaScore: string
-    adriaScore: string
-    tasting: string
-    tags: string
-    rewardNone: string
-  }
-  wineType: Record<WineType, string>
-}
-
 const THEME_KEY = 'wine-web-public-theme'
 const LOCALE_KEY = 'wine-web-public-locale'
 const MOBILE_VIEW_COOKIE_KEY = 'wine-web-public-mobile-view'
@@ -404,249 +296,10 @@ function loadLeafletGlobal(): Promise<LeafletGlobal> {
   })
 }
 
-const DICT: Record<Locale, Dictionary> = {
-  ca: {
-    appName: 'Els nostres vins',
-    title: 'Catàleg de vins',
-    subtitle: 'Selecció pública amb fitxes visuals, puntuació mitjana i reconeixements destacats.',
-    searchPlaceholder: 'Cerca per nom, celler o regió...',
-    filters: {
-      title: 'Filtres',
-      search: 'Cercar',
-      type: 'Tipus',
-      country: 'País',
-      region: 'Regió / D.O.',
-      grape: 'Varietat de raïm',
-      minScore: 'Puntuació mínima',
-      sort: 'Ordenació',
-      allTypes: 'Tots els tipus',
-      allCountries: 'Tots els països',
-      allRegions: 'Totes les regions',
-      anyScore: 'Qualsevol puntuació',
-      clear: 'Neteja filtres',
-    },
-    topbar: {
-      resultCount: 'vins',
-      dark: 'Fosc',
-      light: 'Clar',
-      language: 'Idioma',
-      menu: 'Menú',
-      navigation: 'Navegació',
-      winesCatalog: 'Catàleg de vins',
-      doMap: 'Mapa DO',
-      whoWeAre: 'Qui som',
-      backoffice: 'Àrea privada',
-      openFilters: 'Obre filtres',
-      closeFilters: 'Tanca filtres',
-    },
-    doMap: {
-      eyebrow: '',
-      title: 'Mapa DO',
-      subtitle: '',
-      tip: '',
-      listTitle: 'Denominacions destacades',
-      worldMapLabel: 'Mapa mundi de DO',
-      openCatalog: '',
-      filterCountry: 'País',
-      chooseDo: 'Seleccionar DO',
-      chooseCountryFirst: 'Primer selecciona un país.',
-      chooseDoPlaceholder: 'Escull una denominació',
-      closeSelector: 'Tancar selector',
-      allWorld: 'Tot el món',
-      fullscreenOpen: 'Obrir mapa a pantalla completa',
-      fullscreenClose: 'Tancar pantalla completa',
-    },
-    card: {
-      avgScore: 'Punt. mitjana',
-      priceFrom: 'Preu des de',
-      reward: 'Reconeixement',
-      noReward: 'Sense premi destacat',
-      region: 'Origen',
-      vintage: 'Anyada',
-      points: 'punts',
-      featured90: '+90 destacat',
-      viewDetails: 'Veure detall',
-      viewProfile: 'Veure perfil',
-    },
-    icons: {
-      filters: '⚗',
-      search: '⌕',
-      type: '◈',
-      country: '🌍',
-      region: '🗺',
-      grape: '🍇',
-      minScore: '★',
-      sort: '⇅',
-      results: '▦',
-      avgScore: '★',
-      rewards: '🏅',
-      winery: '🏛',
-      origin: '🧭',
-      vintage: '🗓',
-      price: '€',
-      reward: '🏆',
-      details: 'ℹ',
-      gallery: '🖼',
-      tasting: '🍷',
-      tags: '🏷',
-    },
-    sort: {
-      score_desc: 'Puntuació (major a menor)',
-      price_asc: 'Preu (menor a major)',
-      price_desc: 'Preu (major a menor)',
-      latest: 'Anyada més recent',
-      tasting_date_desc: 'Data de la cata (desc)',
-      tasting_date_asc: 'Data de la cata (asc)',
-    },
-    modal: {
-      close: 'Tanca',
-      gallery: 'Galeria',
-      details: 'Detall del vi',
-      winery: 'Celler',
-      origin: 'Origen',
-      style: 'Estil',
-      grapes: 'Varietats',
-      aging: 'Criança',
-      alcohol: 'Alcohol',
-      tastedAt: 'Data de tast',
-      month: 'Mes',
-      place: 'Lloc',
-      mariaScore: 'Valoració Maria',
-      adriaScore: 'Valoració Adrià',
-      tasting: 'Nota de tast',
-      tags: 'Etiquetes',
-      rewardNone: 'Sense premi destacat',
-    },
-    wineType: {
-      red: 'Negre',
-      white: 'Blanc',
-      rose: 'Rosat',
-      sparkling: 'Escumós',
-    },
-  },
-  es: {
-    appName: 'Els nostres vins',
-    title: 'Catálogo de vinos',
-    subtitle: 'Selección pública con fichas visuales, puntuación media y reconocimientos destacados.',
-    searchPlaceholder: 'Buscar por nombre, bodega o región...',
-    filters: {
-      title: 'Filtros',
-      search: 'Buscar',
-      type: 'Tipo',
-      country: 'País',
-      region: 'Región / D.O.',
-      grape: 'Variedad de uva',
-      minScore: 'Puntuación mínima',
-      sort: 'Ordenación',
-      allTypes: 'Todos los tipos',
-      allCountries: 'Todos los países',
-      allRegions: 'Todas las regiones',
-      anyScore: 'Cualquier puntuación',
-      clear: 'Limpiar filtros',
-    },
-    topbar: {
-      resultCount: 'vinos',
-      dark: 'Oscuro',
-      light: 'Claro',
-      language: 'Idioma',
-      menu: 'Menú',
-      navigation: 'Navegación',
-      winesCatalog: 'Catálogo de vinos',
-      doMap: 'Mapa DO',
-      whoWeAre: 'Quiénes somos',
-      backoffice: 'Área privada',
-      openFilters: 'Abrir filtros',
-      closeFilters: 'Cerrar filtros',
-    },
-    doMap: {
-      eyebrow: '',
-      title: 'Mapa DO',
-      subtitle: '',
-      tip: '',
-      listTitle: 'Denominaciones destacadas',
-      worldMapLabel: 'Mapa mundi de DO',
-      openCatalog: '',
-      filterCountry: 'País',
-      chooseDo: 'Seleccionar DO',
-      chooseCountryFirst: 'Primero selecciona un país.',
-      chooseDoPlaceholder: 'Elige una denominación',
-      closeSelector: 'Cerrar selector',
-      allWorld: 'Todo el mundo',
-      fullscreenOpen: 'Abrir mapa en pantalla completa',
-      fullscreenClose: 'Cerrar pantalla completa',
-    },
-    card: {
-      avgScore: 'Punt. media',
-      priceFrom: 'Precio desde',
-      reward: 'Reconocimiento',
-      noReward: 'Sin premio destacado',
-      region: 'Origen',
-      vintage: 'Añada',
-      points: 'puntos',
-      featured90: '+90 destacado',
-      viewDetails: 'Ver detalle',
-      viewProfile: 'Ver perfil',
-    },
-    icons: {
-      filters: '⚗',
-      search: '⌕',
-      type: '◈',
-      country: '🌍',
-      region: '🗺',
-      grape: '🍇',
-      minScore: '★',
-      sort: '⇅',
-      results: '▦',
-      avgScore: '★',
-      rewards: '🏅',
-      winery: '🏛',
-      origin: '🧭',
-      vintage: '🗓',
-      price: '€',
-      reward: '🏆',
-      details: 'ℹ',
-      gallery: '🖼',
-      tasting: '🍷',
-      tags: '🏷',
-    },
-    sort: {
-      score_desc: 'Puntuación (mayor a menor)',
-      price_asc: 'Precio (menor a mayor)',
-      price_desc: 'Precio (mayor a menor)',
-      latest: 'Añada más reciente',
-      tasting_date_desc: 'Fecha de la cata (desc)',
-      tasting_date_asc: 'Fecha de la cata (asc)',
-    },
-    modal: {
-      close: 'Cerrar',
-      gallery: 'Galería',
-      details: 'Detalle del vino',
-      winery: 'Bodega',
-      origin: 'Origen',
-      style: 'Estilo',
-      grapes: 'Variedades',
-      aging: 'Crianza',
-      alcohol: 'Alcohol',
-      tastedAt: 'Fecha de cata',
-      month: 'Mes',
-      place: 'Lugar',
-      mariaScore: 'Valoración Maria',
-      adriaScore: 'Valoración Adrià',
-      tasting: 'Nota de cata',
-      tags: 'Etiquetas',
-      rewardNone: 'Sin premio destacado',
-    },
-    wineType: {
-      red: 'Tinto',
-      white: 'Blanco',
-      rose: 'Rosado',
-      sparkling: 'Espumoso',
-    },
-  },
-}
-
 const DEFAULT_PUBLIC_WINE_IMAGE_LIGHT = '/images/photos/wines/no-photo.png'
 const DEFAULT_PUBLIC_WINE_IMAGE_DARK = '/images/photos/wines/no-photo-dark.png'
+const TEAM_TAT_PHOTO_SRC = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480"><defs><linearGradient id="bgTat" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f6eadf"/><stop offset="100%" stop-color="#ecd4c4"/></linearGradient></defs><rect width="640" height="480" fill="url(#bgTat)"/><circle cx="320" cy="196" r="108" fill="#f0cdb8"/><path d="M232 208c0-74 44-124 108-124s108 50 108 124v28h-18v128H210V236h22v-28Z" fill="#5d2c39"/><ellipse cx="320" cy="266" rx="64" ry="74" fill="#f3d8c8"/><circle cx="292" cy="252" r="7" fill="#3a2420"/><circle cx="348" cy="252" r="7" fill="#3a2420"/><path d="M292 300c8 12 20 18 28 18s20-6 28-18" fill="none" stroke="#a5505f" stroke-width="8" stroke-linecap="round"/><path d="M228 404c16-52 56-86 92-86 36 0 76 34 92 86" fill="#7f2f45"/><text x="320" y="448" font-family="Georgia,serif" font-size="34" text-anchor="middle" fill="#5d2c39">Tat Maria</text></svg>')}`
+const TEAM_ROSSET_PHOTO_SRC = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480"><defs><linearGradient id="bgRosset" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e8ecf2"/><stop offset="100%" stop-color="#d1dae9"/></linearGradient></defs><rect width="640" height="480" fill="url(#bgRosset)"/><circle cx="320" cy="196" r="108" fill="#edccb5"/><path d="M232 212c0-64 46-114 108-114s108 50 108 114v24h-26v128H218V236h14v-24Z" fill="#2f3546"/><ellipse cx="320" cy="268" rx="64" ry="74" fill="#f2d7c7"/><circle cx="292" cy="252" r="7" fill="#272220"/><circle cx="348" cy="252" r="7" fill="#272220"/><path d="M292 300c8 11 19 17 28 17s20-6 28-17" fill="none" stroke="#8c4a5b" stroke-width="8" stroke-linecap="round"/><path d="M228 404c16-52 56-86 92-86 36 0 76 34 92 86" fill="#485468"/><text x="320" y="448" font-family="Georgia,serif" font-size="34" text-anchor="middle" fill="#374458">Rosset Adria</text></svg>')}`
 
 function defaultPublicWineImageForTheme(isDark: boolean): string {
   return isDark ? DEFAULT_PUBLIC_WINE_IMAGE_DARK : DEFAULT_PUBLIC_WINE_IMAGE_LIGHT
@@ -798,20 +451,20 @@ function countryFlagPath(country: string): string | null {
 }
 
 function localizedCountryName(country: string, locale: Locale): string {
-  const map: Record<string, { ca: string; es: string }> = {
-    Spain: { ca: 'Espanya', es: 'España' },
-    France: { ca: 'França', es: 'Francia' },
-    Italy: { ca: 'Itàlia', es: 'Italia' },
-    Portugal: { ca: 'Portugal', es: 'Portugal' },
-    Germany: { ca: 'Alemanya', es: 'Alemania' },
-    Argentina: { ca: 'Argentina', es: 'Argentina' },
-    Chile: { ca: 'Xile', es: 'Chile' },
-    'United States': { ca: 'Estats Units', es: 'Estados Unidos' },
-    'South Africa': { ca: 'Sud-àfrica', es: 'Sudáfrica' },
-    Australia: { ca: 'Austràlia', es: 'Australia' },
+  const countries = messages[locale].common?.countries ?? {}
+  const map: Record<string, string> = {
+    Spain: countries.spain ?? 'Spain',
+    France: countries.france ?? 'France',
+    Italy: countries.italy ?? 'Italy',
+    Portugal: countries.portugal ?? 'Portugal',
+    Germany: countries.germany ?? 'Germany',
+    Argentina: countries.argentina ?? 'Argentina',
+    Chile: countries.chile ?? 'Chile',
+    'United States': countries.united_states ?? 'United States',
+    'South Africa': countries.south_africa ?? 'South Africa',
+    Australia: countries.australia ?? 'Australia',
   }
-
-  return map[country]?.[locale] ?? country
+  return map[country] ?? country
 }
 
 function spanishAutonomousCommunity(region: string): { name: string; slug: string } | null {
@@ -929,10 +582,11 @@ function countryCodeToLabel(value: WineListApiItem['country']): string {
 }
 
 function mapAgingTypeLabel(value: WineListApiItem['aging_type'], locale: Locale): string {
-  if (value === 'young') return locale === 'ca' ? 'Jove' : 'Joven'
-  if (value === 'crianza') return locale === 'ca' ? 'Criança' : 'Crianza'
-  if (value === 'reserve') return locale === 'ca' ? 'Reserva' : 'Reserva'
-  if (value === 'grand_reserve') return locale === 'ca' ? 'Gran reserva' : 'Gran reserva'
+  if (value == null) return 'n/d'
+  const label = messages[locale].common?.agingType?.[value]
+  if (typeof label === 'string' && label.trim() !== '') {
+    return label
+  }
   return 'n/d'
 }
 
@@ -996,7 +650,7 @@ function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale): WineC
     ? firstReviewCreatedAt
     : item.updated_at
   const tastingDate = new Date(tastingSourceDate)
-  const dateLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
+  const dateLocale = localeToIntl(locale)
   const tastedAt = Number.isNaN(tastingDate.getTime())
     ? '-'
     : new Intl.DateTimeFormat(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(tastingDate)
@@ -1058,7 +712,7 @@ function mergeWineCardWithDetails(card: WineCard, details: NonNullable<WineDetai
   const rewardMapping = mapPrimaryAwardToReward(Array.isArray(details.awards) ? details.awards[0] : undefined)
   const userScores = mapUserScoresFromDetailReviews(details.reviews)
   const tastedDate = lastPurchase?.purchased_at ? new Date(lastPurchase.purchased_at) : null
-  const dateLocale = locale === 'ca' ? 'ca-ES' : 'es-ES'
+  const dateLocale = localeToIntl(locale)
 
   return {
     ...card,
@@ -1102,7 +756,13 @@ function getInitialTheme(): ThemeMode {
 function getInitialLocale(): Locale {
   if (typeof window === 'undefined') return 'ca'
   const stored = window.localStorage.getItem(LOCALE_KEY)
-  return stored === 'es' || stored === 'ca' ? stored : 'ca'
+  return stored === 'es' || stored === 'ca' || stored === 'en' ? stored : 'ca'
+}
+
+function localeToIntl(locale: Locale): string {
+  if (locale === 'ca') return 'ca-ES'
+  if (locale === 'en') return 'en-US'
+  return 'es-ES'
 }
 
 function getCookieValue(name: string): string | null {
@@ -1183,6 +843,7 @@ export default function App() {
     ? (window.location.pathname.replace(/\/+$/, '') || '/')
     : '/'
   const isDoMapPage = currentPath === '/do-map'
+  const isAboutPage = currentPath === '/about'
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme)
   const [locale, setLocale] = useState<Locale>(getInitialLocale)
   const [search, setSearch] = useState(initialUrl.q)
@@ -1233,12 +894,15 @@ export default function App() {
     setSelected: (selected: boolean, zoomBoost: boolean) => void
   }>>([])
 
-  const t = DICT[locale]
+  const t = messages[locale]
   const isDark = theme === 'dark'
-  const isCatalogPage = !isDoMapPage
-  const galleryPhotoLabels = locale === 'ca'
-    ? ['Ampolla', 'Etiqueta frontal', 'Etiqueta posterior', 'Context']
-    : ['Botella', 'Etiqueta frontal', 'Etiqueta posterior', 'Contexto']
+  const isCatalogPage = !isDoMapPage && !isAboutPage
+  const galleryPhotoLabels = [
+    t.common.galleryPhotoLabels.bottle,
+    t.common.galleryPhotoLabels.front,
+    t.common.galleryPhotoLabels.back,
+    t.common.galleryPhotoLabels.context,
+  ]
   const logoSrc = isDark ? 'images/brand/logo-wordmark-dark.png' : 'images/brand/logo-wordmark-light.png'
   const adminHref = useMemo(() => {
     const host = window.location.hostname
@@ -1260,19 +924,18 @@ export default function App() {
   }, [locale])
 
   useEffect(() => {
-    const siteName = 'Vins Tat & Rosset'
-    const isCatalan = locale === 'ca'
+    const siteName = t.common.meta.siteName
     const sectionTitle = isDoMapPage
-      ? (isCatalan ? 'Mapa DO' : 'Mapa DO')
-      : (isCatalan ? 'Catàleg de vins' : 'Catálogo de vinos')
+      ? t.common.meta.sectionDoMap
+      : isAboutPage
+        ? t.common.meta.sectionAbout
+        : t.common.meta.sectionCatalog
     const description = isDoMapPage
-      ? (isCatalan
-        ? 'Mapa públic de denominacions d’origen i vins destacats.'
-        : 'Mapa público de denominaciones de origen y vinos destacados.')
-      : (isCatalan
-        ? 'Catàleg públic de vins amb fitxes, puntuacions i denominacions d’origen.'
-        : 'Catálogo público de vinos con fichas, puntuaciones y denominaciones de origen.')
-    const relativePath = isDoMapPage ? '/do-map' : '/'
+      ? t.common.meta.descriptionDoMap
+      : isAboutPage
+        ? t.common.meta.descriptionAbout
+        : t.common.meta.descriptionCatalog
+    const relativePath = isDoMapPage ? '/do-map' : isAboutPage ? '/about' : '/'
     const canonical = `${window.location.origin}${relativePath}`
 
     document.title = `${siteName} | ${sectionTitle}`
@@ -1281,10 +944,10 @@ export default function App() {
     upsertMetaTag('property', 'og:title', `${siteName} | ${sectionTitle}`)
     upsertMetaTag('property', 'og:description', description)
     upsertMetaTag('property', 'og:url', canonical)
-    upsertMetaTag('property', 'og:locale', isCatalan ? 'ca_ES' : 'es_ES')
+    upsertMetaTag('property', 'og:locale', locale === 'ca' ? 'ca_ES' : locale === 'en' ? 'en_US' : 'es_ES')
     upsertMetaTag('name', 'twitter:title', `${siteName} | ${sectionTitle}`)
     upsertMetaTag('name', 'twitter:description', description)
-  }, [isDoMapPage, locale])
+  }, [isAboutPage, isDoMapPage, locale, t.common.meta])
 
   useEffect(() => {
     if (mobileViewMode === 'card') {
@@ -1636,6 +1299,32 @@ export default function App() {
     const details = wineDetailsById[selectedWineId]
     return details ? mergeWineCardWithDetails(baseWine, details, locale) : baseWine
   }, [selectedWineId, wines, wineDetailsById, locale])
+  const aboutStats = useMemo(() => {
+    const mariaValues = wines.filter((wine) => wine.mariaScore != null).map((wine) => wine.mariaScore as number)
+    const rossetValues = wines.filter((wine) => wine.adriaScore != null).map((wine) => wine.adriaScore as number)
+    const bothValues = wines
+      .filter((wine) => wine.mariaScore != null && wine.adriaScore != null)
+      .map((wine) => Math.abs((wine.mariaScore as number) - (wine.adriaScore as number)))
+
+    const tatAverage = mariaValues.length > 0
+      ? mariaValues.reduce((sum, value) => sum + value, 0) / mariaValues.length
+      : 0
+    const rossetAverage = rossetValues.length > 0
+      ? rossetValues.reduce((sum, value) => sum + value, 0) / rossetValues.length
+      : 0
+    const avgDifference = bothValues.length > 0
+      ? bothValues.reduce((sum, value) => sum + value, 0) / bothValues.length
+      : 0
+    const syncIndex = Math.max(0, Math.min(100, 100 - (avgDifference * 10)))
+
+    return {
+      totalWines: wines.length,
+      totalReviews: mariaValues.length + rossetValues.length,
+      tatAverage,
+      rossetAverage,
+      syncIndex,
+    }
+  }, [wines])
   const doMapPoints = useMemo<DoMapPoint[]>(
     () => doOptions
       .filter((item) => item.map_data && Number.isFinite(item.map_data.lat) && Number.isFinite(item.map_data.lng))
@@ -1819,7 +1508,7 @@ export default function App() {
         setDoMapZoomLevel(leafletMap.getZoom())
       })
 
-      const tileLanguage = locale === 'ca' ? 'ca' : 'es'
+      const tileLanguage = locale === 'ca' ? 'ca' : locale === 'en' ? 'en' : 'es'
       const primaryTileUrl = `https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png?lang=${tileLanguage}`
       const fallbackTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
       const tileLayerOptions = {
@@ -1984,7 +1673,7 @@ export default function App() {
   }, [search, typeFilter, countryFilter, regionFilter, grapeFilter, minScoreFilter, sortKey, selectedWineId])
 
   const euro = useMemo(
-    () => new Intl.NumberFormat(locale === 'ca' ? 'ca-ES' : 'es-ES', { style: 'currency', currency: 'EUR' }),
+    () => new Intl.NumberFormat(localeToIntl(locale), { style: 'currency', currency: 'EUR' }),
     [locale],
   )
 
@@ -2145,7 +1834,7 @@ export default function App() {
                 className="do-combobox-search"
                 value={doSearchText}
                 onChange={(event) => setDoSearchText(event.target.value)}
-                placeholder={locale === 'ca' ? 'Filtrar D.O.' : 'Filtrar D.O.'}
+                placeholder={t.filters.doSearchPlaceholder}
               />
               <button
                 type="button"
@@ -2189,7 +1878,7 @@ export default function App() {
         <select value={grapeFilter} onChange={(event) => setGrapeFilter(event.target.value)}>
           {grapeOptions.map((grape) => (
             <option key={grape} value={grape}>
-              {grape === 'all' ? (locale === 'ca' ? 'Totes les varietats' : 'Todas las variedades') : grape}
+              {grape === 'all' ? t.filters.allGrapes : grape}
             </option>
           ))}
         </select>
@@ -2244,7 +1933,7 @@ export default function App() {
     : localizedCountryName(doMapCountryFilter, locale)
   const selectedMapCountryCompactLabel = useMemo(() => {
     if (doMapCountryFilter === DO_MAP_ALL_WORLD_VALUE) {
-      return locale === 'ca' ? 'Món' : 'Mundo'
+      return t.doMap.allWorldShort
     }
     if (doMapCountryFilter === 'United States') {
       return 'USA'
@@ -2270,7 +1959,7 @@ export default function App() {
     <nav className="topbar-nav" aria-label={t.topbar.navigation}>
       <a className={`topbar-nav-link${isCatalogPage ? ' active' : ''}`} href="/">{t.topbar.winesCatalog}</a>
       <a className={`topbar-nav-link${isDoMapPage ? ' active' : ''}`} href="/do-map">{t.topbar.doMap}</a>
-      <a className="topbar-nav-link" href="/#about">{t.topbar.whoWeAre}</a>
+      <a className={`topbar-nav-link${isAboutPage ? ' active' : ''}`} href="/about">{t.topbar.whoWeAre}</a>
       <a
         className="topbar-nav-link topbar-nav-link-admin"
         href={adminHref}
@@ -2291,7 +1980,7 @@ export default function App() {
         <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
           <div className="brand-block">
             <div className="brand-copy">
-              <img src={logoSrc} className="brand-wordmark" alt="Vins Tat & Rosset" />
+              <img src={logoSrc} className="brand-wordmark" alt={t.common.brandAlt} />
               <p>{t.appName}</p>
             </div>
           </div>
@@ -2311,8 +2000,9 @@ export default function App() {
             <label className="select-wrap">
               <span className="sr-only">{t.topbar.language}</span>
               <select value={locale} onChange={(event) => setLocale(event.target.value as Locale)} aria-label={t.topbar.language}>
-                <option value="ca">CA</option>
-                <option value="es">ES</option>
+                {Object.entries(localeLabels).map(([localeCode, label]) => (
+                  <option key={localeCode} value={localeCode}>{label}</option>
+                ))}
               </select>
             </label>
 
@@ -2337,7 +2027,7 @@ export default function App() {
             </div>
             <a href="/" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
             <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.doMap}</a>
-            <a href="/#about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
+            <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
             <a
               href={adminHref}
               onClick={() => {
@@ -2435,7 +2125,7 @@ export default function App() {
                     onClick={() => setIsDoMapMobileDoPickerOpen(true)}
                     disabled={doMapVisiblePoints.length === 0}
                   >
-                    <span>DO</span>
+                    <span>{t.common.doShort}</span>
                   </button>
                 ) : null}
               </div>
@@ -2463,9 +2153,7 @@ export default function App() {
               ) : null}
               {doMapInitError ? (
                 <p className="do-map-error">
-                  {locale === 'ca'
-                    ? 'No s ha pogut carregar el mapa. Recarrega la pàgina.'
-                    : 'No se ha podido cargar el mapa. Recarga la página.'}
+                  {t.doMap.loadError}
                 </p>
               ) : null}
             </div>
@@ -2516,9 +2204,7 @@ export default function App() {
                   ))}
                   {doMapVisiblePoints.length === 0 ? (
                   <p className="do-map-empty">
-                    {locale === 'ca'
-                      ? 'No hi ha DO amb coordenades disponibles.'
-                      : 'No hay DO con coordenadas disponibles.'}
+                    {t.doMap.noCoordinates}
                   </p>
                   ) : null}
                 </div>
@@ -2580,6 +2266,132 @@ export default function App() {
     )
   }
 
+  if (isAboutPage) {
+    return (
+      <main className="public-shell">
+        <div className="public-background" aria-hidden="true" />
+
+        <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
+          <div className="brand-block">
+            <div className="brand-copy">
+              <img src={logoSrc} className="brand-wordmark" alt={t.common.brandAlt} />
+              <p>{t.appName}</p>
+            </div>
+          </div>
+          {desktopNav}
+
+          <div className="topbar-actions">
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
+              aria-label={isDark ? t.topbar.light : t.topbar.dark}
+            >
+              <span aria-hidden="true">{isDark ? '☾' : '☀'}</span>
+              <span>{isDark ? t.topbar.dark : t.topbar.light}</span>
+            </button>
+
+            <label className="select-wrap">
+              <span className="sr-only">{t.topbar.language}</span>
+              <select value={locale} onChange={(event) => setLocale(event.target.value as Locale)} aria-label={t.topbar.language}>
+                {Object.entries(localeLabels).map(([localeCode, label]) => (
+                  <option key={localeCode} value={localeCode}>{label}</option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              type="button"
+              className={`mobile-header-icon-button${isMobileMenuOpen ? ' active' : ''}`}
+              aria-label={t.topbar.menu}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-nav-menu"
+              onClick={() => setIsMobileMenuOpen((open) => !open)}
+            >
+              <span aria-hidden="true">☰</span>
+            </button>
+          </div>
+
+          <nav id="mobile-nav-menu" className={`mobile-nav-menu${isMobileMenuOpen ? ' open' : ''}`} aria-label={t.topbar.navigation}>
+            <div className="mobile-nav-menu-head">
+              <span>{t.topbar.navigation}</span>
+              <button type="button" className="mobile-nav-menu-close" onClick={() => setIsMobileMenuOpen(false)} aria-label={t.modal.close}>
+                <span aria-hidden="true">✕</span>
+              </button>
+            </div>
+            <a href="/" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
+            <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.doMap}</a>
+            <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
+            <a
+              href={adminHref}
+              onClick={() => {
+                window.localStorage.setItem('wine-app-theme-mode', theme)
+                setIsMobileMenuOpen(false)
+              }}
+            >
+              {t.topbar.backoffice}
+            </a>
+          </nav>
+        </header>
+
+        {isMobileMenuOpen ? (
+          <button
+            type="button"
+            className="mobile-nav-backdrop"
+            aria-label={t.topbar.closeFilters}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        ) : null}
+
+        <section className="hero-panel about-hero-panel" id="about">
+          <div>
+            <p className="eyebrow">{t.about.eyebrow}</p>
+            <h1>{t.about.title}</h1>
+            <p className="hero-subtitle about-hero-subtitle">{t.about.intro}</p>
+          </div>
+        </section>
+
+        <section className="about-team-grid" aria-label={t.about.membersAria}>
+          <article className="cards-panel about-member-card">
+            <img src={TEAM_TAT_PHOTO_SRC} alt={t.about.members.tat.photoAlt} className="about-member-photo" loading="lazy" />
+            <h2>{t.about.members.tat.fullName}</h2>
+            <p className="about-member-role">{t.about.members.tat.role}</p>
+            <p>{t.about.members.tat.bio}</p>
+          </article>
+          <article className="cards-panel about-member-card">
+            <img src={TEAM_ROSSET_PHOTO_SRC} alt={t.about.members.rosset.photoAlt} className="about-member-photo" loading="lazy" />
+            <h2>{t.about.members.rosset.fullName}</h2>
+            <p className="about-member-role">{t.about.members.rosset.role}</p>
+            <p>{t.about.members.rosset.bio}</p>
+          </article>
+        </section>
+
+        <section className="about-stats-grid" aria-label={t.about.statsAria}>
+          <article className="cards-panel about-stat-card">
+            <span>{t.about.stats.totalWines}</span>
+            <strong>{aboutStats.totalWines}</strong>
+          </article>
+          <article className="cards-panel about-stat-card">
+            <span>{t.about.stats.totalReviews}</span>
+            <strong>{aboutStats.totalReviews}</strong>
+          </article>
+          <article className="cards-panel about-stat-card">
+            <span>{t.about.stats.tatAverage}</span>
+            <strong>{aboutStats.tatAverage.toFixed(2)}</strong>
+          </article>
+          <article className="cards-panel about-stat-card">
+            <span>{t.about.stats.rossetAverage}</span>
+            <strong>{aboutStats.rossetAverage.toFixed(2)}</strong>
+          </article>
+          <article className="cards-panel about-stat-card about-stat-card-accent">
+            <span>{t.about.stats.syncIndex}</span>
+            <strong>{aboutStats.syncIndex.toFixed(1)}%</strong>
+          </article>
+        </section>
+      </main>
+    )
+  }
+
   return (
     <main className="public-shell">
       <div className="public-background" aria-hidden="true" />
@@ -2587,7 +2399,7 @@ export default function App() {
       <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
         <div className="brand-block">
           <div className="brand-copy">
-            <img src={logoSrc} className="brand-wordmark" alt="Vins Tat & Rosset" />
+            <img src={logoSrc} className="brand-wordmark" alt={t.common.brandAlt} />
             <p>{t.appName}</p>
           </div>
         </div>
@@ -2607,8 +2419,9 @@ export default function App() {
           <label className="select-wrap">
             <span className="sr-only">{t.topbar.language}</span>
             <select value={locale} onChange={(event) => setLocale(event.target.value as Locale)} aria-label={t.topbar.language}>
-              <option value="ca">CA</option>
-              <option value="es">ES</option>
+              {Object.entries(localeLabels).map(([localeCode, label]) => (
+                <option key={localeCode} value={localeCode}>{label}</option>
+              ))}
             </select>
           </label>
 
@@ -2633,7 +2446,7 @@ export default function App() {
           </div>
           <a href="/" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
           <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.doMap}</a>
-          <a href="/#about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
+          <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
           <a
             href={adminHref}
             onClick={() => {
@@ -2657,8 +2470,8 @@ export default function App() {
 
       <section className="hero-panel" id="catalog">
         <div>
-          <p className="eyebrow">ELS NOSTRES VINS</p>
-          <h1>Catàleg de vins</h1>
+          <p className="eyebrow">{t.common.catalogEyebrow}</p>
+          <h1>{t.title}</h1>
         </div>
         <section className="mobile-filter-dropdown" aria-label={t.filters.title}>
         <div className="mobile-filter-bar">
@@ -2667,11 +2480,11 @@ export default function App() {
             className={`mobile-view-trigger${mobileViewMode === 'card' ? ' active' : ''}`}
             onClick={() => setMobileViewMode((mode) => (mode === 'card' ? 'list' : 'card'))}
             aria-label={mobileViewMode === 'card'
-              ? (locale === 'ca' ? 'Canvia a vista de llista' : 'Cambiar a vista de lista')
-              : (locale === 'ca' ? 'Canvia a vista de targetes' : 'Cambiar a vista de tarjetas')}
+              ? t.topbar.switchToList
+              : t.topbar.switchToCards}
             title={mobileViewMode === 'card'
-              ? (locale === 'ca' ? 'Vista llista' : 'Vista lista')
-              : (locale === 'ca' ? 'Vista targetes' : 'Vista tarjetas')}
+              ? t.topbar.listView
+              : t.topbar.cardView}
           >
             <span aria-hidden="true">◫</span>
           </button>
@@ -2750,10 +2563,10 @@ export default function App() {
         ) : null}
 
         {!isMobileFiltersOpen && activeMobileFilters.length > 0 ? (
-          <div className="mobile-filter-active-bar" aria-label="Active filters">
+          <div className="mobile-filter-active-bar" aria-label={t.filters.activeFiltersAria}>
             <div className="mobile-filter-active-bar-head">
               <span className="mobile-filter-active-bar-title">
-                {t.filters.title} {locale === 'ca' ? 'actius' : 'activos'}
+                {t.filters.title} {t.filters.activeSuffix}
               </span>
               <button type="button" className="mobile-filter-active-clear" onClick={resetFilters}>
                 {t.filters.clear}
@@ -2893,7 +2706,7 @@ export default function App() {
                     </div>
 
                     <section className="wine-card-info-section" aria-label="Informacio del vi">
-                      <p className="wine-card-info-title">INFORMACIO DEL VI</p>
+                      <p className="wine-card-info-title">{t.common.wineInfoTitle}</p>
                       <dl className="wine-card-meta">
                       <div className="wine-card-meta-box-do">
                         <dt>{t.icons.region} DO</dt>
@@ -2957,12 +2770,12 @@ export default function App() {
                        {/* </div>
                                       <div className="wine-card-mobile-main-right">
                           <span className='title'>{wine.avgScore.toFixed(1)}</span>
-                          <span>M: {wine.mariaScore != null ? wine.mariaScore.toFixed(1) : 'n/d'}</span>
-                          <span>A: {wine.adriaScore != null ? wine.adriaScore.toFixed(1) : 'n/d'}</span>
+                          <span>M: {wine.mariaScore != null ? wine.mariaScore.toFixed(1) : t.common.notAvailableShort}</span>
+                          <span>A: {wine.adriaScore != null ? wine.adriaScore.toFixed(1) : t.common.notAvailableShort}</span>
                         </div> */}
 
                       <div className="wine-card-mobile-do-row">
-                        <p className="wine-card-mobile-do-text">DO <span className='title'>{wine.region}</span> </p>
+                        <p className="wine-card-mobile-do-text">{t.common.doShort} <span className="title">{wine.region}</span> </p>
 
                         <p className="wine-card-mobile-do-logos">
                           {communityFlagImage && communityName ? (
@@ -3013,7 +2826,7 @@ export default function App() {
                         <p className="wine-card-mobile-list-name">{wine.name}</p>
                         <p className="wine-card-mobile-list-subline">{wine.vintage} • {t.wineType[wine.type]}</p>
                         <p className="wine-card-mobile-list-do-row">
-                          <span className="wine-card-mobile-list-do-title">DO</span>
+                          <span className="wine-card-mobile-list-do-title">{t.common.doShort}</span>
                           {wine.doLogoImage ? (
                             <img className="do-logo-badge" src={wine.doLogoImage} alt={`${wine.region} DO`} loading="lazy" />
                           ) : null}
@@ -3021,7 +2834,7 @@ export default function App() {
                         <p className="wine-card-mobile-list-do-name">{wine.region}</p>
                         {wine.country !== 'Spain' ? (
                           <p className="wine-card-mobile-list-origin-row">
-                            <span className="wine-card-mobile-list-origin-label">{locale === 'ca' ? 'Fabricació' : 'Fabricación'}</span>
+                            <span className="wine-card-mobile-list-origin-label">{t.card.manufacturing}</span>
                             <span className="wine-card-mobile-list-country">
                               {countryFlagImage
                                 ? <img className="flag-badge-image wine-card-mobile-list-country-flag" src={countryFlagImage} alt={localizedCountryName(wine.country, locale)} loading="lazy" />
@@ -3034,7 +2847,7 @@ export default function App() {
 
                       <div className="wine-card-mobile-list-grapes-col" aria-label={t.filters.grape}>
                         <p className="wine-card-mobile-list-grapes-title">
-                          {locale === 'ca' ? 'varietats de vi' : 'variedades de vino'}
+                          {t.card.grapeVarieties}
                         </p>
                         <div className="wine-card-mobile-list-grapes-list">
                           {splitGrapeVarieties(wine.grapes).map((grape) => (
@@ -3064,7 +2877,7 @@ export default function App() {
                     </section>
 
                     <section className="wine-card-review-section" aria-label="review summary">
-                      <p className="wine-card-review-title">Valoració</p>
+                      <p className="wine-card-review-title">{t.modal.tasting}</p>
                       <div className="wine-card-review-block">
                         <article className="wine-card-mini-box wine-card-mini-maria">
                           <span className="mini-label">👩 {t.modal.mariaScore}</span>
@@ -3091,8 +2904,6 @@ export default function App() {
           </div>
         </section>
       </section>
-
-      <section className="mobile-about-anchor" id="about" aria-hidden="true" />
 
       {selectedWine ? (
         <div className="public-modal-backdrop" role="presentation" onClick={() => setSelectedWineId(null)}>

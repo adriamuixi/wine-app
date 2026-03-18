@@ -1,0 +1,18 @@
+modal:
+  close: Cerrar
+  gallery: Galería
+  details: Detalle del vino
+  winery: Bodega
+  origin: Origen
+  style: Estilo
+  grapes: Variedades
+  aging: Crianza
+  alcohol: Alcohol
+  tastedAt: Fecha de cata
+  month: Mes
+  place: Lugar
+  mariaScore: Valoración Maria
+  adriaScore: Valoración Adrià
+  tasting: Nota de cata
+  tags: Etiquetas
+  rewardNone: Sin premio destacado

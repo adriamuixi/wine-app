@@ -1,0 +1,21 @@
+login:
+  eyebrow: Bodega Privada
+  title: Backoffice de Vinos
+  promo: Gestiona etiquetas, notas de cata y tus reseñas personales desde un único
+    lugar. Preparado para móvil y escritorio.
+  bullets:
+  - Cataloga vinos por región y estilo
+  - Sigue tu historial de catas y reseñas
+  - Prepara un flujo de administración limpio
+  panelTitle: Entrar en /admin
+  email: Email
+  password: Contraseña
+  submit: Entrar al Backoffice
+  requiredError: Email y contraseña son obligatorios.
+  demoTitle: Demo
+  demoDescription: Usa cualquier email/contraseña para entrar al dashboard.
+ui:
+  credentials_invalid: Credenciales inválidas.
+  not_could_start_session: No se pudo iniciar sesión.
+  checking_session: Comprobando sesión...
+  signing_in: Entrando...

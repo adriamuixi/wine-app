@@ -1,0 +1,7 @@
+sort:
+  score_desc: Puntuación (mayor a menor)
+  price_asc: Precio (menor a mayor)
+  price_desc: Precio (mayor a menor)
+  latest: Añada más reciente
+  tasting_date_desc: Fecha de la cata (desc)
+  tasting_date_asc: Fecha de la cata (asc)

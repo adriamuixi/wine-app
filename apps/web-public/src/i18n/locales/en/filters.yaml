@@ -1,0 +1,18 @@
+filters:
+  title: Filters
+  search: Search
+  type: Type
+  country: Country
+  region: Region / D.O.
+  grape: Grape variety
+  minScore: Minimum score
+  sort: Sort
+  allTypes: All types
+  allCountries: All countries
+  allRegions: All regions
+  anyScore: Any score
+  clear: Clear filters
+  doSearchPlaceholder: Filter D.O.
+  allGrapes: All varieties
+  activeSuffix: active
+  activeFiltersAria: Active filters

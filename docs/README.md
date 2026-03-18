@@ -9,6 +9,7 @@ Repository-specific guidance for architecture, workflow, and domain integrity.
 - `docs/BACKEND_FEATURE_WORKFLOW.md`: implementation workflow for backend features.
 - `docs/DOMAIN_RULES_CHECKLIST.md`: domain invariants and review checklist.
 - `docs/FRONTEND_API_GUIDELINES.md`: frontend integration conventions.
+- `docs/FRONTEND_LOCALE_GUIDE.md`: locale structure and translation workflow for frontend apps.
 - `docs/SEO_BEST_PRACTICES.md`: SEO checklist and guardrails for public/private webs.
 - `docs/REPOSITORY_REVIEW.md`: repository status and priorities.
 - `docs/api/openapi.yaml`: API source of truth.

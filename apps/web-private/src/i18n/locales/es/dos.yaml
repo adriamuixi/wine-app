@@ -1,0 +1,39 @@
+dos:
+  title: Denominaciones de Origen
+  list:
+    eyebrow: Catálogo DO
+    title: Listado de denominaciones de origen
+    results: elementos
+    createAction: Crear DO
+  create:
+    eyebrow: Denominaciones de origen
+    title: Crear nueva denominación de origen
+    submit: Guardar DO
+ui:
+  country_region_name: País, región, nombre
+  name_country_region: Nombre, país, región
+  region_name_country: Región, nombre, país
+  name_region_country_and_code_country_2_characters_are_required: Nombre, región,
+    país y código de país (2 caracteres) son obligatorios.
+  not_received_id_do_created_for_upload_logo: No se recibió el ID de la DO creada
+    para subir el logo.
+  not_could_create_do: No se pudo crear la DO.
+  not_could_update_do: No se pudo actualizar la DO.
+  not_could_delete_do: No se pudo eliminar la DO.
+  not_could_identify_do: No se pudo identificar la DO.
+  creating_do: Creando…
+  logo_do: Logo DO
+  image_main: IMAGEN PRINCIPAL
+  free_crop_zoom: Recorte libre + zoom
+  edit_logo_do: Editar logo DO
+  delete_logo_do: Eliminar logo DO
+  without_logo_assigned: Sin logo asignado
+  edit_do: EDITAR DO
+  do_logo_section: LOGO DO
+  logo_region: LOGO REGIÓN
+  image_territorial: Imagen territorial
+  delete_do: ELIMINAR DO
+  this_accion_eliminara_do_yes_not_has_wines_linked_want_continuar: Esta acción eliminará
+    la DO si no tiene vinos asociados. ¿Quieres continuar?
+  logo_do_choose_ratio_arrastra_and_pellizca_for_adjust: Logo DO · elige relación,
+    arrastra y pellizca para ajustar

@@ -1,0 +1,50 @@
+admin:
+  title: Admin Tools
+  shortcuts:
+    eyebrow: Admin Tools
+    title: Operational shortcuts
+    items:
+    - title: Import wines by CSV
+      description: Upload CSV to bulk create wines
+      action: Start
+    - title: Import reviews by CSV
+      description: Upload CSV to bulk load reviews
+      action: Start
+    - title: Label audit
+      description: Detect inconsistent labels
+      action: Run
+  account:
+    eyebrow: User
+    title: My account summary
+    labels:
+      name: Name
+      email: Email
+      myReviews: My reviews
+      averageScore: Average review score
+      lastReview: Last review
+      highestScore: Highest score
+      lowestScore: Lowest score
+ui:
+  name_and_surname_are_required: Name and surname are required
+  not_could_update_profile: Could not update profile
+  settings_backoffice: Settings backoffice
+  surname: Surname
+  new_password: New password
+  leave_empty_for_keep_it: Leave empty for keep it
+  save_profile: Save profile
+  language: Language
+  light: Light
+  dark: Dark
+  added_recently: Added recently
+  price_most_low_first: Price most low first
+  screen_home_by_default: Screen home by default
+  experience: Experience
+  preferencias_extra: Preferencias extra
+  filter_espana_by_default: Filter espana by default
+  aplica_filter_country_espana_open_searcher: Aplica filter country espana open searcher
+  active: Active
+  inactive: Inactive
+  cards_compact: Cards compact
+  mode_with_less_space_vertical_for_lists: Mode with less space vertical for lists
+  upcoming_ideas: Upcoming ideas
+  soon: Soon

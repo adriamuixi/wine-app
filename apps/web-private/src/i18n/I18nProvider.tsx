@@ -18,7 +18,7 @@ const STORAGE_KEY = 'wine-web-private-locale'
 const I18nContext = createContext<I18nContextValue | null>(null)
 
 function isLocale(value: string): value is Locale {
-  return value === 'es' || value === 'ca'
+  return value === 'es' || value === 'ca' || value === 'en'
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {

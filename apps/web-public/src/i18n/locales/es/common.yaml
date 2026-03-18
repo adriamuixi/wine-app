@@ -1,0 +1,42 @@
+common:
+  appName: Els nostres vins
+  title: Els nostres vins
+  subtitle: Selección pública con fichas visuales, puntuación media y reconocimientos
+    destacados.
+  searchPlaceholder: Buscar por nombre, bodega o región...
+  countries:
+    spain: España
+    france: Francia
+    italy: Italia
+    portugal: Portugal
+    germany: Alemania
+    argentina: Argentina
+    chile: Chile
+    united_states: Estados Unidos
+    south_africa: Sudáfrica
+    australia: Australia
+  agingType:
+    young: Joven
+    crianza: Crianza
+    reserve: Reserva
+    grand_reserve: Gran reserva
+  galleryPhotoLabels:
+    bottle: Botella
+    front: Etiqueta frontal
+    back: Etiqueta posterior
+    context: Contexto
+  catalogEyebrow: ELS NOSTRES VINS
+  meta:
+    siteName: Vins Tat & Rosset
+    sectionDoMap: Mapa DO
+    sectionAbout: Quiénes somos
+    sectionCatalog: Els nostres vins
+    descriptionDoMap: Mapa público de denominaciones de origen y vinos destacados.
+    descriptionAbout: Conoce a Tat (Maria) y Rosset (Adrià), el dúo detrás de Els
+      nostres vins.
+    descriptionCatalog: Catálogo público de vinos con fichas, puntuaciones y denominaciones
+      de origen.
+  doShort: DO
+  wineInfoTitle: INFORMACIÓN DEL VINO
+  notAvailableShort: n/d
+  brandAlt: Vins Tat & Rosset

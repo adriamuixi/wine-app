@@ -1,0 +1,50 @@
+wineProfile:
+  pageTitle: Perfil del vi
+  backToDashboard: Torna al Dashboard
+  photosEyebrow: Fotos
+  photoRecordPreview: Vista prèvia PhotoRecord
+  filesSuffix: fitxers
+  summaryEyebrow: Resum
+  operationalProfile: Perfil operatiu
+  filtersAria: Obre dashboard amb filtres
+  filterWine: Vi
+  filterType: Tipus
+  filterCountry: País
+  filterRegion: Regió
+  statAvgScore: Punt. mitjana
+  statPricePaid: Preu pagat
+  statVintage: Anyada
+  pairingEyebrow: Maridatge
+  galleryEyebrow: Fotos del vi
+  closeGallery: Tanca
+  closeGalleryAria: Tanca visor d’imatges
+  imageViewsAria: Vistes d’imatges del vi
+  imageExampleCaption: Imatge d’exemple. En el futur, les fotos estaran associades
+    a cada vi (p. ex. `example_wine-hash.png`).
+  imageLabels:
+    bottle: Ampolla
+    front: Etiqueta frontal
+    back: Etiqueta posterior
+    situation: Situació
+  photoActions:
+    edit: Editar foto
+    delete: Eliminar foto
+ui:
+  not_could_load_sheet_wine: No s’ha pogut carregar la fitxa del vi.
+  profile_updated_successfully: Perfil actualitzat correctament.
+  preparing_sheet_wine: Preparant fitxa del vi…
+  not_could_load_sheet: No s’ha pogut carregar la fitxa
+  without_varieties_listed: Sense varietats informades.
+  sheet_technical: FITXA TÈCNICA
+  identity_wine_information: Identitat del vi + Informació
+  updated: Actualitzat
+  close: Tancar
+  uploading_image: Pujant imatge…
+  increase_zoom: Augmentar zoom
+  format_libre_without_crop_required: Format lliure (sense retall obligatori)
+  arrastra_for_move_and_pellizca_for_zoom: Arrossega per moure i fes pinça per zoom
+  select_ratio_crop: Seleccionar relació de retall
+  offset_x: Desplaçament X
+  offset_and: Desplaçament Y
+  saving_photo: Guardant…
+  close_gallery: Tancar galeria

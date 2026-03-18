@@ -1,0 +1,22 @@
+topbar:
+  overview: Resumen
+  wines: Herramientas de vinos
+  dos: Denominaciones de origen
+  doCreate: Crear DO
+  wineCreate: Crear vino
+  wineEdit: Editar vino
+  reviews: Mis reseñas
+  reviewCreate: Crear reseña
+  reviewEdit: Editar reseña
+  admin: Herramientas Admin
+  apiDoc: Documentación API
+  settings: Configuración
+  welcome: Bienvenido
+  signedInAs: Sesión iniciada como
+  shellReady: Este shell está listo para módulos de dashboard.
+  authCardTitle: Autenticación
+  authCardDesc: Bootstrap de sesión con /api/auth/me (en la versión real).
+  nextStepTitle: Siguiente paso
+  nextStepDesc: Añadir rutas y módulos de vinos, reseñas y administración.
+  mobileReadyTitle: Preparado para móvil
+  mobileReadyDesc: El layout es responsive para móvil y tablet.

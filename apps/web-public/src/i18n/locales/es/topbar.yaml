@@ -1,0 +1,17 @@
+topbar:
+  resultCount: vinos
+  dark: Oscuro
+  light: Claro
+  language: Idioma
+  menu: Menú
+  navigation: Navegación
+  winesCatalog: Els nostres vins
+  doMap: Mapa DO
+  whoWeAre: Quiénes somos
+  backoffice: Área privada
+  openFilters: Abrir filtros
+  closeFilters: Cerrar filtros
+  switchToList: Cambiar a vista de lista
+  switchToCards: Cambiar a vista de tarjetas
+  listView: Vista lista
+  cardView: Vista tarjetas

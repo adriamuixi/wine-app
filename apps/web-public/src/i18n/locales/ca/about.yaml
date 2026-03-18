@@ -1,0 +1,26 @@
+about:
+  eyebrow: QUI SOM
+  title: Tat (Maria) i Rosset (Adrià)
+  intro: Som un duet vinícola que combina sensibilitat de tast i lectura de dades
+    per construir un catàleg viu, honest i compartit.
+  membersAria: Membres de Tat i Rosset
+  statsAria: Estadístiques de Tat i Rosset
+  members:
+    tat:
+      fullName: Tat · Maria
+      role: Curadoria de tast i selecció
+      bio: Maria posa el focus en l’equilibri aromàtic, la textura i la persistència
+        per triar vins amb personalitat.
+      photoAlt: Foto de Tat Maria
+    rosset:
+      fullName: Rosset · Adrià
+      role: Anàlisi de puntuacions i tendències
+      bio: Adrià transforma cada tast en dades útils per detectar patrons de qualitat,
+        anyada i valor.
+      photoAlt: Foto de Rosset Adrià
+  stats:
+    totalWines: Vins al catàleg
+    totalReviews: Ressenyes totals
+    tatAverage: Mitjana Tat
+    rossetAverage: Mitjana Rosset
+    syncIndex: Índex de sintonia

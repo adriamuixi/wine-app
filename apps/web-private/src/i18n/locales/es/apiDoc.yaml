@@ -1,0 +1,7 @@
+apiDoc:
+  eyebrow: API
+  title: Guía de API (Markdown)
+  description: Contenido cargado desde `/guide.md` del backend.
+  loading: Cargando guía de API...
+  error: No se pudo cargar la guía de API.
+  refresh: Recargar

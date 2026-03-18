@@ -1,0 +1,69 @@
+reviews:
+  title: Les meves ressenyes
+  create:
+    eyebrow: Ressenyes
+    title: Crear la meva ressenya
+    badge: Només meves
+    wine: Vi
+    selectWine: Selecciona un vi
+    score: Puntuació
+    body: Cos
+    appearance: Aspecte
+    palateEntry: Entrada en boca
+    notes: Notes
+    notesPlaceholder: Descriu aromes, estructura i final...
+    submit: Crear ressenya
+  edit:
+    eyebrow: Ressenyes
+    title: Editar les meves ressenyes
+    countSuffix: elements
+    editAction: Editar ressenya
+    viewWineAction: Veure vi
+ui:
+  not_could_load_your_reviews: No s’han pogut carregar les teves ressenyes.
+  not_could_preview_photo: No s’ha pogut previsualitzar la foto.
+  want_delete_this_review: Vols eliminar aquesta ressenya?
+  review_deleted_successfully: Ressenya eliminada correctament.
+  not_could_delete_review: No s’ha pogut eliminar la ressenya.
+  must_select_a_wine: Has de seleccionar un vi.
+  this_wine_already_this_reviewed_and_not_can_back_select: Aquest vi ja està ressenyat
+    i no es pot tornar a seleccionar.
+  review_created_successfully: Ressenya creada correctament.
+  review_updated_successfully: Ressenya actualitzada correctament.
+  not_could_save_review: No s’ha pogut desar la ressenya.
+  save_changes_review: Desar canvis de la ressenya
+  create_review: Crear ressenya
+  edit_review: Editar ressenya
+  already_reviewed: (ja ressenyat)
+  wines_already_reviewed_appear_gray_and_not_can_select: Els vins ja ressenyats apareixen
+    en gris i no es poden seleccionar.
+  already_has_reviewed_all_wines_available: Ja has ressenyat tots els vins disponibles.
+  date_review: Data de la ressenya
+  rating_wine: Valoració del Vi
+  rating_general_0_100: Valoració General (0-100)
+  appearance: Aspecte
+  body: Cos
+  persistence: Persistència
+  tags_tasting: Tags de tast
+  reviews: Ressenyes
+  reviews_web_vs_mine: Ressenyes web vs meves
+  summary_reviews: Resum de ressenyes
+  wines_total: Vins totals
+  catalog_global: Catàleg global
+  my_reviews: Les meves ressenyes
+  current_account: Compte actual
+  pending: Pendents
+  wines_by_to_review: Vins per ressenyar
+  calculating_summary_reviews: Calculant resum de ressenyes...
+  not_could_calculate_summary: No s’ha pogut calcular el resum.
+  my_reviews_section: MEVES RESSENYES
+  list_reviews_your_cuenta: Llistat de ressenyes de la teva compte
+  filter_by_wine: Filtrar per vi
+  all_wines: Tots els vins
+  score_total_100: Puntuació total (100)
+  delete_review: Eliminar ressenya
+  yet_not_has_created_reviews: Encara no has creat ressenyes.
+  no_reviews_for_this_wine: No hi ha ressenyes per aquest vi.
+  notifications_new_reviews_export_csv_and_preference_decimals_score: Notificacions
+    de noves ressenyes, exportació CSV i preferència de decimals a la puntuació.
+  without_reviews_registered: Sense ressenyes registrades.

@@ -1,0 +1,51 @@
+admin:
+  title: Configuració
+  shortcuts:
+    eyebrow: Admin Tools
+    title: Accessos operatius
+    items:
+    - title: Importar vins en CSV
+      description: Pujar fitxer CSV per donar d'alta vins en bloc
+      action: Iniciar
+    - title: Importar ressenyes en CSV
+      description: Pujar fitxer CSV per carregar ressenyes en bloc
+      action: Iniciar
+    - title: Auditoria d’etiquetes
+      description: Detectar etiquetes inconsistents
+      action: Executar
+  account:
+    eyebrow: Usuari
+    title: Resum del meu compte
+    labels:
+      name: Nom
+      email: Correu
+      myReviews: Les meves ressenyes
+      averageScore: Mitjana total de les ressenyes
+      lastReview: Última ressenya
+      highestScore: Nota més alta
+      lowestScore: Nota més baixa
+ui:
+  name_and_surname_are_required: Nom i cognom són obligatoris.
+  not_could_update_profile: No s’ha pogut actualitzar el perfil.
+  settings_backoffice: Configuració del backoffice
+  surname: Cognom
+  new_password: Nova contrasenya
+  leave_empty_for_keep_it: Deixa-ho buit per conservar-la
+  save_profile: Desar perfil
+  language: Llengua
+  light: Clar
+  dark: Fosc
+  added_recently: Afegits recentment
+  price_most_low_first: Preu (més baix primer)
+  screen_home_by_default: Pantalla inicial per defecte
+  experience: EXPERIÈNCIA
+  preferencias_extra: Preferències extra
+  filter_espana_by_default: Filtrar Espanya per defecte
+  aplica_filter_country_espana_open_searcher: Aplica el filtre de país “Espanya” quan
+    obres el cercador.
+  active: Activat
+  inactive: Desactivat
+  cards_compact: Targetes compactes
+  mode_with_less_space_vertical_for_lists: Mode amb menys espai vertical per les llistes.
+  upcoming_ideas: Properes idees
+  soon: Aviat

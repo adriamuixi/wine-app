@@ -1,0 +1,19 @@
+doMap:
+  eyebrow: ''
+  title: Mapa DO
+  subtitle: ''
+  tip: ''
+  listTitle: Denominaciones destacadas
+  worldMapLabel: Mapa mundi de DO
+  openCatalog: ''
+  filterCountry: País
+  chooseDo: Seleccionar DO
+  chooseCountryFirst: Primero selecciona un país.
+  chooseDoPlaceholder: Elige una denominación
+  closeSelector: Cerrar selector
+  allWorld: Todo el mundo
+  fullscreenOpen: Abrir mapa en pantalla completa
+  fullscreenClose: Cerrar pantalla completa
+  allWorldShort: Mundo
+  loadError: No se ha podido cargar el mapa. Recarga la página.
+  noCoordinates: No hay DO con coordenadas disponibles.

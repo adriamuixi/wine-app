@@ -1,0 +1,22 @@
+topbar:
+  overview: Visió general
+  wines: Eines de vins
+  dos: Denominacions d'origen
+  doCreate: Crear D.O.
+  wineCreate: Crear vi
+  wineEdit: Editar vi
+  reviews: Les meves ressenyes
+  reviewCreate: Crear ressenya
+  reviewEdit: Editar ressenya
+  admin: Configuració
+  apiDoc: Documentació API
+  settings: Configuració
+  welcome: Benvingut
+  signedInAs: Sessió iniciada com a
+  shellReady: Aquest shell està llest per a mòduls del dashboard.
+  authCardTitle: Autenticació
+  authCardDesc: Bootstrap de sessió amb /api/auth/me (a la versió real).
+  nextStepTitle: Següent pas
+  nextStepDesc: Afegir rutes i mòduls de vins, ressenyes i administració.
+  mobileReadyTitle: Preparat per a mòbil
+  mobileReadyDesc: El layout és responsive per a mòbil i tauleta.

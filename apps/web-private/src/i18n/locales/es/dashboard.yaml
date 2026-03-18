@@ -1,0 +1,82 @@
+dashboard:
+  title: Resumen
+  metrics:
+    totalWines: Vinos totales
+    totalReviews: Reseñas totales
+    myReviews: Mis reseñas
+    avgRed: Media vinos tintos
+    avgWhite: Media vinos blancos
+    catalogHint: Entradas en catálogo
+    globalReviewsHint: Reseñas globales de la plataforma
+    myReviewsHint: Reseñas escritas por mí
+    avgRedHint: Puntuación media en vinos tintos
+    avgWhiteHint: Puntuación media en vinos blancos
+  search:
+    eyebrow: Buscar vinos
+    title: Buscador con filtros
+    results: resultados
+    search: Buscar
+    country: País
+    type: Tipo
+    minScore: Puntuación mínima
+  table:
+    wine: Vino
+    type: Tipo
+    region: Región
+    price: Precio
+    avg: Media
+ui:
+  not_have_could_load_indicators_general: No se han podido cargar los indicadores
+    generales.
+  activity: ACTIVIDAD
+  pace_reviews_and_quality: Ritmo de reseñas y calidad
+  go_to_reviews: Ir a reseñas
+  chart_pace_reviews_and_score: Gráfica de ritmo de reseñas y puntuación
+  not_have_could_load_stats_chart: No se han podido cargar las estadísticas del gráfico.
+  bar_light_reviews: 'Barra clara: reseñas'
+  line_wine_median_score: 'Línea vino: mediana de score'
+  distribution: DISTRIBUCIÓN
+  quality_catalog: Calidad del catálogo
+  not_has_could_load_distribution_score: No se ha podido cargar la distribución de
+    score.
+  frequency: FRECUENCIA
+  comparison_reviews_web_vs_mine: Comparativa de reseñas web versus mías
+  mine_label: Las mías
+  indicators: INDICADORES
+  wines_80: Vinos >= 80
+  wines_65: Vinos < 65
+  dispersion_score: Dispersión score
+  average_price: Precio medio
+  index_quality_price: Índice calidad/precio
+  scores_average_by_type_wine: Notas medias por tipo de vino
+  award_vs_without_award: Con premio vs sin premio
+  without_award: Sin award
+  stats_base_tasting: Estadísticas base de cata
+  median_score: Mediana puntuación
+  deviation_standard: Desviación estándar
+  passed_7: Aprobados (>7)
+  score_max_min: Nota máx / mín
+  range_prices_tasted: Rango de precios catados
+  price_vs_quality: PRECIO VS CALIDAD
+  ratio_price_score: Relación precio/puntuación
+  scatter_price_and_score: Scatter de precio y puntuación
+  slope_regression: Pendiente regresión
+  price_sweet_estimated: Precio dulce estimado
+  value_10_with_score_8: <10€ con nota >8
+  evolution_by_vintage: Evolución por añada
+  average_by_vintage: Media por añada
+  best_vintage: Mejor añada
+  old_2018: Antiguas (<=2018)
+  recent_2019: Recientes (>=2019)
+  ranking_dos: Ranking de DOs
+  do_most_consistent: DO más regular
+  average_maria: Media Maria
+  average_adria: Media Adrià
+  difference_average: Diferencia media
+  disagreements_2: Desacuerdos (>2)
+  index_sync: Índice sincronización
+  rolling_average_10_wines: Rolling average (10 vinos)
+  average_rolling_10_wines: Media móvil de 10 vinos
+  restaurant_score_price: 'Restaurante: nota/precio'
+  supermarket_score_price: 'Supermercado: nota/precio'
+  without_awards_registered: Sin premios registrados.

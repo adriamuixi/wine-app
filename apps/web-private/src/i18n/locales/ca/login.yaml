@@ -1,0 +1,21 @@
+login:
+  eyebrow: Celler Privat
+  title: Backoffice de Vins
+  promo: Gestiona etiquetes, notes de tast i les teves ressenyes personals des d’un
+    únic lloc. Preparat per a mòbil i escriptori.
+  bullets:
+  - Cataloga vins per regió i estil
+  - Segueix l’historial de tastos i ressenyes
+  - Prepara un flux d’administració net
+  panelTitle: Entrar a /admin
+  email: Correu
+  password: Contrasenya
+  submit: Accedir
+  requiredError: Correu i contrasenya són obligatoris.
+  demoTitle: Demo
+  demoDescription: Fes servir qualsevol correu/contrasenya per entrar al dashboard.
+ui:
+  credentials_invalid: Credencials invàlides.
+  not_could_start_session: No s’ha pogut iniciar sessió.
+  checking_session: Comprovant sessió...
+  signing_in: Entrant...

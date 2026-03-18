@@ -1,0 +1,86 @@
+common:
+  appName: Nuestros vinos
+  menu: Menú
+  logout: Cerrar sesión
+  expandSidebar: Expandir barra lateral
+  collapseSidebar: Colapsar barra lateral
+  themeLight: Claro
+  themeDark: Oscuro
+  themeSwitchToLight: Cambiar a modo claro
+  themeSwitchToDark: Cambiar a modo oscuro
+  allCountries: Todos los países
+  allTypes: Todos los tipos
+  anyScore: Cualquier puntuación
+  searchPlaceholder: Nombre, bodega, región...
+  countries:
+    spain: España
+    france: Francia
+    italy: Italia
+    portugal: Portugal
+    germany: Alemania
+    argentina: Argentina
+    chile: Chile
+    united_states: Estados Unidos
+    south_africa: Sudáfrica
+    australia: Australia
+  photoType:
+    bottle: Botella
+    front_label: Etiqueta frontal
+    back_label: Etiqueta trasera
+    situation: Situación
+    do_logo: Logo DO
+    default: Foto
+  placeType:
+    restaurant: Restaurante
+    supermarket: Mercado
+user:
+  backoffice: Backoffice
+  role: Administrador de Bodega
+wineType:
+  red: Tinto
+  white: Blanco
+  rose: Rosado
+  sparkling: Espumoso
+  sweet: Dulce
+  fortified: Fortificado
+ui:
+  reds: Tintas
+  whites: Blancas
+  locale_code_2: es-ES
+  value_2_march_2026: 2 de marzo de 2026
+  name: Nombre
+  actions: Acciones
+  delete: Borrar
+  uploaded: subidas
+  not_could_upload_photo: No se pudo subir la foto.
+  not_could_delete_photo: No se pudo eliminar la foto.
+  all_varieties: Todas las variedades
+  creating: Creando...
+  saving: Guardando...
+  back_list: Volver al listado
+  settings: Configuración
+  mine: Mías
+  type: POR TIPO
+  award: con premio
+  general: GENERALES
+  price: Precio
+  vintage: POR AÑADA
+  do: POR DO
+  minimum: σ mínimo
+  evolution: EVOLUCIÓN
+  filters: Filtros
+  next: Siguiente
+  no_do_available: No hay DO disponibles.
+  preferences: PREFERENCIAS
+  locale_code: ''
+  loading: Cargando
+  try_again_retry_few_seconds: Vuelve a intentarlo en unos segundos.
+  composition: Composición
+  by_type: Tipo
+  main_image: Imagen principal
+  cancel: Cancelar
+  saving_changes: Guardando…
+  save_changes: Guardar cambios
+  deleting: Eliminando…
+  save: Guardar
+  date_must_use_dd_mm_yyyy: La fecha debe usar el formato dd/mm/yyyy.

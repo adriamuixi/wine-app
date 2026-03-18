@@ -1,0 +1,17 @@
+topbar:
+  resultCount: wines
+  dark: Dark
+  light: Light
+  language: Language
+  menu: Menu
+  navigation: Navigation
+  winesCatalog: Our wines
+  doMap: DO Map
+  whoWeAre: Who we are
+  backoffice: Private area
+  openFilters: Open filters
+  closeFilters: Close filters
+  switchToList: Switch to list view
+  switchToCards: Switch to card view
+  listView: List view
+  cardView: Card view
