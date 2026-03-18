@@ -1,0 +1,1 @@
+export type ApiDocTab = 'openapi'

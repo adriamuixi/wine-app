@@ -94,3 +94,5 @@ ui:
   delete_wine_section: ELIMINAR VI
   this_accion_eliminara_wine_and_its_photos_want_continuar: Aquesta acció eliminarà
     el vi i les seves fotos. Vols continuar?
+  created_success: 'El vi "{{name}}" s''ha creat correctament.'
+  updated_success: 'El vi "{{name}}" s''ha actualitzat correctament.'

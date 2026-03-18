@@ -61,6 +61,7 @@ ui:
   filter_by_wine: Filtrar per vi
   all_wines: Tots els vins
   score_total_100: Puntuació total (100)
+  aroma: Aroma
   delete_review: Eliminar ressenya
   yet_not_has_created_reviews: Encara no has creat ressenyes.
   no_reviews_for_this_wine: No hi ha ressenyes per aquest vi.

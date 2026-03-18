@@ -94,3 +94,5 @@ ui:
   delete_wine_section: Delete wine section
   this_accion_eliminara_wine_and_its_photos_want_continuar: This accion eliminara
     wine and its photos want continuar
+  created_success: 'Wine "{{name}}" was created successfully.'
+  updated_success: 'Wine "{{name}}" was updated successfully.'

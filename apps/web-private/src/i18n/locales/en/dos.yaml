@@ -37,3 +37,8 @@ ui:
     DO yes not has wines linked want continuar
   logo_do_choose_ratio_arrastra_and_pellizca_for_adjust: Logo DO choose ratio arrastra
     and pellizca for adjust
+  edit_action: Edit
+  delete_action: Delete
+  created_success: 'The D.O. "{{name}}" was created successfully.'
+  updated_success: 'The D.O. "{{name}}" was updated successfully.'
+  deleted_success: 'The D.O. "{{name}}" was deleted successfully.'

@@ -24,61 +24,64 @@ apps/web-private/src/i18n/locales/
     topbar.yaml
     apiDoc.yaml
     wineProfile.yaml
-    ui.yaml
+  es/
+    common.yaml
+    login.yaml
+    menu.yaml
+    dashboard.yaml
+    wines.yaml
+    dos.yaml
+    reviews.yaml
+    admin.yaml
+    topbar.yaml
+    apiDoc.yaml
+    wineProfile.yaml
+  en/
+    common.yaml
+    login.yaml
+    menu.yaml
+    dashboard.yaml
+    wines.yaml
+    dos.yaml
+    reviews.yaml
+    admin.yaml
+    topbar.yaml
+    apiDoc.yaml
+    wineProfile.yaml
 
 apps/web-public/src/i18n/locales/
-  ca/
-    common.yaml
-    about.yaml
-    filters.yaml
-    topbar.yaml
-    doMap.yaml
-    card.yaml
-    modal.yaml
-    sort.yaml
-    wineType.yaml
-    icons.yaml
-  es/
-    ... same structure ...
-  en/
-    ... same structure ...
-  es/
-    common.yaml
-    login.yaml
-    menu.yaml
-    dashboard.yaml
-    wines.yaml
-    dos.yaml
-    reviews.yaml
-    admin.yaml
-    topbar.yaml
-    apiDoc.yaml
-    wineProfile.yaml
-    ui.yaml
-  en/
-    common.yaml
-    login.yaml
-    menu.yaml
-    dashboard.yaml
-    wines.yaml
-    dos.yaml
-    reviews.yaml
-    admin.yaml
-    topbar.yaml
-    apiDoc.yaml
-    wineProfile.yaml
-    ui.yaml
+  common/
+    ca.yaml
+    es.yaml
+    en.yaml
+  about/
+    ca.yaml
+    es.yaml
+    en.yaml
+  doMap/
+    ca.yaml
+    es.yaml
+    en.yaml
+  toolbar/
+    ca.yaml
+    es.yaml
+    en.yaml
+  main/
+    ca.yaml
+    es.yaml
+    en.yaml
 ```
 
 ## File Responsibilities
 
 - `common.yaml`: shared copy used in multiple places
 - Page/section files: one file per page/area (`dos.yaml`, `reviews.yaml`, `about.yaml`, `doMap.yaml`, etc.)
-- `ui.yaml`: cross-section UI copy that still belongs to frontend screens
+- Avoid a global `ui.yaml`; keep copy inside the owning section file.
+- If a label is used by multiple sections, move it to `common.yaml`.
 
 ## Loading Strategy
 
-`apps/web-private/src/i18n/messages.ts` auto-loads and merges all YAML files in `./locales/*/*.yaml`.
+Each frontend app auto-loads and merges all YAML files in `./locales/*/*.yaml`.
 
 Rules:
 
@@ -86,6 +89,7 @@ Rules:
 - Avoid duplicate keys across files unless intentionally overriding.
 - Keep key names stable; change values, not key paths.
 - All keys must be English semantic keys (never Spanish/Catalan key names).
+- Never use numbered/non-semantic keys (`app_0299`, etc.).
 
 ## App Rules (No Hardcoded Copy)
 

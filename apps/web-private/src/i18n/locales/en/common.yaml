@@ -1,5 +1,6 @@
 common:
   appName: Our wines
+  brandAlt: Tat & Rosset Wines
   menu: Menu
   logout: Log out
   expandSidebar: Expand sidebar
@@ -11,6 +12,27 @@ common:
   allCountries: All countries
   allTypes: All types
   anyScore: Any score
+  logo: Logo
+  country: Country
+  doCountry: DO Country
+  purchaseCountry: Purchase country
+  doAbbreviation: D.O.
+  previous: Previous
+  publicWeb: Public web
+  backofficeNavigationAria: Backoffice navigation
+  userInformationAria: User information
+  closeMenuAria: Close menu
+  backofficeHeaderAria: Backoffice header
+  languageCodeAria: "Language: {{code}}"
+  themeLabel: Theme
+  photoEditorEyebrow: PHOTO EDITOR
+  decreaseZoom: Decrease zoom
+  zoom: Zoom
+  crop: Crop
+  photo: Photo
+  error: Error
+  notEditable: Not editable
+  paginationSummary: "Page {{page}} of {{totalPages}} · Total {{totalItems}} · Showing {{shownItems}}"
   searchPlaceholder: Name, winery, region...
   countries:
     spain: Spain

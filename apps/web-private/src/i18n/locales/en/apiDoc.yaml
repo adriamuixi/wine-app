@@ -5,3 +5,5 @@ apiDoc:
   loading: Loading API guide...
   error: Could not load API guide.
   refresh: Reload
+  copy: Copy
+  copied: Copied

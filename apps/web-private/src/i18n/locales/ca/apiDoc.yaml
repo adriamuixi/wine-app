@@ -5,3 +5,5 @@ apiDoc:
   loading: Carregant guia d'API...
   error: No s'ha pogut carregar la guia d'API.
   refresh: Recarrega
+  copy: Copiar
+  copied: Copiat

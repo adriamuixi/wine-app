@@ -1,0 +1,47 @@
+common:
+  appName: Our wines
+  title: Our wines
+  subtitle: Public selection with visual sheets, average score and featured recognitions.
+  searchPlaceholder: Search by name, winery or region...
+  countries:
+    spain: Spain
+    france: France
+    italy: Italy
+    portugal: Portugal
+    germany: Germany
+    argentina: Argentina
+    chile: Chile
+    united_states: United States
+    south_africa: South Africa
+    australia: Australia
+  agingType:
+    young: Young
+    crianza: Crianza
+    reserve: Reserve
+    grand_reserve: Grand reserve
+  galleryPhotoLabels:
+    bottle: Bottle
+    front: Front label
+    back: Back label
+    context: Context
+  catalogEyebrow: OUR WINES
+  meta:
+    siteName: Tat & Rosset Wines
+    sectionDoMap: DO Map
+    sectionAbout: Who we are
+    sectionCatalog: Our wines
+    descriptionDoMap: Public map of designations of origin and featured wines.
+    descriptionAbout: Meet Tat (Maria) and Rosset (Adrià), the duo behind Our wines.
+    descriptionCatalog: Public wine catalog with profiles, scores and designations
+      of origin.
+  doShort: DO
+  doLabel: Designation of Origin
+  wineInfoTitle: WINE INFORMATION
+  notAvailableShort: n/a
+  removeAction: remove
+  autonomousCommunity: Autonomous community
+  wineInfoAria: Wine information
+  mobileCardLayoutAria: mobile card layout
+  mobileListLayoutAria: mobile list layout
+  reviewSummaryAria: review summary
+  brandAlt: Tat & Rosset Wines

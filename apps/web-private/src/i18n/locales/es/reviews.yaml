@@ -61,6 +61,7 @@ ui:
   filter_by_wine: Filtrar por vino
   all_wines: Todos los vinos
   score_total_100: Puntuación total (100)
+  aroma: Aroma
   delete_review: Eliminar reseña
   yet_not_has_created_reviews: Todavía no has creado reseñas.
   no_reviews_for_this_wine: No hay reseñas para este vino.

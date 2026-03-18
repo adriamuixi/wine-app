@@ -6,12 +6,12 @@ type LanguageSelectorProps = {
 }
 
 export function LanguageSelector({ compact = false }: LanguageSelectorProps) {
-  const { locale, setLocale, localeLabels } = useI18n()
+  const { locale, setLocale, localeLabels, t } = useI18n()
   const locales = Object.keys(localeLabels) as Locale[]
 
   return (
     <label className={`language-selector ${compact ? 'compact' : ''}`}>
-      <span className="sr-only">Language</span>
+      <span className="sr-only">{t('admin.ui.language')}</span>
       <select value={locale} onChange={(event) => setLocale(event.target.value as Locale)}>
         {locales.map((localeKey) => (
           <option key={localeKey} value={localeKey}>{localeLabels[localeKey]}</option>

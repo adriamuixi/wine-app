@@ -1,7 +1,0 @@
-sort:
-  score_desc: Puntuació (major a menor)
-  price_asc: Preu (menor a major)
-  price_desc: Preu (major a menor)
-  latest: Anyada més recent
-  tasting_date_desc: Data de la cata (desc)
-  tasting_date_asc: Data de la cata (asc)

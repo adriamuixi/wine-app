@@ -94,3 +94,5 @@ ui:
   delete_wine_section: ELIMINAR VINO
   this_accion_eliminara_wine_and_its_photos_want_continuar: Esta acción eliminará
     el vino y sus fotos. ¿Quieres continuar?
+  created_success: 'El vino "{{name}}" se ha creado correctamente.'
+  updated_success: 'El vino "{{name}}" se ha actualizado correctamente.'

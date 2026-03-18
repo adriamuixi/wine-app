@@ -1,5 +1,6 @@
 common:
   appName: Els nostres vins
+  brandAlt: Vins Tat & Rosset
   menu: Menú
   logout: Tanca sessió
   expandSidebar: Expandeix la barra lateral
@@ -11,6 +12,27 @@ common:
   allCountries: Tots els països
   allTypes: Tots els tipus
   anyScore: Qualsevol puntuació
+  logo: Logo
+  country: País
+  doCountry: País D.O.
+  purchaseCountry: País de compra
+  doAbbreviation: D.O.
+  previous: Anterior
+  publicWeb: Web pública
+  backofficeNavigationAria: Navegació del backoffice
+  userInformationAria: Informació d'usuari
+  closeMenuAria: Tanca el menú
+  backofficeHeaderAria: Capçalera del backoffice
+  languageCodeAria: "Idioma: {{code}}"
+  themeLabel: Tema
+  photoEditorEyebrow: EDITOR FOTO
+  decreaseZoom: Reduir zoom
+  zoom: Zoom
+  crop: Retall
+  photo: Foto
+  error: Error
+  notEditable: No editable
+  paginationSummary: "Pàgina {{page}} de {{totalPages}} · Total {{totalItems}} · Mostrant {{shownItems}}"
   searchPlaceholder: Nom, celler, regió...
   countries:
     spain: Espanya

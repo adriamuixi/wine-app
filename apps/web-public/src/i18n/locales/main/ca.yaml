@@ -1,0 +1,88 @@
+card:
+  avgScore: Punt. mitjana
+  priceFrom: Preu des de
+  reward: Reconeixement
+  noReward: Sense premi destacat
+  region: Origen
+  vintage: Anyada
+  points: punts
+  featured90: +90 destacat
+  viewDetails: Veure detall
+  viewProfile: Veure perfil
+  manufacturing: Fabricació
+  grapeVarieties: varietats de vi
+
+filters:
+  title: Filtres
+  search: Cercar
+  type: Tipus
+  country: País
+  region: Regió / D.O.
+  grape: Varietat de raïm
+  minScore: Puntuació mínima
+  sort: Ordenació
+  allTypes: Tots els tipus
+  allCountries: Tots els països
+  allRegions: Totes les regions
+  anyScore: Qualsevol puntuació
+  clear: Neteja filtres
+  doSearchPlaceholder: Filtrar D.O.
+  allGrapes: Totes les varietats
+  activeSuffix: actius
+  activeFiltersAria: Filtres actius
+
+icons:
+  filters: ⚗
+  search: ⌕
+  type: ◈
+  country: 🌍
+  region: 🗺
+  grape: 🍇
+  minScore: ★
+  sort: ⇅
+  results: ▦
+  avgScore: ★
+  rewards: 🏅
+  winery: 🏛
+  origin: 🧭
+  vintage: 🗓
+  price: €
+  reward: 🏆
+  details: ℹ
+  gallery: 🖼
+  tasting: 🍷
+  tags: 🏷
+
+modal:
+  close: Tanca
+  gallery: Galeria
+  details: Detall del vi
+  winery: Celler
+  origin: Origen
+  style: Estil
+  grapes: Varietats
+  aging: Criança
+  alcohol: Alcohol
+  tastedAt: Data de tast
+  month: Mes
+  place: Lloc
+  mariaScore: Valoració Maria
+  adriaScore: Valoració Adrià
+  tasting: Nota de tast
+  tags: Etiquetes
+  rewardNone: Sense premi destacat
+
+sort:
+  score_desc: Puntuació (major a menor)
+  price_asc: Preu (menor a major)
+  price_desc: Preu (major a menor)
+  latest: Anyada més recent
+  tasting_date_desc: Data de la cata (desc)
+  tasting_date_asc: Data de la cata (asc)
+
+wineType:
+  red: Negre
+  white: Blanc
+  rose: Rosat
+  sparkling: Escumós
+

@@ -37,3 +37,8 @@ ui:
     eliminarà la D.O. si no té vins associats. Vols continuar?
   logo_do_choose_ratio_arrastra_and_pellizca_for_adjust: Logo D.O. · tria relació,
     arrossega i fes pinça per ajustar
+  edit_action: Editar
+  delete_action: Eliminar
+  created_success: 'La D.O. "{{name}}" s''ha creat correctament.'
+  updated_success: 'La D.O. "{{name}}" s''ha actualitzat correctament.'
+  deleted_success: 'La D.O. "{{name}}" s''ha eliminat correctament.'

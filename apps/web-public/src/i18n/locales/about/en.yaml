@@ -1,0 +1,26 @@
+about:
+  eyebrow: WHO WE ARE
+  title: Tat (Maria) and Rosset (Adrià)
+  intro: We are a wine duo combining tasting sensitivity and data reading to build
+    a living, honest, shared catalog.
+  membersAria: Tat and Rosset members
+  statsAria: Tat and Rosset stats
+  members:
+    tat:
+      fullName: Tat · Maria
+      role: Tasting curation and selection
+      bio: Maria focuses on aromatic balance, texture, and persistence to choose wines
+        with personality.
+      photoAlt: Photo of Tat Maria
+    rosset:
+      fullName: Rosset · Adrià
+      role: Scores and trend analysis
+      bio: Adrià turns each tasting into useful data to detect patterns in quality,
+        vintage, and value.
+      photoAlt: Photo of Rosset Adrià
+  stats:
+    totalWines: Wines in catalog
+    totalReviews: Total reviews
+    tatAverage: Tat average
+    rossetAverage: Rosset average
+    syncIndex: Sync index

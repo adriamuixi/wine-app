@@ -79,3 +79,13 @@ ui:
   restaurant_score_price: 'Restaurant: nota/preu'
   supermarket_score_price: 'Supermercat: nota/preu'
   without_awards_registered: Sense premis registrats.
+  comparison: COMPARATIVA
+  maria_vs_adria: Maria vs Adrià
+  scatter_maria_versus_adria: Scatter Maria versus Adrià
+  maria_axis: Maria
+  adria_axis: Adrià
+  median_score_series: Mediana score
+  web_label: Web
+  web_global_label: Web (global)
+  score_label: Score
+  range_label: Franja

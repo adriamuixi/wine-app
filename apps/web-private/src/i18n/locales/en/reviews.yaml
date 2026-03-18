@@ -61,6 +61,7 @@ ui:
   filter_by_wine: Filter by wine
   all_wines: All wines
   score_total_100: Score total 100
+  aroma: Aroma
   delete_review: Delete review
   yet_not_has_created_reviews: Yet not has created reviews
   no_reviews_for_this_wine: No reviews for this wine

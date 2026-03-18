@@ -1,0 +1,88 @@
+card:
+  avgScore: Punt. media
+  priceFrom: Precio desde
+  reward: Reconocimiento
+  noReward: Sin premio destacado
+  region: Origen
+  vintage: Añada
+  points: puntos
+  featured90: +90 destacado
+  viewDetails: Ver detalle
+  viewProfile: Ver perfil
+  manufacturing: Fabricación
+  grapeVarieties: variedades de vino
+
+filters:
+  title: Filtros
+  search: Buscar
+  type: Tipo
+  country: País
+  region: Región / D.O.
+  grape: Variedad de uva
+  minScore: Puntuación mínima
+  sort: Ordenación
+  allTypes: Todos los tipos
+  allCountries: Todos los países
+  allRegions: Todas las regiones
+  anyScore: Cualquier puntuación
+  clear: Limpiar filtros
+  doSearchPlaceholder: Filtrar D.O.
+  allGrapes: Todas las variedades
+  activeSuffix: activos
+  activeFiltersAria: Filtros activos
+
+icons:
+  filters: ⚗
+  search: ⌕
+  type: ◈
+  country: 🌍
+  region: 🗺
+  grape: 🍇
+  minScore: ★
+  sort: ⇅
+  results: ▦
+  avgScore: ★
+  rewards: 🏅
+  winery: 🏛
+  origin: 🧭
+  vintage: 🗓
+  price: €
+  reward: 🏆
+  details: ℹ
+  gallery: 🖼
+  tasting: 🍷
+  tags: 🏷
+
+modal:
+  close: Cerrar
+  gallery: Galería
+  details: Detalle del vino
+  winery: Bodega
+  origin: Origen
+  style: Estilo
+  grapes: Variedades
+  aging: Crianza
+  alcohol: Alcohol
+  tastedAt: Fecha de cata
+  month: Mes
+  place: Lugar
+  mariaScore: Valoración Maria
+  adriaScore: Valoración Adrià
+  tasting: Nota de cata
+  tags: Etiquetas
+  rewardNone: Sin premio destacado
+
+sort:
+  score_desc: Puntuación (mayor a menor)
+  price_asc: Precio (menor a mayor)
+  price_desc: Precio (mayor a menor)
+  latest: Añada más reciente
+  tasting_date_desc: Fecha de la cata (desc)
+  tasting_date_asc: Fecha de la cata (asc)
+
+wineType:
+  red: Tinto
+  white: Blanco
+  rose: Rosado
+  sparkling: Espumoso
+

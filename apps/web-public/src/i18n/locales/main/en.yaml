@@ -1,0 +1,88 @@
+card:
+  avgScore: Avg. score
+  priceFrom: Price from
+  reward: Recognition
+  noReward: No featured award
+  region: Origin
+  vintage: Vintage
+  points: points
+  featured90: +90 featured
+  viewDetails: View details
+  viewProfile: View profile
+  manufacturing: Manufacturing
+  grapeVarieties: grape varieties
+
+filters:
+  title: Filters
+  search: Search
+  type: Type
+  country: Country
+  region: Region / D.O.
+  grape: Grape variety
+  minScore: Minimum score
+  sort: Sort
+  allTypes: All types
+  allCountries: All countries
+  allRegions: All regions
+  anyScore: Any score
+  clear: Clear filters
+  doSearchPlaceholder: Filter D.O.
+  allGrapes: All varieties
+  activeSuffix: active
+  activeFiltersAria: Active filters
+
+icons:
+  filters: ⚗
+  search: ⌕
+  type: ◈
+  country: 🌍
+  region: 🗺
+  grape: 🍇
+  minScore: ★
+  sort: ⇅
+  results: ▦
+  avgScore: ★
+  rewards: 🏅
+  winery: 🏛
+  origin: 🧭
+  vintage: 🗓
+  price: €
+  reward: 🏆
+  details: ℹ
+  gallery: 🖼
+  tasting: 🍷
+  tags: 🏷
+
+modal:
+  close: Close
+  gallery: Gallery
+  details: Wine details
+  winery: Winery
+  origin: Origin
+  style: Style
+  grapes: Varieties
+  aging: Aging
+  alcohol: Alcohol
+  tastedAt: Tasting date
+  month: Month
+  place: Place
+  mariaScore: Maria score
+  adriaScore: Adrià score
+  tasting: Tasting note
+  tags: Tags
+  rewardNone: No featured award
+
+sort:
+  score_desc: Score (high to low)
+  price_asc: Price (low to high)
+  price_desc: Price (high to low)
+  latest: Latest vintage
+  tasting_date_desc: Tasting date (desc)
+  tasting_date_asc: Tasting date (asc)
+
+wineType:
+  red: Red
+  white: White
+  rose: Rosé
+  sparkling: Sparkling
+

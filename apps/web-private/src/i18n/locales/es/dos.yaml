@@ -37,3 +37,8 @@ ui:
     la DO si no tiene vinos asociados. ¿Quieres continuar?
   logo_do_choose_ratio_arrastra_and_pellizca_for_adjust: Logo DO · elige relación,
     arrastra y pellizca para ajustar
+  edit_action: Editar
+  delete_action: Eliminar
+  created_success: 'La D.O. "{{name}}" se ha creado correctamente.'
+  updated_success: 'La D.O. "{{name}}" se ha actualizado correctamente.'
+  deleted_success: 'La D.O. "{{name}}" se ha eliminado correctamente.'

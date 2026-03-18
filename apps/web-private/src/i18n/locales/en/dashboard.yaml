@@ -78,3 +78,13 @@ ui:
   restaurant_score_price: Restaurant score price
   supermarket_score_price: Supermarket score price
   without_awards_registered: Without awards registered
+  comparison: COMPARISON
+  maria_vs_adria: Maria vs Adrià
+  scatter_maria_versus_adria: Scatter Maria versus Adrià
+  maria_axis: Maria
+  adria_axis: Adrià
+  median_score_series: Median score
+  web_label: Web
+  web_global_label: Web (global)
+  score_label: Score
+  range_label: Range

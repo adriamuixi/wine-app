@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { I18nextProvider } from 'react-i18next'
@@ -8,7 +9,9 @@ import { localeLabels, messages, type Locale } from './messages'
 type I18nContextValue = {
   locale: Locale
   setLocale: (locale: Locale) => void
-  labels: (typeof messages)[Locale]
+  // Flexible dictionary to support current `labels.*` access pattern in App.tsx.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  labels: Record<string, any>
   localeLabels: typeof localeLabels
   t: TFunction
 }
