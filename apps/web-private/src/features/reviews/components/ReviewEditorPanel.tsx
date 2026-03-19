@@ -134,7 +134,7 @@ export function ReviewEditorPanel({
             </label>
             <div className="inline-grid triple">
               <label>
-                {t('reviews.ui.aroma')}
+                {t('ui.aroma')}
                 <select name="aroma" defaultValue={String(preset.aroma)}>
                   {scoreOptions0To10.map((score) => (
                     <option key={score} value={score}>{score}</option>

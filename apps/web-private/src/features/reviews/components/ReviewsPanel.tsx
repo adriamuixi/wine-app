@@ -180,7 +180,7 @@ export function ReviewsPanel({
                   <div className="review-metrics-col">
                     <dl className="review-metrics-grid review-metrics-grid-inline">
                       <div>
-                        <dt>{t('reviews.ui.aroma')}</dt>
+                        <dt>{t('ui.aroma')}</dt>
                         <dd className={`review-metric-value ${medalToneFromTen(entry.review.aroma)}`}>{entry.review.aroma}/10</dd>
                       </div>
                       <div>
