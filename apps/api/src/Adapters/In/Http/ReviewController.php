@@ -12,6 +12,10 @@ use App\Application\UseCases\Review\CreateReview\CreateReviewValidationException
 use App\Application\UseCases\Review\DeleteReview\DeleteReviewHandler;
 use App\Application\UseCases\Review\DeleteReview\DeleteReviewNotFound;
 use App\Application\UseCases\Review\GetReview\GetReviewHandler;
+use App\Application\UseCases\Review\ListReviews\ListReviewsHandler;
+use App\Application\UseCases\Review\ListReviews\ListReviewsQuery;
+use App\Application\UseCases\Review\ListReviews\ListReviewsSort;
+use App\Application\UseCases\Review\ListReviews\ListReviewsValidationException;
 use App\Application\UseCases\Review\UpdateReview\UpdateReviewCommand;
 use App\Application\UseCases\Review\UpdateReview\UpdateReviewHandler;
 use App\Application\UseCases\Review\UpdateReview\UpdateReviewNotFound;
@@ -31,7 +35,76 @@ final class ReviewController
         private readonly UpdateReviewHandler $updateReviewHandler,
         private readonly DeleteReviewHandler $deleteReviewHandler,
         private readonly GetReviewHandler $getReviewHandler,
+        private readonly ListReviewsHandler $listReviewsHandler,
     ) {
+    }
+
+    #[Route('/api/reviews', name: 'api_reviews_list', methods: ['GET'])]
+    public function list(Request $request): JsonResponse
+    {
+        try {
+            $page = $this->parsePositiveIntQuery($request->query->get('page'), 'page', 1);
+            $limit = $this->parsePositiveIntQuery($request->query->get('limit'), 'limit', 20);
+
+            $sortBy = $request->query->get('sort_by');
+            if (null !== $sortBy && !is_string($sortBy)) {
+                return new JsonResponse(['error' => 'sort_by must be a string.'], Response::HTTP_BAD_REQUEST);
+            }
+            $sortBy = null === $sortBy ? ListReviewsSort::SCORE : trim($sortBy);
+
+            $sortDir = $request->query->get('sort_dir');
+            if (null !== $sortDir && !is_string($sortDir)) {
+                return new JsonResponse(['error' => 'sort_dir must be a string.'], Response::HTTP_BAD_REQUEST);
+            }
+            $sortDir = null === $sortDir ? ListReviewsSort::DESC : strtolower(trim($sortDir));
+
+            $result = $this->listReviewsHandler->handle(new ListReviewsQuery(
+                page: $page,
+                limit: $limit,
+                sortBy: $sortBy,
+                sortDir: $sortDir,
+            ));
+        } catch (ListReviewsValidationException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse([
+            'items' => array_map(
+                static fn ($item): array => [
+                    'id' => $item->id,
+                    'user' => [
+                        'id' => $item->userId,
+                        'name' => $item->userName,
+                        'lastname' => $item->userLastname,
+                    ],
+                    'wine' => [
+                        'id' => $item->wineId,
+                        'name' => $item->wineName,
+                        'do' => null === $item->doId ? null : [
+                            'id' => $item->doId,
+                            'name' => $item->doName,
+                        ],
+                    ],
+                    'score' => $item->score,
+                    'aroma' => $item->aroma,
+                    'appearance' => $item->appearance,
+                    'palate_entry' => $item->palateEntry,
+                    'body' => $item->body,
+                    'persistence' => $item->persistence,
+                    'bullets' => $item->bullets,
+                    'created_at' => $item->createdAt,
+                ],
+                $result->items,
+            ),
+            'pagination' => [
+                'page' => $result->page,
+                'limit' => $result->limit,
+                'total_items' => $result->totalItems,
+                'total_pages' => $result->totalPages,
+                'has_next' => $result->page < $result->totalPages,
+                'has_prev' => $result->page > 1,
+            ],
+        ], Response::HTTP_OK);
     }
 
     #[Route('/api/wines/{wineId}/reviews/{id}', name: 'api_wine_reviews_get', methods: ['GET'])]
@@ -220,6 +293,23 @@ final class ReviewController
         } catch (\Exception) {
             throw new \InvalidArgumentException(sprintf('%s must be a valid date string or null.', $field));
         }
+    }
+
+    private function parsePositiveIntQuery(mixed $value, string $field, int $default): int
+    {
+        if (null === $value || '' === $value) {
+            return $default;
+        }
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (!is_string($value) || !preg_match('/^\d+$/', $value)) {
+            throw new ListReviewsValidationException(sprintf('%s must be a positive integer.', $field));
+        }
+
+        return (int) $value;
     }
 
     /**

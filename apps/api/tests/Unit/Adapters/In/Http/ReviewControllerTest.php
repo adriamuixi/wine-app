@@ -9,6 +9,10 @@ use App\Application\Ports\AuthSessionManager;
 use App\Application\UseCases\Review\CreateReview\CreateReviewHandler;
 use App\Application\UseCases\Review\DeleteReview\DeleteReviewHandler;
 use App\Application\UseCases\Review\GetReview\GetReviewHandler;
+use App\Application\UseCases\Review\ListReviews\ListReviewsHandler;
+use App\Application\UseCases\Review\ListReviews\ListReviewsQuery;
+use App\Application\UseCases\Review\ListReviews\ListReviewsResult;
+use App\Application\UseCases\Review\ListReviews\ReviewListItemView;
 use App\Application\UseCases\Review\UpdateReview\UpdateReviewHandler;
 use App\Domain\Enum\ReviewBullet;
 use App\Domain\Model\WineReview;
@@ -40,6 +44,32 @@ final class ReviewControllerTest extends TestCase
         $response = $controller->create(2, $request);
 
         self::assertSame(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
+    }
+
+    public function testListReturnsPaginatedReviewsWithDefaults(): void
+    {
+        $controller = $this->controller();
+
+        $response = $controller->list(Request::create('/api/reviews', 'GET'));
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSame(1, $payload['pagination']['page']);
+        self::assertSame(20, $payload['pagination']['limit']);
+        self::assertSame(1, $payload['items'][0]['id']);
+        self::assertSame('Wine 2', $payload['items'][0]['wine']['name']);
+        self::assertSame('Rioja', $payload['items'][0]['wine']['do']['name']);
+        self::assertSame(88, $payload['items'][0]['score']);
+        self::assertSame('2026-03-01T10:00:00+00:00', $payload['items'][0]['created_at']);
+    }
+
+    public function testListReturnsBadRequestForInvalidSortBy(): void
+    {
+        $controller = $this->controller();
+
+        $response = $controller->list(Request::create('/api/reviews?sort_by=unknown', 'GET'));
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
     }
 
     public function testCreateReturnsCreated(): void
@@ -222,6 +252,7 @@ final class ReviewControllerTest extends TestCase
             new UpdateReviewHandler($repository),
             new DeleteReviewHandler($repository),
             new GetReviewHandler($repository),
+            new ListReviewsHandler($repository),
         ), $repository];
     }
 }
@@ -293,6 +324,36 @@ final class InMemoryWineReviewRepository implements WineReviewRepository
     public function deleteById(int $id): void
     {
         unset($this->items[$id]);
+    }
+
+    public function findPaginated(ListReviewsQuery $query): ListReviewsResult
+    {
+        return new ListReviewsResult(
+            items: [
+                new ReviewListItemView(
+                    id: 1,
+                    userId: 1,
+                    userName: 'Adria',
+                    userLastname: 'Muixi',
+                    wineId: 2,
+                    wineName: 'Wine 2',
+                    doId: 4,
+                    doName: 'Rioja',
+                    score: 88,
+                    aroma: 4,
+                    appearance: 2,
+                    palateEntry: 3,
+                    body: 4,
+                    persistence: 4,
+                    bullets: ['floral'],
+                    createdAt: '2026-03-01T10:00:00+00:00',
+                ),
+            ],
+            page: $query->page,
+            limit: $query->limit,
+            totalItems: 1,
+            totalPages: 1,
+        );
     }
 }
 

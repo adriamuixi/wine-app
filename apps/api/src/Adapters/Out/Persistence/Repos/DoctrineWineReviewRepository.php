@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace App\Adapters\Out\Persistence\Repos;
 
+use App\Application\UseCases\Review\ListReviews\ListReviewsQuery;
+use App\Application\UseCases\Review\ListReviews\ListReviewsResult;
+use App\Application\UseCases\Review\ListReviews\ListReviewsSort;
+use App\Application\UseCases\Review\ListReviews\ReviewListItemView;
 use App\Domain\Enum\ReviewBullet;
 use App\Domain\Model\WineReview;
 use App\Domain\Repository\WineReviewRepository;
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineWineReviewRepository implements WineReviewRepository
@@ -162,5 +168,126 @@ SQL,
             'DELETE FROM review WHERE id = :id',
             ['id' => $id],
         );
+    }
+
+    public function findPaginated(ListReviewsQuery $query): ListReviewsResult
+    {
+        $connection = $this->entityManager->getConnection();
+        $offset = ($query->page - 1) * $query->limit;
+        $sortColumn = $this->resolveSortColumn($query->sortBy);
+        $sortDirection = strtoupper($query->sortDir);
+
+        $totalItems = (int) $connection->fetchOne('SELECT count(*) FROM review');
+
+        $rows = $connection->fetchAllAssociative(
+            sprintf(
+                <<<'SQL'
+SELECT
+    r.id,
+    r.user_id,
+    u.name AS user_name,
+    u.lastname AS user_lastname,
+    r.wine_id,
+    w.name AS wine_name,
+    d.id AS do_id,
+    d.name AS do_name,
+    r.score,
+    r.aroma,
+    r.appearance,
+    r.palate_entry,
+    r.body,
+    r.persistence,
+    r.created_at
+FROM review r
+INNER JOIN users u ON u.id = r.user_id
+INNER JOIN wine w ON w.id = r.wine_id
+LEFT JOIN designation_of_origin d ON d.id = w.do_id
+ORDER BY %s %s NULLS LAST, r.id DESC
+LIMIT :limit OFFSET :offset
+SQL,
+                $sortColumn,
+                $sortDirection,
+            ),
+            [
+                'limit' => $query->limit,
+                'offset' => $offset,
+            ],
+            [
+                'limit' => ParameterType::INTEGER,
+                'offset' => ParameterType::INTEGER,
+            ],
+        );
+
+        $reviewIds = array_map(static fn (array $row): int => (int) $row['id'], $rows);
+        /** @var array<int,list<string>> $bulletsByReviewId */
+        $bulletsByReviewId = [];
+
+        if ([] !== $reviewIds) {
+            $bulletRows = $connection->fetchAllAssociative(
+                <<<'SQL'
+SELECT review_id, bullet
+FROM review_bullets
+WHERE review_id IN (:review_ids)
+ORDER BY review_id ASC, bullet ASC
+SQL,
+                ['review_ids' => $reviewIds],
+                ['review_ids' => ArrayParameterType::INTEGER],
+            );
+
+            foreach ($bulletRows as $row) {
+                $reviewId = (int) $row['review_id'];
+                if (!array_key_exists($reviewId, $bulletsByReviewId)) {
+                    $bulletsByReviewId[$reviewId] = [];
+                }
+
+                $bulletsByReviewId[$reviewId][] = (string) $row['bullet'];
+            }
+        }
+
+        $items = array_map(
+            fn (array $row): ReviewListItemView => new ReviewListItemView(
+                id: (int) $row['id'],
+                userId: (int) $row['user_id'],
+                userName: (string) $row['user_name'],
+                userLastname: (string) $row['user_lastname'],
+                wineId: (int) $row['wine_id'],
+                wineName: (string) $row['wine_name'],
+                doId: null === $row['do_id'] ? null : (int) $row['do_id'],
+                doName: null === $row['do_name'] ? null : (string) $row['do_name'],
+                score: null === $row['score'] ? null : (int) $row['score'],
+                aroma: (int) $row['aroma'],
+                appearance: (int) $row['appearance'],
+                palateEntry: (int) $row['palate_entry'],
+                body: (int) $row['body'],
+                persistence: (int) $row['persistence'],
+                bullets: $bulletsByReviewId[(int) $row['id']] ?? [],
+                createdAt: $this->toIso8601((string) $row['created_at']),
+            ),
+            $rows,
+        );
+
+        $totalPages = 0 === $totalItems ? 0 : (int) ceil($totalItems / $query->limit);
+
+        return new ListReviewsResult(
+            items: $items,
+            page: $query->page,
+            limit: $query->limit,
+            totalItems: $totalItems,
+            totalPages: $totalPages,
+        );
+    }
+
+    private function resolveSortColumn(string $sortBy): string
+    {
+        return match ($sortBy) {
+            ListReviewsSort::NAME => 'w.name',
+            ListReviewsSort::DO => 'd.name',
+            default => 'r.score',
+        };
+    }
+
+    private function toIso8601(string $value): string
+    {
+        return (new \DateTimeImmutable($value))->format(\DateTimeInterface::ATOM);
     }
 }

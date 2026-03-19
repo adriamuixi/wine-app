@@ -17,6 +17,7 @@ Base URL (local): `http://localhost:8080`
   - [`POST /api/auth/users`](#post-apiauthusers)
   - [`DELETE /api/auth/users`](#delete-apiauthusers)
 - [Reviews](#reviews)
+  - [`GET /api/reviews`](#get-apireviews)
   - [`GET /api/wines/{wineId}/reviews/{id}`](#get-apiwineswineidreviewsid)
   - [`POST /api/wines/{wineId}/reviews`](#post-apiwineswineidreviews)
   - [`PUT /api/wines/{wineId}/reviews/{id}`](#put-apiwineswineidreviewsid)
@@ -233,6 +234,58 @@ Response example (`404`):
 ---
 
 ## Reviews
+
+### `GET /api/reviews`
+
+Returns a paginated review list in bulk.
+
+Query params:
+- `page` default `1`
+- `limit` default `20`, max `100`
+- `sort_by` one of: `score|name|do`
+- `sort_dir` one of: `asc|desc`
+
+Expected:
+- `200` success
+- `400` invalid query params
+
+Example:
+
+```bash
+curl -s "http://localhost:8080/api/reviews?page=1&limit=20&sort_by=score&sort_dir=desc" | jq
+```
+
+Response shape:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "user": { "id": 7, "name": "Adria", "lastname": "Muixi" },
+      "wine": { "id": 42, "name": "Vina del Sol", "do": { "id": 2, "name": "Rioja" } },
+      "score": 88,
+      "aroma": 4,
+      "appearance": 2,
+      "palate_entry": 3,
+      "body": 4,
+      "persistence": 4,
+      "bullets": ["floral"],
+      "created_at": "2026-03-01T10:00:00+00:00"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total_items": 200,
+    "total_pages": 10,
+    "has_next": true,
+    "has_prev": false
+  }
+}
+```
+
+---
 
 ### `GET /api/wines/{wineId}/reviews/{id}`
 

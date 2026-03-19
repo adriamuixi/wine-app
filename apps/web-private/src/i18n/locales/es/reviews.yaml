@@ -60,6 +60,13 @@ ui:
   list_reviews_your_cuenta: Listado de reseñas de tu cuenta
   filter_by_wine: Filtrar por vino
   all_wines: Todos los vinos
+  sort_by: Ordenar por
+  sort_order: Orden
+  sort_score: Puntuación
+  sort_wine_name: Nombre del vino
+  sort_do: D.O.
+  sort_direction_asc: Ascendente
+  sort_direction_desc: Descendente
   score_total_100: Puntuación total (100)
   aroma: Aroma
   delete_review: Eliminar reseña

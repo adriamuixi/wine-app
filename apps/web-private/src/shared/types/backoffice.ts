@@ -81,6 +81,36 @@ export type WineListApiResponse = {
   pagination: WineListApiPagination
 }
 
+export type ReviewListApiItem = {
+  id: number
+  user: {
+    id: number
+    name: string
+    lastname: string
+  }
+  wine: {
+    id: number
+    name: string
+    do: {
+      id: number
+      name: string
+    } | null
+  }
+  score: number | null
+  aroma: number
+  appearance: number
+  palate_entry: number
+  body: number
+  persistence: number
+  bullets: Array<'fruity' | 'floral' | 'mineral' | 'oak_forward' | 'powerful'>
+  created_at: string
+}
+
+export type ReviewListApiResponse = {
+  items: ReviewListApiItem[]
+  pagination: WineListApiPagination
+}
+
 export type GrapeApiItem = {
   id: number
   name: string

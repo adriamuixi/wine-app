@@ -60,6 +60,13 @@ ui:
   list_reviews_your_cuenta: Llistat de ressenyes de la teva compte
   filter_by_wine: Filtrar per vi
   all_wines: Tots els vins
+  sort_by: Ordenar per
+  sort_order: Ordre
+  sort_score: Puntuació
+  sort_wine_name: Nom del vi
+  sort_do: D.O.
+  sort_direction_asc: Ascendent
+  sort_direction_desc: Descendent
   score_total_100: Puntuació total (100)
   aroma: Aroma
   delete_review: Eliminar ressenya

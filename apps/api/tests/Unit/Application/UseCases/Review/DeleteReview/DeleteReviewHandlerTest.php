@@ -6,6 +6,8 @@ namespace App\Tests\Unit\Application\UseCases\Review\DeleteReview;
 
 use App\Application\UseCases\Review\DeleteReview\DeleteReviewHandler;
 use App\Application\UseCases\Review\DeleteReview\DeleteReviewNotFound;
+use App\Application\UseCases\Review\ListReviews\ListReviewsQuery;
+use App\Application\UseCases\Review\ListReviews\ListReviewsResult;
 use App\Domain\Enum\ReviewBullet;
 use App\Domain\Model\WineReview;
 use App\Domain\Repository\WineReviewRepository;
@@ -77,5 +79,10 @@ final class InMemoryWineReviewRepository implements WineReviewRepository
     public function deleteById(int $id): void
     {
         unset($this->items[$id]);
+    }
+
+    public function findPaginated(ListReviewsQuery $query): ListReviewsResult
+    {
+        return new ListReviewsResult([], $query->page, $query->limit, 0, 0);
     }
 }

@@ -227,6 +227,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/reviews:
+    get:
+      summary: List reviews (paginated)
+      operationId: getReviewsList
+      tags: [Review]
+      parameters:
+        - in: query
+          name: page
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: sort_by
+          description: Sort field
+          schema:
+            type: string
+            enum: [score, name, do]
+            default: score
+        - in: query
+          name: sort_dir
+          description: Sort direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Paginated review list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponse'
+        '400':
+          description: Invalid query params
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/wines/{wineId}/reviews/{id}:
     get:
       summary: Get review by id
@@ -1071,6 +1119,92 @@ components:
       properties:
         review:
           $ref: '#/components/schemas/Review'
+    ReviewListUser:
+      type: object
+      required: [id, name, lastname]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        lastname:
+          type: string
+    ReviewListDo:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    ReviewListWine:
+      type: object
+      required: [id, name, do]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        do:
+          allOf:
+            - $ref: '#/components/schemas/ReviewListDo'
+          nullable: true
+    ReviewListItem:
+      type: object
+      required: [id, user, wine, score, aroma, appearance, palate_entry, body, persistence, bullets, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        user:
+          $ref: '#/components/schemas/ReviewListUser'
+        wine:
+          $ref: '#/components/schemas/ReviewListWine'
+        score:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 100
+        aroma:
+          type: integer
+          minimum: 0
+          maximum: 10
+        appearance:
+          type: integer
+          minimum: 0
+          maximum: 10
+        palate_entry:
+          type: integer
+          minimum: 0
+          maximum: 10
+        body:
+          type: integer
+          minimum: 0
+          maximum: 10
+        persistence:
+          type: integer
+          minimum: 0
+          maximum: 10
+        bullets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewBulletValue'
+        created_at:
+          type: string
+          format: date-time
+    ReviewListResponse:
+      type: object
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewListItem'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
     ReviewsPerMonthStatsResponse:
       type: object
       required: [months, review_counts, median_scores]

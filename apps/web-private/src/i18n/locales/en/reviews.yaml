@@ -60,6 +60,13 @@ ui:
   list_reviews_your_cuenta: List reviews your cuenta
   filter_by_wine: Filter by wine
   all_wines: All wines
+  sort_by: Sort by
+  sort_order: Sort order
+  sort_score: Score
+  sort_wine_name: Wine name
+  sort_do: D.O.
+  sort_direction_asc: Ascending
+  sort_direction_desc: Descending
   score_total_100: Score total 100
   aroma: Aroma
   delete_review: Delete review

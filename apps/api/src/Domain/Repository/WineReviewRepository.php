@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Repository;
 
+use App\Application\UseCases\Review\ListReviews\ListReviewsQuery;
+use App\Application\UseCases\Review\ListReviews\ListReviewsResult;
 use App\Domain\Model\WineReview;
 
 interface WineReviewRepository
@@ -17,4 +19,6 @@ interface WineReviewRepository
     public function update(WineReview $review): void;
 
     public function deleteById(int $id): void;
+
+    public function findPaginated(ListReviewsQuery $query): ListReviewsResult;
 }

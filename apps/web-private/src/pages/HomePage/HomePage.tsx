@@ -53,6 +53,7 @@ import type {
   GrapeApiResponse,
   GrapeBlendRow,
   PhotoEditorAssetType,
+  ReviewListApiResponse,
   WineDetailsApiAward,
   WineDetailsApiPhoto,
   WineDetailsApiResponse,
@@ -736,7 +737,7 @@ function HomePage() {
   const [myReviewSummaryError, setMyReviewSummaryError] = useState<string | null>(null)
   const [reviewTotalWines, setReviewTotalWines] = useState(0)
   const [reviewListReloadToken, setReviewListReloadToken] = useState(0)
-  const [reviewWineFilter, setReviewWineFilter] = useState<'all' | number>('all')
+  const [reviewSortOrder, setReviewSortOrder] = useState<'score_desc' | 'score_asc' | 'name_asc' | 'name_desc' | 'do_asc' | 'do_desc'>('score_desc')
   const [reviewFormSubmitting, setReviewFormSubmitting] = useState(false)
   const [reviewFormError, setReviewFormError] = useState<string | null>(null)
   const [reviewSuccessToast, setReviewSuccessToast] = useState<string | null>(null)
@@ -1037,6 +1038,16 @@ function HomePage() {
       return left.id - right.id
     })
   }, [doOptions, doSortFields, locale])
+  const reviewSortConfig = useMemo((): { sortBy: 'score' | 'name' | 'do'; sortDir: 'asc' | 'desc' } => {
+    return (() => {
+      if (reviewSortOrder === 'score_asc') return { sortBy: 'score', sortDir: 'asc' }
+      if (reviewSortOrder === 'name_asc') return { sortBy: 'name', sortDir: 'asc' }
+      if (reviewSortOrder === 'name_desc') return { sortBy: 'name', sortDir: 'desc' }
+      if (reviewSortOrder === 'do_asc') return { sortBy: 'do', sortDir: 'asc' }
+      if (reviewSortOrder === 'do_desc') return { sortBy: 'do', sortDir: 'desc' }
+      return { sortBy: 'score', sortDir: 'desc' }
+    })()
+  }, [reviewSortOrder])
   const sortedDoRegionFilterOptions = useMemo(() => {
     const collator = new Intl.Collator(localeToIntl(locale), { sensitivity: 'base' })
     const regionOptions = [...new Set(
@@ -2485,36 +2496,92 @@ function HomePage() {
           page += 1
         }
 
-        const entriesByWine = await Promise.all(
-          allWines.map(async (wine): Promise<MyWineReviewEntry[]> => {
-            const detailsResponse = await fetch(`${resolveApiBaseUrl()}/api/wines/${wine.id}`, {
-              signal: controller.signal,
-              credentials: 'include',
-              headers: {
-                Accept: 'application/json',
-              },
-            })
+        const wineById = new Map(allWines.map((wine) => [wine.id, wine]))
+        const reviewEntries: MyWineReviewEntry[] = []
+        let reviewsPage = 1
+        let reviewsTotalPages = 1
 
-            if (!detailsResponse.ok) {
-              throw new Error(`HTTP ${detailsResponse.status}`)
+        while (reviewsPage <= reviewsTotalPages) {
+          const params = new URLSearchParams()
+          params.set('page', String(reviewsPage))
+          params.set('limit', String(limit))
+          params.set('sort_by', reviewSortConfig.sortBy)
+          params.set('sort_dir', reviewSortConfig.sortDir)
+
+          const reviewsResponse = await fetch(`${resolveApiBaseUrl()}/api/reviews?${params.toString()}`, {
+            signal: controller.signal,
+            credentials: 'include',
+            headers: {
+              Accept: 'application/json',
+            },
+          })
+
+          if (!reviewsResponse.ok) {
+            throw new Error(`HTTP ${reviewsResponse.status}`)
+          }
+
+          const payload = await reviewsResponse.json() as ReviewListApiResponse
+          reviewsTotalPages = payload.pagination.total_pages
+          const pageItems = Array.isArray(payload.items) ? payload.items : []
+
+          pageItems.forEach((item) => {
+            if (item.user.id !== currentUserId) {
+              return
             }
 
-            const detailsPayload = await detailsResponse.json() as WineDetailsApiResponse
-            const myReviews = detailsPayload.wine.reviews.filter((review) => review.user.id === currentUserId)
-            return myReviews.map((review) => ({ wine, review }))
-          }),
-        )
+            const wine = wineById.get(item.wine.id) ?? {
+              id: item.wine.id,
+              name: item.wine.name,
+              winery: '-',
+              type: 'red',
+              country: '-',
+              region: item.wine.do?.name ?? '-',
+              doName: item.wine.do?.name ?? null,
+              doLogo: null,
+              regionLogo: null,
+              thumbnailSrc: getDefaultNoPhotoSrc(),
+              galleryPreview: {
+                bottle: getDefaultNoPhotoSrc(),
+                front: getDefaultNoPhotoSrc(),
+                back: getDefaultNoPhotoSrc(),
+                situation: getDefaultNoPhotoSrc(),
+              },
+              vintageYear: null,
+              agingType: null,
+              pricePaid: 0,
+              averageScore: null,
+            } satisfies WineItem
+
+            reviewEntries.push({
+              wine,
+              review: {
+                id: item.id,
+                user: {
+                  id: item.user.id,
+                  name: item.user.name,
+                  lastname: item.user.lastname,
+                },
+                score: item.score,
+                aroma: item.aroma,
+                appearance: item.appearance,
+                palate_entry: item.palate_entry,
+                body: item.body,
+                persistence: item.persistence,
+                bullets: item.bullets,
+                created_at: item.created_at,
+              },
+            })
+          })
+
+          reviewsPage += 1
+        }
 
         if (controller.signal.aborted) {
           return
         }
 
-        const entries = entriesByWine
-          .flat()
-          .sort((a, b) => new Date(b.review.created_at).getTime() - new Date(a.review.created_at).getTime())
-
         setReviewTotalWines(totalItems)
-        setMyReviewEntries(entries)
+        setMyReviewEntries(reviewEntries)
         setMyReviewSummaryStatus('ready')
       } catch (error: unknown) {
         if (controller.signal.aborted) {
@@ -2531,7 +2598,7 @@ function HomePage() {
     return () => {
       controller.abort()
     }
-  }, [menu, currentUserId, locale, reviewListReloadToken])
+  }, [menu, currentUserId, locale, reviewListReloadToken, reviewSortConfig])
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -3033,28 +3100,6 @@ function HomePage() {
     () => wineItems.filter((wine) => !reviewedWineIdSet.has(wine.id)),
     [wineItems, reviewedWineIdSet],
   )
-  const reviewWineFilterOptions = useMemo(
-    () => myReviewEntries
-      .map((entry) => ({ id: entry.wine.id, name: entry.wine.name }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    [myReviewEntries],
-  )
-  const filteredMyReviewEntries = useMemo(
-    () => (reviewWineFilter === 'all'
-      ? myReviewEntries
-      : myReviewEntries.filter((entry) => entry.wine.id === reviewWineFilter)),
-    [myReviewEntries, reviewWineFilter],
-  )
-
-  useEffect(() => {
-    if (reviewWineFilter === 'all') {
-      return
-    }
-    const stillExists = myReviewEntries.some((entry) => entry.wine.id === reviewWineFilter)
-    if (!stillExists) {
-      setReviewWineFilter('all')
-    }
-  }, [myReviewEntries, reviewWineFilter])
 
   const createReviewPreset = (() => {
     return buildReviewFormPreset(null)
@@ -4296,14 +4341,12 @@ function HomePage() {
             myReviewSummaryStatus={myReviewSummaryStatus}
             myReviewSummaryError={myReviewSummaryError}
             reviewActionError={reviewActionError}
-            reviewWineFilter={reviewWineFilter}
-            reviewWineFilterOptions={reviewWineFilterOptions}
-            filteredMyReviewEntries={filteredMyReviewEntries}
+            reviewSortOrder={reviewSortOrder}
             reviewDeleteBusyId={reviewDeleteBusyId}
             locale={locale}
             reviewEnumToTag={REVIEW_ENUM_TO_TAG}
             onOpenReviewCreate={openReviewCreate}
-            onReviewWineFilterChange={setReviewWineFilter}
+            onReviewSortOrderChange={setReviewSortOrder}
             onOpenReviewEdit={(entry) => openReviewEdit(entry.wine, entry.review)}
             onDeleteReview={(entry) => {
               void deleteReview(entry.wine, entry.review)
