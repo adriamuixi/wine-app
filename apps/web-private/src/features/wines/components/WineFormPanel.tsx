@@ -1,4 +1,5 @@
 import type { FormEventHandler, ReactNode, RefObject, SyntheticEvent } from 'react'
+import { WorldCountrySelect } from '../../../shared/components/WorldCountrySelect'
 import type {
   AwardRow,
   CountryFilterValue,
@@ -463,11 +464,7 @@ export function WineFormPanel({
               </label>
               <label>
                 {t('common.purchaseCountry')}
-                <select name="place_country" defaultValue={primaryEditPurchase?.place.country ?? manufacturingCountry}>
-                  {countryOptions.map((country) => (
-                    <option key={country.value} value={country.value}>{country.label}</option>
-                  ))}
-                </select>
+                <WorldCountrySelect name="place_country" defaultValue={primaryEditPurchase?.place.country ?? manufacturingCountry} />
               </label>
             </div>
             <div className="inline-grid">

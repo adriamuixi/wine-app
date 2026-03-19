@@ -69,6 +69,7 @@ import { resolveApiAssetUrl, resolveApiBaseUrl } from '../../shared/lib/env'
 import { localeToIntl } from '../../shared/lib/locale'
 import { averageScoreByType, clamp, createSeededRandom, linearRegression, median, standardDeviation } from '../../shared/lib/math'
 import { normalizeSearchText } from '../../shared/lib/text'
+import { isWorldCountryValue, toWorldCountryValue } from '../../shared/lib/worldCountries'
 
 const SAMPLE_WINE_THUMBNAIL_SRC = DEFAULT_NO_PHOTO_LIGHT_SRC
 const SAMPLE_WINE_GALLERY = [
@@ -3509,10 +3510,8 @@ function HomePage() {
       return
     }
 
-    const placeCountry = WINE_COUNTRY_FILTER_VALUES.includes(placeCountryRaw as Exclude<CountryFilterValue, 'all'>)
-      ? placeCountryRaw
-      : null
-    if (placeCountry === null) {
+    const placeCountry = toWorldCountryValue(placeCountryRaw)
+    if (!isWorldCountryValue(placeCountry)) {
       setWineFormError(
         t('ui.country_purchase_invalid'),
       )

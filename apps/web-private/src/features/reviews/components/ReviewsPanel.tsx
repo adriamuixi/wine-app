@@ -98,7 +98,6 @@ export function ReviewsPanel({
           </article>
         </div>
 
-        {myReviewSummaryStatus === 'loading' ? <p className="muted">{t('ui.calculating_summary_reviews')}</p> : null}
         {myReviewSummaryStatus === 'error' ? (
           <p className="error-message">{myReviewSummaryError ?? t('ui.not_could_calculate_summary')}</p>
         ) : null}
