@@ -1808,7 +1808,7 @@ function HomePage() {
       setDoCreateLogoPreviewSrc(null)
       setDoListReloadToken((current) => current + 1)
       setDoSuccessToast(
-        t('dos.ui.created_success', { name }),
+        t('ui.created_success', { name }),
       )
       setMenu('dos')
       setDoCreateSubmitting(false)
@@ -1911,7 +1911,7 @@ function HomePage() {
           <td className="wine-col-actions do-directory-actions-cell" data-label={t('ui.actions')}>
             <div className="do-directory-actions">
               <button type="button" className="ghost-button small" onClick={() => openDoEdit(item)}>
-                {t('dos.ui.edit_action')}
+                {t('ui.edit_action')}
               </button>
               <button type="button" className="ghost-button small danger-text-button" onClick={() => openDoDeleteConfirm(item)}>
                 {t('ui.delete')}
@@ -1988,7 +1988,7 @@ function HomePage() {
       setDoOptions((current) => current.map((item) => (item.id === updatedItem.id ? updatedItem : item)))
       setDoListReloadToken((current) => current + 1)
       setDoSuccessToast(
-        t('dos.ui.updated_success', { name }),
+        t('ui.updated_success', { name }),
       )
       closeDoEdit()
     } catch (error: unknown) {
@@ -2011,7 +2011,7 @@ function HomePage() {
       setDoOptions((current) => current.filter((item) => item.id !== doDeleteTarget.id))
       setDoListReloadToken((current) => current + 1)
       setDoSuccessToast(
-        t('dos.ui.deleted_success', { name: doDeleteTarget.name }),
+        t('ui.deleted_success', { name: doDeleteTarget.name }),
       )
       closeDoDeleteConfirm()
     } catch (error: unknown) {
@@ -4637,7 +4637,7 @@ function HomePage() {
         description={t('ui.this_accion_eliminara_do_yes_not_has_wines_linked_want_continuar')}
         error={doDeleteError}
         cancelLabel={t('ui.cancel')}
-        confirmLabel={doDeleteSubmitting ? t('ui.deleting') : t('dos.ui.delete_action')}
+        confirmLabel={doDeleteSubmitting ? t('ui.deleting') : t('ui.delete_action')}
         submitting={doDeleteSubmitting}
         modalId="delete-do-title"
         onClose={closeDoDeleteConfirm}
@@ -4651,7 +4651,7 @@ function HomePage() {
         description={t('ui.this_accion_eliminara_wine_and_its_photos_want_continuar')}
         error={wineDeleteError}
         cancelLabel={t('ui.cancel')}
-        confirmLabel={wineDeleteSubmitting ? t('ui.deleting') : t('dos.ui.delete_action')}
+        confirmLabel={wineDeleteSubmitting ? t('ui.deleting') : t('ui.delete_action')}
         submitting={wineDeleteSubmitting}
         modalId="delete-wine-title"
         onClose={closeWineDeleteConfirm}
