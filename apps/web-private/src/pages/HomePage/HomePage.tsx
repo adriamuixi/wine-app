@@ -242,47 +242,79 @@ function localizedCountryName(country: string, locale: string): string {
   return code == null ? country : countryCodeToLabel(code, locale)
 }
 
+function normalizeCountryToken(value: string): string {
+  return value
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+}
+
+function labelForCountryCodePath(countryCode: Exclude<CountryFilterValue, 'all'>, locale: string, path: 'common.worldCountries' | 'common.countries'): string | null {
+  const key = `${path}.${countryCode}`
+  const translated = i18n.getFixedT(locale)(key)
+  return translated === key ? null : translated
+}
+
 function countryCodeToLabel(countryCode: Exclude<CountryFilterValue, 'all'> | null, locale: string): string {
   if (countryCode == null) {
     return '-'
   }
 
-  return i18n.getFixedT(locale)(`common.countries.${countryCode}`)
+  const fromWorldCountries = labelForCountryCodePath(countryCode, locale, 'common.worldCountries')
+  if (fromWorldCountries != null && fromWorldCountries.trim() !== '') {
+    return fromWorldCountries
+  }
+
+  const fromLegacyCountries = labelForCountryCodePath(countryCode, locale, 'common.countries')
+  if (fromLegacyCountries != null && fromLegacyCountries.trim() !== '') {
+    return fromLegacyCountries
+  }
+
+  return countryCode.replace(/_/g, ' ')
 }
 
 function countryLabelToFilterValue(country: string): CountryFilterValue {
-  const normalized = country.trim().toLowerCase()
-  const map: Record<string, Exclude<CountryFilterValue, 'all'>> = {
-    spain: 'spain',
-    españa: 'spain',
-    espanya: 'spain',
-    france: 'france',
-    francia: 'france',
-    frança: 'france',
-    italy: 'italy',
-    italia: 'italy',
-    portugal: 'portugal',
-    germany: 'germany',
-    alemania: 'germany',
-    alemanya: 'germany',
-    argentina: 'argentina',
-    chile: 'chile',
-    usa: 'united_states',
-    us: 'united_states',
-    united_states: 'united_states',
-    'united-states': 'united_states',
-    'united states': 'united_states',
-    'estados unidos': 'united_states',
-    'estats units': 'united_states',
-    south_africa: 'south_africa',
-    'south-africa': 'south_africa',
-    'south africa': 'south_africa',
-    'sudáfrica': 'south_africa',
-    'sud-àfrica': 'south_africa',
-    australia: 'australia',
+  const normalized = normalizeCountryToken(country)
+  if (normalized === '') {
+    return 'all'
   }
 
-  return map[normalized] ?? 'all'
+  const shorthand: Record<string, Exclude<CountryFilterValue, 'all'>> = {
+    usa: 'united_states',
+    us: 'united_states',
+  }
+  if (normalized in shorthand) {
+    return shorthand[normalized]
+  }
+
+  for (const code of WINE_COUNTRY_FILTER_VALUES) {
+    const normalizedCode = normalizeCountryToken(code)
+    if (normalized === normalizedCode) {
+      return code
+    }
+
+    const normalizedCodeSpaced = normalizeCountryToken(code.replace(/_/g, ' '))
+    if (normalized === normalizedCodeSpaced) {
+      return code
+    }
+
+    for (const locale of ['es', 'ca', 'en'] as const) {
+      const worldLabel = labelForCountryCodePath(code, locale, 'common.worldCountries')
+      if (worldLabel != null && normalizeCountryToken(worldLabel) === normalized) {
+        return code
+      }
+
+      const legacyLabel = labelForCountryCodePath(code, locale, 'common.countries')
+      if (legacyLabel != null && normalizeCountryToken(legacyLabel) === normalized) {
+        return code
+      }
+    }
+  }
+
+  return 'all'
 }
 
 function countryCodeFromAny(country: string): Exclude<CountryFilterValue, 'all'> | null {

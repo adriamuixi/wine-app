@@ -1,103 +1,211 @@
-export type WorldCountryOption = {
-  value: string
-  label: string
-}
+export const WORLD_COUNTRY_VALUES = [
+  "afghanistan",
+  "albania",
+  "algeria",
+  "andorra",
+  "angola",
+  "anguilla",
+  "antigua_and_barbuda",
+  "argentina",
+  "armenia",
+  "australia",
+  "austria",
+  "azerbaijan",
+  "bahamas",
+  "bahrain",
+  "bangladesh",
+  "barbados",
+  "belarus",
+  "belgium",
+  "belize",
+  "benin",
+  "bhutan",
+  "bolivia",
+  "bosnia_and_herzegovina",
+  "botswana",
+  "brazil",
+  "brunei",
+  "bulgaria",
+  "burkina_faso",
+  "burundi",
+  "cambodia",
+  "cameroon",
+  "canada",
+  "cape_verde",
+  "central_african_republic",
+  "chad",
+  "chile",
+  "china",
+  "colombia",
+  "comoros",
+  "congo_brazzaville",
+  "congo_kinshasa",
+  "costa_rica",
+  "cote_d_ivoire",
+  "croatia",
+  "cuba",
+  "cyprus",
+  "czechia",
+  "denmark",
+  "djibouti",
+  "dominica",
+  "dominican_republic",
+  "ecuador",
+  "egypt",
+  "el_salvador",
+  "equatorial_guinea",
+  "eritrea",
+  "estonia",
+  "eswatini",
+  "ethiopia",
+  "fiji",
+  "finland",
+  "france",
+  "gabon",
+  "gambia",
+  "georgia",
+  "germany",
+  "ghana",
+  "greece",
+  "grenada",
+  "guatemala",
+  "guinea",
+  "guinea_bissau",
+  "guyana",
+  "haiti",
+  "honduras",
+  "hungary",
+  "iceland",
+  "india",
+  "indonesia",
+  "iran",
+  "iraq",
+  "ireland",
+  "israel",
+  "italy",
+  "jamaica",
+  "japan",
+  "jordan",
+  "kazakhstan",
+  "kenya",
+  "kiribati",
+  "kuwait",
+  "kyrgyzstan",
+  "laos",
+  "latvia",
+  "lebanon",
+  "lesotho",
+  "liberia",
+  "libya",
+  "liechtenstein",
+  "lithuania",
+  "luxembourg",
+  "madagascar",
+  "malawi",
+  "malaysia",
+  "maldives",
+  "mali",
+  "malta",
+  "marshall_islands",
+  "mauritania",
+  "mauritius",
+  "mexico",
+  "micronesia",
+  "moldova",
+  "monaco",
+  "mongolia",
+  "montenegro",
+  "morocco",
+  "mozambique",
+  "myanmar_burma",
+  "namibia",
+  "nauru",
+  "nepal",
+  "netherlands",
+  "new_zealand",
+  "nicaragua",
+  "niger",
+  "nigeria",
+  "north_korea",
+  "north_macedonia",
+  "norway",
+  "oman",
+  "pakistan",
+  "palau",
+  "panama",
+  "papua_new_guinea",
+  "paraguay",
+  "peru",
+  "philippines",
+  "poland",
+  "portugal",
+  "qatar",
+  "romania",
+  "russia",
+  "rwanda",
+  "samoa",
+  "san_marino",
+  "sao_tome_and_principe",
+  "saudi_arabia",
+  "senegal",
+  "serbia",
+  "seychelles",
+  "sierra_leone",
+  "singapore",
+  "slovakia",
+  "slovenia",
+  "solomon_islands",
+  "somalia",
+  "south_africa",
+  "south_korea",
+  "south_sudan",
+  "spain",
+  "sri_lanka",
+  "st_kitts_and_nevis",
+  "st_lucia",
+  "st_vincent_and_grenadines",
+  "sudan",
+  "suriname",
+  "sweden",
+  "switzerland",
+  "syria",
+  "tajikistan",
+  "tanzania",
+  "thailand",
+  "timor_leste",
+  "togo",
+  "tonga",
+  "trinidad_and_tobago",
+  "tunisia",
+  "turkiye",
+  "turkmenistan",
+  "tuvalu",
+  "uganda",
+  "ukraine",
+  "united_arab_emirates",
+  "united_kingdom",
+  "united_states",
+  "uruguay",
+  "uzbekistan",
+  "vanuatu",
+  "vatican_city",
+  "venezuela",
+  "vietnam",
+  "yemen",
+  "zambia",
+  "zimbabwe",
+]
 
-const FALLBACK_REGION_CODES = [
-  'AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AR', 'AT', 'AU', 'AZ',
-  'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BN', 'BO', 'BR',
-  'BS', 'BT', 'BW', 'BY', 'BZ', 'CA', 'CD', 'CF', 'CG', 'CH', 'CI', 'CL',
-  'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM',
-  'DO', 'DZ', 'EC', 'EE', 'EG', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FM', 'FR',
-  'GA', 'GB', 'GD', 'GE', 'GH', 'GM', 'GN', 'GQ', 'GR', 'GT', 'GW', 'GY',
-  'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IN', 'IQ', 'IR', 'IS', 'IT',
-  'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW',
-  'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY',
-  'MA', 'MC', 'MD', 'ME', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MR', 'MT',
-  'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NE', 'NG', 'NI', 'NL', 'NO',
-  'NP', 'NR', 'NZ', 'OM', 'PA', 'PE', 'PG', 'PH', 'PK', 'PL', 'PT', 'PW',
-  'PY', 'QA', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG',
-  'SI', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SY', 'SZ',
-  'TD', 'TG', 'TH', 'TJ', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TZ',
-  'UA', 'UG', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VN', 'VU', 'WS', 'YE',
-  'ZA', 'ZM', 'ZW',
-] as const
-
-function getRegionCodes(): string[] {
-  const withSupportedValues = Intl as unknown as { supportedValuesOf?: (key: string) => string[] }
-  if (typeof withSupportedValues.supportedValuesOf === 'function') {
-    try {
-      const values = withSupportedValues.supportedValuesOf('region')
-      if (Array.isArray(values) && values.length > 0) {
-        return values
-      }
-    } catch {
-      // Fallback list is used when runtime does not support region introspection.
-    }
-  }
-
-  return [...FALLBACK_REGION_CODES]
-}
+const WORLD_COUNTRY_VALUES_SET = new Set(WORLD_COUNTRY_VALUES)
 
 function normalizeCountryValue(raw: string): string {
-  return raw
-    .trim()
-    .toLowerCase()
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
+  return raw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").replace(/_+/g, "_")
 }
-
-export const WORLD_COUNTRY_OPTIONS: WorldCountryOption[] = (() => {
-  try {
-    const regionCodes = getRegionCodes()
-    const hasDisplayNames = typeof Intl.DisplayNames === 'function'
-    const displayNames = hasDisplayNames ? new Intl.DisplayNames(['en'], { type: 'region' }) : null
-
-    const options = regionCodes
-      .map((code): WorldCountryOption | null => {
-        const label = displayNames?.of(code)
-        if (typeof label !== 'string' || label.trim() === '' || label.toUpperCase() === code.toUpperCase()) {
-          return {
-            value: code.toLowerCase(),
-            label: code,
-          }
-        }
-
-        return {
-          value: normalizeCountryValue(label),
-          label,
-        }
-      })
-      .filter((option): option is WorldCountryOption => option !== null)
-      .sort((left, right) => left.label.localeCompare(right.label))
-
-    if (options.length > 0) {
-      return options
-    }
-  } catch {
-    // Hard fallback below.
-  }
-
-  return [
-    { value: 'spain', label: 'Spain' },
-    { value: 'france', label: 'France' },
-    { value: 'italy', label: 'Italy' },
-    { value: 'portugal', label: 'Portugal' },
-    { value: 'germany', label: 'Germany' },
-    { value: 'argentina', label: 'Argentina' },
-    { value: 'chile', label: 'Chile' },
-    { value: 'united states', label: 'United States' },
-    { value: 'south africa', label: 'South Africa' },
-    { value: 'australia', label: 'Australia' },
-  ]
-})()
-
-const WORLD_COUNTRY_VALUES = new Set(WORLD_COUNTRY_OPTIONS.map((option) => option.value))
 
 export function toWorldCountryValue(raw: string): string {
   return normalizeCountryValue(raw)
 }
 
 export function isWorldCountryValue(raw: string): boolean {
-  return WORLD_COUNTRY_VALUES.has(normalizeCountryValue(raw))
+  return WORLD_COUNTRY_VALUES_SET.has(normalizeCountryValue(raw))
 }
