@@ -62,6 +62,7 @@ final class DesignationOfOriginController
             $nameFilter = $this->parseOptionalStringFilter($request, 'name');
             $countryFilter = $this->parseCountryFilter($request, 'country');
             $regionFilter = $this->parseOptionalStringFilter($request, 'region');
+            $userIdsFilter = $this->parseUserIdsFilter($request, 'user_ids');
         } catch (\InvalidArgumentException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
         }
@@ -71,6 +72,7 @@ final class DesignationOfOriginController
             name: $nameFilter,
             country: $countryFilter,
             region: $regionFilter,
+            userIds: $userIdsFilter,
         ));
 
         return new JsonResponse([
@@ -390,5 +392,37 @@ final class DesignationOfOriginController
         } catch (\ValueError) {
             throw new \InvalidArgumentException(sprintf('Invalid %s value.', $field));
         }
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function parseUserIdsFilter(Request $request, string $field): array
+    {
+        $raw = $request->query->get($field);
+        if (null === $raw) {
+            return [];
+        }
+
+        if (!is_string($raw)) {
+            throw new \InvalidArgumentException(sprintf('%s must be a comma-separated string of integers.', $field));
+        }
+
+        $trimmed = trim($raw);
+        if ('' === $trimmed) {
+            throw new \InvalidArgumentException(sprintf('%s must include at least one user id.', $field));
+        }
+
+        $resolved = [];
+        foreach (explode(',', $trimmed) as $token) {
+            $candidate = trim($token);
+            if ('' === $candidate || !ctype_digit($candidate) || (int) $candidate < 1) {
+                throw new \InvalidArgumentException(sprintf('%s must be a comma-separated string of integers >= 1.', $field));
+            }
+
+            $resolved[(int) $candidate] = true;
+        }
+
+        return array_keys($resolved);
     }
 }

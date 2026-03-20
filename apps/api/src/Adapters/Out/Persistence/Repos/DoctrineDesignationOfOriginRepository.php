@@ -8,6 +8,7 @@ use App\Application\UseCases\DesignationOfOrigin\ListDesignationsOfOrigin\ListDe
 use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Enum\Country;
 use App\Domain\Model\DesignationOfOrigin;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineDesignationOfOriginRepository implements DesignationOfOriginRepository
@@ -74,35 +75,53 @@ final readonly class DoctrineDesignationOfOriginRepository implements Designatio
         ?string $name = null,
         ?Country $country = null,
         ?string $region = null,
+        array $userIds = [],
     ): array
     {
         $resolvedSortFields = [] === $sortFields ? ListDesignationsOfOriginSort::DEFAULT_ORDER : $sortFields;
         $columnMap = [
-            ListDesignationsOfOriginSort::COUNTRY => 'country',
-            ListDesignationsOfOriginSort::REGION => 'region',
-            ListDesignationsOfOriginSort::NAME => 'name',
+            ListDesignationsOfOriginSort::COUNTRY => 'd.country',
+            ListDesignationsOfOriginSort::REGION => 'd.region',
+            ListDesignationsOfOriginSort::NAME => 'd.name',
         ];
         $orderBy = implode(', ', array_map(
-            static fn (string $field): string => sprintf('%s ASC', $columnMap[$field] ?? 'name'),
+            static fn (string $field): string => sprintf('%s ASC', $columnMap[$field] ?? 'd.name'),
             $resolvedSortFields,
         ));
 
         $where = [];
         $params = [];
+        $types = [];
         if (null !== $name && '' !== trim($name)) {
-            $where[] = 'name ILIKE :name';
+            $where[] = 'd.name ILIKE :name';
             $params['name'] = '%'.trim($name).'%';
         }
         if (null !== $country) {
-            $where[] = 'country = :country';
+            $where[] = 'd.country = :country';
             $params['country'] = $country->value;
         }
         if (null !== $region && '' !== trim($region)) {
-            $where[] = 'region ILIKE :region';
+            $where[] = 'd.region ILIKE :region';
             $params['region'] = '%'.trim($region).'%';
         }
+        if ([] !== $userIds) {
+            $where[] = <<<'SQL'
+EXISTS (
+    SELECT 1
+    FROM wine w
+    INNER JOIN review r ON r.wine_id = w.id
+    WHERE w.do_id = d.id
+      AND r.user_id IN (:user_ids)
+    GROUP BY w.id
+    HAVING COUNT(DISTINCT r.user_id) = :required_user_count
+)
+SQL;
+            $params['user_ids'] = $userIds;
+            $params['required_user_count'] = count($userIds);
+            $types['user_ids'] = ArrayParameterType::INTEGER;
+        }
 
-        $sql = 'SELECT id, name, region, country, country_code, do_logo, region_logo, map_data FROM designation_of_origin';
+        $sql = 'SELECT d.id, d.name, d.region, d.country, d.country_code, d.do_logo, d.region_logo, d.map_data FROM designation_of_origin d';
         if ([] !== $where) {
             $sql .= ' WHERE '.implode(' AND ', $where);
         }
@@ -111,6 +130,7 @@ final readonly class DoctrineDesignationOfOriginRepository implements Designatio
         $rows = $this->entityManager->getConnection()->fetchAllAssociative(
             $sql,
             $params,
+            $types,
         );
 
         return array_map(

@@ -506,6 +506,13 @@ paths:
           schema:
             type: string
         - in: query
+          name: user_ids
+          description: >
+            Comma-separated user IDs. Returns only DOs where, within the same DO, at least one wine has been reviewed by every specified user.
+          schema:
+            type: string
+            example: '1,2'
+        - in: query
           name: sort_by_1
           description: Primary sort field. Allowed values are `country`, `region`, `name`.
           schema:
@@ -534,7 +541,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DoListResponse'
         '400':
-          description: Invalid sort parameters
+          description: Invalid query parameters
           content:
             application/json:
               schema:

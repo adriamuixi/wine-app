@@ -103,6 +103,39 @@ final class DesignationOfOriginControllerTest extends TestCase
         self::assertSame('rioja', $repository->lastRegionFilter);
     }
 
+    public function testListPassesUserIdsFilterToRepository(): void
+    {
+        $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
+        $controller = new DesignationOfOriginController(
+            new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
+            new ListDesignationsOfOriginHandler($repository),
+            new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
+            new DeleteDesignationOfOriginHandler($repository, new DesignationOfOriginControllerNullDesignationOfOriginAssetStorage()),
+        );
+
+        $response = $controller->list(Request::create('/api/dos?user_ids=1,2,2', 'GET'));
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSame([1, 2], $repository->lastUserIdsFilter);
+    }
+
+    public function testListReturnsBadRequestForInvalidUserIdsFilter(): void
+    {
+        $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
+        $controller = new DesignationOfOriginController(
+            new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
+            new ListDesignationsOfOriginHandler($repository),
+            new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
+            new DeleteDesignationOfOriginHandler($repository, new DesignationOfOriginControllerNullDesignationOfOriginAssetStorage()),
+        );
+
+        $response = $controller->list(Request::create('/api/dos?user_ids=1,abc', 'GET'));
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertSame('user_ids must be a comma-separated string of integers >= 1.', $payload['error']);
+    }
+
     public function testListReturnsBadRequestForInvalidCountryFilter(): void
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
@@ -438,6 +471,8 @@ final class DesignationOfOriginControllerInMemoryDesignationOfOriginRepository i
     public ?string $lastNameFilter = null;
     public ?Country $lastCountryFilter = null;
     public ?string $lastRegionFilter = null;
+    /** @var list<int> */
+    public array $lastUserIdsFilter = [];
     public ?DesignationOfOrigin $lastCreatedDo = null;
     public ?DesignationOfOrigin $lastUpdatedDo = null;
     /** @var list<int> */
@@ -494,12 +529,14 @@ final class DesignationOfOriginControllerInMemoryDesignationOfOriginRepository i
         ?string $name = null,
         ?Country $country = null,
         ?string $region = null,
+        array $userIds = [],
     ): array
     {
         $this->lastSortFields = $sortFields;
         $this->lastNameFilter = $name;
         $this->lastCountryFilter = $country;
         $this->lastRegionFilter = $region;
+        $this->lastUserIdsFilter = $userIds;
 
         return [
             new DesignationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES', 'rioja_DO.png', 'la_rioja.png', ['lat' => 42.46, 'lng' => -2.44, 'zoom' => 7]),

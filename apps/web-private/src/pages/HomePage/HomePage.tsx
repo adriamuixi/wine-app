@@ -13,6 +13,7 @@ import { toCountryIsoCode } from '../../features/do/services/countryCode'
 import { usePhotoEditorGestures } from '../../features/wines/hooks/usePhotoEditorGestures'
 import { deleteWineById } from '../../features/wines/services/photoApi'
 import { drawPhotoEditorPreviewImage, getPhotoEditorRatioClass } from '../../features/wines/services/photoEditor'
+import { formatIsoDateToDdMmYyyy, parseDateInputToIso } from '../../features/wines/lib/dateInput'
 import { ConfirmDeleteModal } from '../../shared/components/ConfirmDeleteModal'
 import {
   DEFAULT_NO_PHOTO_DARK_SRC,
@@ -496,49 +497,6 @@ function formatApiDate(dateIso: string, locale: string): string {
     month: '2-digit',
     day: '2-digit',
   }).format(date)
-}
-
-function formatIsoDateToDdMmYyyy(value: string | null | undefined): string {
-  if (value == null || value.trim() === '') {
-    return ''
-  }
-  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  if (isoMatch) {
-    const [, year, month, day] = isoMatch
-    return `${day}/${month}/${year}`
-  }
-  return value
-}
-
-function parseDateInputToIso(value: string): string | null {
-  const trimmed = value.trim()
-  if (trimmed === '') {
-    return null
-  }
-
-  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  if (isoMatch) {
-    return trimmed
-  }
-
-  const displayMatch = trimmed.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/)
-  if (!displayMatch) {
-    return null
-  }
-
-  const day = Number(displayMatch[1])
-  const month = Number(displayMatch[2])
-  const year = Number(displayMatch[3])
-  const candidate = new Date(Date.UTC(year, month - 1, day))
-  const isValid = candidate.getUTCFullYear() === year
-    && candidate.getUTCMonth() === month - 1
-    && candidate.getUTCDate() === day
-
-  if (!isValid) {
-    return null
-  }
-
-  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
 function labelForPhotoType(type: WineDetailsApiPhoto['type'] | 'do_logo', locale: string): string {

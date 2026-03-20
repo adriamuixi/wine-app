@@ -17,6 +17,7 @@ interface DesignationOfOriginRepository
 
     /**
      * @param list<string> $sortFields
+     * @param list<int>    $userIds
      *
      * @return list<DesignationOfOrigin>
      */
@@ -25,6 +26,7 @@ interface DesignationOfOriginRepository
         ?string $name = null,
         ?Country $country = null,
         ?string $region = null,
+        array $userIds = [],
     ): array;
 
     public function update(DesignationOfOrigin $do): bool;

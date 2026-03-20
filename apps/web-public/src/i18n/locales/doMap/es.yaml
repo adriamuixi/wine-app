@@ -7,6 +7,8 @@ doMap:
   worldMapLabel: Mapa mundi de DO
   openCatalog: ''
   filterCountry: País
+  tatRossetLabel: Tat & Rosset
+  tatRossetAria: Filtrar DO de usuarios Tat & Rosset
   chooseDo: Seleccionar DO
   chooseCountryFirst: Primero selecciona un país.
   chooseDoPlaceholder: Elige una denominación

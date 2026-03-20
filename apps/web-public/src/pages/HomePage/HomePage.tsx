@@ -103,6 +103,7 @@ export default function App() {
   const [selectedMapDoId, setSelectedMapDoId] = useState<number | null>(null)
   const [doMapZoomLevel, setDoMapZoomLevel] = useState(3.1)
   const [doMapCountryFilter, setDoMapCountryFilter] = useState<string>(DO_MAP_ALL_WORLD_VALUE)
+  const [isDoMapTatRossetOnly, setIsDoMapTatRossetOnly] = useState(false)
   const [isDoMapCountryMenuOpen, setIsDoMapCountryMenuOpen] = useState(false)
   const [isDoMapMobileDoPickerOpen, setIsDoMapMobileDoPickerOpen] = useState(false)
   const [isDoMapMobile, setIsDoMapMobile] = useState(false)
@@ -245,8 +246,9 @@ export default function App() {
   useEffect(() => {
     const controller = new AbortController()
     const base = resolveApiBaseUrl()
+    const userIds = isDoMapPage && isDoMapTatRossetOnly ? [1, 2] : undefined
 
-    void fetchDoItems(base, controller.signal)
+    void fetchDoItems(base, controller.signal, userIds ? { userIds } : {})
       .then((items) => {
         if (controller.signal.aborted) return
         setDoOptions(items)
@@ -259,7 +261,7 @@ export default function App() {
     return () => {
       controller.abort()
     }
-  }, [])
+  }, [isDoMapPage, isDoMapTatRossetOnly])
 
   useEffect(() => {
     const shouldLockScroll = isMobileMenuOpen || isMobileFiltersOpen || isMobileSortOpen
@@ -1128,6 +1130,7 @@ export default function App() {
         isDoMapFullscreen={isDoMapFullscreen}
         isDoMapMobile={isDoMapMobile}
         isDoMapMobileDoPickerOpen={isDoMapMobileDoPickerOpen}
+        isDoMapTatRossetOnly={isDoMapTatRossetOnly}
         isMobileMenuOpen={isMobileMenuOpen}
         locale={locale}
         localeLabels={localeLabels}
@@ -1140,6 +1143,7 @@ export default function App() {
         setDoMapCountryFilter={setDoMapCountryFilter}
         setIsDoMapCountryMenuOpen={setIsDoMapCountryMenuOpen}
         setIsDoMapMobileDoPickerOpen={setIsDoMapMobileDoPickerOpen}
+        setIsDoMapTatRossetOnly={setIsDoMapTatRossetOnly}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         setLocale={setLocale}
         setSelectedMapDoId={setSelectedMapDoId}

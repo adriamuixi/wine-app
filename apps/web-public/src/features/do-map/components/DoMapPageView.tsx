@@ -19,6 +19,7 @@ type Props = {
   isDoMapFullscreen: boolean
   isDoMapMobile: boolean
   isDoMapMobileDoPickerOpen: boolean
+  isDoMapTatRossetOnly: boolean
   isMobileMenuOpen: boolean
   locale: Locale
   localeLabels: Record<Locale, string>
@@ -31,6 +32,7 @@ type Props = {
   setDoMapCountryFilter: Dispatch<SetStateAction<string>>
   setIsDoMapCountryMenuOpen: Dispatch<SetStateAction<boolean>>
   setIsDoMapMobileDoPickerOpen: Dispatch<SetStateAction<boolean>>
+  setIsDoMapTatRossetOnly: Dispatch<SetStateAction<boolean>>
   setIsMobileMenuOpen: Dispatch<SetStateAction<boolean>>
   setLocale: Dispatch<SetStateAction<Locale>>
   setSelectedMapDoId: Dispatch<SetStateAction<number | null>>
@@ -56,6 +58,7 @@ export default function DoMapPageView({
   isDoMapFullscreen,
   isDoMapMobile,
   isDoMapMobileDoPickerOpen,
+  isDoMapTatRossetOnly,
   isMobileMenuOpen,
   locale,
   localeLabels,
@@ -68,6 +71,7 @@ export default function DoMapPageView({
   setDoMapCountryFilter,
   setIsDoMapCountryMenuOpen,
   setIsDoMapMobileDoPickerOpen,
+  setIsDoMapTatRossetOnly,
   setIsMobileMenuOpen,
   setLocale,
   setSelectedMapDoId,
@@ -220,6 +224,16 @@ export default function DoMapPageView({
                   </div>
                 ) : null}
               </div>
+
+              <label className="do-map-tat-rosset-toggle">
+                <input
+                  type="checkbox"
+                  checked={isDoMapTatRossetOnly}
+                  onChange={(event) => setIsDoMapTatRossetOnly(event.target.checked)}
+                  aria-label={t.doMap.tatRossetAria}
+                />
+                <span>{t.doMap.tatRossetLabel}</span>
+              </label>
 
               {isDoMapMobile ? (
                 <button

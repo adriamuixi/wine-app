@@ -608,6 +608,12 @@ code {
   box-shadow: 0 8px 16px rgba(109, 32, 56, 0.14);
 }
 
+@media (min-width: 1101px) {
+  .sidebar:not(.collapsed) .brand-mark {
+    display: none;
+  }
+}
+
 .sidebar-header h1 {
   margin: 0.2rem 0 0;
   font-size: 1.2rem;

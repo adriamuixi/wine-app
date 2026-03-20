@@ -271,6 +271,7 @@ final class InMemoryDesignationOfOriginRepository implements DesignationOfOrigin
         ?string $name = null,
         ?Country $country = null,
         ?string $region = null,
+        array $userIds = [],
     ): array
     {
         return [];

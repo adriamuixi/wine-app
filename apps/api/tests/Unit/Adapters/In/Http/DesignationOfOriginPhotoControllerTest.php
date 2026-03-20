@@ -123,6 +123,7 @@ final class DesignationOfOriginPhotoControllerInMemoryDesignationOfOriginReposit
         ?string $name = null,
         ?Country $country = null,
         ?string $region = null,
+        array $userIds = [],
     ): array
     {
         return [];

@@ -92,6 +92,8 @@ export type PublicMessages = {
     worldMapLabel: string
     openCatalog: string
     filterCountry: string
+    tatRossetLabel: string
+    tatRossetAria: string
     chooseDo: string
     chooseCountryFirst: string
     chooseDoPlaceholder: string

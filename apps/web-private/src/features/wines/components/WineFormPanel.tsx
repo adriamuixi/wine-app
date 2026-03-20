@@ -457,7 +457,7 @@ export function WineFormPanel({
                   type="text"
                   inputMode="numeric"
                   placeholder="dd/mm/yyyy"
-                  pattern="\\d{2}/\\d{2}/\\d{4}"
+                  pattern="(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{4})"
                   defaultValue={formatIsoDateToDdMmYyyy(primaryEditPurchase?.purchased_at?.slice(0, 10) ?? currentDateInput)}
                   required
                 />
