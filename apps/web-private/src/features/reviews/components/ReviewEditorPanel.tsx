@@ -25,7 +25,6 @@ type ReviewEditorPanelProps = {
   scoreOptions0To100: number[]
   onBack: () => void
   onSubmit: FormEventHandler<HTMLFormElement>
-  formatIsoDateToDdMmYyyy: (value: string) => string
 }
 
 export function ReviewEditorPanel({
@@ -44,13 +43,35 @@ export function ReviewEditorPanel({
   scoreOptions0To100,
   onBack,
   onSubmit,
-  formatIsoDateToDdMmYyyy,
 }: ReviewEditorPanelProps) {
   const reviewFormId = `review-form-${mode}-${selectedReviewId ?? 'new'}`
   const reviewSubmitLabel = mode === 'create'
     ? (reviewFormSubmitting ? t('ui.creating') : labels.submit)
     : (reviewFormSubmitting ? t('ui.saving') : t('ui.save_changes_review'))
   const winesForSelect = mode === 'create' ? creatableWineItems : wineItems
+  const reviewDateDefaultValue = (() => {
+    const trimmed = preset.tastingDate.trim()
+    const isoDateMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (isoDateMatch) {
+      return trimmed
+    }
+
+    const isoDateTimeMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})T/)
+    if (isoDateTimeMatch) {
+      const [, year, month, day] = isoDateTimeMatch
+      return `${year}-${month}-${day}`
+    }
+
+    const displayMatch = trimmed.match(/^(\d{1,2})\s*[\/.-]\s*(\d{1,2})\s*[\/.-]\s*(\d{4})$/)
+    if (displayMatch) {
+      const day = displayMatch[1].padStart(2, '0')
+      const month = displayMatch[2].padStart(2, '0')
+      const year = displayMatch[3]
+      return `${year}-${month}-${day}`
+    }
+
+    return ''
+  })()
 
   return (
     <section className="screen-grid">
@@ -113,12 +134,9 @@ export function ReviewEditorPanel({
           <label>
             {t('ui.date_review')}
             <input
-              type="text"
+              type="date"
               name="created_at"
-              inputMode="numeric"
-              placeholder="dd/mm/yyyy"
-              pattern="\\d{2}/\\d{2}/\\d{4}"
-              defaultValue={formatIsoDateToDdMmYyyy(preset.tastingDate)}
+              defaultValue={reviewDateDefaultValue}
             />
           </label>
 

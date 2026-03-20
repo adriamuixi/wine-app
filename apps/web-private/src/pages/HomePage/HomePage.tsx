@@ -4371,7 +4371,6 @@ function HomePage() {
             scoreOptions0To100={SCORE_OPTIONS_0_TO_100}
             onBack={() => setMenu('reviews')}
             onSubmit={handleReviewFormSubmit('create')}
-            formatIsoDateToDdMmYyyy={formatIsoDateToDdMmYyyy}
           />
         ) : null}
 
@@ -4392,7 +4391,6 @@ function HomePage() {
             scoreOptions0To100={SCORE_OPTIONS_0_TO_100}
             onBack={() => setMenu('reviews')}
             onSubmit={handleReviewFormSubmit('edit')}
-            formatIsoDateToDdMmYyyy={formatIsoDateToDdMmYyyy}
           />
         ) : null}
 
