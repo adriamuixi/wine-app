@@ -1333,7 +1333,9 @@ function HomePage() {
   const isPhotoOverlayOpen = selectedWineGallery != null || (photoEditorType != null && photoEditorSource != null)
   const isDarkMode = themeMode === 'dark'
   const brandWordmarkSrc = isDarkMode ? '/images/brand/logo-wordmark-dark.png' : '/images/brand/logo-wordmark-light.png'
-  const brandWordmarkSidebarSrc = '/images/brand/logo-wordmark-dark.png'
+  const brandWordmarkSidebarSrc = isDarkMode
+    ? '/images/brand/logo-wordmark-dark.png'
+    : '/images/brand/logo-wordmark-light.png'
   const brandWordmarkTopbarSrc = '/images/brand/logo-wordmark-dark.png'
   const brandIconSrc = '/images/brand/icon-square-64.png'
   const themeToggleLabel = isDarkMode ? labels.common.themeSwitchToLight : labels.common.themeSwitchToDark
