@@ -162,7 +162,7 @@ export function DashboardPanel({
                 <YAxis yAxisId="avg" orientation="right" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} width={34} domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} />
                 <Tooltip cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }} />
                 <Bar yAxisId="reviews" dataKey="reviews" name={t('ui.reviews')} fill="#c39a7f" radius={[6, 6, 0, 0]} />
-                <Line yAxisId="avg" type="monotone" dataKey="median" name={t('dashboard.ui.median_score_series')} stroke="#8f3851" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                <Line yAxisId="avg" type="monotone" dataKey="median" name={t('ui.median_score_series')} stroke="#8f3851" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -223,13 +223,13 @@ export function DashboardPanel({
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} width={28} />
                 <Tooltip cursor={{ fill: 'rgba(143, 56, 81, 0.05)' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }} />
-                <Bar dataKey="web" name={t('dashboard.ui.web_label')} fill="#c39a7f" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="web" name={t('ui.web_label')} fill="#c39a7f" radius={[5, 5, 0, 0]} />
                 <Bar dataKey="mine" name={t('ui.mine')} fill="#8f3851" radius={[5, 5, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="dashboard-hero-footnote">
-            <span>{t('dashboard.ui.web_global_label')}</span>
+            <span>{t('ui.web_global_label')}</span>
             <span>{t('ui.mine_label')}</span>
           </div>
         </section>
@@ -298,7 +298,7 @@ export function DashboardPanel({
               <ScatterChart margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" />
                 <XAxis type="number" dataKey="price" name={t('ui.price')} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
-                <YAxis type="number" dataKey="score" name={t('dashboard.ui.score_label')} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                <YAxis type="number" dataKey="score" name={t('ui.score_label')} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
                 <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }} />
                 <Scatter data={dashboardAnalytics.priceVsScore} fill="#8f3851" />
                 <Scatter data={dashboardAnalytics.regressionLine} fill="transparent" line={{ stroke: '#c39a7f', strokeWidth: 2 }} />
@@ -314,7 +314,7 @@ export function DashboardPanel({
             {dashboardAnalytics.topValueWines.slice(0, 5).map((wine) => (<div key={wine.id} className="mini-table-row"><span>{wine.name}</span><strong>{wine.valueIndex.toFixed(2)}</strong></div>))}
           </div>
           <div className="mini-table">
-            {dashboardAnalytics.scoreBands.map((band) => (<div key={band.label} className="mini-table-row"><span>{t('dashboard.ui.range_label')} {band.label}</span><strong>{band.count > 0 ? priceFormatter.format(band.avgPrice) : '-'}</strong></div>))}
+            {dashboardAnalytics.scoreBands.map((band) => (<div key={band.label} className="mini-table-row"><span>{t('ui.range_label')} {band.label}</span><strong>{band.count > 0 ? priceFormatter.format(band.avgPrice) : '-'}</strong></div>))}
           </div>
         </section>
 
@@ -350,13 +350,13 @@ export function DashboardPanel({
         </section>
 
         <section className="panel dashboard-couple-panel">
-          <div className="panel-header"><div><p className="eyebrow">{t('dashboard.ui.comparison')}</p><h3>{t('dashboard.ui.maria_vs_adria')}</h3></div></div>
-          <div className="chart-shell" aria-label={t('dashboard.ui.scatter_maria_versus_adria')}>
+          <div className="panel-header"><div><p className="eyebrow">{t('ui.comparison')}</p><h3>{t('ui.maria_vs_adria')}</h3></div></div>
+          <div className="chart-shell" aria-label={t('ui.scatter_maria_versus_adria')}>
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 8, right: 8, left: -20, bottom: 2 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(140, 120, 110, 0.16)" />
-                <XAxis type="number" dataKey="x" name={t('dashboard.ui.maria_axis')} domain={[4, 10]} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
-                <YAxis type="number" dataKey="y" name={t('dashboard.ui.adria_axis')} domain={[4, 10]} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                <XAxis type="number" dataKey="x" name={t('ui.maria_axis')} domain={[4, 10]} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
+                <YAxis type="number" dataKey="y" name={t('ui.adria_axis')} domain={[4, 10]} tick={{ fontSize: 11, fill: '#7a695f' }} axisLine={false} tickLine={false} />
                 <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 12, border: '1px solid rgba(82,46,28,0.12)', background: 'rgba(255,252,248,0.96)' }} />
                 <ReferenceLine segment={[{ x: 4, y: 4 }, { x: 10, y: 10 }]} stroke="#c39a7f" strokeDasharray="4 4" />
                 <Scatter data={dashboardAnalytics.coupleScatter} fill="#8f3851" />

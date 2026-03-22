@@ -3596,8 +3596,8 @@ function HomePage() {
       })
       .then(() => {
         const toastMessage = isEditing
-          ? t('wines.ui.updated_success', { name })
-          : t('wines.ui.created_success', { name })
+          ? t('ui.updated_success', { name })
+          : t('ui.created_success', { name })
         setWineSuccessToast(toastMessage)
 
         if (isEditing) {

@@ -251,6 +251,11 @@ common:
   placeType:
     restaurant: Restaurant
     supermarket: Supermarket
+  agingType:
+    young: Young
+    crianza: Crianza
+    reserve: Reserve
+    grand_reserve: Grand Reserve
 user:
   backoffice: Backoffice
   role: Winery Administrator

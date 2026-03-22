@@ -11,7 +11,7 @@ export function LanguageSelector({ compact = false }: LanguageSelectorProps) {
 
   return (
     <label className={`language-selector ${compact ? 'compact' : ''}`}>
-      <span className="sr-only">{t('admin.ui.language')}</span>
+      <span className="sr-only">{t('ui.language')}</span>
       <select value={locale} onChange={(event) => setLocale(event.target.value as Locale)}>
         {locales.map((localeKey) => (
           <option key={localeKey} value={localeKey}>{localeLabels[localeKey]}</option>

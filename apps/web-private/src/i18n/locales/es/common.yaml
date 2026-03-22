@@ -251,6 +251,11 @@ common:
   placeType:
     restaurant: Restaurante
     supermarket: Mercado
+  agingType:
+    young: Joven
+    crianza: Crianza
+    reserve: Reserva
+    grand_reserve: Gran reserva
 user:
   backoffice: Backoffice
   role: Administrador de Bodega

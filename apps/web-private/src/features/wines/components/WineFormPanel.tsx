@@ -213,7 +213,7 @@ export function WineFormPanel({
                   {t('ui.crianza')}
                   <select name="aging_type" defaultValue={wineEditDetails?.aging_type ?? 'crianza'}>
                     {agingOptions.map((aging) => (
-                      <option key={aging} value={aging}>{aging}</option>
+                      <option key={aging} value={aging}>{t(`common.agingType.${aging}`)}</option>
                     ))}
                   </select>
                 </label>

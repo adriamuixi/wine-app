@@ -251,6 +251,11 @@ common:
   placeType:
     restaurant: Restaurant
     supermarket: Mercat
+  agingType:
+    young: Jove
+    crianza: Criança
+    reserve: Reserva
+    grand_reserve: Gran reserva
 user:
   backoffice: Backoffice
   role: Administrador de Celler
