@@ -50,6 +50,8 @@ services:
     build:
       context: .
       dockerfile: apps/web-private/Dockerfile.prod
+      args:
+        VITE_GEOAPIFY_API_KEY: ${VITE_GEOAPIFY_API_KEY:-}
     container_name: wine_web_private_prod
     restart: unless-stopped
 
