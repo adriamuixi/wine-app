@@ -569,6 +569,8 @@ final class WineController
                 throw new CreateWineValidationException(sprintf('purchases[%d].place.city must be a string or null.', $index));
             }
 
+            $mapData = $this->parsePlaceMapData($place['map_data'] ?? null, $index);
+
             $pricePaid = $item['price_paid'] ?? null;
             if (!is_int($pricePaid) && !is_float($pricePaid) && !is_string($pricePaid)) {
                 throw new CreateWineValidationException(sprintf('purchases[%d].price_paid is required and must be numeric.', $index));
@@ -586,7 +588,7 @@ final class WineController
             }
 
             $result[] = new CreateWinePurchaseInput(
-                new CreateWinePlaceInput($placeType, $placeName, $address, $city, $placeCountry),
+                new CreateWinePlaceInput($placeType, $placeName, $address, $city, $placeCountry, $mapData),
                 (string) $pricePaid,
                 $parsedPurchasedAt,
             );
@@ -653,7 +655,7 @@ final class WineController
      *     created_at:string,
      *     updated_at:string,
      *     grapes:list<array{id:int,name:string,color:string,percentage:?float}>,
-     *     purchases:list<array{id:int,place:array{id:int,place_type:string,name:string,address:?string,city:?string,country:string},price_paid:float,purchased_at:string}>,
+     *     purchases:list<array{id:int,place:array{id:int,place_type:string,name:string,address:?string,city:?string,country:string,map_data:?array{lat:float,lng:float}},price_paid:float,purchased_at:string}>,
      *     awards:list<array{id:int,name:string,score:?float,year:?int}>,
      *     photos:list<array{id:int,type:?string,url:string,hash:string,size:int,extension:string}>,
      *     reviews:list<array{id:int,user:array{id:int,name:string,lastname:string},score:?int,aroma:int,appearance:int,palate_entry:int,body:int,persistence:int,bullets:list<string>,created_at:string}>
@@ -692,6 +694,7 @@ final class WineController
                         'address' => $purchase->place->address,
                         'city' => $purchase->place->city,
                         'country' => $purchase->place->country->value,
+                        'map_data' => $purchase->place->mapData,
                     ],
                     'price_paid' => $purchase->pricePaidAsFloat(),
                     'purchased_at' => $purchase->purchasedAt->format(\DateTimeInterface::ATOM),
@@ -738,6 +741,43 @@ final class WineController
                 $wine->reviews,
             ),
         ];
+    }
+
+    /**
+     * @return array{lat: float, lng: float}|null
+     */
+    private function parsePlaceMapData(mixed $value, int $purchaseIndex): ?array
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        if (!is_array($value)) {
+            throw new CreateWineValidationException(sprintf('purchases[%d].place.map_data must be an object or null.', $purchaseIndex));
+        }
+
+        $lat = $value['lat'] ?? null;
+        if (!is_numeric($lat)) {
+            throw new CreateWineValidationException(sprintf('purchases[%d].place.map_data.lat must be numeric.', $purchaseIndex));
+        }
+
+        $lng = $value['lng'] ?? null;
+        if (!is_numeric($lng)) {
+            throw new CreateWineValidationException(sprintf('purchases[%d].place.map_data.lng must be numeric.', $purchaseIndex));
+        }
+
+        $latFloat = (float) $lat;
+        $lngFloat = (float) $lng;
+
+        if ($latFloat < -90 || $latFloat > 90) {
+            throw new CreateWineValidationException(sprintf('purchases[%d].place.map_data.lat must be between -90 and 90.', $purchaseIndex));
+        }
+
+        if ($lngFloat < -180 || $lngFloat > 180) {
+            throw new CreateWineValidationException(sprintf('purchases[%d].place.map_data.lng must be between -180 and 180.', $purchaseIndex));
+        }
+
+        return ['lat' => $latFloat, 'lng' => $lngFloat];
     }
 
     /**

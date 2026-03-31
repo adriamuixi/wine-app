@@ -3478,6 +3478,8 @@ function HomePage() {
     const placeAddressRaw = String(form.get('place_address') ?? '').trim()
     const placeCityRaw = String(form.get('place_city') ?? '').trim()
     const placeCountryRaw = String(form.get('place_country') ?? '').trim()
+    const placeLatitudeRaw = String(form.get('place_latitude') ?? '').trim()
+    const placeLongitudeRaw = String(form.get('place_longitude') ?? '').trim()
     const pricePaidRaw = String(form.get('price_paid') ?? '').trim()
     const purchasedAtRaw = String(form.get('purchased_at') ?? '').trim()
     const purchasedAtIso = parseDateInputToIso(purchasedAtRaw)
@@ -3509,6 +3511,10 @@ function HomePage() {
       )
       return
     }
+
+    const placeLatitudeValue = placeLatitudeRaw === '' ? null : Number(placeLatitudeRaw)
+    const placeLongitudeValue = placeLongitudeRaw === '' ? null : Number(placeLongitudeRaw)
+    const hasValidCoordinates = Number.isFinite(placeLatitudeValue) && Number.isFinite(placeLongitudeValue)
 
     const grapes = grapeBlendRows
       .map((row) => {
@@ -3558,6 +3564,7 @@ function HomePage() {
             address: placeAddressRaw === '' ? null : placeAddressRaw,
             city: placeCityRaw === '' ? null : placeCityRaw,
             country: placeCountry,
+            map_data: hasValidCoordinates ? { lat: Number(placeLatitudeValue), lng: Number(placeLongitudeValue) } : null,
           },
           price_paid: pricePaidRaw,
           purchased_at: purchasedAtIso,

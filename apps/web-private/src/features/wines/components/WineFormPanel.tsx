@@ -1,5 +1,7 @@
+import { useEffect, useRef, useState } from 'react'
 import type { FormEventHandler, ReactNode, RefObject, SyntheticEvent } from 'react'
 import { WorldCountrySelect } from '../../../shared/components/WorldCountrySelect'
+import { isWorldCountryValue, toWorldCountryValue } from '../../../shared/lib/worldCountries'
 import type {
   AwardRow,
   CountryFilterValue,
@@ -36,6 +38,10 @@ type PurchaseDraft = {
     country: string
     address: string | null
     city: string | null
+    map_data: {
+      lat: number
+      lng: number
+    } | null
   }
   price_paid: number | null
   purchased_at: string | null
@@ -110,6 +116,121 @@ type WineFormPanelProps = {
   formatIsoDateToDdMmYyyy: (value: string) => string
 }
 
+type GeoapifyFeature = {
+  geometry?: {
+    coordinates?: [number, number]
+  }
+  properties?: {
+    formatted?: string
+    address_line1?: string
+    address_line2?: string
+    street?: string
+    housenumber?: string
+    postcode?: string
+    lat?: number
+    lon?: number
+    city?: string
+    town?: string
+    village?: string
+    county?: string
+    state?: string
+    country?: string
+    country_code?: string
+  }
+}
+
+const GEOAPIFY_COUNTRY_BY_ISO2: Record<string, string> = {
+  US: 'united_states',
+  GB: 'united_kingdom',
+  TR: 'turkiye',
+  CI: 'cote_d_ivoire',
+}
+
+function toCountryValueFromGeoapify(properties: GeoapifyFeature['properties']): string | null {
+  if (!properties) {
+    return null
+  }
+
+  const normalizedIso = properties.country_code?.toUpperCase().trim() ?? ''
+  if (normalizedIso.length > 0) {
+    const override = GEOAPIFY_COUNTRY_BY_ISO2[normalizedIso]
+    if (override) {
+      return override
+    }
+
+    const regionName = new Intl.DisplayNames(['en'], { type: 'region' }).of(normalizedIso)
+    if (regionName) {
+      const normalizedRegion = toWorldCountryValue(regionName)
+      if (isWorldCountryValue(normalizedRegion)) {
+        return normalizedRegion
+      }
+    }
+  }
+
+  const normalizedCountry = toWorldCountryValue(properties.country ?? '')
+  return isWorldCountryValue(normalizedCountry) ? normalizedCountry : null
+}
+
+function toAddressValueFromGeoapify(properties: GeoapifyFeature['properties']): string {
+  if (!properties) {
+    return ''
+  }
+  const postcode = properties.postcode?.trim() ?? ''
+  const appendPostcode = (base: string): string => {
+    if (base.trim().length === 0) {
+      return postcode
+    }
+    if (postcode.length === 0) {
+      return base.trim()
+    }
+    return `${base.trim()}, ${postcode}`
+  }
+
+  if (properties.address_line1 && properties.address_line1.trim().length > 0) {
+    return appendPostcode(properties.address_line1)
+  }
+
+  const street = properties.street?.trim() ?? ''
+  const houseNumber = properties.housenumber?.trim() ?? ''
+  const assembled = [street, houseNumber].filter((chunk) => chunk.length > 0).join(' ').trim()
+  if (assembled.length > 0) {
+    return appendPostcode(assembled)
+  }
+  if (properties.address_line2 && properties.address_line2.trim().length > 0) {
+    return appendPostcode(properties.address_line2)
+  }
+  return appendPostcode(properties.formatted?.trim() ?? '')
+}
+
+function toCityValueFromGeoapify(properties: GeoapifyFeature['properties']): string {
+  if (!properties) {
+    return ''
+  }
+  return (
+    properties.city?.trim()
+    || properties.town?.trim()
+    || properties.village?.trim()
+    || properties.county?.trim()
+    || properties.state?.trim()
+    || ''
+  )
+}
+
+function toCoordinateValuesFromGeoapify(feature: GeoapifyFeature): { latitude: string; longitude: string } {
+  const latFromProperties = feature.properties?.lat
+  const lonFromProperties = feature.properties?.lon
+  const latFromGeometry = feature.geometry?.coordinates?.[1]
+  const lonFromGeometry = feature.geometry?.coordinates?.[0]
+
+  const latitude = Number.isFinite(latFromProperties) ? latFromProperties : latFromGeometry
+  const longitude = Number.isFinite(lonFromProperties) ? lonFromProperties : lonFromGeometry
+
+  return {
+    latitude: Number.isFinite(latitude) ? Number(latitude).toFixed(6) : '',
+    longitude: Number.isFinite(longitude) ? Number(longitude).toFixed(6) : '',
+  }
+}
+
 export function WineFormPanel({
   t,
   labels,
@@ -160,6 +281,149 @@ export function WineFormPanel({
   regionLogoPathFromImageName,
   formatIsoDateToDdMmYyyy,
 }: WineFormPanelProps) {
+  const geoapifyApiKey = (import.meta.env.VITE_GEOAPIFY_API_KEY as string | undefined)?.trim() ?? ''
+  const isGeoapifyEnabled = geoapifyApiKey.length > 0
+
+  const formRef = useRef<HTMLFormElement | null>(null)
+  const addressInputRef = useRef<HTMLInputElement | null>(null)
+  const cityInputRef = useRef<HTMLInputElement | null>(null)
+  const [addressAutocompleteQuery, setAddressAutocompleteQuery] = useState('')
+  const [placeLatitude, setPlaceLatitude] = useState('')
+  const [placeLongitude, setPlaceLongitude] = useState('')
+  const [addressSuggestions, setAddressSuggestions] = useState<GeoapifyFeature[]>([])
+  const [isAddressSuggestionsOpen, setIsAddressSuggestionsOpen] = useState(false)
+  const [isAddressSuggestionsLoading, setIsAddressSuggestionsLoading] = useState(false)
+  const debounceRef = useRef<number | null>(null)
+  const searchAbortRef = useRef<AbortController | null>(null)
+  const skipNextAddressLookupRef = useRef(false)
+  const allowAddressLookupRef = useRef(false)
+
+  useEffect(() => {
+    const currentAddress = primaryEditPurchase?.place.address ?? ''
+    const currentLatitude = primaryEditPurchase?.place.map_data?.lat
+    const currentLongitude = primaryEditPurchase?.place.map_data?.lng
+    setAddressAutocompleteQuery(currentAddress)
+    allowAddressLookupRef.current = false
+    setPlaceLatitude(Number.isFinite(currentLatitude) ? Number(currentLatitude).toFixed(6) : '')
+    setPlaceLongitude(Number.isFinite(currentLongitude) ? Number(currentLongitude).toFixed(6) : '')
+    setAddressSuggestions([])
+    setIsAddressSuggestionsOpen(false)
+  }, [primaryEditPurchase?.place.address, primaryEditPurchase?.place.map_data?.lat, primaryEditPurchase?.place.map_data?.lng, selectedWineForEdit?.id, wineEditDetails?.id, mode, wineEditStatus])
+
+  useEffect(() => {
+    if (!isGeoapifyEnabled) {
+      return
+    }
+
+    if (skipNextAddressLookupRef.current) {
+      skipNextAddressLookupRef.current = false
+      setIsAddressSuggestionsLoading(false)
+      return
+    }
+    if (!allowAddressLookupRef.current) {
+      setIsAddressSuggestionsLoading(false)
+      return
+    }
+
+    const normalizedQuery = addressAutocompleteQuery.trim()
+    if (normalizedQuery.length < 3) {
+      setAddressSuggestions([])
+      setIsAddressSuggestionsOpen(false)
+      setIsAddressSuggestionsLoading(false)
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort()
+        searchAbortRef.current = null
+      }
+      return
+    }
+
+    if (debounceRef.current !== null) {
+      window.clearTimeout(debounceRef.current)
+    }
+
+    debounceRef.current = window.setTimeout(async () => {
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort()
+      }
+
+      const abortController = new AbortController()
+      searchAbortRef.current = abortController
+      setIsAddressSuggestionsLoading(true)
+
+      const params = new URLSearchParams({
+        text: normalizedQuery,
+        limit: '5',
+        type: 'street',
+        apiKey: geoapifyApiKey,
+      })
+
+      try {
+        const response = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`, {
+          method: 'GET',
+          signal: abortController.signal,
+        })
+        if (!response.ok) {
+          throw new Error(`Geoapify autocomplete failed with status ${response.status}`)
+        }
+
+        const payload = await response.json() as { features?: GeoapifyFeature[] }
+        const features = Array.isArray(payload.features) ? payload.features : []
+        setAddressSuggestions(features)
+        setIsAddressSuggestionsOpen(features.length > 0)
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setAddressSuggestions([])
+          setIsAddressSuggestionsOpen(false)
+        }
+      } finally {
+        setIsAddressSuggestionsLoading(false)
+      }
+    }, 350)
+
+    return () => {
+      if (debounceRef.current !== null) {
+        window.clearTimeout(debounceRef.current)
+      }
+    }
+  }, [addressAutocompleteQuery, geoapifyApiKey, isGeoapifyEnabled])
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current !== null) {
+        window.clearTimeout(debounceRef.current)
+      }
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort()
+      }
+    }
+  }, [])
+
+  function applyGeoapifySuggestion(feature: GeoapifyFeature) {
+    const properties = feature.properties
+    const nextAddress = toAddressValueFromGeoapify(properties)
+    const nextCity = toCityValueFromGeoapify(properties)
+    const nextCountry = toCountryValueFromGeoapify(properties)
+    const coordinates = toCoordinateValuesFromGeoapify(feature)
+
+    if (addressInputRef.current) {
+      addressInputRef.current.value = nextAddress
+    }
+    if (cityInputRef.current) {
+      cityInputRef.current.value = nextCity
+    }
+    const countrySelect = formRef.current?.querySelector('select[name="place_country"]')
+    if (countrySelect instanceof HTMLSelectElement && nextCountry) {
+      countrySelect.value = nextCountry
+    }
+
+    setAddressAutocompleteQuery(nextAddress)
+    setPlaceLatitude(coordinates.latitude)
+    setPlaceLongitude(coordinates.longitude)
+    skipNextAddressLookupRef.current = true
+    setAddressSuggestions([])
+    setIsAddressSuggestionsOpen(false)
+  }
+
   return (
     <section className="screen-grid">
       <section className="panel">
@@ -185,6 +449,7 @@ export function WineFormPanel({
         </div>
 
         <form
+          ref={formRef}
           id={wineFormId}
           key={`wine-form-${mode}-${selectedWineForEdit?.id ?? 'new'}-${wineEditDetails?.id ?? 'none'}-${wineEditStatus}`}
           className="stack-form wine-create-form"
@@ -470,11 +735,59 @@ export function WineFormPanel({
             <div className="inline-grid">
               <label>
                 {t('ui.address_place')}
-                <input name="place_address" type="text" placeholder="Carrer Major 12" defaultValue={primaryEditPurchase?.place.address ?? ''} />
+                <input
+                  ref={addressInputRef}
+                  name="place_address"
+                  type="text"
+                  placeholder="Carrer Major 12"
+                  defaultValue={primaryEditPurchase?.place.address ?? ''}
+                  onChange={(event) => {
+                    allowAddressLookupRef.current = true
+                    setAddressAutocompleteQuery(event.target.value)
+                    skipNextAddressLookupRef.current = false
+                    setPlaceLatitude('')
+                    setPlaceLongitude('')
+                  }}
+                  onFocus={() => {
+                    if (addressSuggestions.length > 0) {
+                      setIsAddressSuggestionsOpen(true)
+                    }
+                  }}
+                />
+                {isGeoapifyEnabled ? (
+                  <div className="address-autocomplete-panel">
+                    {isAddressSuggestionsLoading ? <p className="address-autocomplete-status">{t('ui.searching_address')}</p> : null}
+                    {!isAddressSuggestionsLoading && isAddressSuggestionsOpen ? (
+                      <div className="address-autocomplete-list" role="listbox" aria-label={t('ui.address_suggestions')}>
+                        {addressSuggestions.map((feature, index) => {
+                          const properties = feature.properties
+                          const optionLabel = properties?.formatted?.trim() || toAddressValueFromGeoapify(properties) || t('ui.address_unknown')
+                          return (
+                            <button
+                              key={`${optionLabel}-${index}`}
+                              type="button"
+                              className="address-autocomplete-option"
+                              role="option"
+                              onMouseDown={(event) => {
+                                event.preventDefault()
+                                applyGeoapifySuggestion(feature)
+                              }}
+                            >
+                              {optionLabel}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+                <p className="address-coordinates">lat: {placeLatitude || '--'} | lon: {placeLongitude || '--'}</p>
+                <input name="place_latitude" type="hidden" value={placeLatitude} readOnly />
+                <input name="place_longitude" type="hidden" value={placeLongitude} readOnly />
               </label>
               <label>
                 {t('ui.city')}
-                <input name="place_city" type="text" placeholder="Barcelona" defaultValue={primaryEditPurchase?.place.city ?? ''} />
+                <input ref={cityInputRef} name="place_city" type="text" placeholder="Barcelona" defaultValue={primaryEditPurchase?.place.city ?? ''} />
               </label>
             </div>
           </fieldset>

@@ -636,6 +636,7 @@ Example response shape:
 ### `POST /api/wines`
 
 Creates a wine with optional grapes, purchases, and awards.
+`purchases[].place.map_data` is optional and accepts coordinates `{ "lat": number, "lng": number }`.
 
 Example 1 (minimum):
 
@@ -661,7 +662,14 @@ curl -s -X POST http://localhost:8080/api/wines \
     "alcohol_percentage":14.5,
     "grapes":[{"grape_id":1,"percentage":85},{"grape_id":2,"percentage":15}],
     "purchases":[{
-      "place":{"place_type":"restaurant","name":"Casa Paco","address":"Calle A","city":"Madrid","country":"spain"},
+      "place":{
+        "place_type":"restaurant",
+        "name":"Casa Paco",
+        "address":"Calle A",
+        "city":"Madrid",
+        "country":"spain",
+        "map_data":{"lat":40.4167,"lng":-3.70325}
+      },
       "price_paid":"25.00",
       "purchased_at":"2026-03-01T10:00:00Z"
     }],
@@ -674,6 +682,21 @@ curl -s -X POST http://localhost:8080/api/wines \
 ### `GET /api/wines/{id}`
 
 Returns full wine details including grapes, purchases, awards, photos, and reviews.
+Each purchase place can include `map_data`:
+
+```json
+{
+  "place": {
+    "id": 11,
+    "place_type": "restaurant",
+    "name": "Casa Paco",
+    "address": "Calle A",
+    "city": "Madrid",
+    "country": "spain",
+    "map_data": { "lat": 40.4167, "lng": -3.70325 }
+  }
+}
+```
 
 Example 1 (existing wine):
 
@@ -692,6 +715,7 @@ curl -s http://localhost:8080/api/wines/999999 | jq
 ### `PUT /api/wines/{id}`
 
 Partial update. Only send fields to change.
+`purchases[].place.map_data` is also supported in updates.
 
 Example 1 (simple name update):
 
@@ -707,6 +731,27 @@ Example 2 (update multiple fields):
 curl -i -X PUT http://localhost:8080/api/wines/1 \
   -H 'Content-Type: application/json' \
   -d '{"wine_type":"white","vintage_year":2022,"alcohol_percentage":13.0}'
+```
+
+Example 3 (update purchase with coordinates):
+
+```bash
+curl -i -X PUT http://localhost:8080/api/wines/1 \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "purchases": [{
+      "place": {
+        "place_type": "restaurant",
+        "name": "Casa Paco",
+        "address": "Calle A",
+        "city": "Madrid",
+        "country": "spain",
+        "map_data": { "lat": 40.4167, "lng": -3.70325 }
+      },
+      "price_paid": "25.00",
+      "purchased_at": "2026-03-01T10:00:00Z"
+    }]
+  }'
 ```
 
 ---

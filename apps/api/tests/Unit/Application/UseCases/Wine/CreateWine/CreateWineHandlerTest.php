@@ -160,6 +160,24 @@ final class CreateWineHandlerTest extends TestCase
         self::assertSame('Madrid', $wineRepository->lastCommand?->purchases[0]->place->city);
     }
 
+    public function testItRejectsInvalidPlaceMapDataRange(): void
+    {
+        $handler = new CreateWineHandler(
+            new SpyWineRepository(),
+            new InMemoryDesignationOfOriginRepository(),
+            new InMemoryGrapeRepository(),
+        );
+
+        $this->expectException(CreateWineValidationException::class);
+        $handler->handle($this->command(
+            purchases: [new CreateWinePurchaseInput(
+                new CreateWinePlaceInput(PlaceType::Restaurant, 'Casa Paco', 'Street 1', 'Madrid', Country::Spain, ['lat' => 91.0, 'lng' => -3.7]),
+                '10.00',
+                new \DateTimeImmutable('2026-02-28T10:00:00+00:00'),
+            )],
+        ));
+    }
+
     /**
      * @param list<CreateWineGrapeInput> $grapes
      * @param list<CreateWinePurchaseInput> $purchases

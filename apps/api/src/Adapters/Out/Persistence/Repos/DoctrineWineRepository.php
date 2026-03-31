@@ -79,8 +79,8 @@ SQL,
                 foreach ($command->purchases as $purchase) {
                     $placeId = (int) $connection->fetchOne(
                         <<<'SQL'
-INSERT INTO place (place_type, name, address, city, country)
-VALUES (:place_type, :name, :address, :city, :country)
+INSERT INTO place (place_type, name, address, city, country, map_data)
+VALUES (:place_type, :name, :address, :city, :country, CAST(:map_data AS JSONB))
 RETURNING id
 SQL,
                         [
@@ -89,6 +89,7 @@ SQL,
                             'address' => $purchase->place->address,
                             'city' => $purchase->place->city,
                             'country' => $purchase->place->country->value,
+                            'map_data' => $this->encodePlaceMapData($purchase->place->mapData),
                         ],
                     );
 
@@ -276,8 +277,8 @@ SQL,
                     foreach ($command->purchases as $purchase) {
                         $placeId = (int) $connection->fetchOne(
                             <<<'SQL'
-INSERT INTO place (place_type, name, address, city, country)
-VALUES (:place_type, :name, :address, :city, :country)
+INSERT INTO place (place_type, name, address, city, country, map_data)
+VALUES (:place_type, :name, :address, :city, :country, CAST(:map_data AS JSONB))
 RETURNING id
 SQL,
                             [
@@ -286,6 +287,7 @@ SQL,
                                 'address' => $purchase->place->address,
                                 'city' => $purchase->place->city,
                                 'country' => $purchase->place->country->value,
+                                'map_data' => $this->encodePlaceMapData($purchase->place->mapData),
                             ],
                         );
 
@@ -399,6 +401,7 @@ SQL,
                     city: null === $row['place_city'] ? null : (string) $row['place_city'],
                     country: Country::from((string) $row['place_country']),
                     id: (int) $row['place_id'],
+                    mapData: $this->decodePlaceMapData($row['place_map_data'] ?? null),
                 ),
                 pricePaid: (string) $row['price_paid'],
                 purchasedAt: new \DateTimeImmutable((string) $row['purchased_at']),
@@ -415,7 +418,8 @@ SELECT
     p.name AS place_name,
     p.address AS place_address,
     p.city AS place_city,
-    p.country AS place_country
+    p.country AS place_country,
+    p.map_data AS place_map_data
 FROM wine_purchase wp
 INNER JOIN place p ON p.id = wp.place_id
 WHERE wp.wine_id = :wine_id
@@ -842,6 +846,45 @@ SQL,
             ),
             $reviewRows,
         );
+    }
+
+    private function encodePlaceMapData(?array $mapData): ?string
+    {
+        if (null === $mapData) {
+            return null;
+        }
+
+        return json_encode($mapData, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @return array{lat: float, lng: float}|null
+     */
+    private function decodePlaceMapData(mixed $value): ?array
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        if (is_string($value)) {
+            /** @var mixed $decoded */
+            $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+        } else {
+            $decoded = $value;
+        }
+
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        if (!array_key_exists('lat', $decoded) || !array_key_exists('lng', $decoded)) {
+            return null;
+        }
+
+        return [
+            'lat' => (float) $decoded['lat'],
+            'lng' => (float) $decoded['lng'],
+        ];
     }
 
     private function toIso8601(string $value): string

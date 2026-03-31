@@ -79,7 +79,12 @@ ui:
   type_place: Type place
   date_purchase: Date purchase
   address_place: Address place
+  searching_address: Searching address...
+  address_suggestions: Address suggestions
+  address_unknown: Address without details
   city: City
+  latitude: Latitude
+  longitude: Longitude
   awards: Awards
   score: Score
   year: Year

@@ -207,6 +207,10 @@ export type WineDetailsApiPurchase = {
     address: string | null
     city: string | null
     country: Exclude<CountryFilterValue, 'all'>
+    map_data: {
+      lat: number
+      lng: number
+    } | null
   }
   price_paid: number
   purchased_at: string

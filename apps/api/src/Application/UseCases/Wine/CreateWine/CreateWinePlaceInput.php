@@ -9,12 +9,14 @@ use App\Domain\Enum\PlaceType;
 
 final readonly class CreateWinePlaceInput
 {
+    /** @var array{lat: float, lng: float}|null */
     public function __construct(
         public PlaceType $placeType,
         public string $name,
         public ?string $address,
         public ?string $city,
         public Country $country,
+        public ?array $mapData = null,
     ) {
     }
 }

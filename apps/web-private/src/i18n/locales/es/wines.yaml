@@ -79,7 +79,12 @@ ui:
   type_place: Tipo de lugar
   date_purchase: Fecha de la compra
   address_place: Dirección del lugar
+  searching_address: Buscando dirección...
+  address_suggestions: Sugerencias de dirección
+  address_unknown: Dirección sin detalle
   city: Ciudad
+  latitude: Latitud
+  longitude: Longitud
   awards: Premios
   score: Puntuación
   year: Año

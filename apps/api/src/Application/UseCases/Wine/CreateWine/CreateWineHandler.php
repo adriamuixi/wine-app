@@ -84,6 +84,7 @@ final readonly class CreateWineHandler
                 address: $purchase->place->address,
                 city: $purchase->place->city,
                 country: $purchase->place->country,
+                mapData: $purchase->place->mapData,
             );
 
             new WinePurchase(

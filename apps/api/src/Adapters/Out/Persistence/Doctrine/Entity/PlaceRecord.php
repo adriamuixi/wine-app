@@ -31,4 +31,8 @@ class PlaceRecord
 
     #[ORM\Column(enumType: Country::class)]
     private Country $country;
+
+    /** @var array{lat: float, lng: float}|null */
+    #[ORM\Column(name: 'map_data', type: 'json', nullable: true)]
+    private ?array $mapData = null;
 }

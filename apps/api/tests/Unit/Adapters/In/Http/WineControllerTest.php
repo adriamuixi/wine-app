@@ -188,6 +188,70 @@ final class WineControllerTest extends TestCase
         self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
     }
 
+    public function testCreateAcceptsPlaceMapData(): void
+    {
+        $controller = $this->controller(doCountries: [1 => Country::Spain], grapeIds: [5]);
+        $request = Request::create(
+            '/api/wines',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Wine with map data',
+                'do_id' => 1,
+                'purchases' => [
+                    [
+                        'place' => [
+                            'place_type' => 'restaurant',
+                            'name' => 'Casa Geo',
+                            'address' => 'Calle A',
+                            'city' => 'Madrid',
+                            'country' => 'spain',
+                            'map_data' => ['lat' => 40.4167, 'lng' => -3.70325],
+                        ],
+                        'price_paid' => '15.00',
+                        'purchased_at' => '2026-03-01T10:00:00+00:00',
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+    }
+
+    public function testCreateRejectsInvalidPlaceMapData(): void
+    {
+        $controller = $this->controller(doCountries: [1 => Country::Spain], grapeIds: [5]);
+        $request = Request::create(
+            '/api/wines',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Wine invalid map data',
+                'do_id' => 1,
+                'purchases' => [
+                    [
+                        'place' => [
+                            'place_type' => 'restaurant',
+                            'name' => 'Casa Geo',
+                            'address' => 'Calle A',
+                            'city' => 'Madrid',
+                            'country' => 'spain',
+                            'map_data' => ['lat' => 'foo', 'lng' => -3.70325],
+                        ],
+                        'price_paid' => '15.00',
+                        'purchased_at' => '2026-03-01T10:00:00+00:00',
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
     public function testListReturnsPaginatedWinesWithDefaults(): void
     {
         $controller = $this->controller();
@@ -343,6 +407,7 @@ final class WineControllerTest extends TestCase
                             'address' => 'Carrer Major 22',
                             'city' => 'Barcelona',
                             'country' => 'spain',
+                            'map_data' => ['lat' => 41.3851, 'lng' => 2.1734],
                         ],
                         'price_paid' => '14.95',
                         'purchased_at' => '2026-03-15T10:00:00+00:00',
@@ -358,6 +423,7 @@ final class WineControllerTest extends TestCase
         self::assertCount(1, SpyWineRepository::$lastUpdateCommand->purchases);
         self::assertSame('Carrer Major 22', SpyWineRepository::$lastUpdateCommand->purchases[0]->place->address);
         self::assertSame('Barcelona', SpyWineRepository::$lastUpdateCommand->purchases[0]->place->city);
+        self::assertSame(['lat' => 41.3851, 'lng' => 2.1734], SpyWineRepository::$lastUpdateCommand->purchases[0]->place->mapData);
         self::assertSame('14.95', SpyWineRepository::$lastUpdateCommand->purchases[0]->pricePaid);
     }
 
@@ -399,6 +465,7 @@ final class WineControllerTest extends TestCase
         self::assertSame('parker', $payload['wine']['awards'][0]['name']);
         self::assertSame('fruity', $payload['wine']['reviews'][0]['bullets'][0]);
         self::assertSame('Madrid', $payload['wine']['purchases'][0]['place']['city']);
+        self::assertSame(['lat' => 40.4167, 'lng' => -3.70325], $payload['wine']['purchases'][0]['place']['map_data']);
         self::assertSame('ribera', $payload['wine']['do']['name']);
         self::assertSame('ribera_del_duero_DO.png', $payload['wine']['do']['do_logo']);
         self::assertSame('castilla_y_leon.png', $payload['wine']['do']['region_logo']);
@@ -494,7 +561,7 @@ final class SpyWineRepository implements WineRepository
             grapes: [new WineGrape(2, '90', 'Tempranillo', GrapeColor::Red)],
             purchases: [
                 new WinePurchase(
-                    new Place(PlaceType::Restaurant, 'Casa Paco', 'Calle A', 'Madrid', Country::Spain, 11),
+                    new Place(PlaceType::Restaurant, 'Casa Paco', 'Calle A', 'Madrid', Country::Spain, 11, ['lat' => 40.4167, 'lng' => -3.70325]),
                     '21.5',
                     new \DateTimeImmutable('2026-03-01T08:00:00+00:00'),
                     10,
