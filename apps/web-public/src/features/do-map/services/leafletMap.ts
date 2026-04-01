@@ -69,14 +69,9 @@ export async function initializeLeafletMap({
   const leaflet = await loadLeafletGlobal()
 
   const leafletMap = leaflet.map(container, {
-    zoomControl: false,
+    zoomControl: true,
     minZoom: 2,
     maxZoom: 12,
-    zoomAnimation: false,
-    fadeAnimation: false,
-    markerZoomAnimation: false,
-    zoomSnap: 1,
-    zoomDelta: 1,
   })
 
   if (doMapCountryFilter === doMapAllWorldValue) {

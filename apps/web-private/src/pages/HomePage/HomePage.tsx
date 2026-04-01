@@ -4026,11 +4026,11 @@ function HomePage() {
       >
         <div className="sidebar-header">
           <img src={brandIconSrc} className="brand-mark" alt={t('common.brandAlt')} />
-          <div className="sidebar-brand-copy">
+          <a className="sidebar-brand-copy sidebar-brand-home-link" href={publicWebUrl} aria-label={t('common.publicWeb')}>
             <img src={brandWordmarkSidebarSrc} className="brand-logo brand-logo-sidebar" alt={t('common.brandAlt')} />
             <p className="eyebrow">{isMobileViewport ? labels.common.appName : ''}</p>
             <h1>{isMobileViewport ? labels.user.backoffice : ''}</h1>
-          </div>
+          </a>
           <button
             type="button"
             className="sidebar-collapse-button"
@@ -4102,9 +4102,9 @@ function HomePage() {
       <section className="dashboard-content">
         <header className="topbar">
           <div className="topbar-mobile-head" aria-label={t('common.backofficeHeaderAria')}>
-            <div className="topbar-mobile-brand">
+            <a className="topbar-mobile-brand topbar-mobile-brand-link" href={publicWebUrl} aria-label={t('common.publicWeb')}>
               <img src={brandWordmarkTopbarSrc} className="topbar-mobile-wordmark" alt={t('common.brandAlt')} />
-            </div>
+            </a>
 
             <div className="topbar-mobile-actions">
               <button

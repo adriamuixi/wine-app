@@ -119,10 +119,20 @@ export default function WineRoutePageView({
   t,
   theme,
 }: Props) {
+  const localeCodes = Object.keys(localeLabels) as Locale[]
+  const toggleLocale = () => {
+    const currentIndex = localeCodes.indexOf(locale)
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % localeCodes.length : 0
+    setLocale(localeCodes[nextIndex] ?? localeCodes[0] ?? 'ca')
+  }
+
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapShellRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<number, LeafletMarker>>({})
   const [isRouteMapError, setIsRouteMapError] = useState(false)
+  const [canRouteMapFullscreen, setCanRouteMapFullscreen] = useState(false)
+  const [isRouteMapFullscreen, setIsRouteMapFullscreen] = useState(false)
 
   const routeStops = useMemo(
     () => [...MOCK_STOPS].sort((a, b) => new Date(a.tastingDate).getTime() - new Date(b.tastingDate).getTime()),
@@ -132,6 +142,33 @@ export default function WineRoutePageView({
 
   useEffect(() => {
     ensureLeafletStylesheet()
+  }, [])
+
+  useEffect(() => {
+    const syncCanFullscreen = () => {
+      const canFullscreen = Boolean(
+        mapShellRef.current
+        && typeof mapShellRef.current.requestFullscreen === 'function',
+      )
+      setCanRouteMapFullscreen(canFullscreen)
+    }
+
+    syncCanFullscreen()
+
+    const onFullscreenChange = () => {
+      const isActive = document.fullscreenElement === mapShellRef.current
+      setIsRouteMapFullscreen(isActive)
+      window.setTimeout(() => {
+        mapRef.current?.invalidateSize({ pan: false, animate: false })
+      }, 100)
+    }
+
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    window.addEventListener('resize', syncCanFullscreen)
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange)
+      window.removeEventListener('resize', syncCanFullscreen)
+    }
   }, [])
 
   useEffect(() => {
@@ -162,11 +199,29 @@ export default function WineRoutePageView({
       })
 
       const tileLanguage = locale === 'ca' ? 'ca' : locale === 'en' ? 'en' : 'es'
-      leaflet
-        .tileLayer(`https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png?lang=${tileLanguage}`, {
-          attribution: '&copy; OpenStreetMap contributors',
-        })
-        .addTo(map)
+      const primaryTileUrl = `https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png?lang=${tileLanguage}`
+      const fallbackTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      const tileLayerOptions = {
+        attribution: '&copy; OpenStreetMap contributors',
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+      }
+
+      const primaryTileLayer = leaflet.tileLayer(primaryTileUrl, tileLayerOptions) as unknown as {
+        addTo: (target: unknown) => unknown
+        on: (event: string, handler: () => void) => unknown
+      }
+      primaryTileLayer.addTo(map)
+      let switchedToFallback = false
+      primaryTileLayer.on('tileerror', () => {
+        if (switchedToFallback) {
+          return
+        }
+
+        switchedToFallback = true
+        map.removeLayer(primaryTileLayer)
+        leaflet.tileLayer(fallbackTileUrl, tileLayerOptions).addTo(map)
+      })
 
       const latLngs = routeStops.map((stop) => [stop.lat, stop.lng] as [number, number])
       const bounds = leaflet.latLngBounds(latLngs)
@@ -245,20 +300,73 @@ export default function WineRoutePageView({
     })
   }, [routeStops, selectedStopId])
 
+  const toggleRouteMapFullscreen = () => {
+    if (!mapShellRef.current) {
+      return
+    }
+
+    if (document.fullscreenElement === mapShellRef.current) {
+      void document.exitFullscreen()
+      return
+    }
+
+    void mapShellRef.current.requestFullscreen()
+  }
+
   return (
     <main className="public-shell wine-route-shell">
       <div className="public-background" aria-hidden="true" />
 
       <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
         <div className="brand-block">
-          <div className="brand-copy">
+          <a className="brand-copy brand-home-link" href="/" onClick={() => setIsMobileMenuOpen(false)} aria-label={t.common.brandAlt}>
             <img src={logoSrc} className="brand-wordmark" alt={t.common.brandAlt} />
             <p>{t.common.appName}</p>
-          </div>
+          </a>
         </div>
         {desktopNav}
 
         <div className="topbar-actions">
+          <div className="topbar-mobile-quick-actions">
+            <button
+              type="button"
+              className="topbar-mobile-bullet topbar-mobile-bullet-language"
+              onClick={toggleLocale}
+              aria-label={t.topbar.language}
+              title={t.topbar.language}
+            >
+              <span>{locale.toUpperCase()}</span>
+            </button>
+
+            <button
+              type="button"
+              className="topbar-mobile-bullet topbar-mobile-bullet-theme"
+              onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
+              aria-pressed={isDark}
+              aria-label={isDark ? t.topbar.light : t.topbar.dark}
+              title={isDark ? t.topbar.light : t.topbar.dark}
+            >
+              <span className="topbar-mobile-icon" aria-hidden="true">
+                {isDark ? (
+                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                    <path
+                      d="M14.8 12.8A6.3 6.3 0 0 1 7.2 5.2a6.8 6.8 0 1 0 7.6 7.6Z"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                    <circle cx="10" cy="10" r="3.2" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M10 2.6v2.1M10 15.3v2.1M2.6 10h2.1M15.3 10h2.1M4.7 4.7l1.5 1.5M13.8 13.8l1.5 1.5M15.3 4.7l-1.5 1.5M6.2 13.8l-1.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                )}
+              </span>
+            </button>
+          </div>
+
           <button
             type="button"
             className="theme-toggle"
@@ -298,19 +406,19 @@ export default function WineRoutePageView({
             </button>
           </div>
           <a href="/" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="/images/icons/wine/wine_card.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <img src="/images/icons/wine/wines2_glass.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.winesCatalog}</span>
           </a>
           <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="/images/icons/wine/do_sign.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <img src="/images/icons/wine/grapes_region.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.doMap}</span>
           </a>
           <a href="/ruta-de-vins" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="/images/icons/wine/calendar_grapes.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <img src="/images/icons/wine/wine_maps2.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.wineRoute}</span>
           </a>
           <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="/images/icons/wine/wines_book.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <img src="/images/icons/wine/wine_couple.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.whoWeAre}</span>
           </a>
           <a
@@ -337,19 +445,32 @@ export default function WineRoutePageView({
 
       <section className="hero-panel wine-route-hero">
         <div>
-          <p className="eyebrow">{t.wineRoute.eyebrow}</p>
-          <h1 className="section-title-with-icon">
-            <img src="/images/icons/wine/calendar_grapes.png" className="section-title-icon" alt="" aria-hidden="true" />
-            <span className="section-title-label">{t.wineRoute.title}</span>
-          </h1>
-          <p className="hero-subtitle">{t.wineRoute.subtitle}</p>
+          <div className="section-heading-with-icon">
+            <img src="/images/icons/wine/wine_maps2.png" className="section-heading-icon" alt="" aria-hidden="true" />
+            <div className="section-heading-copy">
+              <p className="eyebrow">{t.wineRoute.eyebrow}</p>
+              <h1 className="section-title-label">{t.wineRoute.title}</h1>
+            </div>
+          </div>
         </div>
         <div className="wine-route-hero-badge" aria-label={t.wineRoute.mockAria}>{t.wineRoute.mockBadge}</div>
       </section>
 
       <section className="wine-route-layout">
         <div className="cards-panel wine-route-map-card">
-          <div ref={mapContainerRef} className="wine-route-map" role="img" aria-label={t.wineRoute.mapAria}>
+          <div ref={mapShellRef} className="wine-route-map" role="img" aria-label={t.wineRoute.mapAria}>
+            <div ref={mapContainerRef} className="wine-route-map-leaflet" />
+            {canRouteMapFullscreen ? (
+              <button
+                type="button"
+                className="wine-route-fullscreen-button"
+                onClick={toggleRouteMapFullscreen}
+                aria-label={isRouteMapFullscreen ? t.doMap.fullscreenClose : t.doMap.fullscreenOpen}
+                title={isRouteMapFullscreen ? t.doMap.fullscreenClose : t.doMap.fullscreenOpen}
+              >
+                {isRouteMapFullscreen ? '✕' : '⛶'}
+              </button>
+            ) : null}
             {isRouteMapError ? <p className="do-map-error">{t.doMap.loadError}</p> : null}
           </div>
           <p className="wine-route-map-note">{t.wineRoute.circuitHint}</p>

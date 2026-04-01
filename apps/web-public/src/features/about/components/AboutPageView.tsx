@@ -42,20 +42,67 @@ export default function AboutPageView({
   t,
   theme,
 }: Props) {
+  const localeCodes = Object.keys(localeLabels) as Locale[]
+  const toggleLocale = () => {
+    const currentIndex = localeCodes.indexOf(locale)
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % localeCodes.length : 0
+    setLocale(localeCodes[nextIndex] ?? localeCodes[0] ?? 'ca')
+  }
+
   return (
     <main className="public-shell">
       <div className="public-background" aria-hidden="true" />
 
       <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
         <div className="brand-block">
-          <div className="brand-copy">
+          <a className="brand-copy brand-home-link" href="/" onClick={() => setIsMobileMenuOpen(false)} aria-label={t.common.brandAlt}>
             <img src={logoSrc} className="brand-wordmark" alt={t.common.brandAlt} />
             <p>{t.common.appName}</p>
-          </div>
+          </a>
         </div>
         {desktopNav}
 
         <div className="topbar-actions">
+          <div className="topbar-mobile-quick-actions">
+            <button
+              type="button"
+              className="topbar-mobile-bullet topbar-mobile-bullet-language"
+              onClick={toggleLocale}
+              aria-label={t.topbar.language}
+              title={t.topbar.language}
+            >
+              <span>{locale.toUpperCase()}</span>
+            </button>
+
+            <button
+              type="button"
+              className="topbar-mobile-bullet topbar-mobile-bullet-theme"
+              onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
+              aria-pressed={isDark}
+              aria-label={isDark ? t.topbar.light : t.topbar.dark}
+              title={isDark ? t.topbar.light : t.topbar.dark}
+            >
+              <span className="topbar-mobile-icon" aria-hidden="true">
+                {isDark ? (
+                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                    <path
+                      d="M14.8 12.8A6.3 6.3 0 0 1 7.2 5.2a6.8 6.8 0 1 0 7.6 7.6Z"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                    <circle cx="10" cy="10" r="3.2" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M10 2.6v2.1M10 15.3v2.1M2.6 10h2.1M15.3 10h2.1M4.7 4.7l1.5 1.5M13.8 13.8l1.5 1.5M15.3 4.7l-1.5 1.5M6.2 13.8l-1.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                )}
+              </span>
+            </button>
+          </div>
+
           <button
             type="button"
             className="theme-toggle"
@@ -95,19 +142,19 @@ export default function AboutPageView({
             </button>
           </div>
           <a href="/" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="/images/icons/wine/wine_card.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <img src="/images/icons/wine/wines2_glass.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.winesCatalog}</span>
           </a>
           <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="/images/icons/wine/do_sign.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <img src="/images/icons/wine/grapes_region.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.doMap}</span>
           </a>
           <a href="/ruta-de-vins" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="/images/icons/wine/calendar_grapes.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <img src="/images/icons/wine/wine_maps2.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.wineRoute}</span>
           </a>
           <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="/images/icons/wine/wines_book.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <img src="/images/icons/wine/wine_couple.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.whoWeAre}</span>
           </a>
           <a
@@ -134,12 +181,14 @@ export default function AboutPageView({
 
       <section className="hero-panel about-hero-panel" id="about">
         <div>
-          <p className="eyebrow">{t.about.eyebrow}</p>
-          <h1 className="section-title-with-icon">
-            <img src="/images/icons/wine/wines_book.png" className="section-title-icon" alt="" aria-hidden="true" />
-            <span className="section-title-label">{t.about.title}</span>
-          </h1>
-          <p className="hero-subtitle about-hero-subtitle">{t.about.intro}</p>
+          <div className="section-heading-with-icon">
+            <img src="/images/icons/wine/wine_couple.png" className="section-heading-icon" alt="" aria-hidden="true" />
+            <div className="section-heading-copy">
+              <p className="eyebrow">{t.about.eyebrow}</p>
+              <h1 className="section-title-label">{t.about.title}</h1>
+              <p className="hero-subtitle about-hero-subtitle">{t.about.intro}</p>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -138,7 +138,7 @@ export default function App() {
     t.common.galleryPhotoLabels.back,
     t.common.galleryPhotoLabels.context,
   ]
-  const logoSrc = isDark ? 'images/brand/logo-wordmark-dark.png' : 'images/brand/logo-wordmark-light.png'
+  const logoSrc = 'images/brand/logo-wordmark-dark.png'
   const adminHref = useMemo(() => {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1') {
@@ -1105,25 +1105,25 @@ export default function App() {
     <nav className="topbar-nav" aria-label={t.topbar.navigation}>
       <a className={`topbar-nav-link${isCatalogPage ? ' active' : ''}`} href="/">
         <span className="topbar-nav-link-inner">
-          <img src="/images/icons/wine/wine_card.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <img src="/images/icons/wine/wines2_glass.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
           <span>{t.topbar.winesCatalog}</span>
         </span>
       </a>
       <a className={`topbar-nav-link${isDoMapPage ? ' active' : ''}`} href="/do-map">
         <span className="topbar-nav-link-inner">
-          <img src="/images/icons/wine/do_sign.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <img src="/images/icons/wine/grapes_region.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
           <span>{t.topbar.doMap}</span>
         </span>
       </a>
       <a className={`topbar-nav-link${isWineRoutePage ? ' active' : ''}`} href="/ruta-de-vins">
         <span className="topbar-nav-link-inner">
-          <img src="/images/icons/wine/calendar_grapes.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <img src="/images/icons/wine/wine_maps2.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
           <span>{t.topbar.wineRoute}</span>
         </span>
       </a>
       <a className={`topbar-nav-link${isAboutPage ? ' active' : ''}`} href="/about">
         <span className="topbar-nav-link-inner">
-          <img src="/images/icons/wine/wines_book.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <img src="/images/icons/wine/wine_couple.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
           <span>{t.topbar.whoWeAre}</span>
         </span>
       </a>
