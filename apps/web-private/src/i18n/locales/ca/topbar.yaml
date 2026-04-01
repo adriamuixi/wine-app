@@ -2,6 +2,7 @@ topbar:
   overview: Visió general
   wines: Eines de vins
   dos: Denominacions d'origen
+  varieties: Varietats
   doCreate: Crear D.O.
   wineCreate: Crear vi
   wineEdit: Editar vi

@@ -2,6 +2,7 @@ menu:
   dashboard: Dashboard
   wines: Wines
   dos: DO
+  varieties: Varieties
   reviews: Reviews
-  admin: Admin Tools
+  admin: Preferences
   apiDoc: API Doc

@@ -12,8 +12,8 @@ dashboard:
     avgRedHint: Puntuació mitjana en vins negres
     avgWhiteHint: Puntuació mitjana en vins blancs
   search:
-    eyebrow: Cerca vins
-    title: Cercador amb filtres
+    eyebrow: Cercador de vins
+    title: Els nostres vins
     results: resultats
     search: Cercar
     country: País

@@ -46,7 +46,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       setLocale: setLocaleState,
       labels: messages[locale],
       localeLabels,
-      t: i18n.t.bind(i18n),
+      // Keep `t` pinned to the selected locale so it stays in sync with `labels`
+      // while i18next updates its internal language asynchronously.
+      t: i18n.getFixedT(locale),
     }),
     [locale],
   )

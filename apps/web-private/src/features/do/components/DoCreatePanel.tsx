@@ -14,6 +14,7 @@ type DoCreatePanelProps = {
     submit: string
   }
   doCreateSubmitting: boolean
+  showSubmitButton?: boolean
   photoEditorSaving: boolean
   doCreateDraft: DoCreateDraft
   doCreateError: string | null
@@ -35,6 +36,7 @@ export function DoCreatePanel({
   t,
   labels,
   doCreateSubmitting,
+  showSubmitButton = true,
   photoEditorSaving,
   doCreateDraft,
   doCreateError,
@@ -69,9 +71,11 @@ export function DoCreatePanel({
               </svg>
               <span className="review-editor-back-text">{t('ui.back_list')}</span>
             </button>
-            <button type="submit" className="primary-button small" form="do-create-form" disabled={doCreateSubmitting}>
-              {doCreateSubmitting ? t('ui.creating_do') : labels.submit}
-            </button>
+            {showSubmitButton ? (
+              <button type="submit" className="primary-button small" form="do-create-form" disabled={doCreateSubmitting}>
+                {doCreateSubmitting ? t('ui.creating_do') : labels.submit}
+              </button>
+            ) : null}
           </div>
         </div>
 

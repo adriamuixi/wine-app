@@ -16,6 +16,7 @@ type ReviewEditorPanelProps = {
   preset: ReviewFormPreset
   selectedReviewId: number | null
   reviewFormSubmitting: boolean
+  showSubmitButton?: boolean
   reviewFormError: string | null
   creatableWineItems: WineItem[]
   wineItems: WineItem[]
@@ -34,6 +35,7 @@ export function ReviewEditorPanel({
   preset,
   selectedReviewId,
   reviewFormSubmitting,
+  showSubmitButton = true,
   reviewFormError,
   creatableWineItems,
   wineItems,
@@ -91,14 +93,16 @@ export function ReviewEditorPanel({
               </svg>
               <span className="review-editor-back-text">{t('ui.back_list')}</span>
             </button>
-            <button
-              type="submit"
-              className="primary-button small"
-              form={reviewFormId}
-              disabled={reviewFormSubmitting || (mode === 'create' && creatableWineItems.length === 0)}
-            >
-              {reviewSubmitLabel}
-            </button>
+            {showSubmitButton ? (
+              <button
+                type="submit"
+                className="primary-button small"
+                form={reviewFormId}
+                disabled={reviewFormSubmitting || (mode === 'create' && creatableWineItems.length === 0)}
+              >
+                {reviewSubmitLabel}
+              </button>
+            ) : null}
           </div>
         </div>
 

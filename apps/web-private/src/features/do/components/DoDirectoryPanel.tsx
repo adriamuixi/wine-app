@@ -31,6 +31,7 @@ type DoDirectoryPanelProps = {
   doListRegionFilter: string
   sortedDoRegionFilterOptions: string[]
   countryFilterValues: Exclude<CountryFilterValue, 'all'>[]
+  showCreateButton?: boolean
   doDirectoryRows: ReactNode
   onDoSortPresetChange: (nextValue: DoSortPresetKey) => void
   onOpenDoCreate: () => void
@@ -51,6 +52,7 @@ export function DoDirectoryPanel({
   doListRegionFilter,
   sortedDoRegionFilterOptions,
   countryFilterValues,
+  showCreateButton = true,
   doDirectoryRows,
   onDoSortPresetChange,
   onOpenDoCreate,
@@ -63,9 +65,12 @@ export function DoDirectoryPanel({
     <section className="screen-grid">
       <section className="panel">
         <div className="panel-header">
-          <div>
-            <p className="eyebrow">{labels.dos.list.eyebrow}</p>
-            <h3>{labels.dos.list.title}</h3>
+          <div className="panel-header-heading-with-icon">
+            <img className="panel-header-section-icon" src="/images/icons/wine/do.png" alt="" aria-hidden="true" />
+            <div className="panel-header-heading-copy">
+              <p className="eyebrow">{labels.dos.list.eyebrow}</p>
+              <h3>{labels.dos.list.title}</h3>
+            </div>
           </div>
           <div className="panel-header-actions">
             <span className="pill">
@@ -93,9 +98,11 @@ export function DoDirectoryPanel({
                 <span className="do-sort-caret" aria-hidden="true">▾</span>
               </div>
             </label>
-            <button type="button" className="primary-button" onClick={onOpenDoCreate}>
-              {labels.dos.list.createAction}
-            </button>
+            {showCreateButton ? (
+              <button type="button" className="primary-button" onClick={onOpenDoCreate}>
+                {labels.dos.list.createAction}
+              </button>
+            ) : null}
           </div>
         </div>
 

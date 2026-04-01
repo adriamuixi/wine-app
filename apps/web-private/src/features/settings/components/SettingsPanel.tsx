@@ -66,9 +66,12 @@ export function SettingsPanel({
     <section className="screen-grid two-columns">
       <section className="panel">
         <div className="panel-header">
-          <div>
-            <p className="eyebrow">{t('ui.preferences')}</p>
-            <h3>{t('ui.settings_backoffice')}</h3>
+          <div className="panel-header-heading-with-icon">
+            <img className="panel-header-section-icon" src="/images/icons/wine/settings.png" alt="" aria-hidden="true" />
+            <div className="panel-header-heading-copy">
+              <p className="eyebrow">{t('ui.preferences')}</p>
+              <h3>{t('ui.settings_backoffice')}</h3>
+            </div>
           </div>
         </div>
 

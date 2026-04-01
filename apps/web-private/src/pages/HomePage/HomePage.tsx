@@ -1,4 +1,4 @@
-import type { ChangeEvent, FormEvent, ReactNode, SyntheticEvent } from 'react'
+import type { ChangeEvent, FormEvent, SyntheticEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LanguageSelector } from '../../components/LanguageSelector'
 import '../../App.css'
@@ -829,73 +829,48 @@ function HomePage() {
     setGrapeBlendRows((current) => current.map((row) => (row.grapeId === '' ? { ...row, grapeId: firstGrapeOptionId } : row)))
   }, [firstGrapeOptionId])
 
-  const menuItems: Array<{ key: Exclude<MenuKey, 'wineProfile'>; label: string; short: string; icon: ReactNode }> = [
+  const menuItems: Array<{ key: Exclude<MenuKey, 'wineProfile'>; label: string; short: string; iconSrc: string }> = [
     {
       key: 'dashboard',
       label: labels.menu.dashboard,
       short: 'DB',
-      icon: (
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M3 10.5 12 3l9 7.5" />
-          <path d="M5 9.8V20a1 1 0 0 0 1 1h4.5v-6h3v6H18a1 1 0 0 0 1-1V9.8" />
-        </svg>
-      ),
+      iconSrc: '/images/icons/wine/house_grapes.png',
     },
     {
       key: 'wines',
       label: labels.menu.wines,
       short: 'W',
-      icon: (
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M8 3h8c0 4.2-1.2 6.8-4 8.6V17h3v3H9v-3h3v-5.4C9.2 9.8 8 7.2 8 3Z" />
-        </svg>
-      ),
+      iconSrc: '/images/icons/wine/wine_3bottles.png',
     },
     {
       key: 'reviews',
       label: labels.menu.reviews,
       short: 'R',
-      icon: (
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M4 20h4l10-10-4-4L4 16v4Z" />
-          <path d="m12.5 7.5 4 4" />
-        </svg>
-      ),
+      iconSrc: '/images/icons/wine/glass_hand.png',
     },
     {
       key: 'dos',
       label: labels.menu.dos,
       short: 'DO',
-      icon: (
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M6 5.5h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8.8L4 21V7.5a2 2 0 0 1 2-2Z" />
-          <path d="M8 10h8" />
-          <path d="M8 13.5h5.5" />
-        </svg>
-      ),
+      iconSrc: '/images/icons/wine/do.png',
+    },
+    {
+      key: 'varieties',
+      label: labels.menu.varieties,
+      short: 'V',
+      iconSrc: '/images/icons/wine/grapes_basket.png',
     },
     {
       key: 'apiDocs',
       label: labels.menu.apiDoc,
       short: 'API',
-      icon: (
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="8.5" />
-          <path d="m15.5 8.5-2.2 5.2-5.3 2.2 2.2-5.2 5.3-2.2Z" />
-          <circle cx="12" cy="12" r="1" />
-        </svg>
-      ),
+      iconSrc: '/images/icons/wine/wines_book.png',
     },
     {
       key: 'admin',
       label: labels.menu.admin,
       short: 'A',
-      icon: (
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
-          <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.3-1.8-3.1-2.3.5a7.8 7.8 0 0 0-.8-.6l-.3-2.3h-3.6l-.3 2.3c-.3.2-.6.4-.8.6l-2.3-.5-1.8 3.1 2 1.3a7.8 7.8 0 0 0 .1 1l-2 1.3 1.8 3.1 2.3-.5c.2.2.5.4.8.6l.3 2.3h3.6l.3-2.3c.3-.2.6-.4.8-.6l2.3.5 1.8-3.1-2-1.3Z" />
-        </svg>
-      ),
+      iconSrc: '/images/icons/wine/settings.png',
     },
   ]
 
@@ -1298,6 +1273,7 @@ function HomePage() {
     dashboard: labels.topbar.overview,
     wines: labels.topbar.wines,
     dos: labels.topbar.dos,
+    varieties: labels.topbar.varieties,
     doCreate: labels.topbar.doCreate,
     wineCreate: labels.topbar.wineCreate,
     wineEdit: labels.topbar.wineEdit,
@@ -3864,6 +3840,95 @@ function HomePage() {
   const wineSubmitLabel = menu === 'wineEdit'
     ? (wineFormSubmitting ? (t('ui.saving')) : (t('ui.save_wine')))
     : (wineFormSubmitting ? (t('ui.creating')) : labels.wines.add.submit)
+  const publicWebUrl = (import.meta.env.VITE_PUBLIC_WEB_URL as string | undefined)?.trim() || '/'
+  const reviewCreateFormId = 'review-form-create-new'
+  const reviewEditFormId = `review-form-edit-${selectedReviewForEdit?.id ?? 'new'}`
+
+  const requestFormSubmit = useCallback((formId: string) => {
+    if (typeof document === 'undefined') {
+      return
+    }
+    const form = document.getElementById(formId)
+    if (form instanceof HTMLFormElement) {
+      form.requestSubmit()
+    }
+  }, [])
+
+  const mobileFloatingAction = (() => {
+    if (!isMobileViewport || showMobileMenu) {
+      return null
+    }
+
+    if (doEditTarget != null) {
+      return {
+        kind: 'save' as const,
+        label: t('ui.save_changes'),
+        onClick: () => requestFormSubmit('do-edit-form'),
+        disabled: doEditSubmitting || photoEditorSaving,
+      }
+    }
+
+    switch (menu) {
+      case 'wines':
+        return {
+          kind: 'create' as const,
+          label: t('ui.create_new_wine'),
+          onClick: openWineCreate,
+          disabled: false,
+        }
+      case 'dos':
+        return {
+          kind: 'create' as const,
+          label: labels.dos.list.createAction,
+          onClick: openDoCreate,
+          disabled: false,
+        }
+      case 'reviews':
+        return {
+          kind: 'create' as const,
+          label: t('ui.create_review'),
+          onClick: openReviewCreate,
+          disabled: false,
+        }
+      case 'wineCreate':
+        return {
+          kind: 'save' as const,
+          label: labels.wines.add.submit,
+          onClick: () => requestFormSubmit(wineFormId),
+          disabled: wineFormSubmitting,
+        }
+      case 'doCreate':
+        return {
+          kind: 'save' as const,
+          label: labels.dos.create.submit,
+          onClick: () => requestFormSubmit('do-create-form'),
+          disabled: doCreateSubmitting,
+        }
+      case 'reviewCreate':
+        return {
+          kind: 'save' as const,
+          label: labels.reviews.create.submit,
+          onClick: () => requestFormSubmit(reviewCreateFormId),
+          disabled: reviewFormSubmitting || creatableWineItems.length === 0,
+        }
+      case 'wineEdit':
+        return {
+          kind: 'save' as const,
+          label: t('ui.save_wine'),
+          onClick: () => requestFormSubmit(wineFormId),
+          disabled: wineFormSubmitting,
+        }
+      case 'reviewEdit':
+        return {
+          kind: 'save' as const,
+          label: t('ui.save_changes_review'),
+          onClick: () => requestFormSubmit(reviewEditFormId),
+          disabled: reviewFormSubmitting,
+        }
+      default:
+        return null
+    }
+  })()
 
   if (!authBootstrapped) {
     return (
@@ -3878,8 +3943,6 @@ function HomePage() {
   }
 
   if (!loggedIn) {
-    const publicWebUrl = (import.meta.env.VITE_PUBLIC_WEB_URL as string | undefined)?.trim() || '/'
-
     return (
       <main className="login-shell">
         <a
@@ -3968,7 +4031,7 @@ function HomePage() {
           <div className="sidebar-brand-copy">
             <img src={brandWordmarkSidebarSrc} className="brand-logo brand-logo-sidebar" alt={t('common.brandAlt')} />
             <p className="eyebrow">{labels.common.appName}</p>
-            <h1>{labels.user.backoffice}</h1>
+            <h1>{isMobileViewport ? labels.user.backoffice : ''}</h1>
           </div>
           <button
             type="button"
@@ -4000,7 +4063,7 @@ function HomePage() {
               }}
             >
               <span className="nav-badge" aria-hidden="true">
-                {item.icon}
+                <img className="nav-icon-image" src={item.iconSrc} alt="" />
               </span>
               <span className="nav-label">{item.label}</span>
             </button>
@@ -4059,7 +4122,35 @@ function HomePage() {
 
               <button
                 type="button"
-                className="topbar-mobile-bullet"
+                className="topbar-mobile-bullet topbar-mobile-bullet-theme"
+                onClick={toggleTheme}
+                aria-pressed={isDarkMode}
+                aria-label={themeToggleLabel}
+                title={themeToggleLabel}
+              >
+                <span className="topbar-mobile-icon" aria-hidden="true">
+                  {isDarkMode ? (
+                    <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                      <path
+                        d="M14.8 12.8A6.3 6.3 0 0 1 7.2 5.2a6.8 6.8 0 1 0 7.6 7.6Z"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                      <circle cx="10" cy="10" r="3.2" stroke="currentColor" strokeWidth="1.4" />
+                      <path d="M10 2.6v2.1M10 15.3v2.1M2.6 10h2.1M15.3 10h2.1M4.7 4.7l1.5 1.5M13.8 13.8l1.5 1.5M15.3 4.7l-1.5 1.5M6.2 13.8l-1.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="topbar-mobile-bullet topbar-mobile-bullet-settings"
                 onClick={() => {
                   setMenu('admin')
                   setShowMobileMenu(false)
@@ -4068,48 +4159,53 @@ function HomePage() {
                 title={labels.menu.admin}
               >
                 <span className="topbar-mobile-icon" aria-hidden="true">
-                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
-                    <path
-                      d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M4.5 16.5a5.5 5.5 0 0 1 11 0"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              </button>
-
-              <button
-                type="button"
-                className="topbar-mobile-bullet"
-                onClick={() => {
-                  setMenu('settings')
-                  setShowMobileMenu(false)
-                }}
-                aria-label={t('ui.settings')}
-                title={t('ui.settings')}
-              >
-                <span className="topbar-mobile-icon" aria-hidden="true">
-                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
-                    <path
-                      d="M8.8 2.9h2.4l.38 1.62c.33.11.65.24.95.4l1.5-.7 1.7 1.7-.7 1.5c.16.3.29.62.4.95l1.62.38v2.4l-1.62.38c-.11.33-.24.65-.4.95l.7 1.5-1.7 1.7-1.5-.7c-.3.16-.62.29-.95.4l-.38 1.62H8.8l-.38-1.62a6.03 6.03 0 0 1-.95-.4l-1.5.7-1.7-1.7.7-1.5a6.03 6.03 0 0 1-.4-.95l-1.62-.38v-2.4l1.62-.38c.11-.33.24-.65.4-.95l-.7-1.5 1.7-1.7 1.5.7c.3-.16.62-.29.95-.4L8.8 2.9Z"
-                      stroke="currentColor"
-                      strokeWidth="1.1"
-                      strokeLinejoin="round"
-                    />
-                    <circle cx="10" cy="10" r="2.6" stroke="currentColor" strokeWidth="1.2" />
-                  </svg>
+                  <img src="/images/icons/wine/settings.png" alt="" />
                 </span>
               </button>
             </div>
+
+            <button
+              type="button"
+              className="topbar-mobile-bullet topbar-mobile-bullet-logout"
+              onClick={() => {
+                fetch(`${resolveApiBaseUrl()}/api/auth/logout`, {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: {
+                    Accept: 'application/json',
+                  },
+                }).finally(() => {
+                  window.location.assign(publicWebUrl)
+                })
+              }}
+              aria-label={labels.common.logout}
+              title={labels.common.logout}
+            >
+              <span className="topbar-mobile-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" role="presentation">
+                  <path
+                    d="M8 4.5h-2A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M11 13.5 14.5 10 11 6.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8.5 10h6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </button>
           </div>
 
           <button
@@ -4123,8 +4219,8 @@ function HomePage() {
           </button>
 
           <div className="topbar-copy">
-            <p className="eyebrow">{labels.topbar.overview}</p>
-            <h2>{menuTitle}</h2>
+            <p className="eyebrow">{isMobileViewport ? labels.topbar.overview : ''}</p>
+            <h2>{isMobileViewport ? menuTitle : ''}</h2>
           </div>
 
           <div className="topbar-controls">
@@ -4180,6 +4276,7 @@ function HomePage() {
             wineHasNext={wineHasNext}
             wineActiveFiltersCount={wineActiveFiltersCount}
             isMobileViewport={isMobileViewport}
+            showCreateButton={!isMobileViewport}
             onOpenWineCreate={openWineCreate}
             onOpenWineMobileFilters={() => setIsWineFiltersMobileOpen(true)}
             onSetWinePage={setWinePage}
@@ -4214,6 +4311,7 @@ function HomePage() {
             doListRegionFilter={doListRegionFilter}
             sortedDoRegionFilterOptions={sortedDoRegionFilterOptions}
             countryFilterValues={WINE_COUNTRY_FILTER_VALUES}
+            showCreateButton={!isMobileViewport}
             doDirectoryRows={doDirectoryRows}
             onDoSortPresetChange={setDoSortPreset}
             onOpenDoCreate={openDoCreate}
@@ -4224,11 +4322,29 @@ function HomePage() {
           />
         ) : null}
 
+        {menu === 'varieties' ? (
+          <section className="screen-grid">
+            <section className="panel">
+              <div className="panel-header">
+                <div className="panel-header-heading-with-icon">
+                  <img className="panel-header-section-icon" src="/images/icons/wine/grapes_basket.png" alt="" aria-hidden="true" />
+                  <div className="panel-header-heading-copy">
+                    <p className="eyebrow">{labels.menu.varieties}</p>
+                    <h3>{labels.menu.varieties}</h3>
+                  </div>
+                </div>
+              </div>
+              <p className="muted">WIP</p>
+            </section>
+          </section>
+        ) : null}
+
         {menu === 'doCreate' ? (
           <DoCreatePanel
             t={t}
             labels={labels.dos.create}
             doCreateSubmitting={doCreateSubmitting}
+            showSubmitButton={!isMobileViewport}
             photoEditorSaving={photoEditorSaving}
             doCreateDraft={doCreateDraft}
             doCreateError={doCreateError}
@@ -4269,6 +4385,7 @@ function HomePage() {
             wineFormId={wineFormId}
             wineSubmitLabel={wineSubmitLabel}
             wineFormSubmitting={wineFormSubmitting}
+            showSubmitButton={!isMobileViewport}
             wineEditStatus={wineEditStatus}
             wineFormError={wineFormError}
             selectedWineForEdit={selectedWineForEdit}
@@ -4335,6 +4452,7 @@ function HomePage() {
             t={t}
             labels={{ reviews: { edit: labels.reviews.edit, create: { palateEntry: labels.reviews.create.palateEntry } } }}
             reviewTotalWines={reviewTotalWines}
+            showCreateButton={!isMobileViewport}
             myReviewEntries={myReviewEntries}
             myReviewSummaryStatus={myReviewSummaryStatus}
             myReviewSummaryError={myReviewSummaryError}
@@ -4369,6 +4487,7 @@ function HomePage() {
             preset={createReviewPreset}
             selectedReviewId={selectedReviewForEdit?.id ?? null}
             reviewFormSubmitting={reviewFormSubmitting}
+            showSubmitButton={!isMobileViewport}
             reviewFormError={reviewFormError}
             creatableWineItems={creatableWineItems}
             wineItems={wineItems}
@@ -4389,6 +4508,7 @@ function HomePage() {
             preset={reviewEditorPreset}
             selectedReviewId={selectedReviewForEdit?.id ?? null}
             reviewFormSubmitting={reviewFormSubmitting}
+            showSubmitButton={!isMobileViewport}
             reviewFormError={reviewFormError}
             creatableWineItems={creatableWineItems}
             wineItems={wineItems}
@@ -4402,65 +4522,95 @@ function HomePage() {
         ) : null}
 
         {menu === 'admin' ? (
-          <section className="screen-grid two-columns">
-            <section className="panel">
-              <div className="panel-header">
-                <div>
-                  <p className="eyebrow">{labels.admin.shortcuts.eyebrow}</p>
-                  <h3>{labels.admin.shortcuts.title}</h3>
-                </div>
-              </div>
-              <div className="list-stack">
-                {labels.admin.shortcuts.items.map((item: { title: string; description: string; action: string }) => (
-                  <article key={item.title} className="list-card">
-                    <div>
-                      <h4>{item.title}</h4>
-                      <p>{item.description}</p>
-                    </div>
-                    <button type="button" className="secondary-button small">{item.action}</button>
-                  </article>
-                ))}
-              </div>
-            </section>
+          <section className="screen-grid">
+            <SettingsPanel
+              t={t}
+              labelsMenu={labels.menu}
+              settingsName={settingsName}
+              settingsLastname={settingsLastname}
+              settingsPassword={settingsPassword}
+              settingsProfileSubmitting={settingsProfileSubmitting}
+              settingsProfileError={settingsProfileError}
+              settingsProfileSuccess={settingsProfileSuccess}
+              loggedIn={loggedIn}
+              locale={locale}
+              themeMode={themeMode}
+              defaultSortPreference={defaultSortPreference}
+              defaultLandingPage={defaultLandingPage}
+              showOnlySpainByDefault={showOnlySpainByDefault}
+              compactCardsPreference={compactCardsPreference}
+              onSettingsNameChange={setSettingsName}
+              onSettingsLastnameChange={setSettingsLastname}
+              onSettingsPasswordChange={setSettingsPassword}
+              onSettingsProfileSubmit={handleSettingsProfileSubmit}
+              onLocaleChange={setLocale}
+              onThemeModeChange={setThemeMode}
+              onDefaultSortPreferenceChange={setDefaultSortPreference}
+              onDefaultLandingPageChange={setDefaultLandingPage}
+              onToggleShowOnlySpainByDefault={() => setShowOnlySpainByDefault((current) => !current)}
+              onToggleCompactCardsPreference={() => setCompactCardsPreference((current) => !current)}
+            />
 
-            <section className="panel">
-              <div className="panel-header">
-                <div>
-                  <p className="eyebrow">{labels.admin.account.eyebrow}</p>
-                  <h3>{labels.admin.account.title}</h3>
+            <section className="screen-grid two-columns">
+              <section className="panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{labels.admin.shortcuts.eyebrow}</p>
+                    <h3>{labels.admin.shortcuts.title}</h3>
+                  </div>
                 </div>
-              </div>
+                <div className="list-stack">
+                  {labels.admin.shortcuts.items.map((item: { title: string; description: string; action: string }) => (
+                    <article key={item.title} className="list-card">
+                      <div>
+                        <h4>{item.title}</h4>
+                        <p>{item.description}</p>
+                      </div>
+                      <button type="button" className="secondary-button small">{item.action}</button>
+                    </article>
+                  ))}
+                </div>
+              </section>
 
-              <dl className="detail-grid">
-                <div>
-                  <dt>{labels.admin.account.labels.name}</dt>
-                  <dd>{displayedUser.name} {displayedUser.lastname}</dd>
+              <section className="panel">
+                <div className="panel-header">
+                  <div>
+                    <p className="eyebrow">{labels.admin.account.eyebrow}</p>
+                    <h3>{labels.admin.account.title}</h3>
+                  </div>
                 </div>
-                <div>
-                  <dt>{labels.admin.account.labels.email}</dt>
-                  <dd>{displayedUser.email}</dd>
-                </div>
-                <div>
-                  <dt>{labels.admin.account.labels.myReviews}</dt>
-                  <dd>{settingsReviewStats.totalReviews}</dd>
-                </div>
-                <div>
-                  <dt>{labels.admin.account.labels.averageScore}</dt>
-                  <dd>{settingsReviewStats.averageScore.toFixed(1)}</dd>
-                </div>
-                <div>
-                  <dt>{labels.admin.account.labels.lastReview}</dt>
-                  <dd>{settingsReviewStats.lastReview}</dd>
-                </div>
-                <div>
-                  <dt>{labels.admin.account.labels.highestScore}</dt>
-                  <dd>{settingsReviewStats.highestScore}</dd>
-                </div>
-                <div>
-                  <dt>{labels.admin.account.labels.lowestScore}</dt>
-                  <dd>{settingsReviewStats.lowestScore}</dd>
-                </div>
-              </dl>
+
+                <dl className="detail-grid">
+                  <div>
+                    <dt>{labels.admin.account.labels.name}</dt>
+                    <dd>{displayedUser.name} {displayedUser.lastname}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.admin.account.labels.email}</dt>
+                    <dd>{displayedUser.email}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.admin.account.labels.myReviews}</dt>
+                    <dd>{settingsReviewStats.totalReviews}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.admin.account.labels.averageScore}</dt>
+                    <dd>{settingsReviewStats.averageScore.toFixed(1)}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.admin.account.labels.lastReview}</dt>
+                    <dd>{settingsReviewStats.lastReview}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.admin.account.labels.highestScore}</dt>
+                    <dd>{settingsReviewStats.highestScore}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.admin.account.labels.lowestScore}</dt>
+                    <dd>{settingsReviewStats.lowestScore}</dd>
+                  </div>
+                </dl>
+              </section>
             </section>
           </section>
         ) : null}
@@ -4479,36 +4629,6 @@ function HomePage() {
               setApiGuideReloadToken((current) => current + 1)
             }}
             onCopyApiCodeBlock={handleCopyApiCodeBlock}
-          />
-        ) : null}
-
-        {menu === 'settings' ? (
-          <SettingsPanel
-            t={t}
-            labelsMenu={labels.menu}
-            settingsName={settingsName}
-            settingsLastname={settingsLastname}
-            settingsPassword={settingsPassword}
-            settingsProfileSubmitting={settingsProfileSubmitting}
-            settingsProfileError={settingsProfileError}
-            settingsProfileSuccess={settingsProfileSuccess}
-            loggedIn={loggedIn}
-            locale={locale}
-            themeMode={themeMode}
-            defaultSortPreference={defaultSortPreference}
-            defaultLandingPage={defaultLandingPage}
-            showOnlySpainByDefault={showOnlySpainByDefault}
-            compactCardsPreference={compactCardsPreference}
-            onSettingsNameChange={setSettingsName}
-            onSettingsLastnameChange={setSettingsLastname}
-            onSettingsPasswordChange={setSettingsPassword}
-            onSettingsProfileSubmit={handleSettingsProfileSubmit}
-            onLocaleChange={setLocale}
-            onThemeModeChange={setThemeMode}
-            onDefaultSortPreferenceChange={setDefaultSortPreference}
-            onDefaultLandingPageChange={setDefaultLandingPage}
-            onToggleShowOnlySpainByDefault={() => setShowOnlySpainByDefault((current) => !current)}
-            onToggleCompactCardsPreference={() => setCompactCardsPreference((current) => !current)}
           />
         ) : null}
 
@@ -4540,8 +4660,30 @@ function HomePage() {
         ) : null}
       </section>
 
+      {mobileFloatingAction ? (
+        <button
+          type="button"
+          className={`primary-button mobile-floating-action${mobileFloatingAction.kind === 'save' ? ' is-save' : ''}`}
+          onClick={mobileFloatingAction.onClick}
+          disabled={mobileFloatingAction.disabled}
+          aria-label={mobileFloatingAction.label}
+          title={mobileFloatingAction.label}
+        >
+          {mobileFloatingAction.kind === 'create' ? (
+            <span className="mobile-floating-action-icon" aria-hidden="true">+</span>
+          ) : (
+            <svg className="mobile-floating-action-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                d="M5 4.5A1.5 1.5 0 0 1 6.5 3h8.88a1.5 1.5 0 0 1 1.06.44l2.12 2.12A1.5 1.5 0 0 1 19 6.62V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5v-15Zm2 0V9h8V5.5L14.5 4H7.5A.5.5 0 0 0 7 4.5ZM8 13h8v6H8v-6Z"
+                fill="currentColor"
+              />
+            </svg>
+          )}
+        </button>
+      ) : null}
+
       <nav className="mobile-bottom-nav" aria-label="App navigation">
-        {menuItems.map((item) => (
+        {menuItems.filter((item) => item.key !== 'admin').map((item) => (
           <button
             key={`mobile-nav-${item.key}`}
             type="button"
@@ -4553,7 +4695,9 @@ function HomePage() {
             aria-pressed={menu === item.key}
             title={item.label}
           >
-            <span className="mobile-bottom-nav-icon" aria-hidden="true">{item.icon}</span>
+            <span className="mobile-bottom-nav-icon" aria-hidden="true">
+              <img className="mobile-nav-icon-image" src={item.iconSrc} alt="" />
+            </span>
             <span className="mobile-bottom-nav-label">{item.label}</span>
           </button>
         ))}
@@ -4571,6 +4715,7 @@ function HomePage() {
 
       <DoEditModal
         open={doEditTarget != null}
+        formId="do-edit-form"
         t={t}
         targetName={doEditTarget?.name ?? ''}
         doEditDraft={doEditDraft}

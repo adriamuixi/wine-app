@@ -30,6 +30,7 @@ type WinesListPanelProps = {
   wineHasNext: boolean
   wineActiveFiltersCount: number
   isMobileViewport: boolean
+  showCreateButton?: boolean
   onOpenWineCreate: () => void
   onOpenWineMobileFilters: () => void
   onSetWinePage: (nextValue: number | ((current: number) => number)) => void
@@ -66,6 +67,7 @@ export function WinesListPanel({
   wineHasNext,
   wineActiveFiltersCount,
   isMobileViewport,
+  showCreateButton = true,
   onOpenWineCreate,
   onOpenWineMobileFilters,
   onSetWinePage,
@@ -90,9 +92,12 @@ export function WinesListPanel({
     <section className="screen-grid">
       <section className="panel">
         <div className="panel-header">
-          <div>
-            <p className="eyebrow">{labels.dashboard.search.eyebrow}</p>
-            <h3>{labels.dashboard.search.title}</h3>
+          <div className="panel-header-heading-with-icon">
+            <img className="panel-header-section-icon" src="/images/icons/wine/wine_3bottles.png" alt="" aria-hidden="true" />
+            <div className="panel-header-heading-copy">
+              <p className="eyebrow">{labels.dashboard.search.eyebrow}</p>
+              <h3>{labels.dashboard.search.title}</h3>
+            </div>
           </div>
           <div className="panel-header-actions">
             <span className="pill">
@@ -110,9 +115,11 @@ export function WinesListPanel({
                 </span>
               </button>
             ) : null}
-            <button type="button" className="primary-button" onClick={onOpenWineCreate}>
-              {t('ui.create_new_wine')}
-            </button>
+            {showCreateButton ? (
+              <button type="button" className="primary-button" onClick={onOpenWineCreate}>
+                {t('ui.create_new_wine')}
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -161,7 +168,7 @@ export function WinesListPanel({
                         src={wine.thumbnailSrc}
                         alt={`${wine.name} thumbnail`}
                         className="wine-thumb"
-                        loading="lazy"
+                       
                         onError={fallbackToDefaultWineIcon}
                         role="button"
                         tabIndex={0}
@@ -198,7 +205,7 @@ export function WinesListPanel({
                             className="wine-country-flag"
                             src={countryFlagPath(wine.country) as string}
                             alt={localizedCountryName(wine.country, locale)}
-                            loading="lazy"
+                           
                             onError={fallbackToAdminAsset}
                           />
                         ) : (
@@ -223,7 +230,7 @@ export function WinesListPanel({
                                 src={doCommunityFlagPath}
                                 alt=""
                                 className="wine-do-community-flag"
-                                loading="lazy"
+                               
                                 aria-hidden="true"
                                 onError={fallbackToAdminAsset}
                               />
@@ -233,7 +240,7 @@ export function WinesListPanel({
                                 src={doLogoPathFromImageName(wine.doLogo) as string}
                                 alt=""
                                 className="wine-do-logo"
-                                loading="lazy"
+                               
                                 aria-hidden="true"
                                 onError={fallbackToAdminAsset}
                               />

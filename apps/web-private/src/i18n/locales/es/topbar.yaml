@@ -2,6 +2,7 @@ topbar:
   overview: Resumen
   wines: Herramientas de vinos
   dos: Denominaciones de origen
+  varieties: Variedades
   doCreate: Crear DO
   wineCreate: Crear vino
   wineEdit: Editar vino

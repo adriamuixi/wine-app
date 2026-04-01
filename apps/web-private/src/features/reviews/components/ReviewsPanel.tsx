@@ -16,6 +16,7 @@ type ReviewsPanelProps = {
     }
   }
   reviewTotalWines: number
+  showCreateButton?: boolean
   myReviewEntries: MyWineReviewEntry[]
   myReviewSummaryStatus: 'idle' | 'loading' | 'ready' | 'error'
   myReviewSummaryError: string | null
@@ -43,6 +44,7 @@ export function ReviewsPanel({
   t,
   labels,
   reviewTotalWines,
+  showCreateButton = true,
   myReviewEntries,
   myReviewSummaryStatus,
   myReviewSummaryError,
@@ -69,14 +71,19 @@ export function ReviewsPanel({
     <section className="screen-grid">
       <section className="panel">
         <div className="panel-header review-summary-header">
-          <div>
-            <p className="eyebrow">{labels.reviews.edit.title}</p>
-            <h3>{t('ui.summary_reviews')}</h3>
+          <div className="panel-header-heading-with-icon">
+            <img className="panel-header-section-icon" src="/images/icons/wine/glass_hand.png" alt="" aria-hidden="true" />
+            <div className="panel-header-heading-copy">
+              <p className="eyebrow">{labels.reviews.edit.title}</p>
+              <h3>{t('ui.summary_reviews')}</h3>
+            </div>
           </div>
           <div className="panel-header-actions">
-            <button type="button" className="primary-button" onClick={onOpenReviewCreate}>
-              {t('ui.create_review')}
-            </button>
+            {showCreateButton ? (
+              <button type="button" className="primary-button" onClick={onOpenReviewCreate}>
+                {t('ui.create_review')}
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -147,7 +154,7 @@ export function ReviewsPanel({
                         src={entry.wine.thumbnailSrc}
                         alt={`${entry.wine.name} bottle`}
                         className="review-wine-thumb"
-                        loading="lazy"
+                       
                         onError={fallbackToDefaultWineIcon}
                       />
                       <div className="review-card-header">
@@ -157,7 +164,7 @@ export function ReviewsPanel({
                           <div className="review-origin-row">
                             <span className="review-origin-chip">
                               {countryFlagPathValue
-                                ? <img className="review-origin-flag" src={countryFlagPathValue} alt={localizedCountryName(entry.wine.country, locale)} loading="lazy" />
+                                ? <img className="review-origin-flag" src={countryFlagPathValue} alt={localizedCountryName(entry.wine.country, locale)} />
                                 : <span className="review-origin-emoji" aria-hidden="true">{countryFlagEmoji(entry.wine.country)}</span>}
                               <span>{entry.wine.country}</span>
                             </span>

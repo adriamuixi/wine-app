@@ -72,6 +72,7 @@ type WineFormPanelProps = {
   wineFormId: string
   wineSubmitLabel: string
   wineFormSubmitting: boolean
+  showSubmitButton?: boolean
   wineEditStatus: 'idle' | 'loading' | 'ready' | 'error'
   wineFormError: string | null
   selectedWineForEdit: WineItem | null
@@ -238,6 +239,7 @@ export function WineFormPanel({
   wineFormId,
   wineSubmitLabel,
   wineFormSubmitting,
+  showSubmitButton = true,
   wineEditStatus,
   wineFormError,
   selectedWineForEdit,
@@ -442,9 +444,11 @@ export function WineFormPanel({
               </svg>
               <span className="review-editor-back-text">{t('ui.back_list')}</span>
             </button>
-            <button type="submit" className="primary-button small" form={wineFormId} disabled={wineFormSubmitting}>
-              {wineSubmitLabel}
-            </button>
+            {showSubmitButton ? (
+              <button type="submit" className="primary-button small" form={wineFormId} disabled={wineFormSubmitting}>
+                {wineSubmitLabel}
+              </button>
+            ) : null}
           </div>
         </div>
 

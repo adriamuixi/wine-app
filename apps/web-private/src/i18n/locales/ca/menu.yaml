@@ -2,6 +2,7 @@ menu:
   dashboard: Tauler
   wines: Vins
   dos: DO
+  varieties: Varietats
   reviews: Ressenyes
-  admin: Configuració
+  admin: Preferències
   apiDoc: API Doc

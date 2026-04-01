@@ -280,7 +280,7 @@ export type WineDetailsApiResponse = {
   wine: WineDetailsApiWine
 }
 
-export type MenuKey = 'dashboard' | 'wines' | 'dos' | 'doCreate' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
+export type MenuKey = 'dashboard' | 'wines' | 'dos' | 'varieties' | 'doCreate' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
 export type ThemeMode = 'light' | 'dark'
 export type GalleryModalVariant = 'full' | 'compact'
 export type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label' | 'situation'

@@ -2,6 +2,7 @@ topbar:
   overview: Overview
   wines: Wine tools
   dos: Designations of origin
+  varieties: Varieties
   doCreate: Create DO
   wineCreate: Create wine
   wineEdit: Edit wine

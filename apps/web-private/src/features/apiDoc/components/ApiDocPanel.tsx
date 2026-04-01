@@ -41,9 +41,12 @@ export function ApiDocPanel({
     <section className="screen-grid">
       <section className="panel">
         <div className="panel-header">
-          <div>
-            <p className="eyebrow">{labels.eyebrow}</p>
-            <h3>{labels.title}</h3>
+          <div className="panel-header-heading-with-icon">
+            <img className="panel-header-section-icon" src="/images/icons/wine/wines_book.png" alt="" aria-hidden="true" />
+            <div className="panel-header-heading-copy">
+              <p className="eyebrow">{labels.eyebrow}</p>
+              <h3>{labels.title}</h3>
+            </div>
           </div>
           <div className="panel-header-actions">
             <button type="button" className="secondary-button small" onClick={onRefresh}>

@@ -3,6 +3,7 @@ import type { CountryFilterValue, DoEditDraft } from '../types'
 
 type DoEditModalProps = {
   open: boolean
+  formId?: string
   t: (key: string) => string
   targetName: string
   doEditDraft: DoEditDraft | null
@@ -26,6 +27,7 @@ type DoEditModalProps = {
 
 export function DoEditModal({
   open,
+  formId = 'do-edit-form',
   t,
   targetName,
   doEditDraft,
@@ -63,7 +65,7 @@ export function DoEditModal({
           <p className="eyebrow">{t('ui.edit_do')}</p>
           <h3 id="edit-do-title">{targetName}</h3>
         </header>
-        <form className="stack-form do-edit-form" onSubmit={onSubmit}>
+        <form id={formId} className="stack-form do-edit-form" onSubmit={onSubmit}>
           <div className="do-edit-image-grid">
             <section className="do-edit-image-card">
               <header className="do-edit-image-head">
