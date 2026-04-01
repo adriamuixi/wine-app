@@ -132,9 +132,22 @@ export default function DoMapPageView({
               <span aria-hidden="true">✕</span>
             </button>
           </div>
-          <a href="/" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
-          <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.doMap}</a>
-          <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
+          <a href="/" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/wine_card.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.winesCatalog}</span>
+          </a>
+          <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/do_sign.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.doMap}</span>
+          </a>
+          <a href="/ruta-de-vins" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/calendar_grapes.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.wineRoute}</span>
+          </a>
+          <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/wines_book.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.whoWeAre}</span>
+          </a>
           <a
             href={adminHref}
             onClick={() => {
@@ -142,7 +155,8 @@ export default function DoMapPageView({
               setIsMobileMenuOpen(false)
             }}
           >
-            {t.topbar.backoffice}
+            <img src="/images/icons/wine/settings.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.backoffice}</span>
           </a>
         </nav>
       </header>
@@ -162,7 +176,10 @@ export default function DoMapPageView({
             <p className="eyebrow">{t.doMap.eyebrow}</p>
           ) : null}
           <div className="do-map-hero-title-row">
-            <h1>{t.doMap.title}</h1>
+            <h1 className="section-title-with-icon">
+              <img src="/images/icons/wine/do_sign.png" className="section-title-icon" alt="" aria-hidden="true" />
+              <span className="section-title-label">{t.doMap.title}</span>
+            </h1>
             <div className="do-map-country-filter-bar" aria-label={t.doMap.filterCountry}>
               {!isDoMapMobile ? (
                 <span>{t.icons.country} {t.doMap.filterCountry}</span>

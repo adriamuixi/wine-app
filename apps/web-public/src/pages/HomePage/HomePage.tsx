@@ -35,6 +35,7 @@ import {
   type DoMapPoint,
 } from '../../features/do-map/types'
 import DoMapPageView from '../../features/do-map/components/DoMapPageView'
+import WineRoutePageView from '../../features/wine-route/components/WineRoutePageView'
 import { fetchDoItems } from '../../features/do-map/services/doApi'
 import { initializeLeafletMap, type DoMapMarkerHandle } from '../../features/do-map/services/leafletMap'
 import { clearCookieValue, getCookieValue, setCookieValue } from '../../shared/lib/cookies'
@@ -76,6 +77,7 @@ export default function App() {
     : '/'
   const isDoMapPage = currentPath === '/do-map'
   const isAboutPage = currentPath === '/about'
+  const isWineRoutePage = currentPath === '/ruta-de-vins'
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme)
   const [locale, setLocale] = useState<Locale>(getInitialLocale)
   const [search, setSearch] = useState(initialUrl.q)
@@ -129,7 +131,7 @@ export default function App() {
 
   const t = messages[locale]
   const isDark = theme === 'dark'
-  const isCatalogPage = !isDoMapPage && !isAboutPage
+  const isCatalogPage = !isDoMapPage && !isAboutPage && !isWineRoutePage
   const galleryPhotoLabels = [
     t.common.galleryPhotoLabels.bottle,
     t.common.galleryPhotoLabels.front,
@@ -162,13 +164,17 @@ export default function App() {
       ? t.common.meta.sectionDoMap
       : isAboutPage
         ? t.common.meta.sectionAbout
-        : t.common.meta.sectionCatalog
+        : isWineRoutePage
+          ? t.common.meta.sectionWineRoute
+          : t.common.meta.sectionCatalog
     const description = isDoMapPage
       ? t.common.meta.descriptionDoMap
       : isAboutPage
         ? t.common.meta.descriptionAbout
-        : t.common.meta.descriptionCatalog
-    const relativePath = isDoMapPage ? '/do-map' : isAboutPage ? '/about' : '/'
+        : isWineRoutePage
+          ? t.common.meta.descriptionWineRoute
+          : t.common.meta.descriptionCatalog
+    const relativePath = isDoMapPage ? '/do-map' : isAboutPage ? '/about' : isWineRoutePage ? '/ruta-de-vins' : '/'
     const canonical = `${window.location.origin}${relativePath}`
 
     document.title = `${siteName} | ${sectionTitle}`
@@ -180,7 +186,7 @@ export default function App() {
     upsertMetaTag('property', 'og:locale', locale === 'ca' ? 'ca_ES' : locale === 'en' ? 'en_US' : 'es_ES')
     upsertMetaTag('name', 'twitter:title', `${siteName} | ${sectionTitle}`)
     upsertMetaTag('name', 'twitter:description', description)
-  }, [isAboutPage, isDoMapPage, locale, t.common.meta])
+  }, [isAboutPage, isDoMapPage, isWineRoutePage, locale, t.common.meta])
 
   useEffect(() => {
     if (mobileViewMode === 'card') {
@@ -1097,9 +1103,30 @@ export default function App() {
   }
   const desktopNav = (
     <nav className="topbar-nav" aria-label={t.topbar.navigation}>
-      <a className={`topbar-nav-link${isCatalogPage ? ' active' : ''}`} href="/">{t.topbar.winesCatalog}</a>
-      <a className={`topbar-nav-link${isDoMapPage ? ' active' : ''}`} href="/do-map">{t.topbar.doMap}</a>
-      <a className={`topbar-nav-link${isAboutPage ? ' active' : ''}`} href="/about">{t.topbar.whoWeAre}</a>
+      <a className={`topbar-nav-link${isCatalogPage ? ' active' : ''}`} href="/">
+        <span className="topbar-nav-link-inner">
+          <img src="/images/icons/wine/wine_card.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <span>{t.topbar.winesCatalog}</span>
+        </span>
+      </a>
+      <a className={`topbar-nav-link${isDoMapPage ? ' active' : ''}`} href="/do-map">
+        <span className="topbar-nav-link-inner">
+          <img src="/images/icons/wine/do_sign.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <span>{t.topbar.doMap}</span>
+        </span>
+      </a>
+      <a className={`topbar-nav-link${isWineRoutePage ? ' active' : ''}`} href="/ruta-de-vins">
+        <span className="topbar-nav-link-inner">
+          <img src="/images/icons/wine/calendar_grapes.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <span>{t.topbar.wineRoute}</span>
+        </span>
+      </a>
+      <a className={`topbar-nav-link${isAboutPage ? ' active' : ''}`} href="/about">
+        <span className="topbar-nav-link-inner">
+          <img src="/images/icons/wine/wines_book.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <span>{t.topbar.whoWeAre}</span>
+        </span>
+      </a>
       <a
         className="topbar-nav-link topbar-nav-link-admin"
         href={adminHref}
@@ -1107,7 +1134,10 @@ export default function App() {
           window.localStorage.setItem('wine-app-theme-mode', theme)
         }}
       >
-        {t.topbar.backoffice}
+        <span className="topbar-nav-link-inner">
+          <img src="/images/icons/wine/settings.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <span>{t.topbar.backoffice}</span>
+        </span>
       </a>
     </nav>
   )
@@ -1159,6 +1189,25 @@ export default function App() {
     return (
       <AboutPageView
         aboutStats={aboutStats}
+        adminHref={adminHref}
+        desktopNav={desktopNav}
+        isDark={isDark}
+        isMobileMenuOpen={isMobileMenuOpen}
+        locale={locale}
+        localeLabels={localeLabels}
+        logoSrc={logoSrc}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        setLocale={setLocale}
+        setTheme={setTheme}
+        t={t}
+        theme={theme}
+      />
+    )
+  }
+
+  if (isWineRoutePage) {
+    return (
+      <WineRoutePageView
         adminHref={adminHref}
         desktopNav={desktopNav}
         isDark={isDark}

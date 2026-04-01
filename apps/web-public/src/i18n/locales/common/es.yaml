@@ -30,10 +30,13 @@ common:
     siteName: Vins Tat & Rosset
     sectionDoMap: Mapa DO
     sectionAbout: Quiénes somos
+    sectionWineRoute: Ruta de vins
     sectionCatalog: Nuestros vinos
     descriptionDoMap: Mapa público de denominaciones de origen y vinos destacados.
     descriptionAbout: Conoce a Tat (Maria) y Rosset (Adrià), el dúo detrás de Nuestros
       vinos.
+    descriptionWineRoute: Recorrido mock de tiendas donde compramos vino y orden de
+      cata por fecha.
     descriptionCatalog: Catálogo público de vinos con fichas, puntuaciones y denominaciones
       de origen.
   doShort: DO

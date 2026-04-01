@@ -66,9 +66,11 @@ export type PublicMessages = {
       siteName: string
       sectionDoMap: string
       sectionAbout: string
+      sectionWineRoute: string
       sectionCatalog: string
       descriptionDoMap: string
       descriptionAbout: string
+      descriptionWineRoute: string
       descriptionCatalog: string
     }
     doShort: string
@@ -104,6 +106,19 @@ export type PublicMessages = {
     allWorldShort: string
     loadError: string
     noCoordinates: string
+  }
+  wineRoute: {
+    eyebrow: string
+    title: string
+    subtitle: string
+    mapAria: string
+    listAria: string
+    listTitle: string
+    dateLabel: string
+    winesBoughtLabel: string
+    mockBadge: string
+    mockAria: string
+    circuitHint: string
   }
   filters: {
     title: string
@@ -161,6 +176,7 @@ export type PublicMessages = {
     navigation: string
     winesCatalog: string
     doMap: string
+    wineRoute: string
     whoWeAre: string
     backoffice: string
     openFilters: string
@@ -253,7 +269,7 @@ function parseYamlObject(raw: string): JsonObject {
 }
 
 function readLocaleMessages(locale: Locale): PublicMessages {
-  const order = ['common', 'about', 'doMap', 'toolbar', 'main'] as const
+  const order = ['common', 'about', 'doMap', 'wineRoute', 'toolbar', 'main'] as const
   const sectionOrder: Record<string, number> = Object.fromEntries(order.map((name, index) => [name, index]))
   const files = Object.entries(localeFiles)
     .filter(([filePath]) => filePath.endsWith(`/${locale}.yaml`))

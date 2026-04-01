@@ -154,9 +154,22 @@ export default function CatalogPageView({
               <span aria-hidden="true">✕</span>
             </button>
           </div>
-          <a href="/" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.winesCatalog}</a>
-          <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.doMap}</a>
-          <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>{t.topbar.whoWeAre}</a>
+          <a href="/" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/wine_card.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.winesCatalog}</span>
+          </a>
+          <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/do_sign.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.doMap}</span>
+          </a>
+          <a href="/ruta-de-vins" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/calendar_grapes.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.wineRoute}</span>
+          </a>
+          <a href="/about" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/wines_book.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.whoWeAre}</span>
+          </a>
           <a
             href={adminHref}
             onClick={() => {
@@ -164,7 +177,8 @@ export default function CatalogPageView({
               setIsMobileMenuOpen(false)
             }}
           >
-            {t.topbar.backoffice}
+            <img src="/images/icons/wine/settings.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.backoffice}</span>
           </a>
         </nav>
       </header>
@@ -181,7 +195,10 @@ export default function CatalogPageView({
       <section className="hero-panel" id="catalog">
         <div>
           <p className="eyebrow">{t.common.catalogEyebrow}</p>
-          <h1>{t.common.title}</h1>
+          <h1 className="section-title-with-icon">
+            <img src="/images/icons/wine/wine_card.png" className="section-title-icon" alt="" aria-hidden="true" />
+            <span className="section-title-label">{t.common.title}</span>
+          </h1>
         </div>
         <section className="mobile-filter-dropdown" aria-label={t.filters.title}>
           <div className="mobile-filter-bar">

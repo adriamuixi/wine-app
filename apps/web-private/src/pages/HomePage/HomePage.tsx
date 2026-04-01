@@ -2629,6 +2629,7 @@ function HomePage() {
     const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
     const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
     const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
+    const publicWebUrl = (import.meta.env.VITE_PUBLIC_WEB_URL as string | undefined)?.trim() || '/'
 
     fetch(`${apiBaseUrl}/api/auth/logout`, {
       method: 'POST',
@@ -2637,10 +2638,7 @@ function HomePage() {
         Accept: 'application/json',
       },
     }).finally(() => {
-      setLoggedIn(false)
-      setCurrentUser(null)
-      setShowMobileMenu(false)
-      setMenu('dashboard')
+      window.location.assign(publicWebUrl)
     })
   }
 
@@ -4030,7 +4028,7 @@ function HomePage() {
           <img src={brandIconSrc} className="brand-mark" alt={t('common.brandAlt')} />
           <div className="sidebar-brand-copy">
             <img src={brandWordmarkSidebarSrc} className="brand-logo brand-logo-sidebar" alt={t('common.brandAlt')} />
-            <p className="eyebrow">{labels.common.appName}</p>
+            <p className="eyebrow">{isMobileViewport ? labels.common.appName : ''}</p>
             <h1>{isMobileViewport ? labels.user.backoffice : ''}</h1>
           </div>
           <button
@@ -4078,7 +4076,6 @@ function HomePage() {
           <div className="avatar">{displayedUser.name[0]}</div>
           <div className="user-meta">
             <p className="user-name">{displayedUser.name} {displayedUser.lastname}</p>
-            <p className="user-role">{labels.user.role}</p>
             <p className="user-email">{displayedUser.email}</p>
           </div>
           <button

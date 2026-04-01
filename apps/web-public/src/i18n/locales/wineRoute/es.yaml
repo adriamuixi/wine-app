@@ -1,0 +1,12 @@
+wineRoute:
+  eyebrow: RUTA DE VINS
+  title: Ruta de vins
+  subtitle: Circuito cronológico de compras y catas con 10 ubicaciones mock.
+  mapAria: Mapa de ruta de compras y catas
+  listAria: Lista cronológica de paradas de cata
+  listTitle: Paradas por fecha
+  dateLabel: Fecha de cata
+  winesBoughtLabel: Vinos comprados
+  mockBadge: MODO MOCK · 10 PARADAS
+  mockAria: Datos de ejemplo
+  circuitHint: La línea sólida marca el orden de cata por fecha y el tramo discontinuo cierra el circuito.

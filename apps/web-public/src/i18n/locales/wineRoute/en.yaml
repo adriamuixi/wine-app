@@ -1,0 +1,12 @@
+wineRoute:
+  eyebrow: RUTA DE VINS
+  title: Ruta de vins
+  subtitle: Chronological buy-and-taste circuit with 10 mock locations.
+  mapAria: Buy and tasting route map
+  listAria: Chronological tasting stop list
+  listTitle: Stops by date
+  dateLabel: Tasting date
+  winesBoughtLabel: Wines bought
+  mockBadge: MOCK MODE · 10 STOPS
+  mockAria: Mock data
+  circuitHint: Solid line shows tasting order by date and dashed segment closes the circuit.
