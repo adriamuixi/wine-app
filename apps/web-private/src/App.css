@@ -1867,7 +1867,9 @@ code {
 }
 
 .do-directory-table {
-  min-width: 760px;
+  min-width: 0;
+  width: 100%;
+  table-layout: fixed;
 }
 
 .do-directory-filter-grid {
@@ -1913,6 +1915,7 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
+  max-width: 100%;
   min-height: 44px;
   padding: 0.34rem 0.5rem 0.34rem 0.42rem;
   border-radius: 999px;
@@ -1956,7 +1959,8 @@ code {
 
 .do-sort-select-wrap {
   position: relative;
-  min-width: 250px;
+  min-width: 0;
+  width: min(100%, 250px);
 }
 
 .do-sort-select select {
@@ -2063,6 +2067,7 @@ code {
 
 .do-directory-name-cell strong {
   min-width: 180px;
+  overflow-wrap: anywhere;
 }
 
 .do-directory-actions {
@@ -2077,6 +2082,10 @@ code {
 .do-directory-country-cell,
 .do-directory-actions-cell {
   vertical-align: middle;
+}
+
+.do-directory-country-cell .wine-country-chip {
+  flex-wrap: wrap;
 }
 
 .danger-text-button {
