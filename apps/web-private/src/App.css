@@ -7051,6 +7051,23 @@ body {
 }
 
 @media (max-width: 640px) {
+  .panel-header.wine-create-header {
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .wine-create-header > div:first-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .wine-create-header h3 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .panel-header-section-icon {
     width: 3.15rem;
     height: 3.15rem;
@@ -7071,16 +7088,18 @@ body {
   }
 
   .wine-create-header .panel-header-actions {
-    width: 100%;
-    justify-content: space-between;
-    margin-left: 0;
-    flex-wrap: wrap;
+    width: auto;
+    justify-content: flex-end;
+    margin-left: auto;
+    flex-wrap: nowrap;
     gap: 0.45rem;
+    flex-shrink: 0;
   }
 
   .wine-create-header .panel-header-actions .primary-button {
     min-width: 0;
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .tag-checkbox-grid {

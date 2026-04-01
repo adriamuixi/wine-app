@@ -3928,6 +3928,22 @@ function HomePage() {
     }
   })()
 
+  const activeEntityMenuKey: MenuKey = (() => {
+    switch (menu) {
+      case 'wineCreate':
+      case 'wineEdit':
+      case 'wineProfile':
+        return 'wines'
+      case 'doCreate':
+        return 'dos'
+      case 'reviewCreate':
+      case 'reviewEdit':
+        return 'reviews'
+      default:
+        return menu
+    }
+  })()
+
   if (!authBootstrapped) {
     return (
       <main className="login-shell">
@@ -4052,7 +4068,7 @@ function HomePage() {
             <button
               key={item.key}
               type="button"
-              className={`nav-item ${menu === item.key ? 'active' : ''}`}
+              className={`nav-item ${activeEntityMenuKey === item.key ? 'active' : ''}`}
               data-tooltip={item.label}
               title={isSidebarCollapsed ? item.label : undefined}
               onClick={() => {
@@ -4684,12 +4700,12 @@ function HomePage() {
           <button
             key={`mobile-nav-${item.key}`}
             type="button"
-            className={`mobile-bottom-nav-item${menu === item.key ? ' active' : ''}`}
+            className={`mobile-bottom-nav-item${activeEntityMenuKey === item.key ? ' active' : ''}`}
             onClick={() => {
               setMenu(item.key)
               setShowMobileMenu(false)
             }}
-            aria-pressed={menu === item.key}
+            aria-pressed={activeEntityMenuKey === item.key}
             title={item.label}
           >
             <span className="mobile-bottom-nav-icon" aria-hidden="true">
