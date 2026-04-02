@@ -1,5 +1,6 @@
 import type { SyntheticEvent } from 'react'
-import type { MyWineReviewEntry, WineDetailsApiReview } from '../types'
+import { useEffect, useState } from 'react'
+import type { MyWineReviewEntry, ReviewListApiItem, WineDetailsApiReview } from '../types'
 import type { Locale } from '../../../i18n/messages'
 
 type ReviewsPanelProps = {
@@ -18,6 +19,7 @@ type ReviewsPanelProps = {
   reviewTotalWines: number
   showCreateButton?: boolean
   myReviewEntries: MyWineReviewEntry[]
+  reviewComparisonByMyReviewId: Record<number, ReviewListApiItem>
   myReviewSummaryStatus: 'idle' | 'loading' | 'ready' | 'error'
   myReviewSummaryError: string | null
   reviewActionError: string | null
@@ -46,6 +48,7 @@ export function ReviewsPanel({
   reviewTotalWines,
   showCreateButton = true,
   myReviewEntries,
+  reviewComparisonByMyReviewId,
   myReviewSummaryStatus,
   myReviewSummaryError,
   reviewActionError,
@@ -67,6 +70,54 @@ export function ReviewsPanel({
   medalToneFromTen,
   medalToneFromHundred,
 }: ReviewsPanelProps) {
+  const [openComparisonReviewId, setOpenComparisonReviewId] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (openComparisonReviewId == null) {
+      return
+    }
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) {
+        return
+      }
+
+      const clickedInsideComparison = target instanceof Element && target.closest('.review-compare-anchor') != null
+      if (clickedInsideComparison) {
+        return
+      }
+
+      setOpenComparisonReviewId(null)
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenComparisonReviewId(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [openComparisonReviewId])
+
+  const formatScoreDifference = (ownValue: number | null, otherValue: number | null): string => {
+    if (ownValue == null || otherValue == null) {
+      return '—'
+    }
+
+    const diff = otherValue - ownValue
+    if (diff > 0) {
+      return `+${diff}`
+    }
+
+    return String(diff)
+  }
+
   return (
     <section className="screen-grid">
       <section className="panel">
@@ -145,6 +196,8 @@ export function ReviewsPanel({
               const doLabel = doRegion && doRegion !== '-' ? doRegion : t('ui.without_do')
               const doLogoPath = doLogoPathFromImageName(entry.wine.doLogo)
               const countryFlagPathValue = countryFlagPath(entry.wine.country)
+              const comparisonReview = reviewComparisonByMyReviewId[entry.review.id]
+              const isComparisonOpen = openComparisonReviewId === entry.review.id
 
               return (
                 <article key={`my-review-${entry.review.id}`} className="review-card">
@@ -215,6 +268,62 @@ export function ReviewsPanel({
                         <small>{t('ui.score_total_100')}</small>
                       </div>
                       <div className="review-actions review-actions-inline review-actions-end">
+                        {comparisonReview ? (
+                          <div className="review-compare-anchor">
+                            <button
+                              type="button"
+                              className="table-icon-button"
+                              aria-label={t('ui.view_other_review_comparison')}
+                              title={t('ui.view_other_review_comparison')}
+                              aria-expanded={isComparisonOpen}
+                              onClick={() => {
+                                setOpenComparisonReviewId((current) => (current === entry.review.id ? null : entry.review.id))
+                              }}
+                            >
+                              <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M12 5C6 5 1.73 9.11.46 11.03a1.76 1.76 0 0 0 0 1.94C1.73 14.89 6 19 12 19s10.27-4.11 11.54-6.03a1.76 1.76 0 0 0 0-1.94C22.27 9.11 18 5 12 5Zm0 12c-4.92 0-8.58-3.21-9.86-5 1.28-1.79 4.94-5 9.86-5s8.58 3.21 9.86 5c-1.28 1.79-4.94 5-9.86 5Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" fill="currentColor" />
+                              </svg>
+                            </button>
+                            {isComparisonOpen ? (
+                              <div className="review-compare-tooltip" role="tooltip">
+                                <p className="review-compare-title">{t('ui.other_review')} · {comparisonReview.user.name} {comparisonReview.user.lastname}</p>
+                                <p className="review-compare-date">{formatApiDate(comparisonReview.created_at, locale)}</p>
+                                <dl className="review-compare-grid">
+                                  <div>
+                                    <dt>{t('ui.score_total_100')}</dt>
+                                    <dd>{comparisonReview.score == null ? '-' : `${comparisonReview.score}/100`}</dd>
+                                    <span className="review-compare-diff">{formatScoreDifference(entry.review.score, comparisonReview.score)}</span>
+                                  </div>
+                                  <div>
+                                    <dt>{t('ui.aroma')}</dt>
+                                    <dd>{comparisonReview.aroma}/10</dd>
+                                    <span className="review-compare-diff">{formatScoreDifference(entry.review.aroma, comparisonReview.aroma)}</span>
+                                  </div>
+                                  <div>
+                                    <dt>{t('ui.appearance')}</dt>
+                                    <dd>{comparisonReview.appearance}/10</dd>
+                                    <span className="review-compare-diff">{formatScoreDifference(entry.review.appearance, comparisonReview.appearance)}</span>
+                                  </div>
+                                  <div>
+                                    <dt>{labels.reviews.create.palateEntry}</dt>
+                                    <dd>{comparisonReview.palate_entry}/10</dd>
+                                    <span className="review-compare-diff">{formatScoreDifference(entry.review.palate_entry, comparisonReview.palate_entry)}</span>
+                                  </div>
+                                  <div>
+                                    <dt>{t('ui.body')}</dt>
+                                    <dd>{comparisonReview.body}/10</dd>
+                                    <span className="review-compare-diff">{formatScoreDifference(entry.review.body, comparisonReview.body)}</span>
+                                  </div>
+                                  <div>
+                                    <dt>{t('ui.persistence')}</dt>
+                                    <dd>{comparisonReview.persistence}/10</dd>
+                                    <span className="review-compare-diff">{formatScoreDifference(entry.review.persistence, comparisonReview.persistence)}</span>
+                                  </div>
+                                </dl>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
                         <button
                           type="button"
                           className="table-icon-button"

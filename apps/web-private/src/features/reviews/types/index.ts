@@ -2,6 +2,7 @@ export type {
   MyWineReviewEntry,
   ReviewFormPreset,
   ReviewItem,
+  ReviewListApiItem,
   ReviewTimelinePoint,
   WineDetailsApiReview,
   WineItem,

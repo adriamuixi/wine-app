@@ -2901,8 +2901,12 @@ code {
   aspect-ratio: 1 / 1;
 }
 
-.wine-profile-photos-panel .wine-sheet-mini-photo span {
+.wine-profile-photos-panel .wine-photo-label-full {
   font-size: 0.76rem;
+}
+
+.wine-profile-photos-panel .wine-photo-label-short {
+  display: none;
 }
 
 .wine-profile-photos-panel .wine-photo-actions .photo-icon-button {
@@ -4233,6 +4237,82 @@ code {
   margin-left: 0.9rem;
 }
 
+.review-compare-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.review-compare-tooltip {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.38rem);
+  z-index: 30;
+  width: min(320px, 82vw);
+  border-radius: 12px;
+  border: 1px solid rgba(82, 46, 28, 0.16);
+  background: rgba(255, 252, 249, 0.98);
+  box-shadow: 0 16px 36px rgba(31, 18, 13, 0.16);
+  padding: 0.6rem 0.66rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.review-compare-title {
+  margin: 0;
+  color: #3a2b22;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.review-compare-date {
+  margin: 0;
+  color: #7b6a60;
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.review-compare-grid {
+  margin: 0;
+  display: grid;
+  gap: 0.28rem;
+}
+
+.review-compare-grid div {
+  border-radius: 8px;
+  border: 1px solid rgba(82, 46, 28, 0.1);
+  background: rgba(255, 255, 255, 0.88);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.34rem 0.45rem;
+}
+
+.review-compare-grid dt {
+  margin: 0;
+  color: #7b6a60;
+  font-size: 0.72rem;
+  line-height: 1.1;
+}
+
+.review-compare-grid dd {
+  margin: 0;
+  color: #2b1d16;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.review-compare-diff {
+  color: #7f2840;
+  font-size: 0.74rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .review-bullets {
   margin-top: 0.45rem;
   display: flex;
@@ -4350,6 +4430,23 @@ code {
   border: 1px solid rgba(124, 135, 153, 0.34);
 }
 
+@media (max-width: 900px) {
+  .review-compare-tooltip {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    width: min(300px, calc(100vw - 1rem));
+    max-height: calc(100vh - 1rem);
+    overflow: auto;
+  }
+
+  .review-actions-end {
+    margin-left: 0.5rem;
+  }
+}
+
 .review-metric-value.bronze {
   color: #a25e2b;
   background: rgba(162, 94, 43, 0.14);
@@ -4413,7 +4510,8 @@ code {
 .review-list-filter {
   display: grid;
   gap: 0.3rem;
-  min-width: min(320px, 100%);
+  width: min(320px, 100%);
+  max-width: 100%;
 }
 
 .review-list-filter span {
@@ -4430,6 +4528,28 @@ code {
   color: #241a14;
   padding: 0.65rem 0.75rem;
   font: inherit;
+  line-height: 1.2;
+}
+
+:root[data-theme='dark'] .review-list-filter span {
+  color: #d0bfb2;
+}
+
+:root[data-theme='dark'] .review-list-filter select {
+  border-color: rgba(223, 198, 178, 0.24);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f3e9df;
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] .review-list-filter select:focus-visible {
+  outline: 2px solid rgba(210, 104, 133, 0.45);
+  outline-offset: 1px;
+}
+
+:root[data-theme='dark'] .review-list-filter select option {
+  background: #1a1418;
+  color: #f3e9df;
 }
 
 .detail-grid {
@@ -5865,31 +5985,87 @@ code {
   }
 
   .wine-profile-photos-panel .wine-sheet-thumbnail-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.45rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
   }
 
   .wine-profile-photos-panel .wine-sheet-mini-photo {
     grid-template-columns: 1fr;
     align-items: stretch;
     min-width: 0;
+    padding: 0.28rem;
+    gap: 0.22rem;
+    border-radius: 10px;
   }
 
   .wine-profile-photos-panel .wine-sheet-mini-photo img {
     width: 100%;
     aspect-ratio: 1 / 1;
+    border-radius: 8px;
   }
 
-  .wine-profile-photos-panel .wine-sheet-mini-photo span {
-    font-size: 0.8rem;
+  .wine-profile-photos-panel .wine-photo-label-full {
+    display: none;
   }
 
+  .wine-profile-photos-panel .wine-photo-label-short {
+    display: block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-align: center;
+    color: #6a574c;
+  }
+
+  .wine-profile-photos-panel .wine-photo-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.2rem;
+  }
+
+  .wine-profile-photos-panel .wine-photo-actions .photo-icon-button {
+    width: 100%;
+    min-width: 0;
+    height: 30px;
+    min-height: 30px;
+    border-radius: 8px;
+    padding: 0;
+  }
+
+  .wine-profile-photos-panel .wine-photo-actions .table-icon-svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .wine-profile-photos-panel .wine-photo-actions .photo-icon-button.danger {
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  .wine-profile-row-one,
   .wine-profile-row-two {
+    display: contents;
+  }
+
+  .wine-profile-card-maininfo {
     order: 1;
   }
 
-  .wine-profile-row-one {
+  .wine-profile-photos-panel {
     order: 2;
+  }
+
+  .wine-profile-card-composition {
+    order: 3;
+  }
+
+  .wine-profile-card-reviews {
+    order: 4;
+  }
+
+  .wine-profile-card-awards {
+    order: 5;
   }
 
   .wine-profile-toolbar h3,
@@ -5919,7 +6095,7 @@ code {
   }
 
   .wine-profile-facts-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .wine-profile-do-showcase {
@@ -6603,6 +6779,37 @@ body {
 :root[data-theme='dark'] .review-wine-thumb {
   border-color: rgba(223, 198, 178, 0.2);
   background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme='dark'] .review-compare-tooltip {
+  border-color: rgba(223, 198, 178, 0.26);
+  background: rgba(15, 11, 16, 0.98);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.42);
+}
+
+:root[data-theme='dark'] .review-compare-title {
+  color: #f3e9df;
+}
+
+:root[data-theme='dark'] .review-compare-date {
+  color: #cab8ab;
+}
+
+:root[data-theme='dark'] .review-compare-grid div {
+  border-color: rgba(223, 198, 178, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme='dark'] .review-compare-grid dt {
+  color: #cab8ab;
+}
+
+:root[data-theme='dark'] .review-compare-grid dd {
+  color: #f3e9df;
+}
+
+:root[data-theme='dark'] .review-compare-diff {
+  color: #ffb6cf;
 }
 
 :root[data-theme='dark'] .important-rating-field {

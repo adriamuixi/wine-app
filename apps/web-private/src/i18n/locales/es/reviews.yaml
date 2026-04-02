@@ -70,6 +70,8 @@ ui:
   score_total_100: Puntuación total (100)
   aroma: Aroma
   delete_review: Eliminar reseña
+  view_other_review_comparison: Ver comparativa con la otra reseña
+  other_review: Otra reseña
   yet_not_has_created_reviews: Todavía no has creado reseñas.
   no_reviews_for_this_wine: No hay reseñas para este vino.
   notifications_new_reviews_export_csv_and_preference_decimals_score: Notificaciones

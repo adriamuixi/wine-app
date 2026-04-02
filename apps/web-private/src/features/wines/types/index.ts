@@ -7,6 +7,7 @@ export type {
   GrapeApiResponse,
   GrapeBlendRow,
   PhotoEditorAssetType,
+  ReviewListApiItem,
   ReviewListApiResponse,
   WineDetailsApiAward,
   WineDetailsApiPhoto,

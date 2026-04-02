@@ -54,6 +54,7 @@ import type {
   GrapeApiResponse,
   GrapeBlendRow,
   PhotoEditorAssetType,
+  ReviewListApiItem,
   ReviewListApiResponse,
   WineDetailsApiAward,
   WineDetailsApiPhoto,
@@ -286,6 +287,8 @@ function countryLabelToFilterValue(country: string): CountryFilterValue {
   const shorthand: Record<string, Exclude<CountryFilterValue, 'all'>> = {
     usa: 'united_states',
     us: 'united_states',
+    protugal: 'portugal',
+    portugual: 'portugal',
   }
   if (normalized in shorthand) {
     return shorthand[normalized]
@@ -502,6 +505,13 @@ function formatApiDate(dateIso: string, locale: string): string {
 function labelForPhotoType(type: WineDetailsApiPhoto['type'] | 'do_logo', locale: string): string {
   const key = type == null ? 'default' : type
   return i18n.getFixedT(locale)(`common.photoType.${key}`)
+}
+
+function shortLabelForPhotoType(type: WineDetailsApiPhoto['type']): string {
+  if (type === 'bottle') return 'A'
+  if (type === 'front_label') return 'EF'
+  if (type === 'back_label') return 'EP'
+  return 'S'
 }
 
 
@@ -724,6 +734,7 @@ function HomePage() {
     () => (typeof window !== 'undefined' ? window.matchMedia('(max-width: 640px)').matches : false),
   )
   const [myReviewEntries, setMyReviewEntries] = useState<MyWineReviewEntry[]>([])
+  const [reviewComparisonByMyReviewId, setReviewComparisonByMyReviewId] = useState<Record<number, ReviewListApiItem>>({})
   const [myReviewSummaryStatus, setMyReviewSummaryStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [myReviewSummaryError, setMyReviewSummaryError] = useState<string | null>(null)
   const [reviewTotalWines, setReviewTotalWines] = useState(0)
@@ -2467,6 +2478,7 @@ function HomePage() {
 
         const wineById = new Map(allWines.map((wine) => [wine.id, wine]))
         const reviewEntries: MyWineReviewEntry[] = []
+        const allReviewItems: ReviewListApiItem[] = []
         let reviewsPage = 1
         let reviewsTotalPages = 1
 
@@ -2492,6 +2504,7 @@ function HomePage() {
           const payload = await reviewsResponse.json() as ReviewListApiResponse
           reviewsTotalPages = payload.pagination.total_pages
           const pageItems = Array.isArray(payload.items) ? payload.items : []
+          allReviewItems.push(...pageItems)
 
           pageItems.forEach((item) => {
             if (item.user.id !== currentUserId) {
@@ -2549,8 +2562,31 @@ function HomePage() {
           return
         }
 
+        const otherReviewsByWineId = new Map<number, ReviewListApiItem[]>()
+        allReviewItems.forEach((item) => {
+          if (item.user.id === currentUserId) {
+            return
+          }
+          const current = otherReviewsByWineId.get(item.wine.id) ?? []
+          current.push(item)
+          otherReviewsByWineId.set(item.wine.id, current)
+        })
+        otherReviewsByWineId.forEach((items, wineId) => {
+          items.sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+          otherReviewsByWineId.set(wineId, items)
+        })
+
+        const comparisonByMineReviewId: Record<number, ReviewListApiItem> = {}
+        reviewEntries.forEach((entry) => {
+          const counterpart = otherReviewsByWineId.get(entry.wine.id)?.[0]
+          if (counterpart != null) {
+            comparisonByMineReviewId[entry.review.id] = counterpart
+          }
+        })
+
         setReviewTotalWines(totalItems)
         setMyReviewEntries(reviewEntries)
+        setReviewComparisonByMyReviewId(comparisonByMineReviewId)
         setMyReviewSummaryStatus('ready')
       } catch (error: unknown) {
         if (controller.signal.aborted) {
@@ -2559,6 +2595,7 @@ function HomePage() {
 
         setMyReviewSummaryStatus('error')
         setMyReviewSummaryError(error instanceof Error ? error.message : (t('ui.not_could_load_your_reviews')))
+        setReviewComparisonByMyReviewId({})
       }
     }
 
@@ -2824,45 +2861,51 @@ function HomePage() {
         </div>
       </div>
       <div className="wine-sheet-thumbnail-row">
-        {slots.map((photo) => (
-          <div key={photo.type} className="wine-sheet-mini-photo">
-            <img
-              src={photo.src}
-              alt={`${labelForPhotoType(photo.type, locale)}`}
-              loading="lazy"
-              onError={fallbackToDefaultWineIcon}
-            />
-            <span>{labelForPhotoType(photo.type, locale)}</span>
-            <div className="wine-photo-actions">
-              <button
-                type="button"
-                className="ghost-button tiny photo-icon-button"
-                onClick={() => startPhotoPick(wineId, photo.type)}
-                title={t('wineProfile.photoActions.edit')}
-                aria-label={t('wineProfile.photoActions.edit')}
-              >
-                <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path
-                    d="M3 17.25V21h3.75L18.37 9.38l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.62-9.62.92.92-9.62 9.62zM20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.3a1 1 0 0 0-1.41 0l-1.5 1.5 3.75 3.75 1.5-1.5z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className="ghost-button tiny danger photo-icon-button"
-                onClick={() => {
-                  void resetWinePhotoToDefault(wineId, photo.type)
-                }}
-                disabled={photoDeleteBusyType === photo.type}
-                title={t('wineProfile.photoActions.delete')}
-                aria-label={t('wineProfile.photoActions.delete')}
-              >
-                🗑
-              </button>
+        {slots.map((photo) => {
+          const fullPhotoLabel = labelForPhotoType(photo.type, locale)
+          return (
+            <div key={photo.type} className="wine-sheet-mini-photo">
+              <img
+                src={photo.src}
+                alt={fullPhotoLabel}
+                loading="lazy"
+                onError={fallbackToDefaultWineIcon}
+              />
+              <span className="wine-photo-label-full">{fullPhotoLabel}</span>
+              <span className="wine-photo-label-short" title={fullPhotoLabel} aria-label={fullPhotoLabel}>
+                {shortLabelForPhotoType(photo.type)}
+              </span>
+              <div className="wine-photo-actions">
+                <button
+                  type="button"
+                  className="ghost-button tiny photo-icon-button"
+                  onClick={() => startPhotoPick(wineId, photo.type)}
+                  title={t('wineProfile.photoActions.edit')}
+                  aria-label={t('wineProfile.photoActions.edit')}
+                >
+                  <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      d="M3 17.25V21h3.75L18.37 9.38l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.62-9.62.92.92-9.62 9.62zM20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.3a1 1 0 0 0-1.41 0l-1.5 1.5 3.75 3.75 1.5-1.5z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="ghost-button tiny danger photo-icon-button"
+                  onClick={() => {
+                    void resetWinePhotoToDefault(wineId, photo.type)
+                  }}
+                  disabled={photoDeleteBusyType === photo.type}
+                  title={t('wineProfile.photoActions.delete')}
+                  aria-label={t('wineProfile.photoActions.delete')}
+                >
+                  🗑
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )
@@ -4467,6 +4510,7 @@ function HomePage() {
             reviewTotalWines={reviewTotalWines}
             showCreateButton={!isMobileViewport}
             myReviewEntries={myReviewEntries}
+            reviewComparisonByMyReviewId={reviewComparisonByMyReviewId}
             myReviewSummaryStatus={myReviewSummaryStatus}
             myReviewSummaryError={myReviewSummaryError}
             reviewActionError={reviewActionError}

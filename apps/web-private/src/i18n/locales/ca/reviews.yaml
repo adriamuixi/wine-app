@@ -70,6 +70,8 @@ ui:
   score_total_100: Puntuació total (100)
   aroma: Aroma
   delete_review: Eliminar ressenya
+  view_other_review_comparison: Veure comparativa amb l'altra ressenya
+  other_review: Altra ressenya
   yet_not_has_created_reviews: Encara no has creat ressenyes.
   no_reviews_for_this_wine: No hi ha ressenyes per aquest vi.
   notifications_new_reviews_export_csv_and_preference_decimals_score: Notificacions
