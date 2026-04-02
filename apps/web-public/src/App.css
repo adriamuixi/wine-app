@@ -2372,7 +2372,7 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 .public-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 5300;
   background:
     radial-gradient(circle at 50% 12%, rgba(116, 30, 92, 0.14), transparent 40%),
     rgba(8, 5, 7, 0.78);
@@ -2393,7 +2393,7 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 }
 
 .do-logo-lightbox-backdrop {
-  z-index: 40;
+  z-index: 5400;
 }
 
 .do-logo-lightbox {

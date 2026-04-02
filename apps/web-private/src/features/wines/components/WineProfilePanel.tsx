@@ -194,7 +194,7 @@ export function WineProfilePanel({
                 <div><dt>{t('ui.by_type')}</dt><dd>{selectedWineSheetDetails.wine_type ? wineTypeLabel(selectedWineSheetDetails.wine_type) : '-'}</dd></div>
                 <div><dt>{t('ui.crianza')}</dt><dd>{labelForAgingType(selectedWineSheetDetails.aging_type, locale)}</dd></div>
                 <div><dt>{t('ui.alcohol_content')}</dt><dd>{selectedWineSheetDetails.alcohol_percentage ?? '-'}</dd></div>
-                <div><dt>{t('ui.updated')}</dt><dd>{formatApiDate(selectedWineSheetDetails.updated_at, locale)}</dd></div>
+                <div><dt>{t('ui.updated')}</dt><dd>{formatApiDate(selectedWineSheetDetails.purchases[0]?.purchased_at ?? selectedWineSheetDetails.updated_at, locale)}</dd></div>
               </dl>
             </section>
 
