@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\In\Http;
 
+use App\Application\Ports\AuthSessionManager;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoCommand;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoHandler;
 use App\Application\UseCases\Wine\CreateWinePhoto\CreateWinePhotoNotFound;
@@ -17,13 +18,20 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class WinePhotoController
 {
-    public function __construct(private readonly CreateWinePhotoHandler $createWinePhotoHandler)
+    public function __construct(
+        private readonly AuthSessionManager $authSession,
+        private readonly CreateWinePhotoHandler $createWinePhotoHandler,
+    )
     {
     }
 
     #[Route('/api/wines/{id}/photos', name: 'api_wine_photos_create', methods: ['POST'])]
     public function create(int $id, Request $request): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $typeRaw = $request->request->get('type');
         if (!is_string($typeRaw)) {
             return new JsonResponse(['error' => 'type is required.'], Response::HTTP_BAD_REQUEST);

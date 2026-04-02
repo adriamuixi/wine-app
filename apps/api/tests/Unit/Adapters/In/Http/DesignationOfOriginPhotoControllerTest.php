@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\DesignationOfOriginPhotoController;
+use App\Application\Ports\AuthSessionManager;
 use App\Application\Ports\PhotoStoragePort;
 use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOriginAsset\CreateDesignationOfOriginAssetCommand;
@@ -83,6 +84,7 @@ final class DesignationOfOriginPhotoControllerTest extends TestCase
     private function controller(array $existingDoIds = []): DesignationOfOriginPhotoController
     {
         return new DesignationOfOriginPhotoController(
+            new AllowAllAuthSessionManagerForDoPhotoController(),
             new CreateDesignationOfOriginAssetHandler(
                 new DesignationOfOriginPhotoControllerInMemoryDesignationOfOriginRepository($existingDoIds),
                 new DesignationOfOriginPhotoControllerSpyStorage(),
@@ -157,6 +159,22 @@ final class DesignationOfOriginPhotoControllerSpyStorage implements PhotoStorage
     }
 
     public function deleteDirectory(string $entity, int $wineId): void
+    {
+    }
+}
+
+final class AllowAllAuthSessionManagerForDoPhotoController implements AuthSessionManager
+{
+    public function loginByUserId(int $userId): void
+    {
+    }
+
+    public function getAuthenticatedUserId(): ?int
+    {
+        return 1;
+    }
+
+    public function logout(): void
     {
     }
 }

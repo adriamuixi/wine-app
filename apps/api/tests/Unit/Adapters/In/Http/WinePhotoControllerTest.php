@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\WinePhotoController;
+use App\Application\Ports\AuthSessionManager;
 use App\Application\Ports\PhotoStoragePort;
 use App\Application\UseCases\Photo\PhotoInputGuard;
 use App\Domain\Repository\WinePhotoRepository;
@@ -107,6 +108,7 @@ final class WinePhotoControllerTest extends TestCase
     private function controller(array $existingWineIds = []): WinePhotoController
     {
         return new WinePhotoController(
+            new AllowAllAuthSessionManagerForWinePhotoController(),
             new CreateWinePhotoHandler(
                 new PhotoControllerSpyWineRepository($existingWineIds),
                 new PhotoControllerSpyWinePhotoRepository(),
@@ -191,6 +193,22 @@ final class PhotoControllerSpyWinePhotoStorage implements PhotoStoragePort
     }
 
     public function deleteDirectory(string $entity, int $wineId): void
+    {
+    }
+}
+
+final class AllowAllAuthSessionManagerForWinePhotoController implements AuthSessionManager
+{
+    public function loginByUserId(int $userId): void
+    {
+    }
+
+    public function getAuthenticatedUserId(): ?int
+    {
+        return 1;
+    }
+
+    public function logout(): void
     {
     }
 }

@@ -8,6 +8,8 @@ use App\Application\UseCases\Auth\Login\InvalidCredentials;
 use App\Application\UseCases\Auth\Login\LoginCommand;
 use App\Application\UseCases\Auth\Login\LoginHandler;
 use App\Application\UseCases\Auth\Logout\LogoutHandler;
+use App\Application\UseCases\Auth\Token\IssueAuthTokenCommand;
+use App\Application\UseCases\Auth\Token\IssueAuthTokenHandler;
 use App\Application\UseCases\Auth\User\CreateUser\CreateUserAlreadyExists;
 use App\Application\UseCases\Auth\User\CreateUser\CreateUserCommand;
 use App\Application\UseCases\Auth\User\CreateUser\CreateUserHandler;
@@ -22,6 +24,7 @@ use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserHandle
 use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserNotFound;
 use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserUnauthenticated;
 use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserValidationException;
+use App\Application\Ports\AuthSessionManager;
 use App\Domain\Model\AuthUser;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,36 +35,56 @@ final class AuthController
 {
     public function __construct(
         private readonly LoginHandler $loginHandler,
+        private readonly IssueAuthTokenHandler $issueAuthTokenHandler,
         private readonly GetCurrentUserHandler $getCurrentUserHandler,
         private readonly LogoutHandler $logoutHandler,
         private readonly CreateUserHandler $createUserHandler,
         private readonly DeleteUserByEmailHandler $deleteUserByEmailHandler,
         private readonly UpdateCurrentUserHandler $updateCurrentUserHandler,
+        private readonly AuthSessionManager $authSession,
     ) {
     }
 
     #[Route('/api/auth/login', name: 'api_auth_login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
-        $payload = json_decode($request->getContent(), true);
-        if (!is_array($payload)) {
-            return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $email = $payload['email'] ?? null;
-        $password = $payload['password'] ?? null;
-
-        if (!is_string($email) || '' === trim($email) || !is_string($password) || '' === $password) {
-            return new JsonResponse(['error' => 'email and password are required.'], Response::HTTP_BAD_REQUEST);
+        $credentials = $this->parseCredentialsPayload($request);
+        if ($credentials instanceof JsonResponse) {
+            return $credentials;
         }
 
         try {
-            $user = $this->loginHandler->handle(new LoginCommand($email, $password));
+            $user = $this->loginHandler->handle(new LoginCommand($credentials['email'], $credentials['password']));
         } catch (InvalidCredentials) {
             return new JsonResponse(['error' => 'Invalid credentials.'], Response::HTTP_UNAUTHORIZED);
         }
 
         return new JsonResponse(['user' => $this->userPayload($user)], Response::HTTP_OK);
+    }
+
+    #[Route('/api/auth/token', name: 'api_auth_token', methods: ['POST'])]
+    public function token(Request $request): JsonResponse
+    {
+        $credentials = $this->parseCredentialsPayload($request);
+        if ($credentials instanceof JsonResponse) {
+            return $credentials;
+        }
+
+        try {
+            $result = $this->issueAuthTokenHandler->handle(new IssueAuthTokenCommand(
+                email: $credentials['email'],
+                password: $credentials['password'],
+            ));
+        } catch (InvalidCredentials) {
+            return new JsonResponse(['error' => 'Invalid credentials.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return new JsonResponse([
+            'access_token' => $result->token,
+            'token_type' => 'Bearer',
+            'expires_at' => $result->expiresAt->format(\DateTimeInterface::ATOM),
+            'user' => $this->userPayload($result->user),
+        ], Response::HTTP_OK);
     }
 
     #[Route('/api/auth/me', name: 'api_auth_me', methods: ['GET'])]
@@ -119,6 +142,10 @@ final class AuthController
     #[Route('/api/auth/users', name: 'api_auth_users_create', methods: ['POST'])]
     public function createUser(Request $request): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
@@ -146,6 +173,10 @@ final class AuthController
     #[Route('/api/auth/users', name: 'api_auth_users_delete', methods: ['DELETE'])]
     public function deleteUser(Request $request): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
@@ -177,6 +208,29 @@ final class AuthController
             'email' => $user->email,
             'name' => $user->name,
             'lastname' => $user->lastname,
+        ];
+    }
+
+    /**
+     * @return array{email:string,password:string}|JsonResponse
+     */
+    private function parseCredentialsPayload(Request $request): array|JsonResponse
+    {
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $email = $payload['email'] ?? null;
+        $password = $payload['password'] ?? null;
+
+        if (!is_string($email) || '' === trim($email) || !is_string($password) || '' === $password) {
+            return new JsonResponse(['error' => 'email and password are required.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        return [
+            'email' => $email,
+            'password' => $password,
         ];
     }
 }

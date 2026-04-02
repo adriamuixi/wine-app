@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\In\Http;
 
+use App\Application\Ports\AuthSessionManager;
 use App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOrigin\CreateDesignationOfOriginCommand;
 use App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOrigin\CreateDesignationOfOriginHandler;
 use App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOrigin\CreateDesignationOfOriginValidationException;
@@ -27,6 +28,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class DesignationOfOriginController
 {
     public function __construct(
+        private readonly AuthSessionManager $authSession,
         private readonly CreateDesignationOfOriginHandler $createDoHandler,
         private readonly ListDesignationsOfOriginHandler $listDosHandler,
         private readonly UpdateDesignationOfOriginHandler $updateDoHandler,
@@ -37,6 +39,10 @@ final class DesignationOfOriginController
     #[Route('/api/dos', name: 'api_dos_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
@@ -95,6 +101,10 @@ final class DesignationOfOriginController
     #[Route('/api/dos/{id}', name: 'api_dos_update', methods: ['PUT'])]
     public function update(int $id, Request $request): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
@@ -115,6 +125,10 @@ final class DesignationOfOriginController
     #[Route('/api/dos/{id}', name: 'api_dos_delete', methods: ['DELETE'])]
     public function delete(int $id): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         try {
             $this->deleteDoHandler->handle($id);
         } catch (DeleteDesignationOfOriginNotFound $exception) {

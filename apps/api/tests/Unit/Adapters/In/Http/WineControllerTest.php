@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\WineController;
+use App\Application\Ports\AuthSessionManager;
 use App\Application\Ports\PhotoStoragePort;
 use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Repository\GrapeRepository;
@@ -490,6 +491,7 @@ final class WineControllerTest extends TestCase
         $repo = new SpyWineRepository($deletableWineIds, $updatableWineIds, $detailedWineIds);
 
         return new WineController(
+            new AllowAllAuthSessionManager(),
             new CreateWineHandler(
                 $repo,
                 new InMemoryDesignationOfOriginRepository($doCountries),
@@ -500,6 +502,22 @@ final class WineControllerTest extends TestCase
             new GetWineDetailsHandler($repo),
             new ListWinesHandler($repo),
         );
+    }
+}
+
+final class AllowAllAuthSessionManager implements AuthSessionManager
+{
+    public function loginByUserId(int $userId): void
+    {
+    }
+
+    public function getAuthenticatedUserId(): ?int
+    {
+        return 1;
+    }
+
+    public function logout(): void
+    {
     }
 }
 

@@ -11,6 +11,7 @@ final readonly class ListReviewsQuery
         public int $limit,
         public string $sortBy,
         public string $sortDir,
+        public ?int $userId = null,
     ) {
     }
 }

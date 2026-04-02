@@ -1,0 +1,29 @@
+{
+  "name": "wine-app",
+  "private": true,
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "mobile:install": "npm --prefix apps/mobile install",
+    "mobile:start": "npm --prefix apps/mobile run start",
+    "mobile:android": "npm --prefix apps/mobile run android",
+    "mobile:ios": "npm --prefix apps/mobile run ios",
+    "mobile:web": "npm --prefix apps/mobile run web",
+    "mobile:typecheck": "npm --prefix apps/mobile run typecheck",
+    "mobile:lint": "npm --prefix apps/mobile run lint",
+    "mobile:test": "npm --prefix apps/mobile run test",
+    "api-client:build": "npm --prefix packages/api-client run build",
+    "api-client:check": "npm --prefix packages/api-client run check",
+    "domain-types:check": "npm --prefix packages/domain-types run check",
+    "i18n-core:check": "npm --prefix packages/i18n-core run check",
+    "mobile-utils:check": "npm --prefix packages/mobile-utils run check",
+    "packages:check": "npm run api-client:check && npm run domain-types:check && npm run i18n-core:check && npm run mobile-utils:check"
+  }
+}

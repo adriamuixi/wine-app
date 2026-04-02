@@ -62,6 +62,22 @@ final class ListReviewsHandlerTest extends TestCase
             sortDir: ListReviewsSort::DESC,
         ));
     }
+
+    public function testItPassesUserIdFilterToRepository(): void
+    {
+        $repo = new SpyWineReviewRepository();
+        $handler = new ListReviewsHandler($repo);
+
+        $handler->handle(new ListReviewsQuery(
+            page: 1,
+            limit: 20,
+            sortBy: ListReviewsSort::SCORE,
+            sortDir: ListReviewsSort::DESC,
+            userId: 5,
+        ));
+
+        self::assertSame(5, $repo->received?->userId);
+    }
 }
 
 final class SpyWineReviewRepository implements WineReviewRepository

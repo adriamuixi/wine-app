@@ -10,6 +10,9 @@ apps/web-public/node_modules/
 apps/web-public/dist/
 apps/web-private/node_modules/
 apps/web-private/dist/
+apps/mobile/node_modules/
+apps/mobile/.expo/
+apps/mobile/dist/
 
 # Backend generated files (Symfony local cache/logs if root ignore is used by tools)
 apps/api/var/
@@ -22,3 +25,4 @@ coverage/
 # Uploaded wine photos (runtime data, never versioned)
 shared/public/images/wines/*
 !shared/public/images/wines/.gitkeep
+node_modules

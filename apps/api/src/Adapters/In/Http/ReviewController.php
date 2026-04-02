@@ -58,11 +58,17 @@ final class ReviewController
             }
             $sortDir = null === $sortDir ? ListReviewsSort::DESC : strtolower(trim($sortDir));
 
+            $userId = $this->parseOptionalUserIdFilter($request);
+            if ('unauthenticated' === $userId) {
+                return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+            }
+
             $result = $this->listReviewsHandler->handle(new ListReviewsQuery(
                 page: $page,
                 limit: $limit,
                 sortBy: $sortBy,
                 sortDir: $sortDir,
+                userId: $userId,
             ));
         } catch (ListReviewsValidationException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -310,6 +316,29 @@ final class ReviewController
         }
 
         return (int) $value;
+    }
+
+    private function parseOptionalUserIdFilter(Request $request): int|string|null
+    {
+        $userId = $request->query->get('user_id');
+        if (null === $userId || '' === $userId) {
+            return null;
+        }
+
+        if (!is_string($userId)) {
+            throw new ListReviewsValidationException('user_id must be a string.');
+        }
+
+        $normalized = strtolower(trim($userId));
+        if ('me' === $normalized) {
+            return $this->authSession->getAuthenticatedUserId() ?? 'unauthenticated';
+        }
+
+        if (!preg_match('/^\d+$/', $normalized)) {
+            throw new ListReviewsValidationException('user_id must be a positive integer or "me".');
+        }
+
+        return (int) $normalized;
     }
 
     /**

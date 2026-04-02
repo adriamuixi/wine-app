@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\In\Http;
 
+use App\Application\Ports\AuthSessionManager;
 use App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOriginAsset\CreateDesignationOfOriginAssetCommand;
 use App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOriginAsset\CreateDesignationOfOriginAssetHandler;
 use App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOriginAsset\CreateDesignationOfOriginAssetNotFound;
@@ -17,13 +18,20 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class DesignationOfOriginPhotoController
 {
-    public function __construct(private readonly CreateDesignationOfOriginAssetHandler $createDoAssetHandler)
+    public function __construct(
+        private readonly AuthSessionManager $authSession,
+        private readonly CreateDesignationOfOriginAssetHandler $createDoAssetHandler,
+    )
     {
     }
 
     #[Route('/api/dos/{id}/assets', name: 'api_do_photos_create', methods: ['POST'])]
     public function create(int $id, Request $request): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $typeRaw = $request->request->get('type');
         if (!is_string($typeRaw)) {
             return new JsonResponse(['error' => 'type is required.'], Response::HTTP_BAD_REQUEST);

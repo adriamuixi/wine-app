@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\In\Http;
 
+use App\Application\Ports\AuthSessionManager;
 use App\Application\UseCases\Wine\CreateWine\CreateWineAwardInput;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Application\UseCases\Wine\CreateWine\CreateWineGrapeInput;
@@ -40,6 +41,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class WineController
 {
     public function __construct(
+        private readonly AuthSessionManager $authSession,
         private readonly CreateWineHandler $createWineHandler,
         private readonly UpdateWineHandler $updateWineHandler,
         private readonly DeleteWineHandler $deleteWineHandler,
@@ -210,6 +212,10 @@ final class WineController
     #[Route('/api/wines', name: 'api_wines_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
@@ -230,6 +236,10 @@ final class WineController
     #[Route('/api/wines/{id}', name: 'api_wines_update', methods: ['PUT'])]
     public function update(int $id, Request $request): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return new JsonResponse(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
@@ -250,6 +260,10 @@ final class WineController
     #[Route('/api/wines/{id}', name: 'api_wines_delete', methods: ['DELETE'])]
     public function delete(int $id): JsonResponse
     {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         try {
             $this->deleteWineHandler->handle($id);
         } catch (WineNotFound $exception) {

@@ -78,7 +78,7 @@ final class UpdateReviewHandlerTest extends TestCase
         ));
     }
 
-    public function testUpdateAllowsScoreChanges(): void
+    public function testUpdateKeepsExistingScoreWhenPayloadIncludesAnotherScore(): void
     {
         $repository = new InMemoryWineReviewRepository();
         $handler = new UpdateReviewHandler($repository);
@@ -95,7 +95,7 @@ final class UpdateReviewHandlerTest extends TestCase
 
         $saved = $repository->findById(1);
         self::assertNotNull($saved);
-        self::assertSame(91, $saved->score);
+        self::assertSame(90, $saved->score);
     }
 }
 

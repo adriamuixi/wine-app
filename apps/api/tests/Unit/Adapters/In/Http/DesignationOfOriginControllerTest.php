@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\DesignationOfOriginController;
+use App\Application\Ports\AuthSessionManager;
 use App\Application\Ports\PhotoStoragePort;
 use App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOrigin\CreateDesignationOfOriginHandler;
 use App\Application\UseCases\DesignationOfOrigin\DeleteDesignationOfOrigin\DeleteDesignationOfOriginHandler;
@@ -29,6 +30,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -53,6 +55,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -72,6 +75,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -89,6 +93,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -107,6 +112,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -123,6 +129,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -140,6 +147,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -157,6 +165,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(updatableIds: [20]);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -182,6 +191,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(updatableIds: [20]);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -205,6 +215,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(updatableIds: [20]);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -228,6 +239,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(updatableIds: [20]);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -251,6 +263,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(updatableIds: [20]);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -275,6 +288,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(updatableIds: []);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -296,6 +310,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(deletableIds: [33]);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -311,6 +326,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(deletableIds: [33], associatedWineIds: [33]);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -328,6 +344,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(deletableIds: []);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -343,6 +360,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -377,6 +395,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -406,6 +425,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -435,6 +455,7 @@ final class DesignationOfOriginControllerTest extends TestCase
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository(throwUniqueConstraintOnCreate: true);
         $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
             new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
             new ListDesignationsOfOriginHandler($repository),
             new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
@@ -576,6 +597,22 @@ final class DesignationOfOriginControllerNullDesignationOfOriginAssetStorage imp
     }
 
     public function deleteDirectory(string $entity, int $wineId): void
+    {
+    }
+}
+
+final class AllowAllAuthSessionManagerForDoController implements AuthSessionManager
+{
+    public function loginByUserId(int $userId): void
+    {
+    }
+
+    public function getAuthenticatedUserId(): ?int
+    {
+        return 1;
+    }
+
+    public function logout(): void
     {
     }
 }

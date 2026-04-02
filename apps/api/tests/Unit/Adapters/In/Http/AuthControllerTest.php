@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Adapters\In\Http;
 
 use App\Adapters\In\Http\AuthController;
+use App\Application\Ports\AccessTokenClaims;
+use App\Application\Ports\AccessTokenManager;
 use App\Application\UseCases\Auth\User\CreateUser\CreateUserHandler;
 use App\Application\UseCases\Auth\User\DeleteUser\DeleteUserByEmailHandler;
 use App\Domain\Model\AuthUser;
 use App\Application\UseCases\Auth\Login\LoginHandler;
 use App\Application\UseCases\Auth\Logout\LogoutHandler;
 use App\Application\Ports\AuthSessionManager;
+use App\Application\Ports\IssuedAccessToken;
 use App\Application\Ports\PasswordVerifier;
+use App\Application\UseCases\Auth\Token\IssueAuthTokenHandler;
 use App\Application\UseCases\Auth\User\GetCurrentUserHandler;
 use App\Application\UseCases\Auth\User\UpdateCurrentUser\UpdateCurrentUserHandler;
 use App\Domain\Repository\UserRepository;
@@ -63,6 +67,25 @@ final class AuthControllerTest extends TestCase
         self::assertSame('demo@example.com', $payload['user']['email']);
     }
 
+    public function testTokenReturnsBearerPayloadOnSuccess(): void
+    {
+        $controller = $this->controller();
+        $request = Request::create(
+            '/api/auth/token',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['email' => 'demo@example.com', 'password' => 'demo1234'], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->token($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSame('issued-token', $payload['access_token']);
+        self::assertSame('Bearer', $payload['token_type']);
+        self::assertSame('demo@example.com', $payload['user']['email']);
+    }
+
     public function testMeReturnsUnauthorizedWithoutSession(): void
     {
         $controller = $this->controller();
@@ -91,7 +114,7 @@ final class AuthControllerTest extends TestCase
 
     public function testCreateUserReturnsCreated(): void
     {
-        $controller = $this->controller();
+        $controller = $this->controller(authenticatedUserId: 1);
         $request = Request::create(
             '/api/auth/users',
             'POST',
@@ -109,9 +132,29 @@ final class AuthControllerTest extends TestCase
         self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
     }
 
+    public function testCreateUserReturnsUnauthorizedWithoutSession(): void
+    {
+        $controller = $this->controller(authenticatedUserId: null);
+        $request = Request::create(
+            '/api/auth/users',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'email' => 'new@example.com',
+                'name' => 'New',
+                'lastname' => 'User',
+                'password' => 'secret123',
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->createUser($request);
+
+        self::assertSame(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
+    }
+
     public function testDeleteUserReturnsNoContent(): void
     {
-        $controller = $this->controller();
+        $controller = $this->controller(authenticatedUserId: 1);
         $request = Request::create(
             '/api/auth/users',
             'DELETE',
@@ -149,16 +192,19 @@ final class AuthControllerTest extends TestCase
     private function controller(bool $passwordOk = true, ?int $authenticatedUserId = null): AuthController
     {
         $repo = new InMemoryUserRepository(new AuthUser(1, 'demo@example.com', 'hash', 'Demo', 'User'));
-        $session = new SpyAuthSessionManager();
+        $session = new SpyAuthSessionManagerForAuthController();
         $session->authenticatedUserId = $authenticatedUserId;
+        $passwordVerifier = new StubPasswordVerifier($passwordOk);
 
         return new AuthController(
-            new LoginHandler($repo, new StubPasswordVerifier($passwordOk), $session),
+            new LoginHandler($repo, $passwordVerifier, $session),
+            new IssueAuthTokenHandler($repo, $passwordVerifier, new StubAccessTokenManager()),
             new GetCurrentUserHandler($session, $repo),
             new LogoutHandler($session),
             new CreateUserHandler($repo),
             new DeleteUserByEmailHandler($repo),
             new UpdateCurrentUserHandler($session, $repo),
+            $session,
         );
     }
 }
@@ -243,7 +289,7 @@ final class StubPasswordVerifier implements PasswordVerifier
     }
 }
 
-final class SpyAuthSessionManager implements AuthSessionManager
+final class SpyAuthSessionManagerForAuthController implements AuthSessionManager
 {
     public ?int $authenticatedUserId = null;
 
@@ -258,5 +304,18 @@ final class SpyAuthSessionManager implements AuthSessionManager
 
     public function logout(): void
     {
+    }
+}
+
+final class StubAccessTokenManager implements AccessTokenManager
+{
+    public function issueToken(AuthUser $user): IssuedAccessToken
+    {
+        return new IssuedAccessToken('issued-token', new \DateTimeImmutable('2030-01-01T00:00:00+00:00'));
+    }
+
+    public function parseToken(string $token): ?AccessTokenClaims
+    {
+        return null;
     }
 }

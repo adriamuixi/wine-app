@@ -176,8 +176,15 @@ SQL,
         $offset = ($query->page - 1) * $query->limit;
         $sortColumn = $this->resolveSortColumn($query->sortBy);
         $sortDirection = strtoupper($query->sortDir);
+        $filterSql = null === $query->userId ? '' : 'WHERE r.user_id = :user_id';
+        $filterParams = null === $query->userId ? [] : ['user_id' => $query->userId];
+        $filterTypes = null === $query->userId ? [] : ['user_id' => ParameterType::INTEGER];
 
-        $totalItems = (int) $connection->fetchOne('SELECT count(*) FROM review');
+        $totalItems = (int) $connection->fetchOne(
+            'SELECT count(*) FROM review r '.$filterSql,
+            $filterParams,
+            $filterTypes,
+        );
 
         $rows = $connection->fetchAllAssociative(
             sprintf(
@@ -202,20 +209,22 @@ FROM review r
 INNER JOIN users u ON u.id = r.user_id
 INNER JOIN wine w ON w.id = r.wine_id
 LEFT JOIN designation_of_origin d ON d.id = w.do_id
+%s
 ORDER BY %s %s NULLS LAST, r.id DESC
 LIMIT :limit OFFSET :offset
 SQL,
+                $filterSql,
                 $sortColumn,
                 $sortDirection,
             ),
-            [
+            array_merge($filterParams, [
                 'limit' => $query->limit,
                 'offset' => $offset,
-            ],
-            [
+            ]),
+            array_merge($filterTypes, [
                 'limit' => ParameterType::INTEGER,
                 'offset' => ParameterType::INTEGER,
-            ],
+            ]),
         );
 
         $reviewIds = array_map(static fn (array $row): int => (int) $row['id'], $rows);

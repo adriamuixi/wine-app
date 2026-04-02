@@ -37,6 +37,10 @@ final readonly class ListReviewsHandler
             throw new ListReviewsValidationException('Invalid sort_dir value.');
         }
 
+        if (null !== $query->userId && $query->userId < 1) {
+            throw new ListReviewsValidationException('user_id must be >= 1.');
+        }
+
         return $this->reviews->findPaginated($query);
     }
 }

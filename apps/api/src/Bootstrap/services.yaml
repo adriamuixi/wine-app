@@ -17,6 +17,7 @@ services:
 
     App\Application\Ports\PasswordVerifier: '@App\Adapters\Out\Security\NativePasswordVerifier'
     App\Application\Ports\AuthSessionManager: '@App\Adapters\Out\Security\SymfonyAuthSessionManager'
+    App\Application\Ports\AccessTokenManager: '@App\Adapters\Out\Security\JwtAccessTokenManager'
     App\Domain\Repository\UserRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineUserRepository'
     App\Domain\Repository\DesignationOfOriginRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineDesignationOfOriginRepository'
     App\Domain\Repository\GrapeRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineGrapeRepository'
@@ -35,6 +36,11 @@ services:
         arguments:
             $doLogoDir: '/shared/public/images/icons/DO'
             $regionLogoDir: '/shared/public/images/flags/regions'
+
+    App\Adapters\Out\Security\JwtAccessTokenManager:
+        arguments:
+            $secret: '%kernel.secret%'
+            $ttlSeconds: 604800
 
     App\Application\UseCases\DesignationOfOrigin\CreateDesignationOfOriginAsset\CreateDesignationOfOriginAssetHandler:
         arguments:

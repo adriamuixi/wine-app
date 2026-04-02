@@ -102,3 +102,37 @@ health:
     @echo "Public:  http://localhost:8080/"
     @echo "Private: http://localhost:8080/admin/"
     @echo "API:     http://localhost:8080/api"
+
+# =========================
+# Mobile (host commands)
+# =========================
+
+mobile-install:
+    npm --prefix apps/mobile install
+
+mobile-start:
+    npm --prefix apps/mobile run start
+
+mobile-android:
+    npm --prefix apps/mobile run android
+
+mobile-ios:
+    npm --prefix apps/mobile run ios
+
+mobile-web:
+    npm --prefix apps/mobile run web
+
+mobile-lint:
+    npm --prefix apps/mobile run lint
+
+mobile-test:
+    npm --prefix apps/mobile run test
+
+mobile-typecheck:
+    npm --prefix apps/mobile run typecheck
+
+mobile-prebuild:
+    npm --prefix apps/mobile run prebuild
+
+mobile-eas-local-check:
+    npm --prefix apps/mobile run eas:local:check
