@@ -1,0 +1,53 @@
+{
+  "name": "mobile",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "prebuild": "expo prebuild",
+    "lint": "node -e \"console.log('Mobile lint placeholder')\"",
+    "typecheck": "tsc --noEmit",
+    "test": "node -e \"console.log('Mobile tests placeholder')\"",
+    "eas:local:check": "node -e \"console.log('EAS local check placeholder')\""
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-navigation/native": "^7.1.6",
+    "@react-navigation/native-stack": "^7.3.11",
+    "@tanstack/query-async-storage-persister": "^5.90.2",
+    "@tanstack/react-query": "^5.90.2",
+    "@tanstack/react-query-persist-client": "^5.90.2",
+    "@wine-app/api-client": "file:../../packages/api-client",
+    "@wine-app/domain-types": "file:../../packages/domain-types",
+    "@wine-app/i18n-core": "file:../../packages/i18n-core",
+    "@wine-app/mobile-utils": "file:../../packages/mobile-utils",
+    "expo": "^54.0.13",
+    "expo-asset": "~12.0.12",
+    "expo-constants": "~18.0.11",
+    "expo-linear-gradient": "~15.0.7",
+    "expo-navigation-bar": "~5.0.10",
+    "expo-secure-store": "^15.0.7",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-webview": "13.15.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "babel-preset-expo": "~54.0.10",
+    "typescript": "^5.9.3"
+  },
+  "expo": {
+    "doctor": {
+      "appConfigFieldsNotSyncedCheck": {
+        "enabled": false
+      }
+    }
+  }
+}

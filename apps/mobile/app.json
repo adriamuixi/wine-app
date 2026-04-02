@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Wine App",
+    "slug": "wine-app-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wineapp.mobile"
+    },
+    "android": {
+      "package": "com.wineapp.mobile"
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#4d192a",
+      "barStyle": "light-content",
+      "translucent": false
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#000000",
+      "barStyle": "light-content"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "apiBaseUrl": "http://192.168.1.135:8080",
+      "eas": {
+        "projectId": "03a58767-bec8-48f9-a817-2bfb3e910079"
+      }
+    }
+  }
+}

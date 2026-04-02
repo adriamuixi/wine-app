@@ -1,0 +1,4 @@
+<resources>
+  <string name="app_name">Wine App</string>
+  <string name="expo_navigation_bar_legacy_visible" translatable="false">visible</string>
+</resources>
