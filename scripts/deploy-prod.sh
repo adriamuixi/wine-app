@@ -65,7 +65,8 @@ echo "==> Recreate app services"
 docker compose -f "$COMPOSE_FILE" up -d --force-recreate api web-public web-private nginx
 
 echo "==> Healthcheck API"
-HTTP_CODE="$(curl -s -o /tmp/wine_api_health.json -w '%{http_code}' "$APP_URL")"
+# Follow redirects because production nginx enforces HTTP -> HTTPS.
+HTTP_CODE="$(curl -sS -L -o /tmp/wine_api_health.json -w '%{http_code}' "$APP_URL")"
 if [[ "$HTTP_CODE" != "200" ]]; then
   echo "ERROR: API healthcheck failed with HTTP $HTTP_CODE" >&2
   echo "Recent API logs:" >&2
