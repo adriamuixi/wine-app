@@ -106,9 +106,26 @@ if [[ "$APP_URL" =~ ^https?://([^/:]+) ]]; then
   fi
 fi
 
-HTTP_CODE="$(curl "${curl_args[@]}" "$APP_URL")"
+HTTP_CODE=""
+LAST_CURL_ERROR=""
+for i in {1..20}; do
+  if HTTP_CODE="$(curl "${curl_args[@]}" "$APP_URL" 2>/tmp/wine_api_health.err)"; then
+    if [[ "$HTTP_CODE" == "200" ]]; then
+      break
+    fi
+  fi
+
+  LAST_CURL_ERROR="$(cat /tmp/wine_api_health.err 2>/dev/null || true)"
+  sleep 2
+done
+
 if [[ "$HTTP_CODE" != "200" ]]; then
-  echo "ERROR: API healthcheck failed with HTTP $HTTP_CODE" >&2
+  echo "ERROR: API healthcheck failed with HTTP ${HTTP_CODE:-curl_error}" >&2
+  if [[ -n "$LAST_CURL_ERROR" ]]; then
+    echo "curl error: $LAST_CURL_ERROR" >&2
+  fi
+  echo "Recent nginx logs:" >&2
+  docker compose -f "$COMPOSE_FILE" logs --tail=80 nginx >&2
   echo "Recent API logs:" >&2
   docker compose -f "$COMPOSE_FILE" logs --tail=80 api >&2
   exit 1
