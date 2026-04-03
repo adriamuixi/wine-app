@@ -155,6 +155,7 @@ final class ReviewControllerTest extends TestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
         $updatedReview = $repository->findById(1);
         self::assertNotNull($updatedReview);
+        self::assertSame(88, $updatedReview->score);
         self::assertSame('2025-11-03T00:00:00+00:00', $updatedReview->createdAt?->format(DATE_ATOM));
     }
 
