@@ -3,8 +3,28 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
-APP_URL="${APP_URL:-http://localhost/api}"
 DO_PULL="${DO_PULL:-1}"
+NGINX_PROD_CONF="${NGINX_PROD_CONF:-infra/nginx/default.prod.conf}"
+
+resolve_default_health_host() {
+  local config_path="$1"
+
+  if [[ ! -f "$config_path" ]]; then
+    return 1
+  fi
+
+  awk '
+    $1 == "server_name" {
+      for (i = 2; i <= NF; i++) {
+        gsub(/;/, "", $i)
+        if ($i != "" && $i != "_") {
+          print $i
+          exit
+        }
+      }
+    }
+  ' "$config_path"
+}
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "ERROR: docker is not installed." >&2
@@ -23,8 +43,16 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   exit 1
 fi
 
+DEFAULT_HEALTH_HOST="$(resolve_default_health_host "$ROOT_DIR/$NGINX_PROD_CONF" || true)"
+if [[ -n "$DEFAULT_HEALTH_HOST" ]]; then
+  APP_URL="${APP_URL:-https://${DEFAULT_HEALTH_HOST}/api}"
+else
+  APP_URL="${APP_URL:-http://localhost/api}"
+fi
+
 echo "==> Deploy root: $ROOT_DIR"
 echo "==> Compose file: $COMPOSE_FILE"
+echo "==> Healthcheck URL: $APP_URL"
 
 if [[ "$DO_PULL" == "1" ]]; then
   echo "==> Pull latest changes"
@@ -66,7 +94,19 @@ docker compose -f "$COMPOSE_FILE" up -d --force-recreate api web-public web-priv
 
 echo "==> Healthcheck API"
 # Follow redirects because production nginx enforces HTTP -> HTTPS.
-HTTP_CODE="$(curl -sS -L -o /tmp/wine_api_health.json -w '%{http_code}' "$APP_URL")"
+curl_args=(-sS -L -o /tmp/wine_api_health.json -w '%{http_code}')
+if [[ "$APP_URL" =~ ^https?://([^/:]+) ]]; then
+  health_host="${BASH_REMATCH[1]}"
+  if [[ "$health_host" != "localhost" && "$health_host" != "127.0.0.1" ]]; then
+    if [[ "$APP_URL" =~ ^https:// ]]; then
+      curl_args+=(--resolve "${health_host}:443:127.0.0.1")
+    else
+      curl_args+=(--resolve "${health_host}:80:127.0.0.1")
+    fi
+  fi
+fi
+
+HTTP_CODE="$(curl "${curl_args[@]}" "$APP_URL")"
 if [[ "$HTTP_CODE" != "200" ]]; then
   echo "ERROR: API healthcheck failed with HTTP $HTTP_CODE" >&2
   echo "Recent API logs:" >&2
