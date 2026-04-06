@@ -32,6 +32,7 @@ type WinesListPanelProps = {
   isMobileViewport: boolean
   showCreateButton?: boolean
   onOpenWineCreate: () => void
+  onOpenWineAiCreate: () => void
   onOpenWineMobileFilters: () => void
   onSetWinePage: (nextValue: number | ((current: number) => number)) => void
   onSetWineLimit: (nextValue: number) => void
@@ -69,6 +70,7 @@ export function WinesListPanel({
   isMobileViewport,
   showCreateButton = true,
   onOpenWineCreate,
+  onOpenWineAiCreate,
   onOpenWineMobileFilters,
   onSetWinePage,
   onSetWineLimit,
@@ -116,9 +118,14 @@ export function WinesListPanel({
               </button>
             ) : null}
             {showCreateButton ? (
-              <button type="button" className="primary-button" onClick={onOpenWineCreate}>
-                {t('ui.create_new_wine')}
-              </button>
+              <>
+                <button type="button" className="secondary-button" onClick={onOpenWineAiCreate}>
+                  {t('ui.create_with_ai')}
+                </button>
+                <button type="button" className="primary-button" onClick={onOpenWineCreate}>
+                  {t('ui.create_new_wine')}
+                </button>
+              </>
             ) : null}
           </div>
         </div>

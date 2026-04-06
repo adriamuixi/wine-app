@@ -92,6 +92,9 @@ docker compose -f "$COMPOSE_FILE" exec -T api php bin/console doctrine:migration
 echo "==> Recreate app services"
 docker compose -f "$COMPOSE_FILE" up -d --force-recreate api web-public web-private nginx
 
+echo "==> Validate nginx config"
+docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -t
+
 echo "==> Healthcheck API"
 # Follow redirects because production nginx enforces HTTP -> HTTPS.
 curl_args=(-sS -L -o /tmp/wine_api_health.json -w '%{http_code}')

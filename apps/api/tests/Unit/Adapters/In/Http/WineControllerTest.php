@@ -7,6 +7,7 @@ namespace App\Tests\Unit\Adapters\In\Http;
 use App\Adapters\In\Http\WineController;
 use App\Application\Ports\AuthSessionManager;
 use App\Application\Ports\PhotoStoragePort;
+use App\Application\Ports\WineDraftGenerator;
 use App\Domain\Repository\DesignationOfOriginRepository;
 use App\Domain\Repository\GrapeRepository;
 use App\Domain\Repository\WineRepository;
@@ -16,6 +17,8 @@ use App\Domain\Model\Place;
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
 use App\Application\UseCases\Wine\CreateWine\CreateWineHandler;
 use App\Application\UseCases\Wine\DeleteWine\DeleteWineHandler;
+use App\Application\UseCases\Wine\GenerateWineDraft\GenerateWineDraftCommand;
+use App\Application\UseCases\Wine\GenerateWineDraft\GenerateWineDraftHandler;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsHandler;
 use App\Domain\Model\Wine;
 use App\Domain\Model\DesignationOfOrigin;
@@ -42,6 +45,7 @@ use App\Domain\Enum\ReviewBullet;
 use App\Domain\Enum\WineType;
 use App\Domain\Enum\WinePhotoType;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -55,6 +59,56 @@ final class WineControllerTest extends TestCase
         $response = $controller->create($request);
 
         self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testDraftFromAiReturnsBadRequestWhenWineImageIsMissing(): void
+    {
+        $controller = $this->controller();
+        $request = Request::create('/api/wines/draft-from-ai', 'POST');
+
+        $response = $controller->draftFromAi($request);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testDraftFromAiReturnsStructuredDraft(): void
+    {
+        $controller = $this->controller(doCountries: [1 => Country::Spain], grapeIds: [5]);
+        $tmp = tempnam(sys_get_temp_dir(), 'wine-ai-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'wine-image');
+        $uploaded = new UploadedFile($tmp, 'wine.jpg', 'image/jpeg', null, true);
+
+        $request = Request::create('/api/wines/draft-from-ai', 'POST', [
+            'notes' => 'Bought in Madrid',
+            'place_type' => 'restaurant',
+            'location_city' => 'Madrid',
+        ], [], ['wine_image' => $uploaded]);
+
+        $response = $controller->draftFromAi($request);
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSame('Wine AI Demo', $payload['draft']['wine']['name']);
+        self::assertSame('red', $payload['draft']['wine']['wine_type']);
+        self::assertSame('restaurant', $payload['draft']['purchase']['place_type']);
+        self::assertSame(5, $payload['draft']['grapes'][0]['grape_id']);
+        self::assertSame('internet', $payload['draft']['field_metadata']['wine.name']['source']);
+    }
+
+    public function testDraftFromAiAcceptsImageWhenOnlyExtensionCanBeUsed(): void
+    {
+        $controller = $this->controller(doCountries: [1 => Country::Spain], grapeIds: [5]);
+        $tmp = tempnam(sys_get_temp_dir(), 'wine-ai-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'wine-image');
+        $uploaded = new UploadedFile($tmp, 'wine.jpg', null, null, true);
+
+        $request = Request::create('/api/wines/draft-from-ai', 'POST', [], [], ['wine_image' => $uploaded]);
+
+        $response = $controller->draftFromAi($request);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
     }
 
     public function testCreateReturnsBadRequestWhenNameIsMissing(): void
@@ -499,6 +553,11 @@ final class WineControllerTest extends TestCase
             ),
             new UpdateWineHandler($repo, new InMemoryDesignationOfOriginRepository($doCountries)),
             new DeleteWineHandler($repo, new NoopWinePhotoRepository(), new NoopWinePhotoStorage()),
+            new GenerateWineDraftHandler(
+                new StubWineDraftGenerator(),
+                new InMemoryDesignationOfOriginRepository($doCountries),
+                new InMemoryGrapeRepository($grapeIds),
+            ),
             new GetWineDetailsHandler($repo),
             new ListWinesHandler($repo),
         );
@@ -737,7 +796,24 @@ final class InMemoryDesignationOfOriginRepository implements DesignationOfOrigin
         array $userIds = [],
     ): array
     {
-        return [];
+        $items = [];
+        foreach ($this->countryByDoId as $id => $candidateCountry) {
+            if (null !== $country && $candidateCountry !== $country) {
+                continue;
+            }
+
+            $items[] = new DesignationOfOrigin(
+                id: $id,
+                name: 1 === $id ? 'Rioja' : 'DO '.$id,
+                region: 1 === $id ? 'La Rioja' : 'Region '.$id,
+                country: $candidateCountry,
+                countryCode: 'ES',
+                doLogo: 'do_'.$id.'.png',
+                regionLogo: 'region_'.$id.'.png',
+            );
+        }
+
+        return $items;
     }
 
     public function update(DesignationOfOrigin $do): bool
@@ -772,6 +848,52 @@ final class InMemoryGrapeRepository implements GrapeRepository
 
     public function findAll(): array
     {
-        return [];
+        $items = [];
+        foreach ($this->existingIds as $id) {
+            $items[] = new \App\Domain\Model\Grape($id, 5 === $id ? 'Tempranillo' : 'Grape '.$id, \App\Domain\Enum\GrapeColor::Red);
+        }
+
+        return $items;
+    }
+}
+
+final class StubWineDraftGenerator implements WineDraftGenerator
+{
+    public function generate(GenerateWineDraftCommand $command): array
+    {
+        return [
+            'wine' => [
+                'name' => 'Wine AI Demo',
+                'winery' => 'Bodega IA',
+                'wine_type' => 'red',
+                'country' => 'spain',
+                'aging_type' => 'crianza',
+                'vintage_year' => 2021,
+                'alcohol_percentage' => 14.0,
+                'do_name' => 'Rioja',
+                'do_region' => 'La Rioja',
+            ],
+            'purchase' => [
+                'place_type' => 'restaurant',
+                'place_name' => 'Casa AI',
+                'address' => 'Calle Demo 1',
+                'city' => 'Madrid',
+                'country' => 'spain',
+                'price_paid' => 18.5,
+                'purchased_at' => '2026-04-05',
+                'map_data' => ['lat' => 40.4, 'lng' => -3.7],
+            ],
+            'grapes' => [
+                ['name' => 'Tempranillo', 'percentage' => 100],
+            ],
+            'awards' => [
+                ['name' => 'parker', 'score' => 92.0, 'year' => 2024],
+            ],
+            'field_metadata' => [
+                'wine.name' => ['confidence' => 'high', 'source' => 'internet', 'notes' => null],
+            ],
+            'warnings' => ['review ticket date'],
+            'research_summary' => 'Matched against winery and retailer pages.',
+        ];
     }
 }

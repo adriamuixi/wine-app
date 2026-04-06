@@ -280,7 +280,77 @@ export type WineDetailsApiResponse = {
   wine: WineDetailsApiWine
 }
 
-export type MenuKey = 'dashboard' | 'wines' | 'dos' | 'varieties' | 'doCreate' | 'wineCreate' | 'wineEdit' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
+export type WineAiFieldConfidence = 'low' | 'medium' | 'high'
+export type WineAiFieldSource = 'image' | 'ticket' | 'user_text' | 'location' | 'internet' | 'combined'
+
+export type WineAiFieldMetadataItem = {
+  confidence: WineAiFieldConfidence
+  source: WineAiFieldSource
+  notes: string | null
+}
+
+export type WineAiDraftDo = {
+  id: number | null
+  name: string
+  region: string | null
+  country: Exclude<CountryFilterValue, 'all'> | null
+  matched: boolean
+}
+
+export type WineAiDraftWine = {
+  name: string | null
+  winery: string | null
+  wine_type: WineType | null
+  country: Exclude<CountryFilterValue, 'all'> | null
+  aging_type: 'young' | 'crianza' | 'reserve' | 'grand_reserve' | null
+  vintage_year: number | null
+  alcohol_percentage: number | null
+  do: WineAiDraftDo | null
+}
+
+export type WineAiDraftPurchase = {
+  place_type: 'restaurant' | 'supermarket' | null
+  place_name: string | null
+  address: string | null
+  city: string | null
+  country: string | null
+  map_data: {
+    lat: number
+    lng: number
+  } | null
+  price_paid: number | null
+  purchased_at: string | null
+}
+
+export type WineAiDraftGrape = {
+  grape_id: number | null
+  name: string
+  percentage: number | null
+  matched: boolean
+}
+
+export type WineAiDraftAward = {
+  name: 'decanter' | 'penin' | 'wine_spectator' | 'parker' | 'james_suckling' | 'guia_proensa'
+  score: number | null
+  year: number | null
+}
+
+export type WineAiDraft = {
+  wine: WineAiDraftWine
+  purchase: WineAiDraftPurchase
+  grapes: WineAiDraftGrape[]
+  awards: WineAiDraftAward[]
+  field_metadata: Record<string, WineAiFieldMetadataItem>
+  warnings: string[]
+  missing_required_fields: string[]
+  research_summary: string | null
+}
+
+export type WineAiDraftApiResponse = {
+  draft: WineAiDraft
+}
+
+export type MenuKey = 'dashboard' | 'wines' | 'dos' | 'varieties' | 'doCreate' | 'wineCreate' | 'wineEdit' | 'wineAiCreate' | 'wineAiPreview' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
 export type ThemeMode = 'light' | 'dark'
 export type GalleryModalVariant = 'full' | 'compact'
 export type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label' | 'situation'

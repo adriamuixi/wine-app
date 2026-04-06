@@ -45,6 +45,36 @@ ui:
   wines: vinos
   award_label: Premio
   create_new_wine: Crear nuevo vino
+  create_with_ai: Crear con IA
+  create_wine_with_ai: Crear vino con IA
+  ai_wine_creation: Creación de vino con IA
+  ai_evidence: Evidencias para la IA
+  wine_image: Imagen del vino
+  wine_image_required: La imagen del vino es obligatoria.
+  ticket_image_optional: Imagen del ticket o recibo (opcional)
+  no_file_selected: Ningún archivo seleccionado
+  extra_notes: Notas extra
+  ai_notes_placeholder: Añade pistas del lugar, de la bodega o cualquier detalle útil para la IA.
+  price_override_optional: Precio manual (opcional)
+  current_location: Ubicación actual
+  use_current_location: Usar ubicación actual
+  locating: Localizando...
+  place_name_optional: Nombre del lugar (opcional)
+  analyze_with_ai: Analizar con IA
+  analyzing_with_ai: Analizando con IA...
+  ai_preview: Vista previa IA
+  review_ai_draft: Revisar borrador IA
+  use_draft_in_create_form: Usar borrador en el formulario de creación
+  ai_missing_required_fields: Aún faltan campos obligatorios por revisar.
+  ai_warnings: Avisos de IA
+  ai_draft_fields: Campos del borrador
+  ai_matched: Vinculado
+  ai_unmatched: Sin vincular
+  geolocation_not_supported: La geolocalización no está disponible en este navegador.
+  geolocation_requires_https: La ubicación actual solo funciona con HTTPS o localhost. En móvil usando la IP local, introduce el lugar manualmente o abre la app por HTTPS.
+  geolocation_permission_denied: El permiso de ubicación fue denegado en este dispositivo.
+  not_could_capture_location: No se pudo capturar la ubicación actual.
+  not_could_analyze_wine_with_ai: No se pudo analizar el vino con IA.
   not_could_load_list_wines: No se pudo cargar el listado de vinos.
   country_production: País de fabricación
   vintage_label: Añada

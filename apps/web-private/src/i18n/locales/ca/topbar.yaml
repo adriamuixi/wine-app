@@ -6,6 +6,8 @@ topbar:
   doCreate: Crear D.O.
   wineCreate: Crear vi
   wineEdit: Editar vi
+  wineAiCreate: Crear vi amb IA
+  wineAiPreview: Revisar esborrany IA
   reviews: Les meves ressenyes
   reviewCreate: Crear ressenya
   reviewEdit: Editar ressenya

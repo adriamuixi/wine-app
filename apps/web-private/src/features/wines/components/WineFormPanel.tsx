@@ -6,6 +6,7 @@ import type {
   AwardRow,
   CountryFilterValue,
   GrapeBlendRow,
+  WineAiDraft,
   WineDetailsApiWine,
   WineItem,
 } from '../types'
@@ -70,6 +71,7 @@ type WineFormPanelProps = {
   }
   mode: 'wineCreate' | 'wineEdit'
   wineFormId: string
+  formResetKey?: number
   wineSubmitLabel: string
   wineFormSubmitting: boolean
   showSubmitButton?: boolean
@@ -97,6 +99,7 @@ type WineFormPanelProps = {
   primaryEditPurchase: PurchaseDraft | null
   currentDateInput: string
   wineEditPhotoManager: ReactNode
+  createDraft: WineAiDraft | null
   onSubmit: FormEventHandler<HTMLFormElement>
   onBack: () => void
   onManufacturingCountryChange: (value: Exclude<CountryFilterValue, 'all'>) => void
@@ -237,6 +240,7 @@ export function WineFormPanel({
   labels,
   mode,
   wineFormId,
+  formResetKey = 0,
   wineSubmitLabel,
   wineFormSubmitting,
   showSubmitButton = true,
@@ -264,6 +268,7 @@ export function WineFormPanel({
   primaryEditPurchase,
   currentDateInput,
   wineEditPhotoManager,
+  createDraft,
   onSubmit,
   onBack,
   onManufacturingCountryChange,
@@ -301,16 +306,19 @@ export function WineFormPanel({
   const allowAddressLookupRef = useRef(false)
 
   useEffect(() => {
+    const draftAddress = mode === 'wineCreate' ? (createDraft?.purchase.address ?? '') : ''
+    const draftLatitude = mode === 'wineCreate' ? createDraft?.purchase.map_data?.lat : null
+    const draftLongitude = mode === 'wineCreate' ? createDraft?.purchase.map_data?.lng : null
     const currentAddress = primaryEditPurchase?.place.address ?? ''
     const currentLatitude = primaryEditPurchase?.place.map_data?.lat
     const currentLongitude = primaryEditPurchase?.place.map_data?.lng
-    setAddressAutocompleteQuery(currentAddress)
+    setAddressAutocompleteQuery(mode === 'wineCreate' ? draftAddress : currentAddress)
     allowAddressLookupRef.current = false
-    setPlaceLatitude(Number.isFinite(currentLatitude) ? Number(currentLatitude).toFixed(6) : '')
-    setPlaceLongitude(Number.isFinite(currentLongitude) ? Number(currentLongitude).toFixed(6) : '')
+    setPlaceLatitude(Number.isFinite(mode === 'wineCreate' ? draftLatitude : currentLatitude) ? Number(mode === 'wineCreate' ? draftLatitude : currentLatitude).toFixed(6) : '')
+    setPlaceLongitude(Number.isFinite(mode === 'wineCreate' ? draftLongitude : currentLongitude) ? Number(mode === 'wineCreate' ? draftLongitude : currentLongitude).toFixed(6) : '')
     setAddressSuggestions([])
     setIsAddressSuggestionsOpen(false)
-  }, [primaryEditPurchase?.place.address, primaryEditPurchase?.place.map_data?.lat, primaryEditPurchase?.place.map_data?.lng, selectedWineForEdit?.id, wineEditDetails?.id, mode, wineEditStatus])
+  }, [createDraft?.purchase.address, createDraft?.purchase.map_data?.lat, createDraft?.purchase.map_data?.lng, primaryEditPurchase?.place.address, primaryEditPurchase?.place.map_data?.lat, primaryEditPurchase?.place.map_data?.lng, selectedWineForEdit?.id, wineEditDetails?.id, mode, wineEditStatus])
 
   useEffect(() => {
     if (!isGeoapifyEnabled) {
@@ -455,7 +463,7 @@ export function WineFormPanel({
         <form
           ref={formRef}
           id={wineFormId}
-          key={`wine-form-${mode}-${selectedWineForEdit?.id ?? 'new'}-${wineEditDetails?.id ?? 'none'}-${wineEditStatus}`}
+          key={`wine-form-${mode}-${selectedWineForEdit?.id ?? 'new'}-${wineEditDetails?.id ?? 'none'}-${wineEditStatus}-${formResetKey}`}
           className="stack-form wine-create-form"
           onSubmit={onSubmit}
         >
@@ -464,12 +472,12 @@ export function WineFormPanel({
               <legend>{t('ui.data_basic')}</legend>
               <label>
                 {labels.wines.add.name}
-                <input name="name" type="text" placeholder="Clos de la Serra" defaultValue={wineEditDetails?.name ?? selectedWineForEdit?.name ?? ''} required />
+                <input name="name" type="text" placeholder="Clos de la Serra" defaultValue={wineEditDetails?.name ?? createDraft?.wine.name ?? selectedWineForEdit?.name ?? ''} required />
               </label>
               <div className="inline-grid triple">
                 <label>
                   {labels.wines.add.type}
-                  <select name="wine_type" defaultValue={wineEditDetails?.wine_type ?? selectedWineForEdit?.type ?? 'red'}>
+                  <select name="wine_type" defaultValue={wineEditDetails?.wine_type ?? createDraft?.wine.wine_type ?? selectedWineForEdit?.type ?? 'red'}>
                     <option value="red">{labels.wineType.red}</option>
                     <option value="white">{labels.wineType.white}</option>
                     <option value="rose">{labels.wineType.rose}</option>
@@ -480,7 +488,7 @@ export function WineFormPanel({
                 </label>
                 <label>
                   {t('ui.crianza')}
-                  <select name="aging_type" defaultValue={wineEditDetails?.aging_type ?? 'crianza'}>
+                  <select name="aging_type" defaultValue={wineEditDetails?.aging_type ?? createDraft?.wine.aging_type ?? 'crianza'}>
                     {agingOptions.map((aging) => (
                       <option key={aging} value={aging}>{t(`common.agingType.${aging}`)}</option>
                     ))}
@@ -488,7 +496,7 @@ export function WineFormPanel({
                 </label>
                 <label>
                   {labels.wines.add.vintage}
-                  <select name="vintage_year" defaultValue={String(wineEditDetails?.vintage_year ?? selectedWineForEdit?.vintageYear ?? new Date().getFullYear())}>
+                  <select name="vintage_year" defaultValue={String(wineEditDetails?.vintage_year ?? createDraft?.wine.vintage_year ?? selectedWineForEdit?.vintageYear ?? new Date().getFullYear())}>
                     {vintageYearOptions.map((year) => (
                       <option key={year} value={year}>{year}</option>
                     ))}
@@ -505,12 +513,12 @@ export function WineFormPanel({
                     max="20"
                     step="0.1"
                     placeholder="13.5"
-                    defaultValue={wineEditDetails?.alcohol_percentage ?? (selectedWineForEdit ? (selectedWineForEdit.type === 'red' ? 14 : 13) : '')}
+                    defaultValue={wineEditDetails?.alcohol_percentage ?? createDraft?.wine.alcohol_percentage ?? (selectedWineForEdit ? (selectedWineForEdit.type === 'red' ? 14 : 13) : '')}
                   />
                 </label>
                 <label>
                   {labels.wines.add.winery}
-                  <input name="winery" type="text" placeholder="Bodega Nova" defaultValue={wineEditDetails?.winery ?? selectedWineForEdit?.winery ?? ''} />
+                  <input name="winery" type="text" placeholder="Bodega Nova" defaultValue={wineEditDetails?.winery ?? createDraft?.wine.winery ?? selectedWineForEdit?.winery ?? ''} />
                 </label>
                 <label>
                   {t('ui.country_production')}
@@ -703,7 +711,7 @@ export function WineFormPanel({
             <div className="inline-grid triple">
               <label>
                 {t('ui.type_place')}
-                <select name="place_type" defaultValue={primaryEditPurchase?.place.place_type ?? 'restaurant'}>
+                <select name="place_type" defaultValue={primaryEditPurchase?.place.place_type ?? createDraft?.purchase.place_type ?? 'restaurant'}>
                   {placeTypeOptions.map((placeType) => (
                     <option key={placeType} value={placeType}>{t(`common.placeType.${placeType}`)}</option>
                   ))}
@@ -711,11 +719,11 @@ export function WineFormPanel({
               </label>
               <label>
                 {labels.wines.add.place}
-                <input name="place_name" type="text" placeholder="Celler del Centre" defaultValue={primaryEditPurchase?.place.name ?? ''} required />
+                <input name="place_name" type="text" placeholder="Celler del Centre" defaultValue={primaryEditPurchase?.place.name ?? createDraft?.purchase.place_name ?? ''} required />
               </label>
               <label>
                 {labels.wines.add.price}
-                <input name="price_paid" type="number" min="0" step="0.01" placeholder="18.50" defaultValue={primaryEditPurchase?.price_paid ?? selectedWineForEdit?.pricePaid ?? ''} required />
+                <input name="price_paid" type="number" min="0" step="0.01" placeholder="18.50" defaultValue={primaryEditPurchase?.price_paid ?? createDraft?.purchase.price_paid ?? selectedWineForEdit?.pricePaid ?? ''} required />
               </label>
             </div>
             <div className="inline-grid">
@@ -727,13 +735,13 @@ export function WineFormPanel({
                   inputMode="numeric"
                   placeholder="dd/mm/yyyy"
                   pattern="(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{4})"
-                  defaultValue={formatIsoDateToDdMmYyyy(primaryEditPurchase?.purchased_at?.slice(0, 10) ?? currentDateInput)}
+                  defaultValue={formatIsoDateToDdMmYyyy(primaryEditPurchase?.purchased_at?.slice(0, 10) ?? createDraft?.purchase.purchased_at ?? currentDateInput)}
                   required
                 />
               </label>
               <label>
                 {t('common.purchaseCountry')}
-                <WorldCountrySelect name="place_country" defaultValue={primaryEditPurchase?.place.country ?? manufacturingCountry} />
+                <WorldCountrySelect name="place_country" defaultValue={primaryEditPurchase?.place.country ?? createDraft?.purchase.country ?? manufacturingCountry} />
               </label>
             </div>
             <div className="inline-grid">
@@ -744,7 +752,7 @@ export function WineFormPanel({
                   name="place_address"
                   type="text"
                   placeholder="Carrer Major 12"
-                  defaultValue={primaryEditPurchase?.place.address ?? ''}
+                  defaultValue={primaryEditPurchase?.place.address ?? createDraft?.purchase.address ?? ''}
                   onChange={(event) => {
                     allowAddressLookupRef.current = true
                     setAddressAutocompleteQuery(event.target.value)
@@ -791,7 +799,7 @@ export function WineFormPanel({
               </label>
               <label>
                 {t('ui.city')}
-                <input ref={cityInputRef} name="place_city" type="text" placeholder="Barcelona" defaultValue={primaryEditPurchase?.place.city ?? ''} />
+                <input ref={cityInputRef} name="place_city" type="text" placeholder="Barcelona" defaultValue={primaryEditPurchase?.place.city ?? createDraft?.purchase.city ?? ''} />
               </label>
             </div>
           </fieldset>

@@ -27,10 +27,15 @@ services:
     App\Domain\Repository\WineRepository: '@App\Adapters\Out\Persistence\Repos\DoctrineWineRepository'
     App\Domain\Repository\WinePhotoRepository: '@App\Adapters\Out\Persistence\Repos\DoctrinePhotoRepository'
     App\Application\Ports\PhotoStoragePort: '@App\Adapters\Out\Storage\LocalWinePhotoStorage'
+    App\Application\Ports\WineDraftGenerator: '@App\Adapters\Out\AI\OpenAiWineDraftGenerator'
 
     App\Adapters\Out\Storage\LocalWinePhotoStorage:
         arguments:
             $baseDir: '/shared/public/images/wines'
+
+    App\Adapters\Out\AI\OpenAiWineDraftGenerator:
+        arguments:
+            $apiKey: '%env(default::OPENAI_API_KEY)%'
 
     App\Adapters\Out\Storage\LocalDesignationOfOriginPhotoStorage:
         arguments:

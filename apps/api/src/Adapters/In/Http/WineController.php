@@ -15,6 +15,9 @@ use App\Application\UseCases\Wine\CreateWine\CreateWineReferenceNotFound;
 use App\Application\UseCases\Wine\CreateWine\CreateWineValidationException;
 use App\Application\UseCases\Wine\DeleteWine\DeleteWineHandler;
 use App\Application\UseCases\Wine\DeleteWine\WineNotFound;
+use App\Application\UseCases\Wine\GenerateWineDraft\GenerateWineDraftCommand;
+use App\Application\UseCases\Wine\GenerateWineDraft\GenerateWineDraftHandler;
+use App\Application\UseCases\Wine\GenerateWineDraft\GenerateWineDraftValidationException;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsHandler;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsNotFound;
 use App\Application\UseCases\Wine\ListWines\ListWinesHandler;
@@ -34,6 +37,7 @@ use App\Domain\Enum\WineType;
 use App\Domain\Model\DesignationOfOrigin;
 use App\Domain\Model\Wine;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -45,6 +49,7 @@ final class WineController
         private readonly CreateWineHandler $createWineHandler,
         private readonly UpdateWineHandler $updateWineHandler,
         private readonly DeleteWineHandler $deleteWineHandler,
+        private readonly GenerateWineDraftHandler $generateWineDraftHandler,
         private readonly GetWineDetailsHandler $getWineDetailsHandler,
         private readonly ListWinesHandler $listWinesHandler,
     ) {
@@ -231,6 +236,51 @@ final class WineController
         }
 
         return new JsonResponse(['wine' => ['id' => $result->id]], Response::HTTP_CREATED);
+    }
+
+    #[Route('/api/wines/draft-from-ai', name: 'api_wines_draft_from_ai', methods: ['POST'])]
+    public function draftFromAi(Request $request): JsonResponse
+    {
+        if (null === $this->authSession->getAuthenticatedUserId()) {
+            return new JsonResponse(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $wineImage = $request->files->get('wine_image');
+        if (!$wineImage instanceof UploadedFile) {
+            return new JsonResponse(['error' => 'wine_image is required.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $ticketImage = $request->files->get('ticket_image');
+        if (null !== $ticketImage && !$ticketImage instanceof UploadedFile) {
+            return new JsonResponse(['error' => 'ticket_image must be a file.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $command = new GenerateWineDraftCommand(
+                wineImage: $this->uploadedImagePayload($wineImage, 'wine_image'),
+                ticketImage: $ticketImage instanceof UploadedFile ? $this->uploadedImagePayload($ticketImage, 'ticket_image') : null,
+                notes: $this->nullableRequestString($request, 'notes'),
+                priceOverride: $this->nullableRequestString($request, 'price_override'),
+                placeType: $this->nullableRequestString($request, 'place_type'),
+                location: $this->extractLocationPayload($request),
+            );
+            $result = $this->generateWineDraftHandler->handle($command);
+        } catch (GenerateWineDraftValidationException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse([
+            'draft' => [
+                'wine' => $result->wine,
+                'purchase' => $result->purchase,
+                'grapes' => $result->grapes,
+                'awards' => $result->awards,
+                'field_metadata' => $result->fieldMetadata,
+                'warnings' => $result->warnings,
+                'missing_required_fields' => $result->missingRequiredFields,
+                'research_summary' => $result->researchSummary,
+            ],
+        ], Response::HTTP_OK);
     }
 
     #[Route('/api/wines/{id}', name: 'api_wines_update', methods: ['PUT'])]
@@ -440,6 +490,116 @@ final class WineController
         }
 
         return $value;
+    }
+
+    private function nullableRequestString(Request $request, string $field): ?string
+    {
+        $value = $request->request->get($field);
+        if (null === $value) {
+            return null;
+        }
+
+        if (!is_string($value)) {
+            throw new GenerateWineDraftValidationException(sprintf('%s must be a string.', $field));
+        }
+
+        $normalized = trim($value);
+
+        return '' === $normalized ? null : $normalized;
+    }
+
+    /**
+     * @return array{name: ?string, address: ?string, city: ?string, country: ?string, latitude: ?float, longitude: ?float}|null
+     */
+    private function extractLocationPayload(Request $request): ?array
+    {
+        $name = $this->nullableRequestString($request, 'location_name');
+        $address = $this->nullableRequestString($request, 'location_address');
+        $city = $this->nullableRequestString($request, 'location_city');
+        $country = $this->nullableRequestString($request, 'location_country');
+        $latitude = $this->nullableRequestFloat($request, 'location_latitude');
+        $longitude = $this->nullableRequestFloat($request, 'location_longitude');
+
+        if (null === $name && null === $address && null === $city && null === $country && null === $latitude && null === $longitude) {
+            return null;
+        }
+
+        return [
+            'name' => $name,
+            'address' => $address,
+            'city' => $city,
+            'country' => $country,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+        ];
+    }
+
+    private function nullableRequestFloat(Request $request, string $field): ?float
+    {
+        $value = $request->request->get($field);
+        if (null === $value || '' === $value) {
+            return null;
+        }
+
+        if (!is_string($value) || !is_numeric($value)) {
+            throw new GenerateWineDraftValidationException(sprintf('%s must be numeric.', $field));
+        }
+
+        return (float) $value;
+    }
+
+    /**
+     * @return array{sourcePath: string, originalFilename: string, mimeType: string, size: int}
+     */
+    private function uploadedImagePayload(UploadedFile $file, string $field): array
+    {
+        if (!$file->isValid()) {
+            throw new GenerateWineDraftValidationException(sprintf('%s upload is invalid.', $field));
+        }
+
+        $mimeType = $this->resolveUploadedImageMimeType($file);
+        if (!is_string($mimeType) || !str_starts_with($mimeType, 'image/')) {
+            throw new GenerateWineDraftValidationException(sprintf('%s must be an image.', $field));
+        }
+
+        $size = $file->getSize();
+        if (!is_int($size) || $size <= 0) {
+            throw new GenerateWineDraftValidationException(sprintf('%s file is empty.', $field));
+        }
+
+        $sourcePath = $file->getPathname();
+        if (!is_string($sourcePath) || '' === $sourcePath) {
+            throw new GenerateWineDraftValidationException(sprintf('%s could not be read.', $field));
+        }
+
+        return [
+            'sourcePath' => $sourcePath,
+            'originalFilename' => $file->getClientOriginalName(),
+            'mimeType' => $mimeType,
+            'size' => $size,
+        ];
+    }
+
+    private function resolveUploadedImageMimeType(UploadedFile $file): ?string
+    {
+        $clientMimeType = $file->getClientMimeType();
+        if (is_string($clientMimeType) && str_starts_with($clientMimeType, 'image/')) {
+            return $clientMimeType;
+        }
+
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+
+        return match ($extension) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'gif' => 'image/gif',
+            'heic' => 'image/heic',
+            'heif' => 'image/heif',
+            'bmp' => 'image/bmp',
+            'tif', 'tiff' => 'image/tiff',
+            default => null,
+        };
     }
 
     private function parsePositiveIntQuery(mixed $value, string $field, int $default): int

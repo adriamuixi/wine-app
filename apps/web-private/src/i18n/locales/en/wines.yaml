@@ -45,6 +45,36 @@ ui:
   wines: Wines
   award_label: Award label
   create_new_wine: Create new wine
+  create_with_ai: Create with AI
+  create_wine_with_ai: Create wine with AI
+  ai_wine_creation: AI wine creation
+  ai_evidence: Evidence for AI
+  wine_image: Wine image
+  wine_image_required: Wine image is required.
+  ticket_image_optional: Ticket or receipt image (optional)
+  no_file_selected: No file selected
+  extra_notes: Extra notes
+  ai_notes_placeholder: Add place hints, winery clues, or anything the AI should use.
+  price_override_optional: Price override (optional)
+  current_location: Current location
+  use_current_location: Use current location
+  locating: Locating...
+  place_name_optional: Place name (optional)
+  analyze_with_ai: Analyze with AI
+  analyzing_with_ai: Analyzing with AI...
+  ai_preview: AI preview
+  review_ai_draft: Review AI draft
+  use_draft_in_create_form: Use draft in create form
+  ai_missing_required_fields: Some required fields still need your review.
+  ai_warnings: AI warnings
+  ai_draft_fields: Draft fields
+  ai_matched: Matched
+  ai_unmatched: Unmatched
+  geolocation_not_supported: Geolocation is not supported in this browser.
+  geolocation_requires_https: Current location only works on HTTPS or localhost. On mobile over LAN IP, enter the place manually or open the app through HTTPS.
+  geolocation_permission_denied: Location permission was denied on this device.
+  not_could_capture_location: Could not capture current location.
+  not_could_analyze_wine_with_ai: Could not analyze the wine with AI.
   not_could_load_list_wines: Could not load list wines
   country_production: Country production
   vintage_label: Vintage label

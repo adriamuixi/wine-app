@@ -6,6 +6,8 @@ topbar:
   doCreate: Crear DO
   wineCreate: Crear vino
   wineEdit: Editar vino
+  wineAiCreate: Crear vino con IA
+  wineAiPreview: Revisar borrador IA
   reviews: Mis reseñas
   reviewCreate: Crear reseña
   reviewEdit: Editar reseña

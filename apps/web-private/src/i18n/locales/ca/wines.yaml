@@ -45,6 +45,36 @@ ui:
   wines: vins
   award_label: Premi
   create_new_wine: Crear nou vi
+  create_with_ai: Crear amb IA
+  create_wine_with_ai: Crear vi amb IA
+  ai_wine_creation: Creació de vi amb IA
+  ai_evidence: Evidències per a la IA
+  wine_image: Imatge del vi
+  wine_image_required: La imatge del vi és obligatòria.
+  ticket_image_optional: Imatge del tiquet o rebut (opcional)
+  no_file_selected: Cap fitxer seleccionat
+  extra_notes: Notes extra
+  ai_notes_placeholder: Afegeix pistes del lloc, del celler o qualsevol detall útil per a la IA.
+  price_override_optional: Preu manual (opcional)
+  current_location: Ubicació actual
+  use_current_location: Utilitza la ubicació actual
+  locating: Localitzant...
+  place_name_optional: Nom del lloc (opcional)
+  analyze_with_ai: Analitza amb IA
+  analyzing_with_ai: Analitzant amb IA...
+  ai_preview: Vista prèvia IA
+  review_ai_draft: Revisa l'esborrany IA
+  use_draft_in_create_form: Usa l'esborrany al formulari de creació
+  ai_missing_required_fields: Encara falten camps obligatoris per revisar.
+  ai_warnings: Avisos d'IA
+  ai_draft_fields: Camps de l'esborrany
+  ai_matched: Vinculat
+  ai_unmatched: Sense vincular
+  geolocation_not_supported: La geolocalització no està disponible en aquest navegador.
+  geolocation_requires_https: La ubicació actual només funciona amb HTTPS o localhost. En mòbil usant la IP local, introdueix el lloc manualment o obre l'app amb HTTPS.
+  geolocation_permission_denied: El permís d'ubicació s'ha denegat en aquest dispositiu.
+  not_could_capture_location: No s'ha pogut capturar la ubicació actual.
+  not_could_analyze_wine_with_ai: No s'ha pogut analitzar el vi amb IA.
   not_could_load_list_wines: No s’ha pogut carregar el llistat de vins.
   country_production: País de fabricació
   vintage_label: Anyada

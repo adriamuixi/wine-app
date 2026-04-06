@@ -8,7 +8,7 @@ import { DoCreatePanel, DoDirectoryPanel, DoEditModal } from '../../features/do'
 import { deleteDoById } from '../../features/do/services/doApi'
 import { ReviewEditorPanel, ReviewsPanel } from '../../features/reviews'
 import { SettingsPanel } from '../../features/settings'
-import { PhotoEditorModal, WineFiltersMobileModal, WineFormPanel, WineGalleryModal, WineProfilePanel, WinesListPanel, useWinePhotoActions } from '../../features/wines'
+import { analyzeWineDraftWithAi, PhotoEditorModal, WineAiCreatePanel, WineAiDraftPreviewPanel, WineFiltersMobileModal, WineFormPanel, WineGalleryModal, WineProfilePanel, WinesListPanel, useWinePhotoActions } from '../../features/wines'
 import { toCountryIsoCode } from '../../features/do/services/countryCode'
 import { usePhotoEditorGestures } from '../../features/wines/hooks/usePhotoEditorGestures'
 import { deleteWineById } from '../../features/wines/services/photoApi'
@@ -58,6 +58,7 @@ import type {
   ReviewListApiResponse,
   WineDetailsApiAward,
   WineDetailsApiPhoto,
+  WineAiDraft,
   WineDetailsApiResponse,
   WineDetailsApiReview,
   WineDetailsApiWine,
@@ -129,6 +130,30 @@ const DO_SORT_PRESET_FIELDS: Record<DoSortPresetKey, [DoSortField, DoSortField, 
   country_region_name: ['country', 'region', 'name'],
   name_country_region: ['name', 'country', 'region'],
   region_name_country: ['region', 'name', 'country'],
+}
+
+type WineAiFormState = {
+  notes: string
+  priceOverride: string
+  placeType: 'restaurant' | 'supermarket'
+  locationName: string
+  locationAddress: string
+  locationCity: string
+  locationCountry: string
+  locationLatitude: string
+  locationLongitude: string
+}
+
+const DEFAULT_WINE_AI_FORM_STATE: WineAiFormState = {
+  notes: '',
+  priceOverride: '',
+  placeType: 'restaurant',
+  locationName: '',
+  locationAddress: '',
+  locationCity: '',
+  locationCountry: '',
+  locationLatitude: '',
+  locationLongitude: '',
 }
 
 function buildReviewFormPreset(review: ReviewItem | null): ReviewFormPreset {
@@ -777,6 +802,15 @@ function HomePage() {
   const [wineFormSubmitting, setWineFormSubmitting] = useState(false)
   const [wineFormError, setWineFormError] = useState<string | null>(null)
   const [wineSuccessToast, setWineSuccessToast] = useState<string | null>(null)
+  const [wineAiFormState, setWineAiFormState] = useState<WineAiFormState>(DEFAULT_WINE_AI_FORM_STATE)
+  const [wineAiImageFile, setWineAiImageFile] = useState<File | null>(null)
+  const [wineAiTicketFile, setWineAiTicketFile] = useState<File | null>(null)
+  const [wineAiSubmitting, setWineAiSubmitting] = useState(false)
+  const [wineAiError, setWineAiError] = useState<string | null>(null)
+  const [wineAiDraft, setWineAiDraft] = useState<WineAiDraft | null>(null)
+  const [wineAiLocating, setWineAiLocating] = useState(false)
+  const [wineCreatePrefill, setWineCreatePrefill] = useState<WineAiDraft | null>(null)
+  const [wineCreateFormResetKey, setWineCreateFormResetKey] = useState(0)
   const doDropdownRef = useRef<HTMLDivElement | null>(null)
   const createDoDropdownRef = useRef<HTMLDivElement | null>(null)
   const photoPickerInputRef = useRef<HTMLInputElement | null>(null)
@@ -1288,6 +1322,8 @@ function HomePage() {
     doCreate: labels.topbar.doCreate,
     wineCreate: labels.topbar.wineCreate,
     wineEdit: labels.topbar.wineEdit,
+    wineAiCreate: labels.topbar.wineAiCreate,
+    wineAiPreview: labels.topbar.wineAiPreview,
     reviews: labels.topbar.reviews,
     reviewCreate: labels.topbar.reviewCreate,
     reviewEdit: labels.topbar.reviewEdit,
@@ -1555,7 +1591,7 @@ function HomePage() {
   }, [currentUser])
 
   useEffect(() => {
-    if (!['wines', 'wineCreate', 'wineEdit', 'dos', 'doCreate'].includes(menu)) {
+    if (!['wines', 'wineCreate', 'wineEdit', 'wineAiCreate', 'wineAiPreview', 'dos', 'doCreate'].includes(menu)) {
       return
     }
 
@@ -1592,7 +1628,7 @@ function HomePage() {
   }, [menu, grapeOptions.length])
 
   useEffect(() => {
-    if (!['wines', 'wineCreate', 'wineEdit', 'dos'].includes(menu)) {
+    if (!['wines', 'wineCreate', 'wineEdit', 'wineAiCreate', 'wineAiPreview', 'dos'].includes(menu)) {
       return
     }
 
@@ -3119,6 +3155,8 @@ function HomePage() {
     setSelectedWineForEdit(null)
     setWineEditDetails(null)
     setWineEditStatus('idle')
+    setWineAiDraft(null)
+    setWineCreatePrefill(null)
     setGrapeBlendRows([{ id: 1, grapeId: firstGrapeOptionId, percentage: '' }])
     setAwardRows([])
     setCreateDoCountryFilter('spain')
@@ -3127,6 +3165,47 @@ function HomePage() {
     setCreateDoId('all')
     setManufacturingCountry('spain')
     setWineFormError(null)
+    setWineCreateFormResetKey((current) => current + 1)
+    setMenu('wineCreate')
+    setShowMobileMenu(false)
+  }
+
+  const openWineAiCreate = () => {
+    setWineAiFormState(DEFAULT_WINE_AI_FORM_STATE)
+    setWineAiImageFile(null)
+    setWineAiTicketFile(null)
+    setWineAiSubmitting(false)
+    setWineAiError(null)
+    setWineAiDraft(null)
+    setMenu('wineAiCreate')
+    setShowMobileMenu(false)
+  }
+
+  const useWineAiDraftInCreateForm = (draft: WineAiDraft) => {
+    const matchedGrapeRows = draft.grapes.filter((grape) => grape.grape_id != null).map((grape, index) => ({
+      id: Date.now() + index,
+      grapeId: String(grape.grape_id),
+      percentage: grape.percentage == null ? '' : String(grape.percentage),
+    }))
+
+    setWineCreatePrefill(draft)
+    const wineCountry = draft.wine.country ?? draft.wine.do?.country ?? 'spain'
+    setManufacturingCountry(wineCountry)
+    setCreateDoCountryFilter(draft.wine.do?.country ?? wineCountry)
+    setCreateDoSearchText('')
+    setIsCreateDoDropdownOpen(false)
+    setCreateDoId(draft.wine.do?.matched && draft.wine.do.id != null ? draft.wine.do.id : 'all')
+    setGrapeBlendRows(matchedGrapeRows.length > 0 ? matchedGrapeRows : [{ id: 1, grapeId: firstGrapeOptionId, percentage: '' }])
+    setAwardRows(
+      draft.awards.map((award, index) => ({
+        id: Date.now() + index,
+        award: award.name,
+        score: award.score == null ? '' : String(award.score),
+        year: award.year == null ? '' : String(award.year),
+      })),
+    )
+    setWineFormError(null)
+    setWineCreateFormResetKey((current) => current + 1)
     setMenu('wineCreate')
     setShowMobileMenu(false)
   }
@@ -3135,6 +3214,7 @@ function HomePage() {
     setSelectedWineForEdit(wine)
     setWineEditDetails(null)
     setWineEditStatus('loading')
+    setWineCreatePrefill(null)
     setGrapeBlendRows([{ id: 1, grapeId: firstGrapeOptionId, percentage: '' }])
     setAwardRows([])
     const mappedCountry = countryLabelToFilterValue(wine.country)
@@ -3160,6 +3240,80 @@ function HomePage() {
     setWineDeleteTarget(null)
     setWineDeleteError(null)
     setWineDeleteSubmitting(false)
+  }
+
+  const updateWineAiFormField = (field: keyof WineAiFormState, value: string) => {
+    setWineAiFormState((current) => ({ ...current, [field]: value }))
+  }
+
+  const captureWineAiCurrentLocation = () => {
+    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+      setWineAiError(t('ui.geolocation_not_supported'))
+      return
+    }
+
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      setWineAiError(t('ui.geolocation_requires_https'))
+      return
+    }
+
+    setWineAiLocating(true)
+    setWineAiError(null)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setWineAiFormState((current) => ({
+          ...current,
+          locationLatitude: position.coords.latitude.toFixed(6),
+          locationLongitude: position.coords.longitude.toFixed(6),
+        }))
+        setWineAiLocating(false)
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setWineAiError(t('ui.geolocation_permission_denied'))
+        } else {
+          setWineAiError(t('ui.not_could_capture_location'))
+        }
+        setWineAiLocating(false)
+      },
+      { enableHighAccuracy: true, maximumAge: 60_000, timeout: 10_000 },
+    )
+  }
+
+  const handleWineAiAnalyzeSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (wineAiImageFile == null) {
+      setWineAiError(t('ui.wine_image_required'))
+      return
+    }
+
+    setWineAiSubmitting(true)
+    setWineAiError(null)
+
+    try {
+      const response = await analyzeWineDraftWithAi({
+        apiBaseUrl: resolveApiBaseUrl(),
+        wineImage: wineAiImageFile,
+        ticketImage: wineAiTicketFile,
+        notes: wineAiFormState.notes,
+        priceOverride: wineAiFormState.priceOverride,
+        placeType: wineAiFormState.placeType,
+        locationName: wineAiFormState.locationName,
+        locationAddress: wineAiFormState.locationAddress,
+        locationCity: wineAiFormState.locationCity,
+        locationCountry: wineAiFormState.locationCountry,
+        locationLatitude: wineAiFormState.locationLatitude,
+        locationLongitude: wineAiFormState.locationLongitude,
+      })
+
+      setWineAiDraft(response.draft)
+      setMenu('wineAiPreview')
+    } catch (error: unknown) {
+      setWineAiError(error instanceof Error ? error.message : t('ui.not_could_analyze_wine_with_ai'))
+    } finally {
+      setWineAiSubmitting(false)
+    }
   }
 
   const confirmDeleteWine = async () => {
@@ -3975,6 +4129,8 @@ function HomePage() {
     switch (menu) {
       case 'wineCreate':
       case 'wineEdit':
+      case 'wineAiCreate':
+      case 'wineAiPreview':
       case 'wineProfile':
         return 'wines'
       case 'doCreate':
@@ -4332,8 +4488,9 @@ function HomePage() {
             wineHasNext={wineHasNext}
             wineActiveFiltersCount={wineActiveFiltersCount}
             isMobileViewport={isMobileViewport}
-            showCreateButton={!isMobileViewport}
+            showCreateButton
             onOpenWineCreate={openWineCreate}
+            onOpenWineAiCreate={openWineAiCreate}
             onOpenWineMobileFilters={() => setIsWineFiltersMobileOpen(true)}
             onSetWinePage={setWinePage}
             onSetWineLimit={setWineLimit}
@@ -4433,12 +4590,51 @@ function HomePage() {
           />
         ) : null}
 
+        {menu === 'wineAiCreate' ? (
+          <WineAiCreatePanel
+            t={t}
+            wineImageName={wineAiImageFile?.name ?? null}
+            ticketImageName={wineAiTicketFile?.name ?? null}
+            notes={wineAiFormState.notes}
+            priceOverride={wineAiFormState.priceOverride}
+            placeType={wineAiFormState.placeType}
+            locationName={wineAiFormState.locationName}
+            locationAddress={wineAiFormState.locationAddress}
+            locationCity={wineAiFormState.locationCity}
+            locationCountry={wineAiFormState.locationCountry}
+            locationLatitude={wineAiFormState.locationLatitude}
+            locationLongitude={wineAiFormState.locationLongitude}
+            submitting={wineAiSubmitting}
+            error={wineAiError}
+            locating={wineAiLocating}
+            onBack={() => setMenu('wines')}
+            onSubmit={handleWineAiAnalyzeSubmit}
+            onWineImageChange={(event) => setWineAiImageFile(event.target.files?.[0] ?? null)}
+            onTicketImageChange={(event) => setWineAiTicketFile(event.target.files?.[0] ?? null)}
+            onNotesChange={(value) => updateWineAiFormField('notes', value)}
+            onPriceOverrideChange={(value) => updateWineAiFormField('priceOverride', value)}
+            onPlaceTypeChange={(value) => setWineAiFormState((current) => ({ ...current, placeType: value }))}
+            onLocationFieldChange={(field, value) => updateWineAiFormField(field, value)}
+            onCaptureLocation={captureWineAiCurrentLocation}
+          />
+        ) : null}
+
+        {menu === 'wineAiPreview' && wineAiDraft != null ? (
+          <WineAiDraftPreviewPanel
+            t={t}
+            draft={wineAiDraft}
+            onBack={() => setMenu('wineAiCreate')}
+            onUseDraft={() => useWineAiDraftInCreateForm(wineAiDraft)}
+          />
+        ) : null}
+
         {menu === 'wineCreate' || menu === 'wineEdit' ? (
           <WineFormPanel
             t={t}
             labels={{ wines: labels.wines, wineType: labels.wineType, common: labels.common }}
             mode={menu}
             wineFormId={wineFormId}
+            formResetKey={wineCreateFormResetKey}
             wineSubmitLabel={wineSubmitLabel}
             wineFormSubmitting={wineFormSubmitting}
             showSubmitButton={!isMobileViewport}
@@ -4469,6 +4665,7 @@ function HomePage() {
             primaryEditPurchase={primaryEditPurchase}
             currentDateInput={CURRENT_DATE_INPUT}
             wineEditPhotoManager={menu === 'wineEdit' && selectedWineForEdit ? renderWinePhotoManager(selectedWineForEdit.id, wineEditPhotoSlots) : null}
+            createDraft={menu === 'wineCreate' ? wineCreatePrefill : null}
             onSubmit={handleWineFormSubmit}
             onBack={() => setMenu('wines')}
             onManufacturingCountryChange={setManufacturingCountry}
