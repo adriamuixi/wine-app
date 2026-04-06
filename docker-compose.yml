@@ -62,6 +62,7 @@ services:
     container_name: wine_web_private
     environment:
       - VITE_API_BASE=/api
+      - VITE_GEOAPIFY_API_KEY=${VITE_GEOAPIFY_API_KEY:-}
     volumes:
       - ./apps/web-private:/app
       - ./shared:/shared:ro

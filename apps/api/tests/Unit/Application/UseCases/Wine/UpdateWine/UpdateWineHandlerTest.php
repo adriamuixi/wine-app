@@ -18,6 +18,7 @@ use App\Application\UseCases\Wine\UpdateWine\UpdateWineNotFound;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineReferenceNotFound;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineValidationException;
 use App\Domain\Enum\Country;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Enum\PlaceType;
 use App\Domain\Model\DesignationOfOrigin;
 use PHPUnit\Framework\TestCase;
@@ -125,7 +126,7 @@ final class UpdateWineHandlerTest extends TestCase
             provided: ['purchases' => true],
             purchases: [
                 new CreateWinePurchaseInput(
-                    new CreateWinePlaceInput(PlaceType::Restaurant, 'Casa Paco', 'Street 1', 'Madrid', Country::Spain, ['lat' => 44.2, 'lng' => 181]),
+                    new CreateWinePlaceInput(PlaceType::Restaurant, 'Casa Paco', 'Street 1', 'Madrid', PlaceCountry::Spain, ['lat' => 44.2, 'lng' => 181]),
                     '19.95',
                     new \DateTimeImmutable('2026-03-15T10:00:00+00:00'),
                 ),

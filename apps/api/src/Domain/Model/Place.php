@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Model;
 
-use App\Domain\Enum\Country;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Enum\PlaceType;
 
 final readonly class Place
@@ -15,7 +15,7 @@ final readonly class Place
         public string $name,
         public ?string $address,
         public ?string $city,
-        public Country $country,
+        public PlaceCountry $country,
         public ?int $id = null,
         public ?array $mapData = null,
     ) {

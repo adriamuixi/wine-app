@@ -34,7 +34,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCAL_PROJECT_DIR="${LOCAL_PROJECT_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 
-REMOTE_HOST="${REMOTE_HOST:-212.227.20.31}"
+REMOTE_HOST="${REMOTE_HOST:-85.215.62.63}"
 REMOTE_USER="${REMOTE_USER:-root}"
 SSH_PORT="${SSH_PORT:-22}"
 REMOTE_PROJECT_DIR="${REMOTE_PROJECT_DIR:-/root/apps/wine-app}"

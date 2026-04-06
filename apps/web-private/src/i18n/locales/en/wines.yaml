@@ -69,7 +69,7 @@ ui:
   ai_preview: AI preview
   review_ai_draft: Review AI draft
   use_draft_in_create_form: Use draft in create form
-  latest_purchase: Latest purchase
+  latest_purchase: Purchase information
   no_purchase_registered: No purchase information registered.
   coordinates: Coordinates
   open_map: Open map

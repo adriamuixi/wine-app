@@ -8,6 +8,7 @@ use App\Application\Ports\WineDraftGenerator;
 use App\Domain\Enum\AgingType;
 use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Enum\PlaceType;
 use App\Domain\Enum\WineType;
 use App\Domain\Repository\DesignationOfOriginRepository;
@@ -202,7 +203,7 @@ final readonly class GenerateWineDraftHandler
             'place_name' => $this->normalizeNullableString($input['place_name'] ?? $location['name'] ?? null),
             'address' => $this->normalizeNullableString($input['address'] ?? $location['address'] ?? null),
             'city' => $this->normalizeNullableString($input['city'] ?? $location['city'] ?? null),
-            'country' => $this->normalizeCountry($input['country'] ?? $location['country'] ?? null),
+            'country' => $this->normalizePlaceCountry($input['country'] ?? $location['country'] ?? null),
             'map_data' => $this->normalizeMapData(
                 $input['map_data'] ?? [
                     'lat' => $location['latitude'] ?? null,
@@ -415,6 +416,16 @@ final readonly class GenerateWineDraftHandler
         }
 
         return Country::tryFrom($normalized)?->value;
+    }
+
+    private function normalizePlaceCountry(mixed $value): ?string
+    {
+        $normalized = $this->normalizeNullableString($value);
+        if (null === $normalized) {
+            return null;
+        }
+
+        return PlaceCountry::tryFrom($normalized)?->value;
     }
 
     private function normalizeConfidence(mixed $value): string

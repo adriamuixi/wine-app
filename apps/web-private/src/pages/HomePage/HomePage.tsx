@@ -749,7 +749,7 @@ function HomePage() {
   const [wineDeleteSubmitting, setWineDeleteSubmitting] = useState(false)
   const [wineDeleteError, setWineDeleteError] = useState<string | null>(null)
   const [winePage, setWinePage] = useState(1)
-  const [wineLimit, setWineLimit] = useState(20)
+  const [wineLimit, setWineLimit] = useState(50)
   const [wineTotalItems, setWineTotalItems] = useState(0)
   const [wineTotalPages, setWineTotalPages] = useState(0)
   const [wineHasNext, setWineHasNext] = useState(false)

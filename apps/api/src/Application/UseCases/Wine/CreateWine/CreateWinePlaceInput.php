@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\UseCases\Wine\CreateWine;
 
-use App\Domain\Enum\Country;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Enum\PlaceType;
 
 final readonly class CreateWinePlaceInput
@@ -15,7 +15,7 @@ final readonly class CreateWinePlaceInput
         public string $name,
         public ?string $address,
         public ?string $city,
-        public Country $country,
+        public PlaceCountry $country,
         public ?array $mapData = null,
     ) {
     }

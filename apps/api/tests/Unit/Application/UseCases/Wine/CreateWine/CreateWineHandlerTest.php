@@ -21,6 +21,7 @@ use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
 use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Model\DesignationOfOrigin;
 use App\Domain\Enum\PlaceType;
 use PHPUnit\Framework\TestCase;
@@ -71,7 +72,7 @@ final class CreateWineHandlerTest extends TestCase
             doId: 9,
             grapes: [new CreateWineGrapeInput(2, '40')],
             purchases: [new CreateWinePurchaseInput(
-                new CreateWinePlaceInput(PlaceType::Restaurant, 'Casa Paco', 'Calle A', 'Madrid', Country::Spain),
+                new CreateWinePlaceInput(PlaceType::Restaurant, 'Casa Paco', 'Calle A', 'Madrid', PlaceCountry::Spain),
                 '19.99',
                 new \DateTimeImmutable('2026-02-28T10:00:00+00:00'),
             )],
@@ -129,7 +130,7 @@ final class CreateWineHandlerTest extends TestCase
 
         $result = $handler->handle($this->command(
             purchases: [new CreateWinePurchaseInput(
-                new CreateWinePlaceInput(PlaceType::Supermarket, 'Mercadona', 'Street 1', null, Country::Spain),
+                new CreateWinePlaceInput(PlaceType::Supermarket, 'Mercadona', 'Street 1', null, PlaceCountry::Spain),
                 '10.00',
                 new \DateTimeImmutable('2026-02-28T10:00:00+00:00'),
             )],
@@ -150,7 +151,7 @@ final class CreateWineHandlerTest extends TestCase
 
         $result = $handler->handle($this->command(
             purchases: [new CreateWinePurchaseInput(
-                new CreateWinePlaceInput(PlaceType::Supermarket, 'Mercadona', null, 'Madrid', Country::Spain),
+                new CreateWinePlaceInput(PlaceType::Supermarket, 'Mercadona', null, 'Madrid', PlaceCountry::Spain),
                 '10.00',
                 new \DateTimeImmutable('2026-02-28T10:00:00+00:00'),
             )],
@@ -171,7 +172,7 @@ final class CreateWineHandlerTest extends TestCase
         $this->expectException(CreateWineValidationException::class);
         $handler->handle($this->command(
             purchases: [new CreateWinePurchaseInput(
-                new CreateWinePlaceInput(PlaceType::Restaurant, 'Casa Paco', 'Street 1', 'Madrid', Country::Spain, ['lat' => 91.0, 'lng' => -3.7]),
+                new CreateWinePlaceInput(PlaceType::Restaurant, 'Casa Paco', 'Street 1', 'Madrid', PlaceCountry::Spain, ['lat' => 91.0, 'lng' => -3.7]),
                 '10.00',
                 new \DateTimeImmutable('2026-02-28T10:00:00+00:00'),
             )],

@@ -40,6 +40,7 @@ use App\Domain\Enum\AgingType;
 use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
 use App\Domain\Enum\GrapeColor;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Enum\PlaceType;
 use App\Domain\Enum\ReviewBullet;
 use App\Domain\Enum\WineType;
@@ -268,6 +269,37 @@ final class WineControllerTest extends TestCase
                             'map_data' => ['lat' => 40.4167, 'lng' => -3.70325],
                         ],
                         'price_paid' => '15.00',
+                        'purchased_at' => '2026-03-01T10:00:00+00:00',
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->create($request);
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+    }
+
+    public function testCreateAcceptsWorldCountryForPurchasePlace(): void
+    {
+        $controller = $this->controller(doCountries: [1 => Country::Spain], grapeIds: [5]);
+        $request = Request::create(
+            '/api/wines',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Wine bought abroad',
+                'do_id' => 1,
+                'purchases' => [
+                    [
+                        'place' => [
+                            'place_type' => 'restaurant',
+                            'name' => 'Glenmoriston Town House Hotel',
+                            'address' => 'Ness Bank 20, IV2 4SF',
+                            'city' => 'Inverness',
+                            'country' => 'united_kingdom',
+                        ],
+                        'price_paid' => '7.20',
                         'purchased_at' => '2026-03-01T10:00:00+00:00',
                     ],
                 ],
@@ -642,7 +674,7 @@ final class SpyWineRepository implements WineRepository
             grapes: [new WineGrape(2, '90', 'Tempranillo', GrapeColor::Red)],
             purchases: [
                 new WinePurchase(
-                    new Place(PlaceType::Restaurant, 'Casa Paco', 'Calle A', 'Madrid', Country::Spain, 11, ['lat' => 40.4167, 'lng' => -3.70325]),
+                    new Place(PlaceType::Restaurant, 'Casa Paco', 'Calle A', 'Madrid', PlaceCountry::Spain, 11, ['lat' => 40.4167, 'lng' => -3.70325]),
                     '21.5',
                     new \DateTimeImmutable('2026-03-01T08:00:00+00:00'),
                     10,

@@ -19,6 +19,7 @@ use App\Domain\Enum\AgingType;
 use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
 use App\Domain\Enum\GrapeColor;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Enum\PlaceType;
 use App\Domain\Enum\ReviewBullet;
 use App\Domain\Enum\WineType;
@@ -399,7 +400,7 @@ SQL,
                     name: (string) $row['place_name'],
                     address: null === $row['place_address'] ? null : (string) $row['place_address'],
                     city: null === $row['place_city'] ? null : (string) $row['place_city'],
-                    country: Country::from((string) $row['place_country']),
+                    country: PlaceCountry::from((string) $row['place_country']),
                     id: (int) $row['place_id'],
                     mapData: $this->decodePlaceMapData($row['place_map_data'] ?? null),
                 ),

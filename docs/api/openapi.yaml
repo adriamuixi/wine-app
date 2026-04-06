@@ -1534,8 +1534,7 @@ components:
           nullable: true
           example: Madrid
         country:
-          type: string
-          enum: [spain, france, italy, portugal, germany, argentina, chile, united_states, south_africa, australia]
+          $ref: '#/components/schemas/PlaceCountryValue'
         map_data:
           allOf:
             - $ref: '#/components/schemas/PlaceMapData'
@@ -1732,7 +1731,8 @@ components:
           type: string
           nullable: true
         country:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/PlaceCountryValue'
           nullable: true
         map_data:
           type: object
@@ -2036,12 +2036,15 @@ components:
           type: string
           nullable: true
         country:
-          type: string
-          enum: [spain, france, italy, portugal, germany, argentina, chile, united_states, south_africa, australia]
+          $ref: '#/components/schemas/PlaceCountryValue'
         map_data:
           allOf:
             - $ref: '#/components/schemas/PlaceMapData'
           nullable: true
+    PlaceCountryValue:
+      type: string
+      description: World-country slug used for purchase places, for example `spain`, `united_kingdom`, or `japan`.
+      example: united_kingdom
     WineDetailPurchase:
       type: object
       required: [id, place, price_paid, purchased_at]

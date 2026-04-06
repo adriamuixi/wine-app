@@ -150,6 +150,51 @@ final class GenerateWineDraftHandlerTest extends TestCase
         self::assertNotSame([], $result->warnings);
     }
 
+    public function testItAcceptsWorldCountryForPurchaseDraft(): void
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'wine-draft-');
+        self::assertNotFalse($tmp);
+        file_put_contents($tmp, 'image-bytes');
+
+        $handler = new GenerateWineDraftHandler(
+            new StubDraftGenerator([
+                'wine' => [
+                    'name' => 'Travel Wine',
+                    'country' => 'spain',
+                ],
+                'purchase' => [
+                    'place_type' => 'supermarket',
+                    'place_name' => 'Demo Store',
+                    'address' => '221B Baker Street',
+                    'city' => 'London',
+                    'country' => 'united_kingdom',
+                    'price_paid' => 12.5,
+                    'purchased_at' => '2026-04-05',
+                    'map_data' => ['lat' => 51.523767, 'lng' => -0.1585557],
+                ],
+            ]),
+            new InMemoryDoRepo(),
+            new InMemoryGrapeRepo(),
+        );
+
+        $result = $handler->handle(new GenerateWineDraftCommand(
+            wineImage: [
+                'sourcePath' => $tmp,
+                'originalFilename' => 'wine.jpg',
+                'mimeType' => 'image/jpeg',
+                'size' => 10,
+            ],
+            backLabelImage: null,
+            ticketImage: null,
+            notes: null,
+            priceOverride: null,
+            placeType: null,
+            location: null,
+        ));
+
+        self::assertSame('united_kingdom', $result->purchase['country']);
+    }
+
     public function testItRejectsNonImageInput(): void
     {
         $tmp = tempnam(sys_get_temp_dir(), 'wine-draft-');

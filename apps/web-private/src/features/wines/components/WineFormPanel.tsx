@@ -125,6 +125,7 @@ type GeoapifyFeature = {
     coordinates?: [number, number]
   }
   properties?: {
+    name?: string
     formatted?: string
     address_line1?: string
     address_line2?: string
@@ -140,6 +141,8 @@ type GeoapifyFeature = {
     state?: string
     country?: string
     country_code?: string
+    category?: string
+    result_type?: string
   }
 }
 
@@ -179,6 +182,8 @@ function toAddressValueFromGeoapify(properties: GeoapifyFeature['properties']): 
   if (!properties) {
     return ''
   }
+
+  const placeName = toPlaceNameValueFromGeoapify(properties)
   const postcode = properties.postcode?.trim() ?? ''
   const appendPostcode = (base: string): string => {
     if (base.trim().length === 0) {
@@ -190,20 +195,79 @@ function toAddressValueFromGeoapify(properties: GeoapifyFeature['properties']): 
     return `${base.trim()}, ${postcode}`
   }
 
+  const street = properties.street?.trim() ?? ''
+  const houseNumber = properties.housenumber?.trim() ?? ''
+  const assembledStreetAddress = [street, houseNumber].filter((chunk) => chunk.length > 0).join(' ').trim()
+
+  if (placeName.length > 0) {
+    if (assembledStreetAddress.length > 0) {
+      return appendPostcode(assembledStreetAddress)
+    }
+
+    if (properties.address_line2 && properties.address_line2.trim().length > 0) {
+      return appendPostcode(properties.address_line2)
+    }
+
+    if (properties.address_line1 && properties.address_line1.trim().length > 0 && properties.address_line1.trim() !== placeName) {
+      return appendPostcode(properties.address_line1)
+    }
+
+    const formatted = properties.formatted?.trim() ?? ''
+    if (formatted.length > 0) {
+      const formattedParts = formatted.split(',').map((part) => part.trim()).filter((part) => part.length > 0)
+      if (formattedParts.length > 1 && formattedParts[0] === placeName) {
+        return appendPostcode(formattedParts.slice(1).join(', '))
+      }
+      return appendPostcode(formatted)
+    }
+  }
+
   if (properties.address_line1 && properties.address_line1.trim().length > 0) {
     return appendPostcode(properties.address_line1)
   }
 
-  const street = properties.street?.trim() ?? ''
-  const houseNumber = properties.housenumber?.trim() ?? ''
-  const assembled = [street, houseNumber].filter((chunk) => chunk.length > 0).join(' ').trim()
-  if (assembled.length > 0) {
-    return appendPostcode(assembled)
+  if (assembledStreetAddress.length > 0) {
+    return appendPostcode(assembledStreetAddress)
   }
   if (properties.address_line2 && properties.address_line2.trim().length > 0) {
     return appendPostcode(properties.address_line2)
   }
   return appendPostcode(properties.formatted?.trim() ?? '')
+}
+
+function toPlaceNameValueFromGeoapify(properties: GeoapifyFeature['properties']): string {
+  if (!properties) {
+    return ''
+  }
+
+  const explicitName = properties.name?.trim() ?? ''
+  if (explicitName.length > 0) {
+    return explicitName
+  }
+
+  const resultType = properties.result_type?.trim() ?? ''
+  const category = properties.category?.trim() ?? ''
+  const addressLine1 = properties.address_line1?.trim() ?? ''
+
+  if ((resultType === 'amenity' || category.includes('amenity')) && addressLine1.length > 0) {
+    return addressLine1
+  }
+
+  return ''
+}
+
+function toGeoapifySuggestionLabel(properties: GeoapifyFeature['properties'] | undefined, fallback: string): string {
+  const placeName = toPlaceNameValueFromGeoapify(properties)
+  if (placeName.length === 0) {
+    return fallback
+  }
+
+  const address = toAddressValueFromGeoapify(properties)
+  if (address.length === 0 || address === placeName) {
+    return placeName
+  }
+
+  return `${placeName} · ${address}`
 }
 
 function toCityValueFromGeoapify(properties: GeoapifyFeature['properties']): string {
@@ -233,6 +297,40 @@ function toCoordinateValuesFromGeoapify(feature: GeoapifyFeature): { latitude: s
     latitude: Number.isFinite(latitude) ? Number(latitude).toFixed(6) : '',
     longitude: Number.isFinite(longitude) ? Number(longitude).toFixed(6) : '',
   }
+}
+
+async function fetchGeoapifySuggestions({
+  query,
+  apiKey,
+  signal,
+  mode,
+}: {
+  query: string
+  apiKey: string
+  signal: AbortSignal
+  mode: 'mixed' | 'street'
+}): Promise<GeoapifyFeature[]> {
+  const params = new URLSearchParams({
+    text: query,
+    limit: '5',
+    apiKey,
+  })
+
+  if (mode === 'street') {
+    params.set('type', 'street')
+  }
+
+  const response = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`, {
+    method: 'GET',
+    signal,
+  })
+
+  if (!response.ok) {
+    throw new Error(`Geoapify autocomplete failed with status ${response.status}`)
+  }
+
+  const payload = await response.json() as { features?: GeoapifyFeature[] }
+  return Array.isArray(payload.features) ? payload.features : []
 }
 
 export function WineFormPanel({
@@ -292,6 +390,7 @@ export function WineFormPanel({
   const isGeoapifyEnabled = geoapifyApiKey.length > 0
 
   const formRef = useRef<HTMLFormElement | null>(null)
+  const placeNameInputRef = useRef<HTMLInputElement | null>(null)
   const addressInputRef = useRef<HTMLInputElement | null>(null)
   const cityInputRef = useRef<HTMLInputElement | null>(null)
   const [addressAutocompleteQuery, setAddressAutocompleteQuery] = useState('')
@@ -360,24 +459,23 @@ export function WineFormPanel({
       searchAbortRef.current = abortController
       setIsAddressSuggestionsLoading(true)
 
-      const params = new URLSearchParams({
-        text: normalizedQuery,
-        limit: '5',
-        type: 'street',
-        apiKey: geoapifyApiKey,
-      })
-
       try {
-        const response = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`, {
-          method: 'GET',
+        let features = await fetchGeoapifySuggestions({
+          query: normalizedQuery,
+          apiKey: geoapifyApiKey,
           signal: abortController.signal,
+          mode: 'mixed',
         })
-        if (!response.ok) {
-          throw new Error(`Geoapify autocomplete failed with status ${response.status}`)
+
+        if (features.length === 0) {
+          features = await fetchGeoapifySuggestions({
+            query: normalizedQuery,
+            apiKey: geoapifyApiKey,
+            signal: abortController.signal,
+            mode: 'street',
+          })
         }
 
-        const payload = await response.json() as { features?: GeoapifyFeature[] }
-        const features = Array.isArray(payload.features) ? payload.features : []
         setAddressSuggestions(features)
         setIsAddressSuggestionsOpen(features.length > 0)
       } catch (error) {
@@ -410,11 +508,15 @@ export function WineFormPanel({
 
   function applyGeoapifySuggestion(feature: GeoapifyFeature) {
     const properties = feature.properties
+    const nextPlaceName = toPlaceNameValueFromGeoapify(properties)
     const nextAddress = toAddressValueFromGeoapify(properties)
     const nextCity = toCityValueFromGeoapify(properties)
     const nextCountry = toCountryValueFromGeoapify(properties)
     const coordinates = toCoordinateValuesFromGeoapify(feature)
 
+    if (placeNameInputRef.current && nextPlaceName.length > 0) {
+      placeNameInputRef.current.value = nextPlaceName
+    }
     if (addressInputRef.current) {
       addressInputRef.current.value = nextAddress
     }
@@ -719,7 +821,7 @@ export function WineFormPanel({
               </label>
               <label>
                 {labels.wines.add.place}
-                <input name="place_name" type="text" placeholder="Celler del Centre" defaultValue={primaryEditPurchase?.place.name ?? createDraft?.purchase.place_name ?? ''} required />
+                <input ref={placeNameInputRef} name="place_name" type="text" placeholder="Celler del Centre" defaultValue={primaryEditPurchase?.place.name ?? createDraft?.purchase.place_name ?? ''} required />
               </label>
               <label>
                 {labels.wines.add.price}
@@ -773,7 +875,10 @@ export function WineFormPanel({
                       <div className="address-autocomplete-list" role="listbox" aria-label={t('ui.address_suggestions')}>
                         {addressSuggestions.map((feature, index) => {
                           const properties = feature.properties
-                          const optionLabel = properties?.formatted?.trim() || toAddressValueFromGeoapify(properties) || t('ui.address_unknown')
+                          const optionLabel = toGeoapifySuggestionLabel(
+                            properties,
+                            properties?.formatted?.trim() || toAddressValueFromGeoapify(properties) || t('ui.address_unknown'),
+                          )
                           return (
                             <button
                               key={`${optionLabel}-${index}`}

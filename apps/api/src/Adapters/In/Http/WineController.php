@@ -32,6 +32,7 @@ use App\Application\UseCases\Wine\UpdateWine\UpdateWineValidationException;
 use App\Domain\Enum\AgingType;
 use App\Domain\Enum\AwardName;
 use App\Domain\Enum\Country;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Enum\PlaceType;
 use App\Domain\Enum\WineType;
 use App\Domain\Model\DesignationOfOrigin;
@@ -734,7 +735,7 @@ final class WineController
             }
 
             try {
-                $placeCountry = Country::from($placeCountryRaw);
+                $placeCountry = PlaceCountry::from($placeCountryRaw);
             } catch (\ValueError) {
                 throw new CreateWineValidationException(sprintf('Invalid purchases[%d].place.country value.', $index));
             }

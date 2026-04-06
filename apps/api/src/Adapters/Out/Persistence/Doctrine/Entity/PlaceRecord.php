@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\Out\Persistence\Doctrine\Entity;
 
-use App\Domain\Enum\Country;
+use App\Domain\Enum\PlaceCountry;
 use App\Domain\Enum\PlaceType;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -29,8 +29,8 @@ class PlaceRecord
     #[ORM\Column(length: 120, nullable: true)]
     private ?string $city = null;
 
-    #[ORM\Column(enumType: Country::class)]
-    private Country $country;
+    #[ORM\Column(enumType: PlaceCountry::class)]
+    private PlaceCountry $country;
 
     /** @var array{lat: float, lng: float}|null */
     #[ORM\Column(name: 'map_data', type: 'json', nullable: true)]
