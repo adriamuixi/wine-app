@@ -69,6 +69,10 @@ ui:
   ai_preview: Vista previa IA
   review_ai_draft: Revisar borrador IA
   use_draft_in_create_form: Usar borrador en el formulario de creación
+  latest_purchase: Última compra
+  no_purchase_registered: No hay información de compra registrada.
+  coordinates: Coordenadas
+  open_map: Abrir mapa
   ai_missing_required_fields: Aún faltan campos obligatorios por revisar.
   ai_warnings: Avisos de IA
   ai_draft_fields: Campos del borrador

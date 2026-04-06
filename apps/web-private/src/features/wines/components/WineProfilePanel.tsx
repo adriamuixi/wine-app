@@ -2,6 +2,20 @@ import type { ReactNode, SyntheticEvent } from 'react'
 import type { Locale } from '../../../i18n/messages'
 import type { CountryFilterValue, WineDetailsApiReview, WineDetailsApiWine, WineType } from '../types'
 
+function mapEmbedUrl(lat: number, lng: number) {
+  const latOffset = 0.008
+  const lngOffset = 0.012
+  const bbox = [lng - lngOffset, lat - latOffset, lng + lngOffset, lat + latOffset]
+    .map((value) => value.toFixed(6))
+    .join('%2C')
+
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat.toFixed(6)}%2C${lng.toFixed(6)}`
+}
+
+function mapOpenUrl(lat: number, lng: number) {
+  return `https://www.openstreetmap.org/?mlat=${lat.toFixed(6)}&mlon=${lng.toFixed(6)}#map=16/${lat.toFixed(6)}/${lng.toFixed(6)}`
+}
+
 type WineProfilePanelProps = {
   t: (key: string) => string
   locale: Locale
@@ -51,6 +65,9 @@ export function WineProfilePanel({
   medalToneFromHundred,
   wineryLabel,
 }: WineProfilePanelProps) {
+  const latestPurchase = selectedWineSheetDetails?.purchases?.[0] ?? null
+  const latestPurchaseMap = latestPurchase?.place.map_data ?? null
+
   return (
     <section className="wine-profile-screen">
       <header className="wine-profile-toolbar">
@@ -196,6 +213,51 @@ export function WineProfilePanel({
                 <div><dt>{t('ui.alcohol_content')}</dt><dd>{selectedWineSheetDetails.alcohol_percentage ?? '-'}</dd></div>
                 <div><dt>{t('ui.updated')}</dt><dd>{formatApiDate(selectedWineSheetDetails.purchases[0]?.purchased_at ?? selectedWineSheetDetails.updated_at, locale)}</dd></div>
               </dl>
+            </section>
+
+            <section className="wine-sheet-card wine-profile-card-awards">
+              <h4>
+                <span className="wine-sheet-section-icon" aria-hidden="true">🛒</span>
+                <span>{t('ui.latest_purchase')}</span>
+              </h4>
+              {latestPurchase ? (
+                <div className="wine-profile-purchase-block">
+                  <dl className="wine-profile-facts-grid wine-profile-purchase-grid">
+                    <div><dt>{t('wines.add.place')}</dt><dd>{latestPurchase.place.name}</dd></div>
+                    <div><dt>{t('wines.add.price')}</dt><dd>{latestPurchase.price_paid}</dd></div>
+                    <div><dt>{t('ui.date_purchase')}</dt><dd>{formatApiDate(latestPurchase.purchased_at, locale)}</dd></div>
+                    <div><dt>{t('common.purchaseCountry')}</dt><dd>{countryCodeToLabel(latestPurchase.place.country, locale)}</dd></div>
+                    <div><dt>{t('ui.city')}</dt><dd>{latestPurchase.place.city ?? '-'}</dd></div>
+                    <div><dt>{t('ui.address_place')}</dt><dd>{latestPurchase.place.address ?? '-'}</dd></div>
+                    {latestPurchaseMap ? (
+                      <div>
+                        <dt>{t('ui.coordinates')}</dt>
+                        <dd>{latestPurchaseMap.lat.toFixed(5)}, {latestPurchaseMap.lng.toFixed(5)}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+
+                  {latestPurchaseMap ? (
+                    <div className="wine-profile-map-card">
+                      <iframe
+                        className="wine-profile-map-embed"
+                        title={`${latestPurchase.place.name} map`}
+                        src={mapEmbedUrl(latestPurchaseMap.lat, latestPurchaseMap.lng)}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                      <a
+                        className="secondary-button small wine-profile-map-link"
+                        href={mapOpenUrl(latestPurchaseMap.lat, latestPurchaseMap.lng)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t('ui.open_map')}
+                      </a>
+                    </div>
+                  ) : null}
+                </div>
+              ) : <p className="muted">{t('ui.no_purchase_registered')}</p>}
             </section>
 
             <section className="wine-sheet-card wine-profile-card-awards">

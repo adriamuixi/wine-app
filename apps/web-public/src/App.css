@@ -2628,6 +2628,35 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   font-weight: 700;
 }
 
+.detail-map-block {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.detail-map-embed {
+  width: 100%;
+  min-height: 220px;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--surface-soft-2);
+}
+
+.detail-map-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 8%, var(--surface-soft)), var(--surface));
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+}
+
 .detail-grapes-row dd {
   margin-top: 0.35rem;
 }
@@ -2834,6 +2863,10 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 
   .public-wine-modal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .detail-map-embed {
+    min-height: 200px;
   }
 
   .reviewer-score-grid {

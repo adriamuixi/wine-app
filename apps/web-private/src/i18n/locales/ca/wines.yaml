@@ -69,6 +69,10 @@ ui:
   ai_preview: Vista prèvia IA
   review_ai_draft: Revisa l'esborrany IA
   use_draft_in_create_form: Usa l'esborrany al formulari de creació
+  latest_purchase: Última compra
+  no_purchase_registered: No hi ha informació de compra registrada.
+  coordinates: Coordenades
+  open_map: Obrir mapa
   ai_missing_required_fields: Encara falten camps obligatoris per revisar.
   ai_warnings: Avisos d'IA
   ai_draft_fields: Camps de l'esborrany

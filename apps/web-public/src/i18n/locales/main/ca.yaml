@@ -57,6 +57,7 @@ modal:
   close: Tanca
   gallery: Galeria
   details: Detall del vi
+  purchase: Compra
   winery: Celler
   origin: Origen
   style: Estil
@@ -66,6 +67,11 @@ modal:
   tastedAt: Data de tast
   month: Mes
   place: Lloc
+  address: Adreça
+  country: País
+  coordinates: Coordenades
+  openMap: Obrir mapa
+  noPurchase: No hi ha informació de compra disponible
   mariaScore: Valoració Maria
   adriaScore: Valoració Adrià
   tasting: Nota de tast
@@ -85,4 +91,3 @@ wineType:
   white: Blanc
   rose: Rosat
   sparkling: Escumós
-

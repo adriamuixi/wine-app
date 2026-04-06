@@ -57,6 +57,7 @@ modal:
   close: Cerrar
   gallery: Galería
   details: Detalle del vino
+  purchase: Compra
   winery: Bodega
   origin: Origen
   style: Estilo
@@ -66,6 +67,11 @@ modal:
   tastedAt: Fecha de cata
   month: Mes
   place: Lugar
+  address: Dirección
+  country: País
+  coordinates: Coordenadas
+  openMap: Abrir mapa
+  noPurchase: No hay información de compra disponible
   mariaScore: Valoración Maria
   adriaScore: Valoración Adrià
   tasting: Nota de cata
@@ -85,4 +91,3 @@ wineType:
   white: Blanco
   rose: Rosado
   sparkling: Espumoso
-

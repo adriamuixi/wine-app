@@ -33,6 +33,13 @@ export type WineCard = {
   adriaScore: number | null
   place: string
   city: string
+  purchaseAddress: string | null
+  purchaseCountry: string | null
+  purchaseDateIso: string | null
+  purchaseMap: {
+    lat: number
+    lng: number
+  } | null
   techSheet: boolean
   reward?: {
     name: string
@@ -141,7 +148,13 @@ export type WineDetailsApiResponse = {
       place: {
         id: number
         name: string
+        address: string | null
         city: string | null
+        country: 'spain' | 'france' | 'italy' | 'portugal' | 'germany' | 'argentina' | 'chile' | 'united_states' | 'south_africa' | 'australia'
+        map_data: {
+          lat: number
+          lng: number
+        } | null
       }
       price_paid: number
       purchased_at: string

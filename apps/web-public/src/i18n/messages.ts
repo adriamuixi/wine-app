@@ -144,6 +144,7 @@ export type PublicMessages = {
     close: string
     gallery: string
     details: string
+    purchase: string
     winery: string
     origin: string
     style: string
@@ -153,6 +154,11 @@ export type PublicMessages = {
     tastedAt: string
     month: string
     place: string
+    address: string
+    country: string
+    coordinates: string
+    openMap: string
+    noPurchase: string
     mariaScore: string
     adriaScore: string
     tasting: string

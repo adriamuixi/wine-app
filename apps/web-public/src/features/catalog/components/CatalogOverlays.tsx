@@ -4,6 +4,20 @@ import type { WineCard } from '../types'
 
 type DoLogoPreview = { src: string; label: string } | null
 
+function mapEmbedUrl(lat: number, lng: number) {
+  const latOffset = 0.008
+  const lngOffset = 0.012
+  const bbox = [lng - lngOffset, lat - latOffset, lng + lngOffset, lat + latOffset]
+    .map((value) => value.toFixed(6))
+    .join('%2C')
+
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat.toFixed(6)}%2C${lng.toFixed(6)}`
+}
+
+function mapOpenUrl(lat: number, lng: number) {
+  return `https://www.openstreetmap.org/?mlat=${lat.toFixed(6)}&mlon=${lng.toFixed(6)}#map=16/${lat.toFixed(6)}/${lng.toFixed(6)}`
+}
+
 type Props = {
   activeModalImageIndex: number
   autonomousCommunityNameForRegion: (region: string) => string | null
@@ -165,7 +179,6 @@ export default function CatalogOverlays({
                             <div className="grape-variety-list">
                               {splitGrapeVarieties(selectedWine.grapes).map((grape) => (
                                 <span key={`${selectedWine.id}-grape-${grape}`} className="grape-variety-pill">
-                                  <span aria-hidden="true">{t.icons.grape}</span>
                                   <span>{grape}</span>
                                 </span>
                               ))}
@@ -204,6 +217,39 @@ export default function CatalogOverlays({
                       <p>{selectedWine.adriaScore != null ? selectedWine.adriaScore.toFixed(2) : t.common.notAvailableShort}</p>
                     </article>
                   </div>
+                </section>
+
+                <section className="detail-card">
+                  <h3>🛒 {t.modal.purchase}</h3>
+                  <dl>
+                    <div><dt>📍 {t.modal.place}</dt><dd>{selectedWine.place}{selectedWine.city !== '-' ? ` · ${selectedWine.city}` : ''}</dd></div>
+                    <div><dt>{t.icons.price} {t.card.priceFrom}</dt><dd>{euro.format(selectedWine.priceFrom)}</dd></div>
+                    <div><dt>📅 {t.modal.tastedAt}</dt><dd>{selectedWine.tastedAt}</dd></div>
+                    <div><dt>{t.icons.country} {t.modal.country}</dt><dd>{selectedWine.purchaseCountry ?? '-'}</dd></div>
+                    <div><dt>🏠 {t.modal.address}</dt><dd>{selectedWine.purchaseAddress ?? '-'}</dd></div>
+                    {selectedWine.purchaseMap ? (
+                      <div><dt>🧭 {t.modal.coordinates}</dt><dd>{selectedWine.purchaseMap.lat.toFixed(5)}, {selectedWine.purchaseMap.lng.toFixed(5)}</dd></div>
+                    ) : null}
+                  </dl>
+                  {selectedWine.purchaseMap ? (
+                    <div className="detail-map-block">
+                      <iframe
+                        className="detail-map-embed"
+                        title={`${selectedWine.place} map`}
+                        src={mapEmbedUrl(selectedWine.purchaseMap.lat, selectedWine.purchaseMap.lng)}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                      <a
+                        className="detail-map-link"
+                        href={mapOpenUrl(selectedWine.purchaseMap.lat, selectedWine.purchaseMap.lng)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t.modal.openMap}
+                      </a>
+                    </div>
+                  ) : null}
                 </section>
 
                 <section className="detail-card">

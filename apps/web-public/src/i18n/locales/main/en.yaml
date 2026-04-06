@@ -57,6 +57,7 @@ modal:
   close: Close
   gallery: Gallery
   details: Wine details
+  purchase: Purchase
   winery: Winery
   origin: Origin
   style: Style
@@ -66,6 +67,11 @@ modal:
   tastedAt: Tasting date
   month: Month
   place: Place
+  address: Address
+  country: Country
+  coordinates: Coordinates
+  openMap: Open map
+  noPurchase: No purchase information available
   mariaScore: Maria score
   adriaScore: Adrià score
   tasting: Tasting note
@@ -85,4 +91,3 @@ wineType:
   white: White
   rose: Rosé
   sparkling: Sparkling
-

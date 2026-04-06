@@ -3338,6 +3338,33 @@ code {
   gap: 0.5rem;
 }
 
+.wine-profile-purchase-block {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.wine-profile-purchase-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wine-profile-map-card {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.wine-profile-map-embed {
+  width: 100%;
+  min-height: 240px;
+  border: 1px solid rgba(82, 46, 28, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.wine-profile-map-link {
+  justify-self: start;
+  text-decoration: none;
+}
+
 .wine-profile-list-row {
   border-radius: 11px;
   border: 1px solid rgba(82, 46, 28, 0.08);
@@ -6203,6 +6230,14 @@ code {
     grid-column: span 1;
   }
 
+  .wine-profile-purchase-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wine-profile-map-embed {
+    min-height: 220px;
+  }
+
   .wine-profile-kpi-strip {
     grid-auto-flow: row;
     grid-auto-columns: 1fr;
@@ -7272,6 +7307,11 @@ body {
 :root[data-theme='dark'] .wine-profile-facts-grid > div,
 :root[data-theme='dark'] .wine-profile-grape-row,
 :root[data-theme='dark'] .wine-profile-list-row {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(223, 198, 178, 0.1);
+}
+
+:root[data-theme='dark'] .wine-profile-map-embed {
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(223, 198, 178, 0.1);
 }
