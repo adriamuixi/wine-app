@@ -255,9 +255,15 @@ final class WineController
             return new JsonResponse(['error' => 'ticket_image must be a file.'], Response::HTTP_BAD_REQUEST);
         }
 
+        $backLabelImage = $request->files->get('back_label_image');
+        if (null !== $backLabelImage && !$backLabelImage instanceof UploadedFile) {
+            return new JsonResponse(['error' => 'back_label_image must be a file.'], Response::HTTP_BAD_REQUEST);
+        }
+
         try {
             $command = new GenerateWineDraftCommand(
                 wineImage: $this->uploadedImagePayload($wineImage, 'wine_image'),
+                backLabelImage: $backLabelImage instanceof UploadedFile ? $this->uploadedImagePayload($backLabelImage, 'back_label_image') : null,
                 ticketImage: $ticketImage instanceof UploadedFile ? $this->uploadedImagePayload($ticketImage, 'ticket_image') : null,
                 notes: $this->nullableRequestString($request, 'notes'),
                 priceOverride: $this->nullableRequestString($request, 'price_override'),

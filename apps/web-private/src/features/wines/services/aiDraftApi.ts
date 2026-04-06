@@ -3,6 +3,7 @@ import type { WineAiDraftApiResponse } from '../types'
 type AnalyzeWineDraftParams = {
   apiBaseUrl: string
   wineImage: File
+  backLabelImage: File | null
   ticketImage: File | null
   notes: string
   priceOverride: string
@@ -18,6 +19,9 @@ type AnalyzeWineDraftParams = {
 export async function analyzeWineDraftWithAi(params: AnalyzeWineDraftParams) {
   const body = new FormData()
   body.append('wine_image', params.wineImage)
+  if (params.backLabelImage != null) {
+    body.append('back_label_image', params.backLabelImage)
+  }
   if (params.ticketImage != null) {
     body.append('ticket_image', params.ticketImage)
   }

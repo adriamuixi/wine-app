@@ -78,12 +78,16 @@ final class WineControllerTest extends TestCase
         self::assertNotFalse($tmp);
         file_put_contents($tmp, 'wine-image');
         $uploaded = new UploadedFile($tmp, 'wine.jpg', 'image/jpeg', null, true);
+        $backTmp = tempnam(sys_get_temp_dir(), 'wine-ai-back-');
+        self::assertNotFalse($backTmp);
+        file_put_contents($backTmp, 'back-label-image');
+        $backUploaded = new UploadedFile($backTmp, 'wine-back.jpg', 'image/jpeg', null, true);
 
         $request = Request::create('/api/wines/draft-from-ai', 'POST', [
             'notes' => 'Bought in Madrid',
             'place_type' => 'restaurant',
             'location_city' => 'Madrid',
-        ], [], ['wine_image' => $uploaded]);
+        ], [], ['wine_image' => $uploaded, 'back_label_image' => $backUploaded]);
 
         $response = $controller->draftFromAi($request);
         $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);

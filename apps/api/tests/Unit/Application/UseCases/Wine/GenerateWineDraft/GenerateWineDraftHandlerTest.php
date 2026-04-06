@@ -70,6 +70,7 @@ final class GenerateWineDraftHandlerTest extends TestCase
                 'mimeType' => 'image/jpeg',
                 'size' => 10,
             ],
+            backLabelImage: null,
             ticketImage: null,
             notes: null,
             priceOverride: null,
@@ -134,6 +135,7 @@ final class GenerateWineDraftHandlerTest extends TestCase
                 'mimeType' => 'image/jpeg',
                 'size' => 10,
             ],
+            backLabelImage: null,
             ticketImage: null,
             notes: null,
             priceOverride: null,
@@ -144,7 +146,7 @@ final class GenerateWineDraftHandlerTest extends TestCase
         self::assertNull($result->wine['wine_type']);
         self::assertFalse($result->wine['do']['matched']);
         self::assertFalse($result->grapes[0]['matched']);
-        self::assertSame(['wine.name', 'purchase.place_name', 'purchase.price_paid', 'purchase.purchased_at'], $result->missingRequiredFields);
+        self::assertSame(['purchase.place_name', 'purchase.price_paid', 'purchase.purchased_at'], $result->missingRequiredFields);
         self::assertNotSame([], $result->warnings);
     }
 
@@ -169,6 +171,7 @@ final class GenerateWineDraftHandlerTest extends TestCase
                 'mimeType' => 'text/plain',
                 'size' => 10,
             ],
+            backLabelImage: null,
             ticketImage: null,
             notes: null,
             priceOverride: null,

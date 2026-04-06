@@ -50,7 +50,9 @@ ui:
   ai_wine_creation: Creación de vino con IA
   ai_evidence: Evidencias para la IA
   wine_image: Imagen del vino
-  wine_image_required: La imagen del vino es obligatoria.
+  front_label_image: Imagen de la etiqueta frontal
+  back_label_image_optional: Imagen de la etiqueta trasera (opcional)
+  wine_image_required: La imagen de la etiqueta frontal es obligatoria.
   ticket_image_optional: Imagen del ticket o recibo (opcional)
   no_file_selected: Ningún archivo seleccionado
   extra_notes: Notas extra

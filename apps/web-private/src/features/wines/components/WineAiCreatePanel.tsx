@@ -2,7 +2,8 @@ import type { ChangeEvent, FormEventHandler } from 'react'
 
 type WineAiCreatePanelProps = {
   t: (key: string) => string
-  wineImageName: string | null
+  frontLabelImageName: string | null
+  backLabelImageName: string | null
   ticketImageName: string | null
   notes: string
   priceOverride: string
@@ -18,7 +19,8 @@ type WineAiCreatePanelProps = {
   locating: boolean
   onBack: () => void
   onSubmit: FormEventHandler<HTMLFormElement>
-  onWineImageChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onFrontLabelImageChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onBackLabelImageChange: (event: ChangeEvent<HTMLInputElement>) => void
   onTicketImageChange: (event: ChangeEvent<HTMLInputElement>) => void
   onNotesChange: (value: string) => void
   onPriceOverrideChange: (value: string) => void
@@ -29,7 +31,8 @@ type WineAiCreatePanelProps = {
 
 export function WineAiCreatePanel({
   t,
-  wineImageName,
+  frontLabelImageName,
+  backLabelImageName,
   ticketImageName,
   notes,
   priceOverride,
@@ -45,7 +48,8 @@ export function WineAiCreatePanel({
   locating,
   onBack,
   onSubmit,
-  onWineImageChange,
+  onFrontLabelImageChange,
+  onBackLabelImageChange,
   onTicketImageChange,
   onNotesChange,
   onPriceOverrideChange,
@@ -73,10 +77,17 @@ export function WineAiCreatePanel({
             <legend>{t('ui.ai_evidence')}</legend>
             <div className="inline-grid">
               <label>
-                {t('ui.wine_image')}
-                <input name="wine_image" type="file" accept="image/*" onChange={onWineImageChange} required />
-                <small>{wineImageName ?? t('ui.no_file_selected')}</small>
+                {t('ui.front_label_image')}
+                <input name="wine_image" type="file" accept="image/*" onChange={onFrontLabelImageChange} required />
+                <small>{frontLabelImageName ?? t('ui.no_file_selected')}</small>
               </label>
+              <label>
+                {t('ui.back_label_image_optional')}
+                <input name="back_label_image" type="file" accept="image/*" onChange={onBackLabelImageChange} />
+                <small>{backLabelImageName ?? t('ui.no_file_selected')}</small>
+              </label>
+            </div>
+            <div className="inline-grid">
               <label>
                 {t('ui.ticket_image_optional')}
                 <input name="ticket_image" type="file" accept="image/*" onChange={onTicketImageChange} />

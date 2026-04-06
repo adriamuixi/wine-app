@@ -1622,9 +1622,15 @@ components:
         wine_image:
           type: string
           format: binary
+          description: Front label image.
+        back_label_image:
+          type: string
+          format: binary
+          description: Optional back label image for technical wine details.
         ticket_image:
           type: string
           format: binary
+          description: Optional ticket or receipt image.
         notes:
           type: string
         price_override:

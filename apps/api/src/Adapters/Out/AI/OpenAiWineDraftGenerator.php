@@ -82,9 +82,16 @@ final readonly class OpenAiWineDraftGenerator implements WineDraftGenerator
             'text' => $this->buildPrompt($command),
         ]];
 
+        $content[] = $this->buildImageDescriptor('Front label image. Prioritize wine name, winery, appellation, vintage, and visible front-label clues.');
         $content[] = $this->buildImageContent($command->wineImage);
 
+        if (null !== $command->backLabelImage) {
+            $content[] = $this->buildImageDescriptor('Back label image. Use this for technical details such as grapes, alcohol, importer text, tasting notes, and legal label details.');
+            $content[] = $this->buildImageContent($command->backLabelImage);
+        }
+
         if (null !== $command->ticketImage) {
+            $content[] = $this->buildImageDescriptor('Ticket or receipt image. Use this as direct evidence for place, price, purchase date, and merchant details.');
             $content[] = $this->buildImageContent($command->ticketImage);
         }
 
@@ -110,15 +117,29 @@ final readonly class OpenAiWineDraftGenerator implements WineDraftGenerator
         ];
     }
 
+    /**
+     * @return array{type: string, text: string}
+     */
+    private function buildImageDescriptor(string $text): array
+    {
+        return [
+            'type' => 'input_text',
+            'text' => $text,
+        ];
+    }
+
     private function buildPrompt(GenerateWineDraftCommand $command): string
     {
         $location = $command->location;
 
         return implode("\n", [
-            'Analyze the provided wine image, optional ticket image, user notes, user location context, and perform internet research using web search when helpful.',
+            'Analyze the provided front label image, optional back label image, optional ticket image, user notes, user location context, and perform internet research using web search when helpful.',
             'Return only JSON matching the provided schema.',
             'Do not invent ids. Use textual names for grapes and DOs. The backend will resolve ids later.',
             'If direct evidence conflicts with internet research, prefer direct evidence and add a warning.',
+            'Prefer the front label for name, winery, DO, and vintage when visible.',
+            'Prefer the back label for grapes, alcohol percentage, importer/legal details, and any production notes when visible.',
+            'Prefer the ticket for merchant, price, and purchase date when visible.',
             'Use only these enum values when you are confident:',
             'wine_type: red, white, rose, sparkling, sweet, fortified',
             'country: spain, france, italy, portugal, germany, argentina, chile, united_states, south_africa, australia',

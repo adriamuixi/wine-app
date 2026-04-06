@@ -8,11 +8,13 @@ final readonly class GenerateWineDraftCommand
 {
     /**
      * @param array{sourcePath: string, originalFilename: string, mimeType: string, size: int} $wineImage
+     * @param array{sourcePath: string, originalFilename: string, mimeType: string, size: int}|null $backLabelImage
      * @param array{sourcePath: string, originalFilename: string, mimeType: string, size: int}|null $ticketImage
      * @param array{name: ?string, address: ?string, city: ?string, country: ?string, latitude: ?float, longitude: ?float}|null $location
      */
     public function __construct(
         public array $wineImage,
+        public ?array $backLabelImage,
         public ?array $ticketImage,
         public ?string $notes,
         public ?string $priceOverride,

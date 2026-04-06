@@ -50,7 +50,9 @@ ui:
   ai_wine_creation: AI wine creation
   ai_evidence: Evidence for AI
   wine_image: Wine image
-  wine_image_required: Wine image is required.
+  front_label_image: Front label image
+  back_label_image_optional: Back label image (optional)
+  wine_image_required: Front label image is required.
   ticket_image_optional: Ticket or receipt image (optional)
   no_file_selected: No file selected
   extra_notes: Extra notes

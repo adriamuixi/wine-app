@@ -50,7 +50,9 @@ ui:
   ai_wine_creation: Creació de vi amb IA
   ai_evidence: Evidències per a la IA
   wine_image: Imatge del vi
-  wine_image_required: La imatge del vi és obligatòria.
+  front_label_image: Imatge de l'etiqueta frontal
+  back_label_image_optional: Imatge de l'etiqueta posterior (opcional)
+  wine_image_required: La imatge de l'etiqueta frontal és obligatòria.
   ticket_image_optional: Imatge del tiquet o rebut (opcional)
   no_file_selected: Cap fitxer seleccionat
   extra_notes: Notes extra

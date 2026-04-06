@@ -804,6 +804,7 @@ function HomePage() {
   const [wineSuccessToast, setWineSuccessToast] = useState<string | null>(null)
   const [wineAiFormState, setWineAiFormState] = useState<WineAiFormState>(DEFAULT_WINE_AI_FORM_STATE)
   const [wineAiImageFile, setWineAiImageFile] = useState<File | null>(null)
+  const [wineAiBackLabelFile, setWineAiBackLabelFile] = useState<File | null>(null)
   const [wineAiTicketFile, setWineAiTicketFile] = useState<File | null>(null)
   const [wineAiSubmitting, setWineAiSubmitting] = useState(false)
   const [wineAiError, setWineAiError] = useState<string | null>(null)
@@ -3173,6 +3174,7 @@ function HomePage() {
   const openWineAiCreate = () => {
     setWineAiFormState(DEFAULT_WINE_AI_FORM_STATE)
     setWineAiImageFile(null)
+    setWineAiBackLabelFile(null)
     setWineAiTicketFile(null)
     setWineAiSubmitting(false)
     setWineAiError(null)
@@ -3295,6 +3297,7 @@ function HomePage() {
       const response = await analyzeWineDraftWithAi({
         apiBaseUrl: resolveApiBaseUrl(),
         wineImage: wineAiImageFile,
+        backLabelImage: wineAiBackLabelFile,
         ticketImage: wineAiTicketFile,
         notes: wineAiFormState.notes,
         priceOverride: wineAiFormState.priceOverride,
@@ -4593,7 +4596,8 @@ function HomePage() {
         {menu === 'wineAiCreate' ? (
           <WineAiCreatePanel
             t={t}
-            wineImageName={wineAiImageFile?.name ?? null}
+            frontLabelImageName={wineAiImageFile?.name ?? null}
+            backLabelImageName={wineAiBackLabelFile?.name ?? null}
             ticketImageName={wineAiTicketFile?.name ?? null}
             notes={wineAiFormState.notes}
             priceOverride={wineAiFormState.priceOverride}
@@ -4609,7 +4613,8 @@ function HomePage() {
             locating={wineAiLocating}
             onBack={() => setMenu('wines')}
             onSubmit={handleWineAiAnalyzeSubmit}
-            onWineImageChange={(event) => setWineAiImageFile(event.target.files?.[0] ?? null)}
+            onFrontLabelImageChange={(event) => setWineAiImageFile(event.target.files?.[0] ?? null)}
+            onBackLabelImageChange={(event) => setWineAiBackLabelFile(event.target.files?.[0] ?? null)}
             onTicketImageChange={(event) => setWineAiTicketFile(event.target.files?.[0] ?? null)}
             onNotesChange={(value) => updateWineAiFormField('notes', value)}
             onPriceOverrideChange={(value) => updateWineAiFormField('priceOverride', value)}

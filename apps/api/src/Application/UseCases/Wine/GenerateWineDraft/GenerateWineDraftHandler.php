@@ -53,6 +53,10 @@ final readonly class GenerateWineDraftHandler
     {
         $this->assertImagePayload($command->wineImage, 'wine_image');
 
+        if (null !== $command->backLabelImage) {
+            $this->assertImagePayload($command->backLabelImage, 'back_label_image');
+        }
+
         if (null !== $command->ticketImage) {
             $this->assertImagePayload($command->ticketImage, 'ticket_image');
         }
