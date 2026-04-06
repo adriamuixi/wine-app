@@ -28,7 +28,7 @@ export function WineAiDraftPreviewPanel({ t, draft, onBack, onUseDraft }: WineAi
 
   return (
     <section className="screen-grid">
-      <section className="panel">
+      <section className="panel ai-preview-panel">
         <div className="panel-header wine-create-header">
           <div>
             <p className="eyebrow">{t('ui.ai_preview')}</p>
@@ -60,15 +60,15 @@ export function WineAiDraftPreviewPanel({ t, draft, onBack, onUseDraft }: WineAi
 
         <fieldset className="form-block">
           <legend>{t('ui.ai_draft_fields')}</legend>
-          <div className="award-rows-scroll">
+          <div className="ai-preview-stack">
             {fields.map((field) => {
               const metadata = draft.field_metadata[field.key]
               return (
-                <div key={field.key} className="award-row">
-                  <strong>{field.label}</strong>
-                  <span>{field.value}</span>
-                  <span>{metadata ? `${metadataLabel(metadata.source)} · ${metadataLabel(metadata.confidence)}` : '-'}</span>
-                  <span>{metadata?.notes ?? ''}</span>
+                <div key={field.key} className="ai-preview-field-row">
+                  <strong className="ai-preview-field-label">{field.label}</strong>
+                  <span className="ai-preview-field-value">{field.value}</span>
+                  <span className="ai-preview-field-meta">{metadata ? `${metadataLabel(metadata.source)} · ${metadataLabel(metadata.confidence)}` : '-'}</span>
+                  {metadata?.notes ? <span className="ai-preview-field-notes">{metadata.notes}</span> : null}
                 </div>
               )
             })}
@@ -77,13 +77,13 @@ export function WineAiDraftPreviewPanel({ t, draft, onBack, onUseDraft }: WineAi
 
         <fieldset className="form-block form-block-half">
           <legend>{t('ui.composition_and_grape')}</legend>
-          <div className="award-rows-scroll">
+          <div className="ai-preview-stack">
             {draft.grapes.length === 0 ? <p className="muted">-</p> : draft.grapes.map((grape) => (
-              <div key={`${grape.name}-${grape.grape_id ?? 'x'}`} className="award-row">
-                <span>{grape.name}</span>
-                <span>{grape.percentage == null ? '-' : `${grape.percentage}%`}</span>
-                <span>{grape.matched ? t('ui.ai_matched') : t('ui.ai_unmatched')}</span>
-                <span>{grape.grape_id == null ? '-' : `#${grape.grape_id}`}</span>
+              <div key={`${grape.name}-${grape.grape_id ?? 'x'}`} className="ai-preview-field-row">
+                <strong className="ai-preview-field-label">{grape.name}</strong>
+                <span className="ai-preview-field-value">{grape.percentage == null ? '-' : `${grape.percentage}%`}</span>
+                <span className="ai-preview-field-meta">{grape.matched ? t('ui.ai_matched') : t('ui.ai_unmatched')}</span>
+                <span className="ai-preview-field-notes">{grape.grape_id == null ? '-' : `#${grape.grape_id}`}</span>
               </div>
             ))}
           </div>
@@ -91,13 +91,12 @@ export function WineAiDraftPreviewPanel({ t, draft, onBack, onUseDraft }: WineAi
 
         <fieldset className="form-block form-block-half">
           <legend>{t('ui.awards')}</legend>
-          <div className="award-rows-scroll">
+          <div className="ai-preview-stack">
             {draft.awards.length === 0 ? <p className="muted">-</p> : draft.awards.map((award) => (
-              <div key={`${award.name}-${award.year ?? 'x'}`} className="award-row">
-                <span>{award.name}</span>
-                <span>{award.score == null ? '-' : award.score}</span>
-                <span>{award.year ?? '-'}</span>
-                <span />
+              <div key={`${award.name}-${award.year ?? 'x'}`} className="ai-preview-field-row">
+                <strong className="ai-preview-field-label">{award.name}</strong>
+                <span className="ai-preview-field-value">{award.score == null ? '-' : String(award.score)}</span>
+                <span className="ai-preview-field-meta">{award.year ?? '-'}</span>
               </div>
             ))}
           </div>

@@ -2392,6 +2392,27 @@ function HomePage() {
   }, [isWineFiltersMobileOpen])
 
   useEffect(() => {
+    if (!wineAiSubmitting) {
+      return
+    }
+
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+    const previousBodyTouchAction = document.body.style.touchAction
+
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    document.body.style.touchAction = 'none'
+    window.scrollTo({ top: 0, behavior: 'auto' })
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.body.style.overflow = previousBodyOverflow
+      document.body.style.touchAction = previousBodyTouchAction
+    }
+  }, [wineAiSubmitting])
+
+  useEffect(() => {
     if (menu !== 'wines' && menu !== 'reviews') {
       return
     }
@@ -5088,6 +5109,16 @@ function HomePage() {
         deleteDisabled={photoDeleteBusyType === activeGalleryPhotoType}
         onFallbackWineImage={fallbackToDefaultWineIcon}
       />
+
+      {wineAiSubmitting ? (
+        <div className="ai-global-loading-overlay" role="status" aria-live="polite" aria-label={t('ui.generating_ai_wine_draft')}>
+          <div className="ai-loading-card">
+            <span className="ai-loading-spinner" aria-hidden="true" />
+            <p className="ai-loading-title">{t('ui.generating_ai_wine_draft')}</p>
+            <p className="ai-loading-message">{t('ui.please_wait_ai_generation')}</p>
+          </div>
+        </div>
+      ) : null}
 
       {wineSuccessToast ? (
         <div className="floating-toast floating-toast-success" role="status" aria-live="polite">
