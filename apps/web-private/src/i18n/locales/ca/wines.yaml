@@ -64,6 +64,8 @@ ui:
   place_name_optional: Nom del lloc (opcional)
   analyze_with_ai: Analitza amb IA
   analyzing_with_ai: Analitzant amb IA...
+  generating_ai_wine_draft: Generant l'esborrany del vi amb IA
+  please_wait_ai_generation: Si us plau, espera. Estem revisant les imatges, cercant context i preparant les dades suggerides del vi.
   ai_preview: Vista prèvia IA
   review_ai_draft: Revisa l'esborrany IA
   use_draft_in_create_form: Usa l'esborrany al formulari de creació

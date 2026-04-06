@@ -64,6 +64,8 @@ ui:
   place_name_optional: Nombre del lugar (opcional)
   analyze_with_ai: Analizar con IA
   analyzing_with_ai: Analizando con IA...
+  generating_ai_wine_draft: Generando el borrador del vino con IA
+  please_wait_ai_generation: Por favor, espera. Estamos revisando las imágenes, buscando contexto y preparando los datos sugeridos del vino.
   ai_preview: Vista previa IA
   review_ai_draft: Revisar borrador IA
   use_draft_in_create_form: Usar borrador en el formulario de creación

@@ -64,6 +64,8 @@ ui:
   place_name_optional: Place name (optional)
   analyze_with_ai: Analyze with AI
   analyzing_with_ai: Analyzing with AI...
+  generating_ai_wine_draft: Generating the wine draft with AI
+  please_wait_ai_generation: Please wait. We are reviewing the images, searching for context, and preparing the suggested wine data.
   ai_preview: AI preview
   review_ai_draft: Review AI draft
   use_draft_in_create_form: Use draft in create form

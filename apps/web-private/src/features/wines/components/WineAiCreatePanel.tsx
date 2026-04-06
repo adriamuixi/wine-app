@@ -59,7 +59,7 @@ export function WineAiCreatePanel({
 }: WineAiCreatePanelProps) {
   return (
     <section className="screen-grid">
-      <section className="panel">
+      <section className="panel ai-create-panel" aria-busy={submitting}>
         <div className="panel-header wine-create-header">
           <div>
             <p className="eyebrow">{t('ui.ai_wine_creation')}</p>
@@ -161,6 +161,16 @@ export function WineAiCreatePanel({
             </button>
           </div>
         </form>
+
+        {submitting ? (
+          <div className="ai-loading-overlay" role="status" aria-live="polite" aria-label={t('ui.generating_ai_wine_draft')}>
+            <div className="ai-loading-card">
+              <span className="ai-loading-spinner" aria-hidden="true" />
+              <p className="ai-loading-title">{t('ui.generating_ai_wine_draft')}</p>
+              <p className="ai-loading-message">{t('ui.please_wait_ai_generation')}</p>
+            </div>
+          </div>
+        ) : null}
       </section>
     </section>
   )

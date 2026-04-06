@@ -15,6 +15,8 @@ final readonly class OpenAiWineDraftGenerator implements WineDraftGenerator
         private HttpClientInterface $httpClient,
         private ?string $apiKey,
         private string $model = 'gpt-5',
+        private float $timeoutSeconds = 180.0,
+        private float $maxDurationSeconds = 240.0,
     ) {
     }
 
@@ -50,6 +52,8 @@ final readonly class OpenAiWineDraftGenerator implements WineDraftGenerator
                 'Content-Type' => 'application/json',
             ],
             'json' => $payload,
+            'timeout' => $this->timeoutSeconds,
+            'max_duration' => $this->maxDurationSeconds,
         ]);
 
         $data = $response->toArray(false);
