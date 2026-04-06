@@ -2097,6 +2097,11 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   font-weight: 700;
 }
 
+.wine-card-grapes-heading {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
 .wine-card-meta dd {
   margin: 0.12rem 0 0;
   font-weight: 700;
@@ -4067,6 +4072,7 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     display: grid;
     align-content: start;
     justify-items: end;
+    align-self: start;
     gap: 0.1rem;
     min-width: 0;
     padding-left: 0.34rem;
@@ -4091,6 +4097,11 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+
+  .wine-card-mobile-list-grapes-title.wine-card-grapes-heading {
+    justify-self: end;
+    gap: 0.22rem;
   }
 
   .wine-card-mobile-list-grapes-list {

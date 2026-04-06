@@ -510,7 +510,7 @@ export default function CatalogPageView({
                         </div>
                         <div className="wine-card-meta-box-vintage"><dt>{t.icons.vintage} {t.card.vintage}</dt><dd>{wine.vintage}</dd></div>
                         <div className="wine-card-meta-box-grapes">
-                          <dt>{t.icons.grape} {t.filters.grape}</dt>
+                          <dt className="wine-card-grapes-heading"><span aria-hidden="true">{t.icons.grape}</span><span>{t.card.grapeVarieties}</span></dt>
                           <dd className="wine-card-meta-grapes">
                             {splitGrapeVarieties(wine.grapes).map((grape) => (
                               <button
@@ -524,7 +524,6 @@ export default function CatalogPageView({
                                 aria-label={`${t.filters.grape}: ${grape}`}
                                 title={grape}
                               >
-                                <span aria-hidden="true">{t.icons.grape}</span>
                                 <span>{grape}</span>
                               </button>
                             ))}
@@ -558,7 +557,7 @@ export default function CatalogPageView({
                       </div>
 
                       <div className="wine-card-mobile-grapes-row">
-                        <p>{t.filters.grape}</p>
+                        <p className="wine-card-grapes-heading"><span aria-hidden="true">{t.icons.grape}</span><span>{t.card.grapeVarieties}</span></p>
                         <div className="wine-card-mobile-grapes-list">
                           {splitGrapeVarieties(wine.grapes).map((grape) => (
                             <button
@@ -572,7 +571,6 @@ export default function CatalogPageView({
                               aria-label={`${t.filters.grape}: ${grape}`}
                               title={grape}
                             >
-                              <span aria-hidden="true">{t.icons.grape}</span>
                               <span>{grape}</span>
                             </button>
                           ))}
@@ -616,8 +614,9 @@ export default function CatalogPageView({
                       </div>
 
                       <div className="wine-card-mobile-list-grapes-col" aria-label={t.filters.grape}>
-                        <p className="wine-card-mobile-list-grapes-title">
-                          {t.card.grapeVarieties}
+                        <p className="wine-card-mobile-list-grapes-title wine-card-grapes-heading">
+                          <span aria-hidden="true">{t.icons.grape}</span>
+                          <span>{t.card.grapeVarieties}</span>
                         </p>
                         <div className="wine-card-mobile-list-grapes-list">
                           {splitGrapeVarieties(wine.grapes).map((grape) => (
@@ -632,7 +631,6 @@ export default function CatalogPageView({
                               aria-label={`${t.filters.grape}: ${grape}`}
                               title={grape}
                             >
-                              <span aria-hidden="true">{t.icons.grape}</span>
                               <span>{grape}</span>
                             </button>
                           ))}
