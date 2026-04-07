@@ -13,7 +13,8 @@ Use this checklist in design, implementation, and review.
 - Wine is global (not user-owned)
 - Reviews belong to users
 - One review per user + wine
-- Scores immutable after creation
+- Review score behavior must stay consistent across docs, code, and tests
+- Current implementation allows score updates on review edit
 - Place required
 - Price required
 - Vintage is a variant, not a new wine
@@ -55,7 +56,7 @@ Checks:
 
 - business rules only in controller validation
 - doctrine records contain domain behavior
-- mutable flow bypasses immutability rules
+- review edit behavior drifts between docs, tests, and implementation
 - untyped arrays replace domain models for business data
 
 ## Test Checklist

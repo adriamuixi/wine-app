@@ -469,10 +469,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/stats/reviews-per-month:
+  /api/stats/reviews-per-monh:
     get:
       summary: Get monthly review count and median score series
-      operationId: getStatsReviewsPerMonth
+      operationId: getStatsReviewsPerMonh
       tags: [Stats]
       security:
         - bearerAuth: []
@@ -490,22 +490,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/stats/reviews-per-monh:
-    get:
-      summary: Get monthly review count and median score series
-      operationId: getStatsReviewsPerMonhLegacy
-      tags: [Stats]
-      deprecated: true
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      responses:
-        '200':
-          description: Legacy typoed route kept for backward compatibility
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReviewsPerMonthStatsResponse'
   /api/stats/generic:
     get:
       summary: Get generic dashboard stats
@@ -527,10 +511,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/stats/scoring-generic:
+  /api/stats/socring-generic:
     get:
       summary: Get generic score bucket stats
-      operationId: getStatsScoringGeneric
+      operationId: getStatsSocringGeneric
       tags: [Stats]
       security:
         - bearerAuth: []
@@ -538,22 +522,6 @@ paths:
       responses:
         '200':
           description: Score bucket distribution for catalog quality panel
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScoringGenericStatsResponse'
-  /api/stats/socring-generic:
-    get:
-      summary: Get generic score bucket stats
-      operationId: getStatsSocringGenericLegacy
-      tags: [Stats]
-      deprecated: true
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      responses:
-        '200':
-          description: Legacy typoed route kept for backward compatibility
           content:
             application/json:
               schema:

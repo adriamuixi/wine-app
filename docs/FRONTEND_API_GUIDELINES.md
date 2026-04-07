@@ -5,7 +5,7 @@ This repo contains two React apps:
 - `apps/web-public`
 - `apps/web-private`
 
-Both are currently Vite starter templates. Use the same architectural rules in both apps to avoid drift.
+Both apps are active product surfaces with feature/page structure on top of Vite. Use the same architectural rules in both apps to avoid drift.
 
 ## Objectives
 

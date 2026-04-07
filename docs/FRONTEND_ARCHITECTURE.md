@@ -61,7 +61,7 @@ It reflects the real changes performed in code (not a proposal).
 
 - `tsc`: pass.
 - `eslint`: pass.
-- `build`: blocked by FS permissions (`EACCES` in `public/images/brand` during asset sync).
+- `build`: validate against the current shared-asset sync flow before relying on older refactor-era notes.
 
 ---
 
@@ -188,8 +188,8 @@ It reflects the real changes performed in code (not a proposal).
 ### Validation
 
 - `tsc`: pass.
-- `eslint`: no errors in touched files; existing hook dependency warnings remain in `HomePage.tsx`.
-- `build`: blocked by FS permissions (`EACCES` in `public/images/brand` during asset sync).
+- `eslint`: current repo state should be checked directly; this document should not be treated as a live lint report.
+- `build`: validate against the current shared-asset sync flow before relying on older refactor-era notes.
 
 ---
 
@@ -201,7 +201,7 @@ It reflects the real changes performed in code (not a proposal).
 - `shared/`
 - `features/`
 - `pages/HomePage/`
-- `i18n/locales/{common,about,doMap,toolbar,main}/`
+- `i18n/locales/{common,about,doMap,toolbar,main,wineRoute}/`
 - `App.tsx` (minimal)
 
 ### `apps/web-private/src`

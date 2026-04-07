@@ -117,7 +117,6 @@ type WineFormPanelProps = {
   addAwardRow: () => void
   onFallbackAsset: (event: SyntheticEvent<HTMLImageElement>) => void
   regionLogoPathFromImageName: (imageName: string | null) => string | null
-  formatIsoDateToDdMmYyyy: (value: string) => string
 }
 
 type GeoapifyFeature = {
@@ -379,7 +378,6 @@ export function WineFormPanel({
   addAwardRow,
   onFallbackAsset,
   regionLogoPathFromImageName,
-  formatIsoDateToDdMmYyyy,
 }: WineFormPanelProps) {
   const geoapifyApiKey = (import.meta.env.VITE_GEOAPIFY_API_KEY as string | undefined)?.trim() ?? ''
   const isGeoapifyEnabled = geoapifyApiKey.length > 0
@@ -814,11 +812,8 @@ export function WineFormPanel({
                 {t('ui.date_purchase')}
                 <input
                   name="purchased_at"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="dd/mm/yyyy"
-                  pattern="(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{4})"
-                  defaultValue={formatIsoDateToDdMmYyyy(primaryEditPurchase?.purchased_at?.slice(0, 10) ?? createDraft?.purchase.purchased_at ?? currentDateInput)}
+                  type="date"
+                  defaultValue={primaryEditPurchase?.purchased_at?.slice(0, 10) ?? createDraft?.purchase.purchased_at?.slice(0, 10) ?? currentDateInput}
                   required
                 />
               </label>

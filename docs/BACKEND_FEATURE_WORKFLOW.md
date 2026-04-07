@@ -9,7 +9,7 @@ Write the rule first in plain language.
 Examples:
 
 - one review per user + wine
-- score immutable after creation
+- review edit rules must match code, tests, and docs
 - place and price required
 
 ## 2. Model domain first

@@ -70,6 +70,10 @@ apps/web-public/src/i18n/locales/
     ca.yaml
     es.yaml
     en.yaml
+  wineRoute/
+    ca.yaml
+    es.yaml
+    en.yaml
 ```
 
 ## File Responsibilities

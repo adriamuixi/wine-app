@@ -13,7 +13,7 @@ import { toCountryIsoCode } from '../../features/do/services/countryCode'
 import { usePhotoEditorGestures } from '../../features/wines/hooks/usePhotoEditorGestures'
 import { deleteWineById } from '../../features/wines/services/photoApi'
 import { drawPhotoEditorPreviewImage, getPhotoEditorRatioClass } from '../../features/wines/services/photoEditor'
-import { formatIsoDateToDdMmYyyy, parseDateInputToIso } from '../../features/wines/lib/dateInput'
+import { parseDateInputToIso } from '../../features/wines/lib/dateInput'
 import { ConfirmDeleteModal } from '../../shared/components/ConfirmDeleteModal'
 import {
   DEFAULT_NO_PHOTO_DARK_SRC,
@@ -4722,7 +4722,6 @@ function HomePage() {
             addAwardRow={addAwardRow}
             onFallbackAsset={fallbackToAdminAsset}
             regionLogoPathFromImageName={regionLogoPathFromImageName}
-            formatIsoDateToDdMmYyyy={formatIsoDateToDdMmYyyy}
           />
         ) : null}
 

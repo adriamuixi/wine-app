@@ -1,61 +1,36 @@
 # Wine App API Guide
 
-This guide documents all available HTTP endpoints with practical examples.
+Human-readable API overview for the current backend implementation.
 
-Base URL (local): `http://localhost:8080`
+The machine-readable source of truth is:
+- `docs/api/openapi.yaml`
 
-## Table of Contents
+Base URL (local):
+- `http://localhost:8080`
 
-- [Conventions](#conventions)
-- [Health](#health)
-  - [`GET /api`](#get-api)
-- [Auth](#auth)
-  - [`POST /api/auth/login`](#post-apiauthlogin)
-  - [`GET /api/auth/me`](#get-apiauthme)
-  - [`PUT /api/auth/me`](#put-apiauthme)
-  - [`POST /api/auth/logout`](#post-apiauthlogout)
-  - [`POST /api/auth/users`](#post-apiauthusers)
-  - [`DELETE /api/auth/users`](#delete-apiauthusers)
-- [Reviews](#reviews)
-  - [`GET /api/reviews`](#get-apireviews)
-  - [`GET /api/wines/{wineId}/reviews/{id}`](#get-apiwineswineidreviewsid)
-  - [`POST /api/wines/{wineId}/reviews`](#post-apiwineswineidreviews)
-  - [`PUT /api/wines/{wineId}/reviews/{id}`](#put-apiwineswineidreviewsid)
-  - [`DELETE /api/wines/{wineId}/reviews/{id}`](#delete-apiwineswineidreviewsid)
-- [Stats](#stats)
-  - [`GET /api/stats/generic`](#get-apistatsgeneric)
-  - [`GET /api/stats/socring-generic`](#get-apistatssocring-generic)
-  - [`GET /api/stats/reviews-per-monh`](#get-apistatsreviews-per-monh)
-- [Wines](#wines)
-  - [`GET /api/grapes`](#get-apigrapes)
-  - [`POST /api/dos`](#post-apidos)
-  - [`GET /api/dos`](#get-apidos)
-  - [`GET /api/wines`](#get-apiwines)
-  - [`POST /api/wines`](#post-apiwines)
-  - [`GET /api/wines/{id}`](#get-apiwinesid)
-  - [`PUT /api/wines/{id}`](#put-apiwinesid)
-  - [`DELETE /api/wines/{id}`](#delete-apiwinesid)
-  - [`POST /api/wines/{id}/photos`](#post-apiwinesidphotos)
-- [Guide Endpoint](#guide-endpoint)
-  - [`GET /guide.md`](#get-guidemd)
+Important:
+- Web clients use the Symfony session flow.
+- Mobile clients can use bearer auth via `POST /api/auth/token`.
+- Some stats endpoints currently use legacy typoed paths because that is what the controller implementation exposes today.
 
 ## Conventions
 
-- Content type for JSON requests: `application/json`
+- JSON requests use `Content-Type: application/json`
+- file uploads use `multipart/form-data`
 - IDs are `int64`
-- Time format: ISO-8601 (for example `2026-03-01T10:00:00Z`)
-- Main errors:
+- common errors:
   - `400` invalid input
-  - `401` unauthenticated / invalid credentials
+  - `401` unauthenticated
+  - `403` forbidden
   - `404` not found
+  - `409` conflict
 
----
+## System
 
-## Health
-
-### `GET /api`
-
-Checks if API is alive.
+- `GET /api`
+  - health check
+- `GET /guide.md`
+  - returns this markdown guide
 
 Example:
 
@@ -63,257 +38,57 @@ Example:
 curl -s http://localhost:8080/api | jq
 ```
 
-Response:
-
-```json
-{
-  "status": "ok",
-  "service": "wine-api"
-}
-```
-
----
-
 ## Auth
 
-### `POST /api/auth/login`
+- `POST /api/auth/login`
+  - email/password login for session-based clients
+- `POST /api/auth/token`
+  - issues bearer token for mobile/API clients
+- `GET /api/auth/me`
+  - returns current authenticated user
+- `PUT /api/auth/me`
+  - updates current authenticated user
+- `POST /api/auth/logout`
+  - clears the current session
+- `POST /api/auth/users`
+  - creates a user, requires authenticated session
+- `DELETE /api/auth/users`
+  - deletes a user by email, requires authenticated session
 
-Creates session cookie using email/password.
-
-Example 1 (success):
+Session login example:
 
 ```bash
 curl -i -c cookies.txt -X POST http://localhost:8080/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"adriamuixi@gmail.com","password":"wine1234"}'
+  -d '{"email":"user@example.com","password":"secret"}'
 ```
 
-Example 2 (invalid credentials):
+Bearer token example:
 
 ```bash
-curl -s -X POST http://localhost:8080/api/auth/login \
+curl -s -X POST http://localhost:8080/api/auth/token \
   -H 'Content-Type: application/json' \
-  -d '{"email":"adriamuixi@gmail.com","password":"wrong"}' | jq
+  -d '{"email":"user@example.com","password":"secret"}' | jq
 ```
-
----
-
-### `GET /api/auth/me`
-
-Returns current authenticated user from session.
-
-Example 1 (authenticated):
-
-```bash
-curl -s -b cookies.txt http://localhost:8080/api/auth/me | jq
-```
-
-Example 2 (without session):
-
-```bash
-curl -s http://localhost:8080/api/auth/me | jq
-```
-
----
-
-### `PUT /api/auth/me`
-
-Updates the current authenticated user profile.
-
-Expected:
-- `200` updated
-- `400` invalid input
-- `401` unauthenticated
-
-Example:
-
-```bash
-curl -s -b cookies.txt -X PUT http://localhost:8080/api/auth/me \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Adria","lastname":"Muixi","password":"newSecret123"}' | jq
-```
-
-Notes:
-- `name` and `lastname` are required
-- `password` is optional
-- when `password` is omitted or `null`, the existing password is preserved
-
----
-
-### `POST /api/auth/logout`
-
-Clears current session.
-
-```bash
-curl -i -b cookies.txt -X POST http://localhost:8080/api/auth/logout
-```
-
----
-
-### `POST /api/auth/users`
-
-Creates a user with name, lastname, email and password.
-
-Expected:
-- `201` created
-- `400` invalid input
-- `409` email already exists
-
-Example:
-
-```bash
-curl -s -X POST http://localhost:8080/api/auth/users \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Adria","lastname":"Muixi","email":"adriamuixi@gmail.com","password":"wine1234"}' | jq
-```
-
-Response example (`201`):
-
-```json
-{
-  "user": {
-    "id": 12,
-    "email": "adriamuixi@gmail.com",
-    "name": "Adria",
-    "lastname": "Muixi"
-  }
-}
-```
-
-Response example (`400`):
-
-```json
-{
-  "error": "Field \"email\" must be a valid email address."
-}
-```
-
-Response example (`409`):
-
-```json
-{
-  "error": "User already exists for email adriamuixi@gmail.com."
-}
-```
-
----
-
-### `DELETE /api/auth/users`
-
-Deletes a user by email.
-
-Expected:
-- `204` deleted
-- `400` invalid email/body
-- `404` user not found
-
-Example:
-
-```bash
-curl -i -X DELETE http://localhost:8080/api/auth/users \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"adriamuixi@gmail.com"}'
-```
-
-Example (`204` deleted, no body):
-
-```bash
-curl -i -X DELETE http://localhost:8080/api/auth/users \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"gascon.maria@gmail.com"}'
-```
-
-Response example (`404`):
-
-```json
-{
-  "error": "User not found for email adriamuixi@gmail.com."
-}
-```
-
----
 
 ## Reviews
 
-### `GET /api/reviews`
+- `GET /api/reviews`
+  - paginated review list
+- `GET /api/wines/{wineId}/reviews/{id}`
+  - fetch single review
+- `POST /api/wines/{wineId}/reviews`
+  - create review for authenticated user
+- `PUT /api/wines/{wineId}/reviews/{id}`
+  - update review fields
+- `DELETE /api/wines/{wineId}/reviews/{id}`
+  - delete review
 
-Returns a paginated review list in bulk.
+Notes:
+- Current implementation allows review score updates on edit.
+- `created_at` accepts `YYYY-MM-DD` or full ISO-8601 when supported by the use case/controller flow.
 
-Query params:
-- `page` default `1`
-- `limit` default `20`, max `100`
-- `sort_by` one of: `score|name|do`
-- `sort_dir` one of: `asc|desc`
-
-Expected:
-- `200` success
-- `400` invalid query params
-
-Example:
-
-```bash
-curl -s "http://localhost:8080/api/reviews?page=1&limit=20&sort_by=score&sort_dir=desc" | jq
-```
-
-Response shape:
-
-```json
-{
-  "items": [
-    {
-      "id": 1,
-      "user": { "id": 7, "name": "Adria", "lastname": "Muixi" },
-      "wine": { "id": 42, "name": "Vina del Sol", "do": { "id": 2, "name": "Rioja" } },
-      "score": 88,
-      "aroma": 4,
-      "appearance": 2,
-      "palate_entry": 3,
-      "body": 4,
-      "persistence": 4,
-      "bullets": ["floral"],
-      "created_at": "2026-03-01T10:00:00+00:00"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total_items": 200,
-    "total_pages": 10,
-    "has_next": true,
-    "has_prev": false
-  }
-}
-```
-
----
-
-### `GET /api/wines/{wineId}/reviews/{id}`
-
-Gets one review by id.
-
-Expected:
-- `200` found
-- `404` not found
-
-Example:
-
-```bash
-curl -s http://localhost:8080/api/wines/2/reviews/1 | jq
-```
-
----
-
-### `POST /api/wines/{wineId}/reviews`
-
-Creates a review for the authenticated user (session required).
-
-Expected:
-- `201` created
-- `400` invalid input
-- `401` unauthenticated
-- `409` review already exists for user+wine
-
-Example:
+Create example:
 
 ```bash
 curl -s -b cookies.txt -X POST http://localhost:8080/api/wines/2/reviews \
@@ -321,490 +96,85 @@ curl -s -b cookies.txt -X POST http://localhost:8080/api/wines/2/reviews \
   -d '{"created_at":"2025-12-24","score":88,"aroma":4,"appearance":2,"palate_entry":3,"body":4,"persistence":4,"bullets":["floral"]}' | jq
 ```
 
-Notes:
-- `created_at` is optional
-- it accepts either `YYYY-MM-DD` or a full ISO-8601 timestamp
-
----
-
-### `PUT /api/wines/{wineId}/reviews/{id}`
-
-Updates review axes/bullets (score can also be updated).
-
-Expected:
-- `204` updated
-- `400` invalid input
-- `401` unauthenticated
-- `403` forbidden (review owned by another user)
-- `404` not found
-
-Example:
-
-```bash
-curl -i -b cookies.txt -X PUT http://localhost:8080/api/wines/2/reviews/1 \
-  -H 'Content-Type: application/json' \
-  -d '{"created_at":"2025-12-24","aroma":5,"appearance":2,"palate_entry":2,"body":4,"persistence":4,"bullets":["powerful"],"score":88}'
-```
-
-Notes:
-- `created_at` is optional
-- if omitted on update, the existing review date is preserved
-
----
-
-### `DELETE /api/wines/{wineId}/reviews/{id}`
-
-Deletes a review by id.
-
-Expected:
-- `204` deleted
-- `401` unauthenticated
-- `403` forbidden (review owned by another user)
-- `404` not found
-
-Example:
-
-```bash
-curl -i -b cookies.txt -X DELETE http://localhost:8080/api/wines/2/reviews/1
-```
-
----
-
 ## Stats
 
-### `GET /api/stats/generic`
+Current implemented paths:
 
-Returns the generic KPI cards for the private dashboard.
+- `GET /api/stats/generic`
+- `GET /api/stats/reviews-per-monh`
+- `GET /api/stats/socring-generic`
 
-Expected:
-- `200` success
-- `401` unauthenticated
+Important:
+- The `reviews-per-monh` and `socring-generic` spellings are legacy typoed route names, but they are the live routes exposed by the controller today.
 
-Example:
-
-```bash
-curl -s -b cookies.txt "http://localhost:8080/api/stats/generic" | jq
-```
-
-Response shape:
-
-```json
-{
-  "total_wines": 120,
-  "total_reviews": 44,
-  "my_reviews": 7,
-  "average_red": 86.4,
-  "average_white": 84.1
-}
-```
-
----
-
-### `GET /api/stats/socring-generic`
-
-Returns the score bucket distribution for the catalog quality panel.
-
-Expected:
-- `200` success
-
-Example:
+Examples:
 
 ```bash
-curl -s "http://localhost:8080/api/stats/socring-generic" | jq
+curl -s -b cookies.txt http://localhost:8080/api/stats/generic | jq
+curl -s -b cookies.txt http://localhost:8080/api/stats/reviews-per-monh | jq
+curl -s -b cookies.txt http://localhost:8080/api/stats/socring-generic | jq
 ```
 
-Response shape:
+## Grapes and DOs
 
-```json
-{
-  "items": [
-    { "label": "<60", "count": 0 },
-    { "label": "60-69", "count": 0 },
-    { "label": "70-79", "count": 2 },
-    { "label": "80-89", "count": 4 },
-    { "label": "90+", "count": 3 }
-  ]
-}
-```
+- `GET /api/grapes`
+  - returns grapes
+- `GET /api/dos`
+  - lists denominations of origin
+- `POST /api/dos`
+  - creates denomination of origin
+- `PUT /api/dos/{id}`
+  - updates denomination of origin
+- `DELETE /api/dos/{id}`
+  - deletes denomination of origin
+- `POST /api/dos/{id}/assets`
+  - uploads DO assets
 
----
-
-### `GET /api/stats/reviews-per-monh`
-
-Returns chart-ready monthly review statistics ordered chronologically.
-
-Expected:
-- `200` success
-
-Notes:
-- `review_counts` is the number of reviews created in each month
-- `median_scores` is the median of review `score` for that month
-- Months without reviews between the first and last recorded review are included with `0` and `null`
-
-Example:
-
-```bash
-curl -s "http://localhost:8080/api/stats/reviews-per-monh" | jq
-```
-
-Response shape:
-
-```json
-{
-  "months": ["2025-11", "2025-12", "2026-01"],
-  "review_counts": [3, 0, 5],
-  "median_scores": [91, null, 88.5]
-}
-```
-
----
-
-## Wines
-
-### `GET /api/grapes`
-
-Returns all grapes from DB.
-
-Example:
-
-```bash
-curl -s "http://localhost:8080/api/grapes" | jq
-```
-
-Response shape:
-
-```json
-{
-  "items": [
-    {
-      "id": 1,
-      "name": "Tempranillo",
-      "color": "red"
-    }
-  ]
-}
-```
-
----
-
-### `POST /api/dos`
-
-Creates a denomination of origin.
-
-Expected:
-- `201` created
-- `400` invalid body
-- `409` duplicate `(country, name)`
-
-Notes:
-- `do_logo` (if provided in JSON) must use an image extension: `jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`.
-
-Example:
-
-```bash
-curl -s -X POST "http://localhost:8080/api/dos" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "name": "Campo de Borja",
-    "region": "Aragón",
-    "country": "spain",
-    "country_code": "ES",
-    "do_logo": "campo_borja_DO.png"
-  }' | jq
-```
-
-Response shape:
-
-```json
-{
-  "do": {
-    "id": 123
-  }
-}
-```
-
----
-
-### `GET /api/dos`
-
-Returns all denominations of origin from DB.
-
-Query params:
-
-- `name` optional, case-insensitive contains match on DO name
-- `country` optional country enum value
-- `region` optional, case-insensitive contains match on region
-- `sort_by_1`, `sort_by_2`, `sort_by_3` optional sort order (`country|region|name`)
-
-Example:
-
-```bash
-curl -s "http://localhost:8080/api/dos" | jq
-```
-
-Example with filters:
+List example:
 
 ```bash
 curl -s "http://localhost:8080/api/dos?name=rio&country=spain&region=rioja" | jq
 ```
 
-Response shape:
+## Wines
 
-```json
-{
-  "items": [
-    {
-      "id": 1,
-      "name": "Rioja",
-      "region": "La Rioja",
-      "country": "spain",
-      "country_code": "ES"
-    }
-  ]
-}
-```
+- `GET /api/wines`
+  - paginated wine listing with filters
+- `POST /api/wines`
+  - create wine
+- `POST /api/wines/draft-from-ai`
+  - create AI-assisted wine draft from uploaded files
+- `GET /api/wines/{id}`
+  - fetch wine details
+- `PUT /api/wines/{id}`
+  - update wine
+- `DELETE /api/wines/{id}`
+  - delete wine
+- `POST /api/wines/{id}/photos`
+  - upload or replace wine photos
 
----
-
-### `GET /api/wines`
-
-Paginated wine listing with filters.
-
-Query params:
-
-- `page` default `1`
-- `limit` default `20` (max `100`)
-- `search` search in wine name, winery, DO name, region
-- `wine_type` one of: `red|white|rose|sparkling|sweet|fortified`
-- `country` one of country enum values
-- `do_id` region/DO id
-- `grape_id` grape id
-- `score_min` integer `0..100`
-- `score_max` integer `0..100`
-- `score_bucket` one of: `any|lt70|70_80|80_90|90_plus`
-- `sort_by` one of: `created_at|updated_at|name|vintage_year|score`
-- `sort_dir` one of: `asc|desc`
-
-Example 1 (default list):
+AI draft example:
 
 ```bash
-curl -s "http://localhost:8080/api/wines" | jq
+curl -s -b cookies.txt -X POST http://localhost:8080/api/wines/draft-from-ai \
+  -F 'wine_image=@/path/to/front.jpg' \
+  -F 'back_label_image=@/path/to/back.jpg' \
+  -F 'ticket_image=@/path/to/ticket.jpg' \
+  -F 'notes=Manual notes' | jq
 ```
 
-Example 2 (search + country + pagination):
+Wine photo example:
 
 ```bash
-curl -s "http://localhost:8080/api/wines?search=rioja&country=spain&page=2&limit=10" | jq
-```
-
-Example 3 (advanced filters from dashboard):
-
-```bash
-curl -s "http://localhost:8080/api/wines?wine_type=red&do_id=2&grape_id=5&score_bucket=90_plus&sort_by=score&sort_dir=desc" | jq
-```
-
-Example response shape:
-
-```json
-{
-  "items": [
-    {
-      "id": 42,
-      "name": "Vina del Sol",
-      "winery": "Bodega La Sierra",
-      "wine_type": "red",
-      "country": "spain",
-      "do": { "id": 2, "name": "Rioja" },
-      "vintage_year": 2020,
-      "avg_score": 91.5,
-      "updated_at": "2026-03-01T10:00:00+00:00"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total_items": 1,
-    "total_pages": 1,
-    "has_next": false,
-    "has_prev": false
-  }
-}
-```
-
----
-
-### `POST /api/wines`
-
-Creates a wine with optional grapes, purchases, and awards.
-`purchases[].place.map_data` is optional and accepts coordinates `{ "lat": number, "lng": number }`.
-
-Example 1 (minimum):
-
-```bash
-curl -s -X POST http://localhost:8080/api/wines \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Mencia 2023"}' | jq
-```
-
-Example 2 (full payload):
-
-```bash
-curl -s -X POST http://localhost:8080/api/wines \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "name":"Gran Reserva Demo",
-    "winery":"Bodega Demo",
-    "wine_type":"red",
-    "do_id":1,
-    "country":"spain",
-    "aging_type":"reserve",
-    "vintage_year":2020,
-    "alcohol_percentage":14.5,
-    "grapes":[{"grape_id":1,"percentage":85},{"grape_id":2,"percentage":15}],
-    "purchases":[{
-      "place":{
-        "place_type":"restaurant",
-        "name":"Casa Paco",
-        "address":"Calle A",
-        "city":"Madrid",
-        "country":"spain",
-        "map_data":{"lat":40.4167,"lng":-3.70325}
-      },
-      "price_paid":"25.00",
-      "purchased_at":"2026-03-01T10:00:00Z"
-    }],
-    "awards":[{"name":"parker","score":93.5,"year":2025}]
-  }' | jq
-```
-
----
-
-### `GET /api/wines/{id}`
-
-Returns full wine details including grapes, purchases, awards, photos, and reviews.
-Each purchase place can include `map_data`:
-
-```json
-{
-  "place": {
-    "id": 11,
-    "place_type": "restaurant",
-    "name": "Casa Paco",
-    "address": "Calle A",
-    "city": "Madrid",
-    "country": "spain",
-    "map_data": { "lat": 40.4167, "lng": -3.70325 }
-  }
-}
-```
-
-Example 1 (existing wine):
-
-```bash
-curl -s http://localhost:8080/api/wines/1 | jq
-```
-
-Example 2 (not found):
-
-```bash
-curl -s http://localhost:8080/api/wines/999999 | jq
-```
-
----
-
-### `PUT /api/wines/{id}`
-
-Partial update. Only send fields to change.
-`purchases[].place.map_data` is also supported in updates.
-
-Example 1 (simple name update):
-
-```bash
-curl -i -X PUT http://localhost:8080/api/wines/1 \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Updated Name"}'
-```
-
-Example 2 (update multiple fields):
-
-```bash
-curl -i -X PUT http://localhost:8080/api/wines/1 \
-  -H 'Content-Type: application/json' \
-  -d '{"wine_type":"white","vintage_year":2022,"alcohol_percentage":13.0}'
-```
-
-Example 3 (update purchase with coordinates):
-
-```bash
-curl -i -X PUT http://localhost:8080/api/wines/1 \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "purchases": [{
-      "place": {
-        "place_type": "restaurant",
-        "name": "Casa Paco",
-        "address": "Calle A",
-        "city": "Madrid",
-        "country": "spain",
-        "map_data": { "lat": 40.4167, "lng": -3.70325 }
-      },
-      "price_paid": "25.00",
-      "purchased_at": "2026-03-01T10:00:00Z"
-    }]
-  }'
-```
-
----
-
-### `DELETE /api/wines/{id}`
-
-Deletes a wine.
-
-Example 1 (existing):
-
-```bash
-curl -i -X DELETE http://localhost:8080/api/wines/1
-```
-
-Example 2 (not found):
-
-```bash
-curl -s -X DELETE http://localhost:8080/api/wines/999999 | jq
-```
-
----
-
-### `POST /api/wines/{id}/photos`
-
-Uploads/replaces photo by type (`front_label`, `back_label`, `bottle`).
-
-Notes:
-- Uploaded file must use an image extension: `jpg`, `jpeg`, `png`, `webp`, `gif`, `avif`.
-
-Example 1:
-
-```bash
-curl -s -X POST http://localhost:8080/api/wines/1/photos \
+curl -s -b cookies.txt -X POST http://localhost:8080/api/wines/1/photos \
   -F 'type=front_label' \
   -F 'file=@/path/to/front.jpg' | jq
 ```
 
-Example 2 (replace same type):
+## Recommendation
 
-```bash
-curl -s -X POST http://localhost:8080/api/wines/1/photos \
-  -F 'type=front_label' \
-  -F 'file=@/path/to/new-front.jpg' | jq
-```
+Use this file for quick orientation, but rely on:
+- `docs/api/openapi.yaml` for request/response shapes
+- controller tests in `apps/api/tests/Unit/Adapters/In/Http/`
+- use case tests in `apps/api/tests/Unit/Application/UseCases/`
 
----
-
-## Guide Endpoint
-
-### `GET /guide.md`
-
-Returns this Markdown guide.
-
-```bash
-curl -s http://localhost:8080/guide.md
-```
