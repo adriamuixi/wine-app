@@ -3165,7 +3165,16 @@ function HomePage() {
     [myReviewEntries],
   )
   const creatableWineItems = useMemo(
-    () => wineItems.filter((wine) => !reviewedWineIdSet.has(wine.id)),
+    () => wineItems
+      .filter((wine) => !reviewedWineIdSet.has(wine.id))
+      .sort((left, right) => {
+        const byName = left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })
+        if (byName !== 0) {
+          return byName
+        }
+
+        return left.winery.localeCompare(right.winery, undefined, { sensitivity: 'base' })
+      }),
     [wineItems, reviewedWineIdSet],
   )
 

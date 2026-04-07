@@ -813,6 +813,7 @@ export function WineFormPanel({
                 <input
                   name="purchased_at"
                   type="date"
+                  lang="en-GB"
                   defaultValue={primaryEditPurchase?.purchased_at?.slice(0, 10) ?? createDraft?.purchase.purchased_at?.slice(0, 10) ?? currentDateInput}
                   required
                 />
