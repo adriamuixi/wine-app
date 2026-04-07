@@ -14,14 +14,21 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: apps/api/vendor
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('apps/api/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.4-composer-
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: composer install --no-interaction --prefer-dist
       - name: Run API unit tests
         working-directory: apps/api
-        run: |
-          if [ -f vendor/bin/phpunit ]; then
-            php vendor/bin/phpunit --testsuite Unit
-          else
-            echo "Skipping phpunit because vendor is not installed in CI image"
-          fi
+        run: php vendor/bin/phpunit --testsuite Unit
 
   web-checks:
     runs-on: ubuntu-latest
@@ -33,9 +40,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install deps
+          cache: npm
+      - name: Install workspace dependencies
         run: npm ci
-        working-directory: apps/${{ matrix.app }}
       - name: Lint
         run: npm run lint
         working-directory: apps/${{ matrix.app }}
@@ -50,15 +57,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install web-public deps for TypeScript binary reuse
+          cache: npm
+      - name: Install workspace dependencies
         run: npm ci
-        working-directory: apps/web-public
       - name: Package type checks
         run: npm run packages:check
-      - name: API client type checks
-        run: npm run api-client:check
-      - name: Mobile typecheck (placeholder until deps are installed in workspace root)
-        run: |
-          if [ -f apps/mobile/package.json ]; then
-            echo "Mobile package detected. Install + typecheck handled in dedicated mobile workflow."
-          fi
+      - name: Mobile lint
+        run: npm run mobile:lint
+      - name: Mobile typecheck
+        run: npm run mobile:typecheck
+      - name: Mobile tests
+        run: npm run mobile:test

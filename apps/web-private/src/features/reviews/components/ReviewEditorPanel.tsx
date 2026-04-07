@@ -64,7 +64,7 @@ export function ReviewEditorPanel({
       return `${year}-${month}-${day}`
     }
 
-    const displayMatch = trimmed.match(/^(\d{1,2})\s*[\/.-]\s*(\d{1,2})\s*[\/.-]\s*(\d{4})$/)
+    const displayMatch = trimmed.match(/^(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{4})$/)
     if (displayMatch) {
       const day = displayMatch[1].padStart(2, '0')
       const month = displayMatch[2].padStart(2, '0')

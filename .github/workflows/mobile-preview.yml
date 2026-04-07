@@ -18,9 +18,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install mobile dependencies
-        run: npm install
-        working-directory: apps/mobile
+          cache: npm
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Mobile sanity checks
+        run: |
+          npm run mobile:lint
+          npm run mobile:typecheck
       - name: Setup EAS CLI
         run: npm install -g eas-cli
       - name: EAS preview build (non-blocking placeholder)

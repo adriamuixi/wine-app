@@ -12,8 +12,8 @@
     }
   },
   "scripts": {
-    "build": "node ../../apps/web-public/node_modules/typescript/bin/tsc -p tsconfig.json",
-    "check": "node ../../apps/web-public/node_modules/typescript/bin/tsc -p tsconfig.json --noEmit"
+    "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "check": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@wine-app/domain-types": "0.1.0"

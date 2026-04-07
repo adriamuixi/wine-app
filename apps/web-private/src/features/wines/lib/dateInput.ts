@@ -34,7 +34,7 @@ export function parseDateInputToIso(value: string): string | null {
     return isValidDateParts(year, month, day) ? `${isoYear}-${isoMonth}-${isoDay}` : null
   }
 
-  const displayMatch = trimmed.match(/^(\d{1,2})\s*[\/.-]\s*(\d{1,2})\s*[\/.-]\s*(\d{4})$/)
+  const displayMatch = trimmed.match(/^(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{4})$/)
   if (!displayMatch) {
     return null
   }

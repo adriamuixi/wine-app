@@ -3204,7 +3204,7 @@ function HomePage() {
     setShowMobileMenu(false)
   }
 
-  const useWineAiDraftInCreateForm = (draft: WineAiDraft) => {
+  const applyWineAiDraftToCreateForm = (draft: WineAiDraft) => {
     const matchedGrapeRows = draft.grapes.filter((grape) => grape.grape_id != null).map((grape, index) => ({
       id: Date.now() + index,
       grapeId: String(grape.grape_id),
@@ -4650,7 +4650,7 @@ function HomePage() {
             t={t}
             draft={wineAiDraft}
             onBack={() => setMenu('wineAiCreate')}
-            onUseDraft={() => useWineAiDraftInCreateForm(wineAiDraft)}
+            onUseDraft={() => applyWineAiDraftToCreateForm(wineAiDraft)}
           />
         ) : null}
 
