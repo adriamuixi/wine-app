@@ -303,22 +303,17 @@ async function fetchGeoapifySuggestions({
   query,
   apiKey,
   signal,
-  mode,
 }: {
   query: string
   apiKey: string
   signal: AbortSignal
-  mode: 'mixed' | 'street'
 }): Promise<GeoapifyFeature[]> {
   const params = new URLSearchParams({
     text: query,
     limit: '5',
     apiKey,
+    type: 'street',
   })
-
-  if (mode === 'street') {
-    params.set('type', 'street')
-  }
 
   const response = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`, {
     method: 'GET',
@@ -460,21 +455,11 @@ export function WineFormPanel({
       setIsAddressSuggestionsLoading(true)
 
       try {
-        let features = await fetchGeoapifySuggestions({
+        const features = await fetchGeoapifySuggestions({
           query: normalizedQuery,
           apiKey: geoapifyApiKey,
           signal: abortController.signal,
-          mode: 'mixed',
         })
-
-        if (features.length === 0) {
-          features = await fetchGeoapifySuggestions({
-            query: normalizedQuery,
-            apiKey: geoapifyApiKey,
-            signal: abortController.signal,
-            mode: 'street',
-          })
-        }
 
         setAddressSuggestions(features)
         setIsAddressSuggestionsOpen(features.length > 0)
@@ -508,15 +493,11 @@ export function WineFormPanel({
 
   function applyGeoapifySuggestion(feature: GeoapifyFeature) {
     const properties = feature.properties
-    const nextPlaceName = toPlaceNameValueFromGeoapify(properties)
     const nextAddress = toAddressValueFromGeoapify(properties)
     const nextCity = toCityValueFromGeoapify(properties)
     const nextCountry = toCountryValueFromGeoapify(properties)
     const coordinates = toCoordinateValuesFromGeoapify(feature)
 
-    if (placeNameInputRef.current && nextPlaceName.length > 0) {
-      placeNameInputRef.current.value = nextPlaceName
-    }
     if (addressInputRef.current) {
       addressInputRef.current.value = nextAddress
     }
