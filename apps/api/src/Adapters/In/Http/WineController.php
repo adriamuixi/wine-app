@@ -182,6 +182,7 @@ final class WineController
                                 'name' => $award->name,
                                 'score' => $award->score,
                                 'year' => $award->year,
+                                'value' => $award->value,
                             ],
                             $item->awards,
                         ),
@@ -859,7 +860,38 @@ final class WineController
                 throw new CreateWineValidationException(sprintf('awards[%d].year must be an integer.', $index));
             }
 
-            $result[] = new CreateWineAwardInput($name, null === $score ? null : (string) $score, $year);
+            $valueRaw = $item['value'] ?? null;
+            if (null !== $valueRaw && !is_string($valueRaw)) {
+                throw new CreateWineValidationException(sprintf('awards[%d].value must be a string.', $index));
+            }
+
+            $valueNormalized = null === $valueRaw ? null : strtolower(trim($valueRaw));
+
+            if ($name === AwardName::Decanter) {
+                if (null !== $score) {
+                    throw new CreateWineValidationException(sprintf('awards[%d].score must be null for decanter.', $index));
+                }
+
+                if (null !== $year) {
+                    throw new CreateWineValidationException(sprintf('awards[%d].year must be null for decanter.', $index));
+                }
+
+                if (null !== $valueNormalized && !in_array($valueNormalized, ['gold', 'silver', 'bronze', 'platinum'], true)) {
+                    throw new CreateWineValidationException(sprintf('awards[%d].value must be one of gold, silver, bronze, platinum.', $index));
+                }
+            } elseif ($name === AwardName::WineSpectator) {
+                if (null !== $score) {
+                    throw new CreateWineValidationException(sprintf('awards[%d].score must be null for wine_spectator.', $index));
+                }
+
+                if (null !== $valueNormalized) {
+                    throw new CreateWineValidationException(sprintf('awards[%d].value must be null for wine_spectator.', $index));
+                }
+            } elseif (null !== $valueNormalized) {
+                throw new CreateWineValidationException(sprintf('awards[%d].value is only supported for decanter.', $index));
+            }
+
+            $result[] = new CreateWineAwardInput($name, null === $score ? null : (string) $score, $year, $valueNormalized);
         }
 
         return $result;
@@ -880,7 +912,7 @@ final class WineController
      *     updated_at:string,
      *     grapes:list<array{id:int,name:string,color:string,percentage:?float}>,
      *     purchases:list<array{id:int,place:array{id:int,place_type:string,name:string,address:?string,city:?string,country:string,map_data:?array{lat:float,lng:float}},price_paid:float,purchased_at:string}>,
-     *     awards:list<array{id:int,name:string,score:?float,year:?int}>,
+     *     awards:list<array{id:int,name:string,score:?float,year:?int,value:?string}>,
      *     photos:list<array{id:int,type:?string,url:string,hash:string,size:int,extension:string}>,
      *     reviews:list<array{id:int,user:array{id:int,name:string,lastname:string},score:?int,aroma:int,appearance:int,palate_entry:int,body:int,persistence:int,bullets:list<string>,created_at:string}>
      * }
@@ -931,6 +963,7 @@ final class WineController
                     'name' => $award->name->value,
                     'score' => $award->scoreAsFloat(),
                     'year' => $award->year,
+                    'value' => $award->value,
                 ],
                 $wine->awards,
             ),

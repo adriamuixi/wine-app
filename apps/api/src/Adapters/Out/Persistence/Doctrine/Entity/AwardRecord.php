@@ -30,4 +30,7 @@ class AwardRecord
 
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $year = null;
+
+    #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
+    private ?string $value = null;
 }

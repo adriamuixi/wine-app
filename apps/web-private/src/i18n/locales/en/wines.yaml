@@ -124,8 +124,14 @@ ui:
   latitude: Latitude
   longitude: Longitude
   awards: Awards
+  award_value: Value
   score: Score
   year: Year
+  select_medal: Select medal
+  decanter_gold: Gold
+  decanter_silver: Silver
+  decanter_bronze: Bronze
+  decanter_platinum: Platinum
   delete_award: Delete award
   add_award: Add award
   loading_data_wine: Loading data wine

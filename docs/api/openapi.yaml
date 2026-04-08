@@ -1528,6 +1528,11 @@ components:
     CreateWineAwardInput:
       type: object
       required: [name]
+      description: |
+        Award rules by type:
+        - `decanter`: uses `value` only (`gold|silver|bronze|platinum`), with `score` and `year` set to null.
+        - `wine_spectator`: uses `year` only, with `score` and `value` set to null.
+        - other awards: may use `score` and/or `year`, with `value` set to null.
       properties:
         name:
           type: string
@@ -1539,11 +1544,17 @@ components:
           minimum: 0
           maximum: 100
           example: 92.5
+          nullable: true
         year:
           type: integer
           minimum: 1800
           maximum: 2200
           example: 2025
+          nullable: true
+        value:
+          type: string
+          nullable: true
+          enum: [gold, silver, bronze, platinum]
     CreateWineRequest:
       type: object
       required: [name]
@@ -1756,7 +1767,12 @@ components:
           type: boolean
     WineAiDraftAward:
       type: object
-      required: [name, score, year]
+      required: [name, score, year, value]
+      description: |
+        Award draft rules by type:
+        - `decanter`: uses `value` only (`gold|silver|bronze|platinum`), with `score` and `year` set to null.
+        - `wine_spectator`: uses `year` only, with `score` and `value` set to null.
+        - other awards: may use `score` and/or `year`, with `value` set to null.
       properties:
         name:
           type: string
@@ -1768,6 +1784,10 @@ components:
         year:
           type: integer
           nullable: true
+        value:
+          type: string
+          nullable: true
+          enum: [gold, silver, bronze, platinum]
     WineAiDraft:
       type: object
       required: [wine, purchase, grapes, awards, field_metadata, warnings, missing_required_fields, research_summary]
@@ -2048,7 +2068,12 @@ components:
           format: date-time
     WineDetailAward:
       type: object
-      required: [id, name, score, year]
+      required: [id, name, score, year, value]
+      description: |
+        Award rules by type:
+        - `decanter`: uses `value` only (`gold|silver|bronze|platinum`), with `score` and `year` set to null.
+        - `wine_spectator`: uses `year` only, with `score` and `value` set to null.
+        - other awards: may use `score` and/or `year`, with `value` set to null.
       properties:
         id:
           type: integer
@@ -2063,6 +2088,10 @@ components:
         year:
           type: integer
           nullable: true
+        value:
+          type: string
+          nullable: true
+          enum: [gold, silver, bronze, platinum]
     WineDetailPhoto:
       type: object
       required: [id, type, url, hash, size, extension]
@@ -2248,7 +2277,12 @@ components:
           nullable: true
     WineListAward:
       type: object
-      required: [name, score, year]
+      required: [name, score, year, value]
+      description: |
+        Award rules by type:
+        - `decanter`: uses `value` only (`gold|silver|bronze|platinum`), with `score` and `year` set to null.
+        - `wine_spectator`: uses `year` only, with `score` and `value` set to null.
+        - other awards: may use `score` and/or `year`, with `value` set to null.
       properties:
         name:
           type: string
@@ -2260,6 +2294,10 @@ components:
         year:
           type: integer
           nullable: true
+        value:
+          type: string
+          nullable: true
+          enum: [gold, silver, bronze, platinum]
     WineListReview:
       type: object
       required: [user_id, name, lastname, created_at, score]

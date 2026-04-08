@@ -108,12 +108,13 @@ SQL,
 
                 foreach ($command->awards as $award) {
                     $connection->executeStatement(
-                        'INSERT INTO wine_award (wine_id, name, score, year) VALUES (:wine_id, :name, :score, :year)',
+                        'INSERT INTO wine_award (wine_id, name, score, year, value) VALUES (:wine_id, :name, :score, :year, :value)',
                         [
                             'wine_id' => $wineId,
                             'name' => $award->name->value,
                             'score' => $award->score,
                             'year' => $award->year,
+                            'value' => $award->value,
                         ],
                     );
                 }
@@ -251,12 +252,13 @@ SQL,
 
                     foreach ($command->awards as $award) {
                         $connection->executeStatement(
-                            'INSERT INTO wine_award (wine_id, name, score, year) VALUES (:wine_id, :name, :score, :year)',
+                            'INSERT INTO wine_award (wine_id, name, score, year, value) VALUES (:wine_id, :name, :score, :year, :value)',
                             [
                                 'wine_id' => $command->wineId,
                                 'name' => $award->name->value,
                                 'score' => $award->score,
                                 'year' => $award->year,
+                                'value' => $award->value,
                             ],
                         );
                     }
@@ -437,10 +439,11 @@ SQL,
                 score: null === $row['score'] ? null : (string) $row['score'],
                 year: null === $row['year'] ? null : (int) $row['year'],
                 id: (int) $row['id'],
+                value: null === $row['value'] ? null : (string) $row['value'],
             ),
             $connection->fetchAllAssociative(
                 <<<'SQL'
-SELECT id, name, score, year
+SELECT id, name, score, year, value
 FROM wine_award
 WHERE wine_id = :wine_id
 ORDER BY year DESC NULLS LAST, id ASC
@@ -672,7 +675,7 @@ SQL,
 
             $awardRows = $connection->fetchAllAssociative(
                 <<<'SQL'
-SELECT wine_id, name, score, year
+SELECT wine_id, name, score, year, value
 FROM wine_award
 WHERE wine_id IN (:wine_ids)
 ORDER BY wine_id ASC, year DESC NULLS LAST, id ASC
@@ -691,6 +694,7 @@ SQL,
                     name: (string) $row['name'],
                     score: null === $row['score'] ? null : (float) $row['score'],
                     year: null === $row['year'] ? null : (int) $row['year'],
+                    value: null === $row['value'] ? null : (string) $row['value'],
                 );
             }
 

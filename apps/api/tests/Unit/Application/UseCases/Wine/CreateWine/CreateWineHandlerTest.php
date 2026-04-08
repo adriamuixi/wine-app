@@ -95,6 +95,26 @@ final class CreateWineHandlerTest extends TestCase
         $handler->handle($this->command(name: '   '));
     }
 
+    public function testItAcceptsDecanterMedalValue(): void
+    {
+        $wineRepository = new SpyWineRepository();
+        $handler = new CreateWineHandler(
+            $wineRepository,
+            new InMemoryDesignationOfOriginRepository(),
+            new InMemoryGrapeRepository(),
+        );
+
+        $result = $handler->handle($this->command(
+            awards: [new CreateWineAwardInput(AwardName::Decanter, null, null, 'gold')],
+        ));
+
+        self::assertSame(101, $result->id);
+        self::assertCount(1, $wineRepository->lastCommand?->awards ?? []);
+        self::assertSame('gold', $wineRepository->lastCommand?->awards[0]->value);
+        self::assertNull($wineRepository->lastCommand?->awards[0]->score);
+        self::assertNull($wineRepository->lastCommand?->awards[0]->year);
+    }
+
     public function testItRejectsMissingGrapeIds(): void
     {
         $handler = new CreateWineHandler(

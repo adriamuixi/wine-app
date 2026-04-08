@@ -320,24 +320,26 @@ final class WineControllerWebTest extends WebTestCase
         $client->jsonRequest('PUT', sprintf('/api/wines/%d', $wineId), [
             'name' => 'Update Award Wine v2',
             'awards' => [
-                ['name' => 'decanter', 'score' => 95.0, 'year' => 2026],
-                ['name' => 'james_suckling', 'score' => null, 'year' => null],
+                ['name' => 'decanter', 'score' => null, 'year' => null, 'value' => 'gold'],
+                ['name' => 'wine_spectator', 'score' => null, 'year' => 2025, 'value' => null],
             ],
         ]);
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 
-        /** @var list<array{name:string,score:?string,year:?int}> $rows */
+        /** @var list<array{name:string,score:?string,year:?int,value:?string}> $rows */
         $rows = $this->connection->fetchAllAssociative(
-            'SELECT name, score::text AS score, year FROM wine_award WHERE wine_id = :wine_id ORDER BY id ASC',
+            'SELECT name, score::text AS score, year, value FROM wine_award WHERE wine_id = :wine_id ORDER BY id ASC',
             ['wine_id' => $wineId],
         );
         self::assertCount(2, $rows);
         self::assertSame('decanter', $rows[0]['name']);
-        self::assertSame('95.00', $rows[0]['score']);
-        self::assertSame(2026, $rows[0]['year']);
-        self::assertSame('james_suckling', $rows[1]['name']);
+        self::assertNull($rows[0]['score']);
+        self::assertNull($rows[0]['year']);
+        self::assertSame('gold', $rows[0]['value']);
+        self::assertSame('wine_spectator', $rows[1]['name']);
         self::assertNull($rows[1]['score']);
-        self::assertNull($rows[1]['year']);
+        self::assertSame(2025, $rows[1]['year']);
+        self::assertNull($rows[1]['value']);
 
         $client->jsonRequest('PUT', sprintf('/api/wines/%d', $wineId), [
             'awards' => [],

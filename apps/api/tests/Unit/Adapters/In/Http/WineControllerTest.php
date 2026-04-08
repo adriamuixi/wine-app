@@ -482,7 +482,7 @@ final class WineControllerTest extends TestCase
                 'name' => 'Updated Name',
                 'awards' => [
                     ['name' => 'parker', 'score' => 96.5, 'year' => 2026],
-                    ['name' => 'decanter', 'score' => null, 'year' => null],
+                    ['name' => 'decanter', 'score' => null, 'year' => null, 'value' => 'gold'],
                 ],
             ], JSON_THROW_ON_ERROR),
         );
@@ -498,6 +498,54 @@ final class WineControllerTest extends TestCase
         self::assertSame(AwardName::Decanter, SpyWineRepository::$lastUpdateCommand->awards[1]->name);
         self::assertNull(SpyWineRepository::$lastUpdateCommand->awards[1]->score);
         self::assertNull(SpyWineRepository::$lastUpdateCommand->awards[1]->year);
+        self::assertSame('gold', SpyWineRepository::$lastUpdateCommand->awards[1]->value);
+    }
+
+    public function testUpdatePersistsWineSpectatorYearOnlyInCommand(): void
+    {
+        $controller = $this->controller(updatableWineIds: [20]);
+        $request = Request::create(
+            '/api/wines/20',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Updated Name',
+                'awards' => [
+                    ['name' => 'wine_spectator', 'score' => null, 'year' => 2025, 'value' => null],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(20, $request);
+
+        self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+        self::assertNotNull(SpyWineRepository::$lastUpdateCommand);
+        self::assertCount(1, SpyWineRepository::$lastUpdateCommand->awards);
+        self::assertSame(AwardName::WineSpectator, SpyWineRepository::$lastUpdateCommand->awards[0]->name);
+        self::assertNull(SpyWineRepository::$lastUpdateCommand->awards[0]->score);
+        self::assertSame(2025, SpyWineRepository::$lastUpdateCommand->awards[0]->year);
+        self::assertNull(SpyWineRepository::$lastUpdateCommand->awards[0]->value);
+    }
+
+    public function testUpdateRejectsWineSpectatorScore(): void
+    {
+        $controller = $this->controller(updatableWineIds: [20]);
+        $request = Request::create(
+            '/api/wines/20',
+            'PUT',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'name' => 'Updated Name',
+                'awards' => [
+                    ['name' => 'wine_spectator', 'score' => 95, 'year' => 2025],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $response = $controller->update(20, $request);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertStringContainsString('awards[0].score must be null for wine_spectator.', (string) $response->getContent());
     }
 
     public function testUpdatePersistsPurchasesPayloadInCommand(): void
@@ -573,6 +621,7 @@ final class WineControllerTest extends TestCase
         self::assertSame('Tempranillo', $payload['wine']['grapes'][0]['name']);
         self::assertSame('front_label', $payload['wine']['photos'][0]['type']);
         self::assertSame('parker', $payload['wine']['awards'][0]['name']);
+        self::assertArrayHasKey('value', $payload['wine']['awards'][0]);
         self::assertSame('fruity', $payload['wine']['reviews'][0]['bullets'][0]);
         self::assertSame('Madrid', $payload['wine']['purchases'][0]['place']['city']);
         self::assertSame(['lat' => 40.4167, 'lng' => -3.70325], $payload['wine']['purchases'][0]['place']['map_data']);
@@ -700,7 +749,7 @@ final class SpyWineRepository implements WineRepository
                     10,
                 ),
             ],
-            awards: [new Award(AwardName::Parker, '93.5', 2025, 3)],
+            awards: [new Award(AwardName::Parker, '93.5', 2025, 3, null)],
             photos: [new WinePhoto(4, '/images/wines/77/front.jpg', WinePhotoType::FrontLabel, 'abc123', 12345, 'jpg')],
             reviews: [
                 new WineReview(
@@ -741,7 +790,7 @@ final class SpyWineRepository implements WineRepository
                     avgScore: 91.5,
                     updatedAt: '2026-03-01T09:00:00+00:00',
                     grapes: [new WineListItemGrapeView(2, 'Tempranillo', 'red', 90.0)],
-                    awards: [new WineListItemAwardView('parker', 93.5, 2025)],
+                    awards: [new WineListItemAwardView('parker', 93.5, 2025, null)],
                     photos: [
                         new WineListItemPhotoView('bottle', '/images/wines/1/bottle.jpg'),
                         new WineListItemPhotoView('front_label', null),

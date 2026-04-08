@@ -119,8 +119,14 @@ ui:
   address_place: Adreça del lloc
   city: Ciutat
   awards: Premis
+  award_value: Valor
   score: Puntuació
   year: Any
+  select_medal: Selecciona medalla
+  decanter_gold: Gold
+  decanter_silver: Silver
+  decanter_bronze: Bronze
+  decanter_platinum: Platinum
   delete_award: Eliminar premi
   add_award: Afegir premi
   loading_data_wine: Carregant dades del vi...

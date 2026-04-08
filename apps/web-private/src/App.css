@@ -2978,8 +2978,20 @@ code {
 }
 
 .wine-profile-award-icon {
-  font-size: 1rem;
-  line-height: 1;
+  width: 1.9rem;
+  height: 1.9rem;
+  object-fit: contain;
+  display: block;
+}
+
+.wine-profile-award-row {
+  align-items: center;
+}
+
+.wine-profile-award-row-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 .wine-profile-award-content {
@@ -4178,7 +4190,7 @@ code {
 
 .award-rows-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 130px 110px 44px;
+  grid-template-columns: minmax(0, 1fr) 132px 130px 110px 44px;
   gap: 0.5rem;
   color: #6b5a50;
   font-size: 0.78rem;
@@ -4194,7 +4206,7 @@ code {
 
 .award-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 130px 110px 44px;
+  grid-template-columns: minmax(0, 1fr) 132px 130px 110px 44px;
   gap: 0.5rem;
   align-items: center;
 }
@@ -7652,7 +7664,7 @@ body {
 
   .award-rows-head,
   .award-row {
-    grid-template-columns: minmax(0, 1fr) 94px 76px 40px;
+    grid-template-columns: minmax(0, 1fr) 92px 94px 76px 40px;
     gap: 0.35rem;
   }
 

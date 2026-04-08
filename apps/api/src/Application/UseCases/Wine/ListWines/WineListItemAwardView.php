@@ -10,6 +10,7 @@ final readonly class WineListItemAwardView
         public string $name,
         public ?float $score,
         public ?int $year,
+        public ?string $value = null,
     ) {
     }
 }

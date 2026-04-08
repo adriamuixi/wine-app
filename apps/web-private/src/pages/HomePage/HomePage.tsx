@@ -94,6 +94,7 @@ const DEFAULT_USER_PLACEHOLDER: AppUser = {
 const AGING_OPTIONS = ['young', 'crianza', 'reserve', 'grand_reserve'] as const
 const PLACE_TYPE_OPTIONS = ['restaurant', 'supermarket'] as const
 const AWARD_OPTIONS = ['decanter', 'penin', 'wine_spectator', 'parker', 'james_suckling', 'guia_proensa'] as const
+const DECANTER_VALUE_OPTIONS = ['platinum', 'gold', 'silver', 'bronze'] as const
 const REVIEW_TAG_OPTIONS = ['AFRUTADO', 'FLORAL', 'MINERAL', 'MADERA MARCADA', 'POTENTE'] as const
 const REVIEW_TAG_TO_ENUM: Record<(typeof REVIEW_TAG_OPTIONS)[number], WineDetailsApiReview['bullets'][number]> = {
   AFRUTADO: 'fruity',
@@ -581,6 +582,21 @@ function labelForAwardName(awardName: WineDetailsApiAward['name']): string {
   return map[awardName] ?? awardName
 }
 
+function labelForAwardValue(value: string | null, t: (key: string) => string): string {
+  if (value == null || value === '') {
+    return '-'
+  }
+
+  const map: Record<string, string> = {
+    platinum: t('ui.decanter_platinum'),
+    gold: t('ui.decanter_gold'),
+    silver: t('ui.decanter_silver'),
+    bronze: t('ui.decanter_bronze'),
+  }
+
+  return map[value] ?? value
+}
+
 function formatReviewTimelineLabel(monthKey: string, locale: string): string {
   if (!/^\d{4}-\d{2}$/.test(monthKey)) {
     return monthKey
@@ -800,7 +816,7 @@ function HomePage() {
   const addAwardRow = () => {
     setAwardRows((current) => [
       ...current,
-      { id: Date.now(), award: AWARD_OPTIONS[0], score: '', year: '' },
+      { id: Date.now(), award: AWARD_OPTIONS[0], value: '', score: '', year: '' },
     ])
   }
 
@@ -2121,6 +2137,7 @@ function HomePage() {
           payload.wine.awards.map((award, index) => ({
             id: index + 1,
             award: award.name,
+            value: award.value ?? '',
             score: award.score == null ? '' : String(award.score),
             year: award.year == null ? '' : String(award.year),
           })),
@@ -3177,6 +3194,7 @@ function HomePage() {
       draft.awards.map((award, index) => ({
         id: Date.now() + index,
         award: award.name,
+        value: award.value ?? '',
         score: award.score == null ? '' : String(award.score),
         year: award.year == null ? '' : String(award.year),
       })),
@@ -3685,12 +3703,16 @@ function HomePage() {
 
     const awards = awardRows
       .map((row) => {
+        const isDecanter = row.award.trim() === 'decanter'
+        const isWineSpectator = row.award.trim() === 'wine_spectator'
         const score = row.score.trim()
         const year = row.year.trim()
+        const value = row.value.trim()
         return {
           name: row.award.trim(),
-          score: score === '' ? null : Number(score),
-          year: year === '' ? null : Number.parseInt(year, 10),
+          value: isDecanter && value !== '' ? value : null,
+          score: isDecanter || isWineSpectator || score === '' ? null : Number(score),
+          year: isDecanter || year === '' ? null : Number.parseInt(year, 10),
         }
       })
       .filter((row) => row.name !== '' && (row.score === null || Number.isFinite(row.score)) && (row.year === null || Number.isInteger(row.year)))
@@ -4634,6 +4656,8 @@ function HomePage() {
             }))}
             placeTypeOptions={PLACE_TYPE_OPTIONS}
             awardOptions={AWARD_OPTIONS}
+            decanterAwardValues={DECANTER_VALUE_OPTIONS}
+            labelForAwardName={labelForAwardName}
             manufacturingCountry={manufacturingCountry}
             createDoCountryFilter={createDoCountryFilter}
             createDoSearchText={createDoSearchText}
@@ -4896,6 +4920,7 @@ function HomePage() {
             wineTypeLabel={(type) => wineTypeLabel(type)}
             labelForAgingType={labelForAgingType}
             labelForAwardName={labelForAwardName}
+            labelForAwardValue={(value) => labelForAwardValue(value, t)}
             medalToneFromHundred={medalToneFromHundred}
             wineryLabel={labels.wines.add.winery}
           />

@@ -95,8 +95,14 @@ export function WineAiDraftPreviewPanel({ t, draft, onBack, onUseDraft }: WineAi
             {draft.awards.length === 0 ? <p className="muted">-</p> : draft.awards.map((award) => (
               <div key={`${award.name}-${award.year ?? 'x'}`} className="ai-preview-field-row">
                 <strong className="ai-preview-field-label">{award.name}</strong>
-                <span className="ai-preview-field-value">{award.score == null ? '-' : String(award.score)}</span>
-                <span className="ai-preview-field-meta">{award.year ?? '-'}</span>
+                <span className="ai-preview-field-value">
+                  {award.name === 'decanter'
+                    ? (award.value ?? '-')
+                    : award.name === 'wine_spectator'
+                      ? (award.year ?? '-')
+                      : (award.score == null ? '-' : String(award.score))}
+                </span>
+                <span className="ai-preview-field-meta">{award.name === 'decanter' || award.name === 'wine_spectator' ? '-' : (award.year ?? '-')}</span>
               </div>
             ))}
           </div>

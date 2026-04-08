@@ -290,6 +290,7 @@ final readonly class GenerateWineDraftHandler
                 'name' => $name,
                 'score' => $this->normalizeFloat($item['score'] ?? null),
                 'year' => $this->normalizeInt($item['year'] ?? null),
+                'value' => $this->normalizeNullableString($item['value'] ?? null),
             ];
         }
 

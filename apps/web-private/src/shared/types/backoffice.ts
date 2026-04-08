@@ -322,6 +322,7 @@ export type WineDetailsApiAward = {
   name: string
   score: number | null
   year: number | null
+  value: string | null
 }
 
 export type WineDetailsApiPhoto = {
@@ -434,6 +435,7 @@ export type WineAiDraftAward = {
   name: 'decanter' | 'penin' | 'wine_spectator' | 'parker' | 'james_suckling' | 'guia_proensa'
   score: number | null
   year: number | null
+  value: string | null
 }
 
 export type WineAiDraft = {
@@ -485,6 +487,7 @@ export type GrapeBlendRow = {
 export type AwardRow = {
   id: number
   award: string
+  value: string
   score: string
   year: string
 }

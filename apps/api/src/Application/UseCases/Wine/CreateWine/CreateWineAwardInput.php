@@ -12,6 +12,7 @@ final readonly class CreateWineAwardInput
         public AwardName $name,
         public ?string $score,
         public ?int $year,
+        public ?string $value = null,
     ) {
     }
 }

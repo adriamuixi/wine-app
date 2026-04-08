@@ -37,8 +37,28 @@ type WineProfilePanelProps = {
   wineTypeLabel: (type: WineType) => string
   labelForAgingType: (value: WineDetailsApiWine['aging_type'], locale: Locale) => string
   labelForAwardName: (value: string) => string
+  labelForAwardValue: (value: string | null) => string
   medalToneFromHundred: (score: number | null) => string
   wineryLabel: string
+}
+
+function awardIconPath(name: string, value: string | null): string | null {
+  if (name === 'wine_spectator') {
+    return '/images/icons/awards/wine_spectator/logo.png'
+  }
+
+  if (name !== 'decanter' || value == null || value === '') {
+    return null
+  }
+
+  const map: Record<string, string> = {
+    platinum: '/images/icons/awards/decanter/decanter_platinum.png',
+    gold: '/images/icons/awards/decanter/decanter_gold.png',
+    silver: '/images/icons/awards/decanter/decanter_silver.png',
+    bronze: '/images/icons/awards/decanter/decanter_bronze.png',
+  }
+
+  return map[value] ?? null
 }
 
 export function WineProfilePanel({
@@ -62,6 +82,7 @@ export function WineProfilePanel({
   wineTypeLabel,
   labelForAgingType,
   labelForAwardName,
+  labelForAwardValue,
   medalToneFromHundred,
   wineryLabel,
 }: WineProfilePanelProps) {
@@ -267,9 +288,20 @@ export function WineProfilePanel({
               </h4>
               <div className="wine-profile-list-block">
                 {selectedWineSheetDetails.awards.length > 0 ? selectedWineSheetDetails.awards.map((award) => (
-                  <article key={award.id} className="wine-profile-list-row">
-                    <span>{labelForAwardName(award.name)}</span>
-                    <strong>{award.score != null ? `${award.score}/100` : '-'} · {award.year ?? '-'}</strong>
+                  <article key={award.id} className="wine-profile-list-row wine-profile-award-row">
+                    <span className="wine-profile-award-row-left">
+                      {awardIconPath(award.name, award.value) ? (
+                        <img className="wine-profile-award-icon" src={awardIconPath(award.name, award.value) ?? ''} alt="" aria-hidden="true" />
+                      ) : null}
+                      <span>{labelForAwardName(award.name)}</span>
+                    </span>
+                    <strong>
+                      {award.name === 'decanter'
+                        ? labelForAwardValue(award.value)
+                        : award.name === 'wine_spectator'
+                          ? (award.year ?? '-')
+                          : `${award.score != null ? `${award.score}/100` : '-'} · ${award.year ?? '-'}`}
+                    </strong>
                   </article>
                 )) : <p className="muted">{t('ui.without_awards_registered')}</p>}
               </div>

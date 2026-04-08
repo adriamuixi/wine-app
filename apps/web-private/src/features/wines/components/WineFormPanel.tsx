@@ -84,6 +84,8 @@ type WineFormPanelProps = {
   countryOptions: Array<{ value: Exclude<CountryFilterValue, 'all'>; label: string }>
   placeTypeOptions: readonly string[]
   awardOptions: readonly string[]
+  decanterAwardValues: readonly string[]
+  labelForAwardName: (value: string) => string
   manufacturingCountry: Exclude<CountryFilterValue, 'all'>
   createDoCountryFilter: CountryFilterValue
   createDoSearchText: string
@@ -345,6 +347,8 @@ export function WineFormPanel({
   countryOptions,
   placeTypeOptions,
   awardOptions,
+  decanterAwardValues,
+  labelForAwardName,
   manufacturingCountry,
   createDoCountryFilter,
   createDoSearchText,
@@ -889,27 +893,43 @@ export function WineFormPanel({
           <fieldset className="form-block">
             <legend>{t('ui.awards')}</legend>
             <div className="award-rows-scroll">
-              <div className="award-rows-head"><span>{t('ui.award_label')}</span><span>{t('ui.score')}</span><span>{t('ui.year')}</span><span aria-hidden="true" /></div>
+              <div className="award-rows-head"><span>{t('ui.award_label')}</span><span>{t('ui.award_value')}</span><span>{t('ui.score')}</span><span>{t('ui.year')}</span><span aria-hidden="true" /></div>
               <div className="award-rows-list">
-                {awardRows.map((row) => (
-                  <div key={row.id} className="award-row">
-                    <label className="sr-only" htmlFor={`award-name-${row.id}`}>{t('ui.award_label')}</label>
-                    <select id={`award-name-${row.id}`} value={row.award} onChange={(event) => updateAwardRow(row.id, { award: event.target.value })}>
-                      {awardOptions.map((award) => (
-                        <option key={award} value={award}>{award}</option>
-                      ))}
-                    </select>
-                    <label className="sr-only" htmlFor={`award-score-${row.id}`}>{t('ui.score')}</label>
-                    <input id={`award-score-${row.id}`} type="number" min="0" max="100" step="0.1" placeholder="92.0" value={row.score} onChange={(event) => updateAwardRow(row.id, { score: event.target.value })} />
-                    <label className="sr-only" htmlFor={`award-year-${row.id}`}>{t('ui.year')}</label>
-                    <input id={`award-year-${row.id}`} type="number" min="1900" max="2030" placeholder="2024" value={row.year} onChange={(event) => updateAwardRow(row.id, { year: event.target.value })} />
-                    <button type="button" className="icon-square-button" onClick={() => removeAwardRow(row.id)} aria-label={t('ui.delete_award')} title={t('ui.delete_award')}>
-                      <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
-                        <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2v8H7v-8Z" fill="currentColor" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
+                {awardRows.map((row) => {
+                  const isDecanter = row.award === 'decanter'
+                  const isWineSpectator = row.award === 'wine_spectator'
+
+                  return (
+                    <div key={row.id} className="award-row">
+                      <label className="sr-only" htmlFor={`award-name-${row.id}`}>{t('ui.award_label')}</label>
+                      <select id={`award-name-${row.id}`} value={row.award} onChange={(event) => updateAwardRow(row.id, { award: event.target.value })}>
+                        {awardOptions.map((award) => (
+                          <option key={award} value={award}>{labelForAwardName(award)}</option>
+                        ))}
+                      </select>
+                      <label className="sr-only" htmlFor={`award-value-${row.id}`}>{t('ui.award_value')}</label>
+                      {isDecanter ? (
+                        <select id={`award-value-${row.id}`} value={row.value} onChange={(event) => updateAwardRow(row.id, { value: event.target.value })}>
+                          <option value="">{t('ui.select_medal')}</option>
+                          {decanterAwardValues.map((value) => (
+                            <option key={value} value={value}>{t(`ui.decanter_${value}`)}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input id={`award-value-${row.id}`} type="text" value="" placeholder="-" disabled aria-disabled="true" />
+                      )}
+                      <label className="sr-only" htmlFor={`award-score-${row.id}`}>{t('ui.score')}</label>
+                      <input id={`award-score-${row.id}`} type="number" min="0" max="100" step="0.1" placeholder="92.0" value={row.score} disabled={isDecanter || isWineSpectator} onChange={(event) => updateAwardRow(row.id, { score: event.target.value })} />
+                      <label className="sr-only" htmlFor={`award-year-${row.id}`}>{t('ui.year')}</label>
+                      <input id={`award-year-${row.id}`} type="number" min="1900" max="2030" placeholder="2024" value={row.year} disabled={isDecanter} onChange={(event) => updateAwardRow(row.id, { year: event.target.value })} />
+                      <button type="button" className="icon-square-button" onClick={() => removeAwardRow(row.id)} aria-label={t('ui.delete_award')} title={t('ui.delete_award')}>
+                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                          <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 7h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2v8H7v-8Z" fill="currentColor" />
+                        </svg>
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
             <div className="award-rows-actions"><button type="button" className="secondary-button small" onClick={addAwardRow}>{t('ui.add_award')}</button></div>
