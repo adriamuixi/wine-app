@@ -622,8 +622,33 @@
     grid-template-columns: 1fr;
   }
 
+  .about-hero-panel .section-heading-with-icon {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .about-hero-panel .section-heading-icon {
+    width: 54px;
+    height: 54px;
+    min-height: 0;
+  }
+
+  .about-hero-panel .section-heading-copy {
+    gap: 0.12rem;
+  }
+
+  .about-hero-panel .section-title-label {
+    font-size: 1.65rem;
+    line-height: 1.04;
+  }
+
+  .about-hero-subtitle {
+    max-width: none;
+  }
+
   .about-hero-stat-strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+    gap: 0.42rem;
   }
 
   .about-team-grid {
