@@ -2,15 +2,17 @@ dashboard:
   title: Overview
   metrics:
     totalWines: Total wines
+    reviewedWines: Reviewed wines
     totalReviews: Total reviews
-    myReviews: My reviews
-    avgRed: Average red wines
-    avgWhite: Average white wines
+    reviewCoverage: Review coverage
+    avgScore: Average score
+    medianScore: Median score
     catalogHint: Catalog entries
+    reviewedHint: Wines with at least one review
     globalReviewsHint: Global platform reviews
-    myReviewsHint: Reviews written by me
-    avgRedHint: Average score for red wines
-    avgWhiteHint: Average score for white wines
+    coverageHint: Share of wines already reviewed
+    avgScoreHint: Global average of reviewed catalog
+    medianScoreHint: Global median of reviewed catalog
   search:
     eyebrow: Search wines
     title: Search with filters
@@ -26,65 +28,60 @@ dashboard:
     price: Price
     avg: Average
 ui:
-  not_have_could_load_indicators_general: Could not load indicators general
-  activity: Activity
-  pace_reviews_and_quality: Pace reviews and quality
+  not_have_could_load_indicators_general: Could not load coverage indicators
+  activity: ACTIVITY
+  pace_reviews_and_quality: Review pace and quality
   go_to_reviews: Go to reviews
-  chart_pace_reviews_and_score: Chart pace reviews and score
-  not_have_could_load_stats_chart: Could not load stats chart
-  bar_light_reviews: Bar light reviews
-  line_wine_median_score: Line wine median score
-  distribution: Distribution
-  quality_catalog: Quality catalog
-  not_has_could_load_distribution_score: Could not load distribution score
-  frequency: Frequency
-  comparison_reviews_web_vs_mine: Comparison reviews web vs mine
-  mine_label: Mine label
-  indicators: Indicators
-  wines_80: Wines 80
-  wines_65: Wines 65
-  dispersion_score: Dispersion score
-  average_price: Average price
-  index_quality_price: Index quality price
-  scores_average_by_type_wine: Scores average by type wine
-  award_vs_without_award: Award vs without award
-  without_award: Without award
-  stats_base_tasting: Stats base tasting
-  median_score: Median score
-  deviation_standard: Deviation standard
-  passed_7: Passed 7
-  score_max_min: Score max min
-  range_prices_tasted: Range prices tasted
-  price_vs_quality: Price vs quality
-  ratio_price_score: Ratio price score
-  scatter_price_and_score: Scatter price and score
-  slope_regression: Slope regression
-  price_sweet_estimated: Price sweet estimated
-  value_10_with_score_8: Value 10 with score 8
-  evolution_by_vintage: Evolution by vintage
-  average_by_vintage: Average by vintage
-  best_vintage: Best vintage
-  old_2018: Old 2018
-  recent_2019: Recent 2019
-  ranking_dos: Ranking DOs
-  do_most_consistent: Do most consistent
-  average_maria: Average maria
-  average_adria: Average adria
-  difference_average: Difference average
-  disagreements_2: Disagreements 2
-  index_sync: Index sync
-  rolling_average_10_wines: Rolling average 10 wines
-  average_rolling_10_wines: Average rolling 10 wines
-  restaurant_score_price: Restaurant score price
-  supermarket_score_price: Supermarket score price
-  without_awards_registered: Without awards registered
+  chart_pace_reviews_and_score: Review pace and score chart
+  not_have_could_load_stats_chart: Could not load activity chart
+  bar_light_reviews: 'Light bar: reviews'
+  line_wine_median_score: 'Wine line: median score'
+  last_month_reviews: Last month reviews
+  avg_reviews_per_month: Avg reviews per month
+  best_month: Best month
+  distribution: DISTRIBUTION
+  quality_catalog: Catalog quality
+  not_has_could_load_distribution_score: Could not load score distribution
+  indicators: INDICATORS
+  wines_80: Wines >= 80
+  deviation_standard: Standard deviation
+  passed_7: Passed (>7)
+  score_max_min: Max / min score
+  range_prices_tasted: Tasted price range
+  price_vs_quality: PRICE VS QUALITY
+  ratio_price_score: Price / score ratio
+  scatter_price_and_score: Price and score scatter
+  slope_regression: Regression slope
+  price_correlation: Price-score correlation
+  median_price_label: Median price
+  value_10_with_score_8: <10€ with >8 score
+  value_picks: Best buys
+  general: GENERAL
+  catalog_health: Catalog health
+  not_could_load_value_stats: Could not load value stats
+  wines_without_reviews: Wines without reviews
+  wines_without_photos: Wines without photos
+  wines_with_awards: Wines with awards
+  wines_without_awards: Wines without awards
+  photo_coverage: Photo coverage
+  grape_coverage: Grape coverage
+  do_logo_coverage: DO logo coverage
+  region_logo_coverage: Region logo coverage
+  do_map_coverage: DO map coverage
+  place_map_coverage: Place map coverage
+  not_could_load_catalog_health: Could not load catalog health
   comparison: COMPARISON
   maria_vs_adria: Maria vs Adrià
-  scatter_maria_versus_adria: Scatter Maria versus Adrià
+  scatter_maria_versus_adria: Maria vs Adrià scatter
   maria_axis: Maria
   adria_axis: Adrià
+  compared_wines: Compared wines
+  difference_average: Average difference
+  disagreements_10: Disagreements >= 10
+  disagreements_15: Disagreements >= 15
+  index_sync: Sync index
+  not_could_load_pair_agreement: Could not load pair agreement
+  reviews: Reviews
   median_score_series: Median score
-  web_label: Web
-  web_global_label: Web (global)
   score_label: Score
   range_label: Range

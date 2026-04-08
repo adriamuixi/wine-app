@@ -3,3 +3,7 @@ export function resolveApiBaseUrl(): string {
   const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
   return configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
 }
+
+export function resolveGoogleAnalyticsMeasurementId(): string {
+  return (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined)?.trim() ?? ''
+}

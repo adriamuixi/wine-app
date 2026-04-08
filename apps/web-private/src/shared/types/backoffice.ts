@@ -185,6 +185,107 @@ export type ScoringGenericStatsApiResponse = {
   }>
 }
 
+export type CoverageStatsApiResponse = {
+  total_wines: number
+  reviewed_wines: number
+  total_reviews: number
+  review_coverage_pct: number
+  avg_score: number
+  median_score: number
+  my_reviews: number
+  users_with_reviews: number
+}
+
+export type ActivityStatsApiResponse = {
+  months: string[]
+  review_counts: number[]
+  avg_scores: Array<number | null>
+  median_scores: Array<number | null>
+  summary: {
+    last_month_reviews: number
+    avg_reviews_per_month: number
+    best_month: {
+      month: string
+      reviews: number
+    } | null
+    last_active_month: string | null
+  }
+}
+
+export type ScoreDistributionStatsApiResponse = {
+  buckets: Array<{
+    label: '<60' | '60-69' | '70-79' | '80-89' | '90+'
+    count: number
+  }>
+  approved_70_pct: number
+  great_80_pct: number
+  min_score: number
+  max_score: number
+  std_dev: number
+}
+
+export type ValueStatsApiResponse = {
+  price_score_correlation: number
+  regression_slope: number
+  regression_intercept: number
+  median_price: number
+  min_price: number
+  max_price: number
+  price_bands: Array<{
+    label: string
+    wines: number
+    avg_score: number | null
+  }>
+  top_value_wines: Array<{
+    wine_id: number
+    name: string
+    do_name: string | null
+    price: number
+    avg_score: number
+    value_index: number
+  }>
+  under_10_high_score: {
+    count: number
+    pct: number
+    threshold: number
+  }
+}
+
+export type CatalogHealthStatsApiResponse = {
+  wines_without_reviews: number
+  wines_without_photos: number
+  wines_with_awards: number
+  wines_without_awards: number
+  photo_coverage_pct: number
+  grape_coverage_pct: number
+  review_coverage_pct: number
+  do_logo_coverage_pct: number
+  region_logo_coverage_pct: number
+  do_map_coverage_pct: number
+  places_with_map_pct: number
+}
+
+export type PairAgreementStatsApiResponse = {
+  pairs_count: number
+  avg_diff: number
+  diff_ge_10_pct: number
+  diff_ge_15_pct: number
+  sync_index: number
+  scatter_points: Array<{
+    wine_id: number
+    wine_name: string
+    do_name: string | null
+    user_a_score: number
+    user_b_score: number
+    diff: number
+  }>
+  by_do: Array<{
+    do_name: string | null
+    compared_wines: number
+    avg_diff: number
+  }>
+}
+
 export type ReviewTimelinePoint = {
   label: string
   reviews: number

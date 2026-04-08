@@ -2,18 +2,20 @@ dashboard:
   title: Visió general
   metrics:
     totalWines: Vins totals
+    reviewedWines: Vins amb ressenya
     totalReviews: Ressenyes totals
-    myReviews: Les meves ressenyes
-    avgRed: Mitjana vins negres
-    avgWhite: Mitjana vins blancs
+    reviewCoverage: Cobertura de ressenyes
+    avgScore: Nota mitjana
+    medianScore: Mediana
     catalogHint: Entrades al catàleg
+    reviewedHint: Vins amb almenys una ressenya
     globalReviewsHint: Ressenyes globals de la plataforma
-    myReviewsHint: Ressenyes escrites per mi
-    avgRedHint: Puntuació mitjana en vins negres
-    avgWhiteHint: Puntuació mitjana en vins blancs
+    coverageHint: Percentatge de vins ressenyats
+    avgScoreHint: Mitjana global del catàleg ressenyat
+    medianScoreHint: Mediana global del catàleg ressenyat
   search:
     eyebrow: Cercador de vins
-    title: Els nostres vins
+    title: Cercador amb filtres
     results: resultats
     search: Cercar
     country: País
@@ -26,7 +28,7 @@ dashboard:
     price: Preu
     avg: Mitjana
 ui:
-  not_have_could_load_indicators_general: No s’han pogut carregar els indicadors generals.
+  not_have_could_load_indicators_general: No s’han pogut carregar els indicadors de cobertura.
   activity: ACTIVITAT
   pace_reviews_and_quality: Ritme de ressenyes i qualitat
   go_to_reviews: Anar a ressenyes
@@ -34,24 +36,14 @@ ui:
   not_have_could_load_stats_chart: No s'han pogut carregar les estadístiques del gràfic.
   bar_light_reviews: 'Barra clara: ressenyes'
   line_wine_median_score: 'Línia vi: mediana de score'
+  last_month_reviews: Ressenyes últim mes
+  avg_reviews_per_month: Mitjana de ressenyes per mes
+  best_month: Millor mes
   distribution: DISTRIBUCIÓ
-  quality_catalog: Qualitat del celler
-  not_has_could_load_distribution_score: No s’ha pogut carregar la distribució de
-    score.
-  frequency: FREQÜÈNCIA
-  comparison_reviews_web_vs_mine: Comparativa de ressenyes web versus meves
-  mine_label: Les meves
+  quality_catalog: Qualitat del catàleg
+  not_has_could_load_distribution_score: No s’ha pogut carregar la distribució de score.
   indicators: INDICADORS
   wines_80: Vins >= 80
-  wines_65: Vins < 65
-  dispersion_score: Dispersió score
-  average_price: Preu mitjà
-  index_quality_price: Índex qualitat/preu
-  scores_average_by_type_wine: Notes mitjanes per tipus de vi
-  award_vs_without_award: Amb premi vs sense premi
-  without_award: Sense award
-  stats_base_tasting: Estadístiques base de tast
-  median_score: Mediana puntuació
   deviation_standard: Desviació estàndard
   passed_7: Aprovats (>7)
   score_max_min: Nota màx / mín
@@ -60,32 +52,36 @@ ui:
   ratio_price_score: Relació preu/puntuació
   scatter_price_and_score: Scatter de preu i puntuació
   slope_regression: Pendent regressió
-  price_sweet_estimated: Preu dolç estimat
+  price_correlation: Correlació preu-score
+  median_price_label: Preu median
   value_10_with_score_8: <10€ amb nota >8
-  evolution_by_vintage: Evolució per anyada
-  average_by_vintage: Mitjana per anyada
-  best_vintage: Millor anyada
-  old_2018: Antigues (<=2018)
-  recent_2019: Recents (>=2019)
-  ranking_dos: Rànquing de DOs
-  do_most_consistent: DO més regular
-  average_maria: Mitjana Maria
-  average_adria: Mitjana Adrià
-  difference_average: Diferència mitjana
-  disagreements_2: Desacords (>2)
-  index_sync: Índex sincronització
-  rolling_average_10_wines: Rolling average (10 vins)
-  average_rolling_10_wines: Mitjana mòbil de 10 vins
-  restaurant_score_price: 'Restaurant: nota/preu'
-  supermarket_score_price: 'Supermercat: nota/preu'
-  without_awards_registered: Sense premis registrats.
+  value_picks: Millors compres
+  general: GENERAL
+  catalog_health: Salut del catàleg
+  not_could_load_value_stats: No s'han pogut carregar les estadístiques de valor.
+  wines_without_reviews: Vins sense ressenya
+  wines_without_photos: Vins sense foto
+  wines_with_awards: Vins amb premis
+  wines_without_awards: Vins sense premis
+  photo_coverage: Cobertura de fotos
+  grape_coverage: Cobertura de raïms
+  do_logo_coverage: Cobertura logo DO
+  region_logo_coverage: Cobertura logo regió
+  do_map_coverage: Cobertura mapes DO
+  place_map_coverage: Cobertura mapes de llocs
+  not_could_load_catalog_health: No s'ha pogut carregar la salut del catàleg.
   comparison: COMPARATIVA
   maria_vs_adria: Maria vs Adrià
   scatter_maria_versus_adria: Scatter Maria versus Adrià
   maria_axis: Maria
   adria_axis: Adrià
+  compared_wines: Vins comparats
+  difference_average: Diferència mitjana
+  disagreements_10: Desacords >= 10
+  disagreements_15: Desacords >= 15
+  index_sync: Índex sincronització
+  not_could_load_pair_agreement: No s'ha pogut carregar la comparativa.
+  reviews: Ressenyes
   median_score_series: Mediana score
-  web_label: Web
-  web_global_label: Web (global)
   score_label: Score
   range_label: Franja

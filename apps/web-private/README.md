@@ -1,5 +1,9 @@
 # React + TypeScript + Vite
 
+## Google Analytics
+
+Set `VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX` to enable GA4 page tracking.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

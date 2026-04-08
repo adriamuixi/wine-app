@@ -38,13 +38,15 @@ import type {
   MyWineReviewEntry,
   ReviewFormPreset,
   ReviewItem,
-  ReviewTimelinePoint,
 } from '../../features/reviews'
 import type { AppUser, AuthApiResponse, MenuKey, ThemeMode } from '../../features/settings'
 import type {
-  GenericStatsApiResponse,
-  ReviewsPerMonthStatsApiResponse,
-  ScoringGenericStatsApiResponse,
+  ActivityStatsApiResponse,
+  CatalogHealthStatsApiResponse,
+  CoverageStatsApiResponse,
+  PairAgreementStatsApiResponse,
+  ScoreDistributionStatsApiResponse,
+  ValueStatsApiResponse,
 } from '../../features/dashboard'
 import type {
   AwardRow,
@@ -70,7 +72,7 @@ import type {
 } from '../../features/wines'
 import { resolveApiAssetUrl, resolveApiBaseUrl } from '../../shared/lib/env'
 import { localeToIntl } from '../../shared/lib/locale'
-import { averageScoreByType, clamp, createSeededRandom, linearRegression, median, standardDeviation } from '../../shared/lib/math'
+import { clamp } from '../../shared/lib/math'
 import { normalizeSearchText } from '../../shared/lib/text'
 import { isWorldCountryValue, toWorldCountryValue } from '../../shared/lib/worldCountries'
 
@@ -596,71 +598,6 @@ function formatReviewTimelineLabel(monthKey: string, locale: string): string {
   }).format(monthDate).replace('.', '')
 }
 
-function buildBiMonthlyReviewTimeline(
-  months: string[],
-  reviewCounts: number[],
-  medianScores: Array<number | null>,
-  locale: string,
-): ReviewTimelinePoint[] {
-  const grouped: ReviewTimelinePoint[] = []
-
-  for (let index = 0; index < months.length; index += 2) {
-    const firstMonth = months[index]
-    const secondMonth = months[index + 1] ?? null
-    const firstCount = reviewCounts[index] ?? 0
-    const secondCount = reviewCounts[index + 1] ?? 0
-    const firstMedian = medianScores[index] ?? null
-    const secondMedian = medianScores[index + 1] ?? null
-    const availableMedians = [firstMedian, secondMedian].filter((value): value is number => value != null)
-
-    const label = (() => {
-      if (secondMonth == null) {
-        return formatReviewTimelineLabel(firstMonth, locale)
-      }
-
-      const [firstYear, firstMonthNumber] = firstMonth.split('-')
-      const [secondYear, secondMonthNumber] = secondMonth.split('-')
-      const firstDate = new Date(`${firstMonth}-01T00:00:00Z`)
-      const secondDate = new Date(`${secondMonth}-01T00:00:00Z`)
-
-      if (
-        firstYear == null
-        || firstMonthNumber == null
-        || secondYear == null
-        || secondMonthNumber == null
-        || Number.isNaN(firstDate.getTime())
-        || Number.isNaN(secondDate.getTime())
-      ) {
-        return `${formatReviewTimelineLabel(firstMonth, locale)} · ${formatReviewTimelineLabel(secondMonth, locale)}`
-      }
-
-      const monthFormatter = new Intl.DateTimeFormat(localeToIntl(locale), {
-        month: 'short',
-        timeZone: 'UTC',
-      })
-      const firstMonthLabel = monthFormatter.format(firstDate).replace('.', '')
-      const secondMonthLabel = monthFormatter.format(secondDate).replace('.', '')
-      const connector = 'del'
-
-      if (firstYear === secondYear) {
-        return `${firstMonthLabel}-${secondMonthLabel} ${connector} ${firstYear}`
-      }
-
-      return `${firstMonthLabel} ${connector} ${firstYear} - ${secondMonthLabel} ${connector} ${secondYear}`
-    })()
-
-    grouped.push({
-      label,
-      reviews: firstCount + secondCount,
-      median: availableMedians.length === 0
-        ? null
-        : Math.round((availableMedians.reduce((sum, value) => sum + value, 0) / availableMedians.length) * 10) / 10,
-    })
-  }
-
-  return grouped
-}
-
 function HomePage() {
   const { labels, locale, setLocale, t } = useI18n()
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
@@ -699,7 +636,6 @@ function HomePage() {
   const [selectedReviewForEdit, setSelectedReviewForEdit] = useState<ReviewItem | null>(null)
   const [galleryModalVariant, setGalleryModalVariant] = useState<GalleryModalVariant>('full')
   const [activeGalleryImageKey, setActiveGalleryImageKey] = useState<(typeof SAMPLE_WINE_GALLERY)[number]['key']>('bottle')
-  const [dashboardSeed] = useState(() => Math.floor(Math.random() * 2_147_483_647))
   const [defaultSortPreference, setDefaultSortPreference] = useState<'score_desc' | 'recent' | 'price_asc'>('score_desc')
   const [defaultLandingPage, setDefaultLandingPage] = useState<'dashboard' | 'wines' | 'dos' | 'reviews'>('dashboard')
   const [showOnlySpainByDefault, setShowOnlySpainByDefault] = useState(true)
@@ -790,15 +726,24 @@ function HomePage() {
   const [doDeleteTarget, setDoDeleteTarget] = useState<DoApiItem | null>(null)
   const [doDeleteSubmitting, setDoDeleteSubmitting] = useState(false)
   const [doDeleteError, setDoDeleteError] = useState<string | null>(null)
-  const [genericStats, setGenericStats] = useState<GenericStatsApiResponse | null>(null)
-  const [genericStatsStatus, setGenericStatsStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
-  const [genericStatsError, setGenericStatsError] = useState<string | null>(null)
-  const [scoringGenericStats, setScoringGenericStats] = useState<ScoringGenericStatsApiResponse | null>(null)
-  const [scoringGenericStatsStatus, setScoringGenericStatsStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
-  const [scoringGenericStatsError, setScoringGenericStatsError] = useState<string | null>(null)
-  const [reviewsPerMonthStats, setReviewsPerMonthStats] = useState<ReviewsPerMonthStatsApiResponse | null>(null)
-  const [reviewsPerMonthStatus, setReviewsPerMonthStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
-  const [reviewsPerMonthError, setReviewsPerMonthError] = useState<string | null>(null)
+  const [coverageStats, setCoverageStats] = useState<CoverageStatsApiResponse | null>(null)
+  const [coverageStatus, setCoverageStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [coverageError, setCoverageError] = useState<string | null>(null)
+  const [activityStats, setActivityStats] = useState<ActivityStatsApiResponse | null>(null)
+  const [activityStatus, setActivityStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [activityError, setActivityError] = useState<string | null>(null)
+  const [scoreDistributionStats, setScoreDistributionStats] = useState<ScoreDistributionStatsApiResponse | null>(null)
+  const [scoreDistributionStatus, setScoreDistributionStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [scoreDistributionError, setScoreDistributionError] = useState<string | null>(null)
+  const [valueStats, setValueStats] = useState<ValueStatsApiResponse | null>(null)
+  const [valueStatus, setValueStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [valueError, setValueError] = useState<string | null>(null)
+  const [catalogHealthStats, setCatalogHealthStats] = useState<CatalogHealthStatsApiResponse | null>(null)
+  const [catalogHealthStatus, setCatalogHealthStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [catalogHealthError, setCatalogHealthError] = useState<string | null>(null)
+  const [pairAgreementStats, setPairAgreementStats] = useState<PairAgreementStatsApiResponse | null>(null)
+  const [pairAgreementStatus, setPairAgreementStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [pairAgreementError, setPairAgreementError] = useState<string | null>(null)
   const [wineFormSubmitting, setWineFormSubmitting] = useState(false)
   const [wineFormError, setWineFormError] = useState<string | null>(null)
   const [wineSuccessToast, setWineSuccessToast] = useState<string | null>(null)
@@ -1072,243 +1017,122 @@ function HomePage() {
   }, [doOptions, locale])
   const metrics = useMemo(
     () => ({
-      totalWines: genericStats?.total_wines ?? wineItems.length,
-      totalReviews: genericStats?.total_reviews ?? reviewsPerMonthStats?.review_counts.reduce((sum, count) => sum + count, 0) ?? 0,
-      myReviews: genericStats?.my_reviews ?? myReviewEntries.length,
-      averageRed: genericStats?.average_red ?? averageScoreByType(wineItems, 'red'),
-      averageWhite: genericStats?.average_white ?? averageScoreByType(wineItems, 'white'),
+      totalWines: coverageStats?.total_wines ?? wineItems.length,
+      reviewedWines: coverageStats?.reviewed_wines ?? wineItems.filter((wine) => wine.averageScore != null).length,
+      totalReviews: coverageStats?.total_reviews ?? myReviewEntries.length,
+      reviewCoveragePct: coverageStats?.review_coverage_pct ?? 0,
+      avgScore: coverageStats?.avg_score ?? 0,
+      medianScore: coverageStats?.median_score ?? 0,
     }),
-    [genericStats, myReviewEntries.length, reviewsPerMonthStats, wineItems],
+    [coverageStats, myReviewEntries.length, wineItems],
   )
 
   const dashboardAnalytics = useMemo(() => {
-    const scoredWines = wineItems.filter((wine) => wine.averageScore != null)
-    const scoreValues = scoredWines.map((wine) => wine.averageScore as number)
-    const scoreMedian = median(scoreValues)
-    const scoreStdDev = standardDeviation(scoreValues)
-    const sortedByScore = [...scoredWines].sort((a, b) => (b.averageScore ?? 0) - (a.averageScore ?? 0))
-    const topWines = sortedByScore.slice(0, 3)
-    const lowWines = [...sortedByScore].slice(-3).reverse()
-    const highScoreCount = scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 80).length
-    const lowScoreCount = scoredWines.filter((wine) => (wine.averageScore ?? 0) < 65).length
-    const scoreSpread = scoredWines.length > 0
-      ? Math.max(...scoredWines.map((wine) => wine.averageScore ?? 0)) - Math.min(...scoredWines.map((wine) => wine.averageScore ?? 0))
-      : 0
-    const averagePrice = wineItems.length ? (wineItems.reduce((sum, wine) => sum + wine.pricePaid, 0) / wineItems.length) : 0
-    const minPrice = wineItems.length ? Math.min(...wineItems.map((wine) => wine.pricePaid)) : 0
-    const maxPrice = wineItems.length ? Math.max(...wineItems.map((wine) => wine.pricePaid)) : 0
-    const maxScore = Math.max(...scoreValues)
-    const minScore = Math.min(...scoreValues)
-    const approvedCount = scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 70).length
-    const approvedRate = scoredWines.length ? (approvedCount / scoredWines.length) * 100 : 0
-    const qualityIndex = averagePrice > 0 ? ((metrics.averageRed + metrics.averageWhite) / 2) / averagePrice : 0
-
-    const randCompare = createSeededRandom(dashboardSeed + 311)
-    const reviewTimeline: ReviewTimelinePoint[] = reviewsPerMonthStats == null
+    const scoredWines = wineItems.filter((wine) => wine.averageScore != null && Number.isFinite(wine.pricePaid))
+    const minScatterPrice = scoredWines.length > 0 ? Math.min(...scoredWines.map((wine) => wine.pricePaid)) : 0
+    const reviewTimeline = activityStats == null
       ? []
-      : buildBiMonthlyReviewTimeline(
-          reviewsPerMonthStats.months,
-          reviewsPerMonthStats.review_counts,
-          reviewsPerMonthStats.median_scores,
-          locale,
-        )
-
-    const compareLabels = locale === 'ca'
-      ? ['Gen', 'Feb', 'Mar', 'Abr', 'Mai', 'Jun']
-      : ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun']
-    let previousWeb = 16 + Math.floor(randCompare() * 10)
-    let previousMine = 2 + Math.floor(randCompare() * 3)
-    const webVsMyTimeline = compareLabels.map((label) => {
-      const web = Math.max(8, Math.min(36, previousWeb + Math.floor((randCompare() * 9) - 4)))
-      const mine = Math.max(1, Math.min(9, previousMine + Math.floor((randCompare() * 5) - 2)))
-      previousWeb = web
-      previousMine = mine
-      return { label, web, mine }
-    })
-    const rollingAverage10 = scoredWines.map((_, index) => {
-      const start = Math.max(0, index - 9)
-      const slice = scoredWines.slice(start, index + 1)
-      const avg = slice.reduce((sum, row) => sum + (row.averageScore ?? 0), 0) / slice.length
-      return { index: index + 1, avg: Math.round(avg * 10) / 10 }
-    })
-
-    const scoreBuckets = scoringGenericStats?.items ?? [
-      { label: '90+', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 90).length },
-      { label: '80-89', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 80 && (wine.averageScore ?? 0) < 90).length },
-      { label: '70-79', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 70 && (wine.averageScore ?? 0) < 80).length },
-      { label: '60-69', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) >= 60 && (wine.averageScore ?? 0) < 70).length },
-      { label: '<60', count: scoredWines.filter((wine) => (wine.averageScore ?? 0) < 60).length },
-    ]
-
-    const byType = (['red', 'white', 'rose', 'sparkling'] as WineType[]).map((type) => {
-      const wines = scoredWines.filter((wine) => wine.type === type)
-      const avg = wines.length ? wines.reduce((sum, wine) => sum + (wine.averageScore ?? 0), 0) / wines.length : 0
-      return { type, count: wines.length, avg }
-    })
-
-    const awards = wineItems.map((wine) => ({
-      hasAward: wine.id % 5 !== 0,
-      awardName: wine.id % 2 === 0 ? 'decanter' : 'penin',
-    }))
-    const awardsWith = awards.filter((entry) => entry.hasAward).length
-    const awardsWithout = awards.length - awardsWith
-    const awardTypes = [
-      { label: 'Decanter', count: awards.filter((entry) => entry.hasAward && entry.awardName === 'decanter').length },
-      { label: 'Peñín', count: awards.filter((entry) => entry.hasAward && entry.awardName === 'penin').length },
-    ]
-
-    const valueRows = scoredWines
-      .map((wine) => ({
-        ...wine,
-        valueIndex: wine.pricePaid > 0 ? ((wine.averageScore ?? 0) / wine.pricePaid) : 0,
-      }))
-      .sort((a, b) => b.valueIndex - a.valueIndex)
-    const topValueWines = valueRows.slice(0, 10)
-    const underTenWines = scoredWines.filter((wine) => wine.pricePaid < 10)
-    const underTenWithGreatScore = underTenWines.filter((wine) => (wine.averageScore ?? 0) >= 80)
-    const underTenGreatPct = underTenWines.length ? (underTenWithGreatScore.length / underTenWines.length) * 100 : 0
-    const scoreBands = [
-      { label: '50-59', min: 50, max: 60 },
-      { label: '60-69', min: 60, max: 70 },
-      { label: '70-79', min: 70, max: 80 },
-      { label: '80-89', min: 80, max: 90 },
-      { label: '90+', min: 90, max: 101 },
-    ].map((band) => {
-      const wines = scoredWines.filter((wine) => (wine.averageScore ?? 0) >= band.min && (wine.averageScore ?? 0) < band.max)
-      const avgBandPrice = wines.length ? wines.reduce((sum, wine) => sum + wine.pricePaid, 0) / wines.length : 0
-      return { label: band.label, avgPrice: avgBandPrice, count: wines.length }
-    })
-
-    const byVintageMap = new Map<number, WineItem[]>()
-    scoredWines.forEach((wine) => {
-      if (wine.vintageYear == null) return
-      const current = byVintageMap.get(wine.vintageYear) ?? []
-      current.push(wine)
-      byVintageMap.set(wine.vintageYear, current)
-    })
-    const byVintage = [...byVintageMap.entries()]
-      .map(([year, wines]) => ({
-        year,
-        avgScore: wines.reduce((sum, wine) => sum + (wine.averageScore ?? 0), 0) / wines.length,
-        count: wines.length,
-      }))
-      .sort((a, b) => a.year - b.year)
-    const bestVintage = [...byVintage].sort((a, b) => b.avgScore - a.avgScore)[0] ?? null
-    const oldVintageScores = scoredWines.filter((wine) => (wine.vintageYear ?? 9999) <= 2018).map((wine) => wine.averageScore ?? 0)
-    const recentVintageScores = scoredWines.filter((wine) => (wine.vintageYear ?? 0) >= 2019).map((wine) => wine.averageScore ?? 0)
-    const oldVsRecent = {
-      oldAvg: oldVintageScores.length ? oldVintageScores.reduce((sum, value) => sum + value, 0) / oldVintageScores.length : 0,
-      recentAvg: recentVintageScores.length ? recentVintageScores.reduce((sum, value) => sum + value, 0) / recentVintageScores.length : 0,
-    }
-
-    const byDo = [...new Set(scoredWines.map((wine) => wine.region))].map((region) => {
-      const wines = scoredWines.filter((wine) => wine.region === region)
-      const avgScore = wines.reduce((sum, wine) => sum + (wine.averageScore ?? 0), 0) / wines.length
-      const avgPrice = wines.reduce((sum, wine) => sum + wine.pricePaid, 0) / wines.length
-      const consistency = standardDeviation(wines.map((wine) => wine.averageScore ?? 0))
-      const bestWine = [...wines].sort((a, b) => (b.averageScore ?? 0) - (a.averageScore ?? 0))[0]
-      const bestValue = [...wines]
-        .map((wine) => ({
-          name: wine.name,
-          valueIndex: (wine.averageScore ?? 0) / Math.max(0.01, wine.pricePaid),
+      : activityStats.months.map((month, index) => ({
+          label: formatReviewTimelineLabel(month, locale),
+          reviews: activityStats.review_counts[index] ?? 0,
+          avg: activityStats.avg_scores[index] ?? null,
+          median: activityStats.median_scores[index] ?? null,
         }))
-        .sort((a, b) => b.valueIndex - a.valueIndex)[0]
-      return {
-        region,
-        count: wines.length,
-        avgScore,
-        avgPrice,
-        consistency,
-        bestWine: bestWine?.name ?? '-',
-        bestValue: bestValue?.valueIndex ?? 0,
-      }
-    })
-    const doRanking = [...byDo].sort((a, b) => b.avgScore - a.avgScore)
-    const doMostConsistent = [...byDo].filter((entry) => entry.count > 1).sort((a, b) => a.consistency - b.consistency)[0] ?? null
 
-    const priceVsScore = scoredWines.map((wine) => ({ price: wine.pricePaid, score: wine.averageScore ?? 0, name: wine.name }))
-    const regression = linearRegression(priceVsScore.map((point) => ({ x: point.price, y: point.score })))
-    const regressionLine = [
-      { price: minPrice, score: (regression.slope * minPrice) + regression.intercept },
-      { price: maxPrice, score: (regression.slope * maxPrice) + regression.intercept },
-    ]
-    const sweetSpotPrice = topValueWines.length
-      ? median(topValueWines.map((wine) => wine.pricePaid))
-      : averagePrice
-
-    const coupleRows: Array<{ wine: string; region: string; maria: number; adria: number; diff: number }> = []
-    const mariaAvg = coupleRows.length ? coupleRows.reduce((sum, row) => sum + row.maria, 0) / coupleRows.length : 0
-    const adriaAvg = coupleRows.length ? coupleRows.reduce((sum, row) => sum + row.adria, 0) / coupleRows.length : 0
-    const disagreementCount = coupleRows.filter((row) => row.diff > 2).length
-    const disagreementPct = coupleRows.length ? (disagreementCount / coupleRows.length) * 100 : 0
-    const avgDifference = coupleRows.length ? coupleRows.reduce((sum, row) => sum + row.diff, 0) / coupleRows.length : 0
-    const syncIndex = Math.max(0, 100 - (avgDifference * 20) - disagreementPct)
-    const coupleScatter = coupleRows.map((row) => ({ x: row.maria, y: row.adria, wine: row.wine }))
-    const disagreementByDo = [...new Set(coupleRows.map((row) => row.region))].map((region) => {
-      const rows = coupleRows.filter((row) => row.region === region)
-      const avgDiff = rows.reduce((sum, row) => sum + row.diff, 0) / rows.length
-      return { region, avgDiff, count: rows.length }
-    }).sort((a, b) => b.avgDiff - a.avgDiff)
-
-    const placeRows = scoredWines.map((wine) => ({
-      ...wine,
-      placeType: wine.winery.toLowerCase().includes('casa') ? 'supermarket' : 'restaurant',
-    }))
-    const supermarketRows = placeRows.filter((row) => row.placeType === 'supermarket')
-    const restaurantRows = placeRows.filter((row) => row.placeType === 'restaurant')
-    const placeComparison = {
-      supermarketAvgScore: supermarketRows.length ? supermarketRows.reduce((sum, row) => sum + (row.averageScore ?? 0), 0) / supermarketRows.length : 0,
-      restaurantAvgScore: restaurantRows.length ? restaurantRows.reduce((sum, row) => sum + (row.averageScore ?? 0), 0) / restaurantRows.length : 0,
-      supermarketAvgPrice: supermarketRows.length ? supermarketRows.reduce((sum, row) => sum + row.pricePaid, 0) / supermarketRows.length : 0,
-      restaurantAvgPrice: restaurantRows.length ? restaurantRows.reduce((sum, row) => sum + row.pricePaid, 0) / restaurantRows.length : 0,
-    }
+    const scoreBuckets = scoreDistributionStats?.buckets ?? []
+    const regressionLine = valueStats == null
+      ? []
+      : [
+          {
+            price: valueStats.min_price,
+            score: (valueStats.regression_slope * valueStats.min_price) + valueStats.regression_intercept,
+          },
+          {
+            price: valueStats.max_price,
+            score: (valueStats.regression_slope * valueStats.max_price) + valueStats.regression_intercept,
+          },
+        ]
 
     return {
-      topWines,
-      lowWines,
-      highScoreCount,
-      lowScoreCount,
-      scoreMedian,
-      scoreStdDev,
-      approvedRate,
-      maxScore,
-      minScore,
-      scoreSpread,
-      averagePrice,
-      minPrice,
-      maxPrice,
-      qualityIndex,
       reviewTimeline,
-      webVsMyTimeline,
-      rollingAverage10,
+      activitySummary: {
+        lastMonthReviews: activityStats?.summary.last_month_reviews ?? 0,
+        avgReviewsPerMonth: activityStats?.summary.avg_reviews_per_month ?? 0,
+        bestMonth: activityStats?.summary.best_month ?? null,
+        lastActiveMonth: activityStats?.summary.last_active_month ?? null,
+      },
       scoreBuckets,
-      byType,
-      awardsWith,
-      awardsWithout,
-      awardTypes,
-      topValueWines,
-      underTenGreatPct,
-      underTenGreatCount: underTenWithGreatScore.length,
-      scoreBands,
-      byVintage,
-      bestVintage,
-      oldVsRecent,
-      doRanking,
-      doMostConsistent,
-      priceVsScore,
-      regressionLine,
-      regressionSlope: regression.slope,
-      sweetSpotPrice,
-      mariaAvg,
-      adriaAvg,
-      avgDifference,
-      disagreementPct,
-      syncIndex,
-      coupleScatter,
-      disagreementByDo,
-      placeComparison,
+      distributionSummary: {
+        approved70Pct: scoreDistributionStats?.approved_70_pct ?? 0,
+        great80Pct: scoreDistributionStats?.great_80_pct ?? 0,
+        minScore: scoreDistributionStats?.min_score ?? 0,
+        maxScore: scoreDistributionStats?.max_score ?? 0,
+        stdDev: scoreDistributionStats?.std_dev ?? 0,
+      },
+      valueSummary: {
+        priceScoreCorrelation: valueStats?.price_score_correlation ?? 0,
+        regressionSlope: valueStats?.regression_slope ?? 0,
+        medianPrice: valueStats?.median_price ?? 0,
+        minPrice: valueStats?.min_price ?? 0,
+        maxPrice: valueStats?.max_price ?? 0,
+        under10HighScoreCount: valueStats?.under_10_high_score.count ?? 0,
+        under10HighScorePct: valueStats?.under_10_high_score.pct ?? 0,
+        under10HighScoreThreshold: valueStats?.under_10_high_score.threshold ?? 80,
+        priceBands: (valueStats?.price_bands ?? []).map((band) => ({
+          label: band.label,
+          wines: band.wines,
+          avgScore: band.avg_score,
+        })),
+        topValueWines: (valueStats?.top_value_wines ?? []).map((wine) => ({
+          wineId: wine.wine_id,
+          name: wine.name,
+          doName: wine.do_name,
+          price: wine.price,
+          avgScore: wine.avg_score,
+          valueIndex: wine.value_index,
+        })),
+        priceVsScore: scoredWines.map((wine) => ({
+          price: wine.pricePaid,
+          score: wine.averageScore ?? 0,
+          name: wine.name,
+        })),
+        regressionLine: regressionLine.map((point) => ({
+          price: Number.isFinite(point.price) ? point.price : minScatterPrice,
+          score: Number.isFinite(point.score) ? point.score : 0,
+        })),
+      },
+      healthSummary: {
+        winesWithoutReviews: catalogHealthStats?.wines_without_reviews ?? 0,
+        winesWithoutPhotos: catalogHealthStats?.wines_without_photos ?? 0,
+        winesWithAwards: catalogHealthStats?.wines_with_awards ?? 0,
+        winesWithoutAwards: catalogHealthStats?.wines_without_awards ?? 0,
+        photoCoveragePct: catalogHealthStats?.photo_coverage_pct ?? 0,
+        grapeCoveragePct: catalogHealthStats?.grape_coverage_pct ?? 0,
+        reviewCoveragePct: catalogHealthStats?.review_coverage_pct ?? 0,
+        doLogoCoveragePct: catalogHealthStats?.do_logo_coverage_pct ?? 0,
+        regionLogoCoveragePct: catalogHealthStats?.region_logo_coverage_pct ?? 0,
+        doMapCoveragePct: catalogHealthStats?.do_map_coverage_pct ?? 0,
+        placesWithMapPct: catalogHealthStats?.places_with_map_pct ?? 0,
+      },
+      pairAgreementSummary: {
+        pairsCount: pairAgreementStats?.pairs_count ?? 0,
+        avgDiff: pairAgreementStats?.avg_diff ?? 0,
+        diffGe10Pct: pairAgreementStats?.diff_ge_10_pct ?? 0,
+        diffGe15Pct: pairAgreementStats?.diff_ge_15_pct ?? 0,
+        syncIndex: pairAgreementStats?.sync_index ?? 0,
+        scatterPoints: (pairAgreementStats?.scatter_points ?? []).map((point) => ({
+          x: point.user_a_score,
+          y: point.user_b_score,
+          wine: point.wine_name,
+        })),
+        byDo: (pairAgreementStats?.by_do ?? []).map((row) => ({
+          doName: row.do_name ?? '-',
+          comparedWines: row.compared_wines,
+          avgDiff: row.avg_diff,
+        })),
+      },
     }
-  }, [dashboardSeed, locale, metrics.averageRed, metrics.averageWhite, reviewsPerMonthStats, scoringGenericStats, wineItems])
+  }, [activityStats, catalogHealthStats, locale, pairAgreementStats, scoreDistributionStats, valueStats, wineItems])
 
   const priceFormatter = useMemo(
     () => new Intl.NumberFormat(localeToIntl(locale), { style: 'currency', currency: 'EUR' }),
@@ -2010,10 +1834,10 @@ function HomePage() {
     }
 
     const controller = new AbortController()
-    setReviewsPerMonthStatus('loading')
-    setReviewsPerMonthError(null)
+    setCoverageStatus('loading')
+    setCoverageError(null)
 
-    fetch(`${resolveApiBaseUrl()}/api/stats/reviews-per-monh`, {
+    fetch(`${resolveApiBaseUrl()}/api/stats/coverage`, {
       signal: controller.signal,
       credentials: 'include',
       headers: {
@@ -2025,24 +1849,18 @@ function HomePage() {
           throw new Error(`HTTP ${response.status}`)
         }
 
-        const payload = await response.json() as ReviewsPerMonthStatsApiResponse
-        const seriesLength = Math.min(payload.months.length, payload.review_counts.length, payload.median_scores.length)
-
-        setReviewsPerMonthStats({
-          months: payload.months.slice(0, seriesLength),
-          review_counts: payload.review_counts.slice(0, seriesLength),
-          median_scores: payload.median_scores.slice(0, seriesLength),
-        })
-        setReviewsPerMonthStatus('ready')
+        const payload = await response.json() as CoverageStatsApiResponse
+        setCoverageStats(payload)
+        setCoverageStatus('ready')
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) {
           return
         }
 
-        setReviewsPerMonthStats(null)
-        setReviewsPerMonthStatus('error')
-        setReviewsPerMonthError(error instanceof Error ? error.message : 'Unknown error')
+        setCoverageStats(null)
+        setCoverageStatus('error')
+        setCoverageError(error instanceof Error ? error.message : 'Unknown error')
       })
 
     return () => {
@@ -2056,10 +1874,10 @@ function HomePage() {
     }
 
     const controller = new AbortController()
-    setScoringGenericStatsStatus('loading')
-    setScoringGenericStatsError(null)
+    setActivityStatus('loading')
+    setActivityError(null)
 
-    fetch(`${resolveApiBaseUrl()}/api/stats/socring-generic`, {
+    fetch(`${resolveApiBaseUrl()}/api/stats/activity`, {
       signal: controller.signal,
       credentials: 'include',
       headers: {
@@ -2071,18 +1889,18 @@ function HomePage() {
           throw new Error(`HTTP ${response.status}`)
         }
 
-        const payload = await response.json() as ScoringGenericStatsApiResponse
-        setScoringGenericStats(payload)
-        setScoringGenericStatsStatus('ready')
+        const payload = await response.json() as ActivityStatsApiResponse
+        setActivityStats(payload)
+        setActivityStatus('ready')
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) {
           return
         }
 
-        setScoringGenericStats(null)
-        setScoringGenericStatsStatus('error')
-        setScoringGenericStatsError(error instanceof Error ? error.message : 'Unknown error')
+        setActivityStats(null)
+        setActivityStatus('error')
+        setActivityError(error instanceof Error ? error.message : 'Unknown error')
       })
 
     return () => {
@@ -2096,10 +1914,10 @@ function HomePage() {
     }
 
     const controller = new AbortController()
-    setGenericStatsStatus('loading')
-    setGenericStatsError(null)
+    setScoreDistributionStatus('loading')
+    setScoreDistributionError(null)
 
-    fetch(`${resolveApiBaseUrl()}/api/stats/generic`, {
+    fetch(`${resolveApiBaseUrl()}/api/stats/score-distribution`, {
       signal: controller.signal,
       credentials: 'include',
       headers: {
@@ -2111,18 +1929,138 @@ function HomePage() {
           throw new Error(`HTTP ${response.status}`)
         }
 
-        const payload = await response.json() as GenericStatsApiResponse
-        setGenericStats(payload)
-        setGenericStatsStatus('ready')
+        const payload = await response.json() as ScoreDistributionStatsApiResponse
+        setScoreDistributionStats(payload)
+        setScoreDistributionStatus('ready')
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) {
           return
         }
 
-        setGenericStats(null)
-        setGenericStatsStatus('error')
-        setGenericStatsError(error instanceof Error ? error.message : 'Unknown error')
+        setScoreDistributionStats(null)
+        setScoreDistributionStatus('error')
+        setScoreDistributionError(error instanceof Error ? error.message : 'Unknown error')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [loggedIn, menu])
+
+  useEffect(() => {
+    if (!loggedIn || menu !== 'dashboard') {
+      return
+    }
+
+    const controller = new AbortController()
+    setValueStatus('loading')
+    setValueError(null)
+
+    fetch(`${resolveApiBaseUrl()}/api/stats/value`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as ValueStatsApiResponse
+        setValueStats(payload)
+        setValueStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setValueStats(null)
+        setValueStatus('error')
+        setValueError(error instanceof Error ? error.message : 'Unknown error')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [loggedIn, menu])
+
+  useEffect(() => {
+    if (!loggedIn || menu !== 'dashboard') {
+      return
+    }
+
+    const controller = new AbortController()
+    setCatalogHealthStatus('loading')
+    setCatalogHealthError(null)
+
+    fetch(`${resolveApiBaseUrl()}/api/stats/catalog-health`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as CatalogHealthStatsApiResponse
+        setCatalogHealthStats(payload)
+        setCatalogHealthStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setCatalogHealthStats(null)
+        setCatalogHealthStatus('error')
+        setCatalogHealthError(error instanceof Error ? error.message : 'Unknown error')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [loggedIn, menu])
+
+  useEffect(() => {
+    if (!loggedIn || menu !== 'dashboard') {
+      return
+    }
+
+    const controller = new AbortController()
+    setPairAgreementStatus('loading')
+    setPairAgreementError(null)
+
+    fetch(`${resolveApiBaseUrl()}/api/stats/pair-agreement`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as PairAgreementStatsApiResponse
+        setPairAgreementStats(payload)
+        setPairAgreementStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setPairAgreementStats(null)
+        setPairAgreementStatus('error')
+        setPairAgreementError(error instanceof Error ? error.message : 'Unknown error')
       })
 
     return () => {
@@ -4492,14 +4430,18 @@ function HomePage() {
             labels={{ dashboard: { metrics: labels.dashboard.metrics } }}
             metrics={metrics}
             dashboardAnalytics={dashboardAnalytics}
-            genericStatsStatus={genericStatsStatus}
-            genericStatsError={genericStatsError}
-            reviewsPerMonthStatus={reviewsPerMonthStatus}
-            reviewsPerMonthError={reviewsPerMonthError}
-            scoringGenericStatsStatus={scoringGenericStatsStatus}
-            scoringGenericStatsError={scoringGenericStatsError}
-            wineItemsLength={wineItems.length}
-            wineTypeLabel={wineTypeLabel}
+            coverageStatus={coverageStatus}
+            coverageError={coverageError}
+            activityStatus={activityStatus}
+            activityError={activityError}
+            distributionStatus={scoreDistributionStatus}
+            distributionError={scoreDistributionError}
+            valueStatus={valueStatus}
+            valueError={valueError}
+            catalogHealthStatus={catalogHealthStatus}
+            catalogHealthError={catalogHealthError}
+            pairAgreementStatus={pairAgreementStatus}
+            pairAgreementError={pairAgreementError}
             priceFormatter={priceFormatter}
             onGoToReviews={() => setMenu('reviews')}
           />

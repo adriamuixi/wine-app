@@ -3,6 +3,15 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { I18nProvider } from './i18n/I18nProvider'
+import { initGoogleAnalytics, startGoogleAnalyticsPageTracking } from './shared/lib/analytics'
+import { resolveGoogleAnalyticsMeasurementId } from './shared/lib/env'
+
+const googleAnalyticsMeasurementId = resolveGoogleAnalyticsMeasurementId()
+
+if (googleAnalyticsMeasurementId.length > 0) {
+  initGoogleAnalytics(googleAnalyticsMeasurementId)
+  startGoogleAnalyticsPageTracking(googleAnalyticsMeasurementId)
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

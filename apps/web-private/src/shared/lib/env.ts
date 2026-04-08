@@ -4,6 +4,10 @@ export function resolveApiBaseUrl(): string {
   return configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
 }
 
+export function resolveGoogleAnalyticsMeasurementId(): string {
+  return (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined)?.trim() ?? ''
+}
+
 export function resolveApiAssetUrl(path: string): string {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path

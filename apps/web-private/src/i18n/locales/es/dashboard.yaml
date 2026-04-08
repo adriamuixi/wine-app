@@ -2,15 +2,17 @@ dashboard:
   title: Resumen
   metrics:
     totalWines: Vinos totales
+    reviewedWines: Vinos con reseña
     totalReviews: Reseñas totales
-    myReviews: Mis reseñas
-    avgRed: Media vinos tintos
-    avgWhite: Media vinos blancos
+    reviewCoverage: Cobertura de reseñas
+    avgScore: Nota media
+    medianScore: Mediana
     catalogHint: Entradas en catálogo
+    reviewedHint: Vinos con al menos una reseña
     globalReviewsHint: Reseñas globales de la plataforma
-    myReviewsHint: Reseñas escritas por mí
-    avgRedHint: Puntuación media en vinos tintos
-    avgWhiteHint: Puntuación media en vinos blancos
+    coverageHint: Porcentaje de vinos reseñados
+    avgScoreHint: Media global del catálogo reseñado
+    medianScoreHint: Mediana global del catálogo reseñado
   search:
     eyebrow: Buscar vinos
     title: Buscador con filtros
@@ -26,8 +28,7 @@ dashboard:
     price: Precio
     avg: Media
 ui:
-  not_have_could_load_indicators_general: No se han podido cargar los indicadores
-    generales.
+  not_have_could_load_indicators_general: No se han podido cargar los indicadores generales.
   activity: ACTIVIDAD
   pace_reviews_and_quality: Ritmo de reseñas y calidad
   go_to_reviews: Ir a reseñas
@@ -35,24 +36,14 @@ ui:
   not_have_could_load_stats_chart: No se han podido cargar las estadísticas del gráfico.
   bar_light_reviews: 'Barra clara: reseñas'
   line_wine_median_score: 'Línea vino: mediana de score'
+  last_month_reviews: Reseñas último mes
+  avg_reviews_per_month: Media de reseñas por mes
+  best_month: Mejor mes
   distribution: DISTRIBUCIÓN
   quality_catalog: Calidad del catálogo
-  not_has_could_load_distribution_score: No se ha podido cargar la distribución de
-    score.
-  frequency: FRECUENCIA
-  comparison_reviews_web_vs_mine: Comparativa de reseñas web versus mías
-  mine_label: Las mías
+  not_has_could_load_distribution_score: No se ha podido cargar la distribución de score.
   indicators: INDICADORES
   wines_80: Vinos >= 80
-  wines_65: Vinos < 65
-  dispersion_score: Dispersión score
-  average_price: Precio medio
-  index_quality_price: Índice calidad/precio
-  scores_average_by_type_wine: Notas medias por tipo de vino
-  award_vs_without_award: Con premio vs sin premio
-  without_award: Sin award
-  stats_base_tasting: Estadísticas base de cata
-  median_score: Mediana puntuación
   deviation_standard: Desviación estándar
   passed_7: Aprobados (>7)
   score_max_min: Nota máx / mín
@@ -61,32 +52,36 @@ ui:
   ratio_price_score: Relación precio/puntuación
   scatter_price_and_score: Scatter de precio y puntuación
   slope_regression: Pendiente regresión
-  price_sweet_estimated: Precio dulce estimado
+  price_correlation: Correlación precio-score
+  median_price_label: Precio mediano
   value_10_with_score_8: <10€ con nota >8
-  evolution_by_vintage: Evolución por añada
-  average_by_vintage: Media por añada
-  best_vintage: Mejor añada
-  old_2018: Antiguas (<=2018)
-  recent_2019: Recientes (>=2019)
-  ranking_dos: Ranking de DOs
-  do_most_consistent: DO más regular
-  average_maria: Media Maria
-  average_adria: Media Adrià
-  difference_average: Diferencia media
-  disagreements_2: Desacuerdos (>2)
-  index_sync: Índice sincronización
-  rolling_average_10_wines: Rolling average (10 vinos)
-  average_rolling_10_wines: Media móvil de 10 vinos
-  restaurant_score_price: 'Restaurante: nota/precio'
-  supermarket_score_price: 'Supermercado: nota/precio'
-  without_awards_registered: Sin premios registrados.
+  value_picks: Mejores compras
+  general: GENERAL
+  catalog_health: Salud del catálogo
+  not_could_load_value_stats: No se han podido cargar las estadísticas de valor.
+  wines_without_reviews: Vinos sin reseña
+  wines_without_photos: Vinos sin foto
+  wines_with_awards: Vinos con premios
+  wines_without_awards: Vinos sin premios
+  photo_coverage: Cobertura de fotos
+  grape_coverage: Cobertura de uvas
+  do_logo_coverage: Cobertura logo DO
+  region_logo_coverage: Cobertura logo región
+  do_map_coverage: Cobertura mapas DO
+  place_map_coverage: Cobertura mapas de lugares
+  not_could_load_catalog_health: No se ha podido cargar la salud del catálogo.
   comparison: COMPARATIVA
   maria_vs_adria: Maria vs Adrià
   scatter_maria_versus_adria: Scatter Maria versus Adrià
   maria_axis: Maria
   adria_axis: Adrià
+  compared_wines: Vinos comparados
+  difference_average: Diferencia media
+  disagreements_10: Desacuerdos >= 10
+  disagreements_15: Desacuerdos >= 15
+  index_sync: Índice sincronización
+  not_could_load_pair_agreement: No se ha podido cargar la comparativa.
+  reviews: Reseñas
   median_score_series: Mediana score
-  web_label: Web
-  web_global_label: Web (global)
   score_label: Score
   range_label: Franja
