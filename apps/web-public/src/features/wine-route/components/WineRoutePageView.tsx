@@ -183,8 +183,8 @@ export default function WineRoutePageView({
 
       const map = leaflet.map(mapContainerRef.current, {
         zoomControl: true,
-        minZoom: 5,
-        maxZoom: 13,
+        minZoom: 2,
+        maxZoom: 19,
       })
 
       const tileLanguage = locale === 'ca' ? 'ca' : locale === 'en' ? 'en' : 'es'
