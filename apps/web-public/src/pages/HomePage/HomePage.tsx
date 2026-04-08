@@ -110,8 +110,7 @@ export default function App() {
   const [selectedMapDoId, setSelectedMapDoId] = useState<number | null>(null)
   const [doMapZoomLevel, setDoMapZoomLevel] = useState(3.1)
   const [doMapCountryFilter, setDoMapCountryFilter] = useState<string>(DO_MAP_ALL_WORLD_VALUE)
-  const [isDoMapTatRossetOnly, setIsDoMapTatRossetOnly] = useState(false)
-  const [doMapTatRossetScope, setDoMapTatRossetScope] = useState<'with_reviews' | 'all_wines'>('with_reviews')
+  const [doMapTatRossetScope, setDoMapTatRossetScope] = useState<'all_dos' | 'with_reviews' | 'all_wines'>('all_dos')
   const [isDoMapCountryMenuOpen, setIsDoMapCountryMenuOpen] = useState(false)
   const [isDoMapMobileDoPickerOpen, setIsDoMapMobileDoPickerOpen] = useState(false)
   const [isDoMapMobile, setIsDoMapMobile] = useState(false)
@@ -290,10 +289,12 @@ export default function App() {
   useEffect(() => {
     const controller = new AbortController()
     const base = resolveApiBaseUrl()
-    const params = isDoMapPage && isDoMapTatRossetOnly
+    const params = isDoMapPage
       ? doMapTatRossetScope === 'with_reviews'
         ? { userIds: [1, 2] }
-        : { hasWines: true }
+        : doMapTatRossetScope === 'all_wines'
+          ? { hasWines: true }
+          : {}
       : {}
 
     void fetchDoItems(base, controller.signal, params)
@@ -309,7 +310,7 @@ export default function App() {
     return () => {
       controller.abort()
     }
-  }, [doMapTatRossetScope, isDoMapPage, isDoMapTatRossetOnly])
+  }, [doMapTatRossetScope, isDoMapPage])
 
   useEffect(() => {
     const shouldLockScroll = isMobileMenuOpen || isMobileFiltersOpen || isMobileSortOpen
@@ -1202,7 +1203,6 @@ export default function App() {
         isDoMapFullscreen={isDoMapFullscreen}
         isDoMapMobile={isDoMapMobile}
         isDoMapMobileDoPickerOpen={isDoMapMobileDoPickerOpen}
-        isDoMapTatRossetOnly={isDoMapTatRossetOnly}
         doMapTatRossetScope={doMapTatRossetScope}
         isMobileMenuOpen={isMobileMenuOpen}
         locale={locale}
@@ -1216,7 +1216,6 @@ export default function App() {
         setDoMapCountryFilter={setDoMapCountryFilter}
         setIsDoMapCountryMenuOpen={setIsDoMapCountryMenuOpen}
         setIsDoMapMobileDoPickerOpen={setIsDoMapMobileDoPickerOpen}
-        setIsDoMapTatRossetOnly={setIsDoMapTatRossetOnly}
         setDoMapTatRossetScope={setDoMapTatRossetScope}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         setLocale={setLocale}

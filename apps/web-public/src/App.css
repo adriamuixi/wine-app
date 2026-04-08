@@ -449,39 +449,95 @@
 }
 
 .about-hero-panel {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1.28fr) minmax(340px, 1fr);
+  gap: 1.05rem;
+  align-items: stretch;
+}
+
+.about-hero-copy {
+  min-width: 0;
 }
 
 .about-hero-subtitle {
   max-width: 72ch;
 }
 
+.about-hero-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.about-hero-stat {
+  border: 1px solid color-mix(in srgb, var(--line-soft) 92%, transparent);
+  border-radius: 1rem;
+  padding: 0.85rem 0.8rem;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  display: grid;
+  gap: 0.18rem;
+  align-content: start;
+}
+
+.about-hero-stat span {
+  font-size: 0.76rem;
+  color: var(--muted-strong);
+}
+
+.about-hero-stat strong {
+  font-size: clamp(1.05rem, 2.1vw, 1.45rem);
+}
+
+.about-hero-stat-accent {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line-soft));
+  background: color-mix(in srgb, var(--surface) 80%, var(--accent) 20%);
+}
+
 .about-team-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-  margin-bottom: 0.65rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .about-member-card {
-  border-radius: 1.25rem;
-  padding: 0.9rem;
+  border-radius: 1.35rem;
+  padding: 1.08rem;
+  display: grid;
+  gap: 1rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, transparent) 0%, color-mix(in srgb, var(--surface) 90%, var(--accent) 10%) 100%);
+}
+
+.about-member-media {
+  position: relative;
 }
 
 .about-member-photo {
   width: 100%;
-  max-width: 320px;
-  aspect-ratio: 4 / 3;
-  border-radius: 0.95rem;
+  border-radius: 1.1rem;
   border: 1px solid var(--line-soft);
   object-fit: cover;
   background: color-mix(in srgb, var(--surface) 90%, transparent);
-  margin-bottom: 0.65rem;
+  box-shadow: 0 18px 44px rgba(12, 10, 14, 0.16);
+}
+
+.about-member-body {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.about-member-kicker {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .about-member-card h2 {
   margin: 0;
-  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  font-size: clamp(1.3rem, 2.4vw, 1.72rem);
 }
 
 .about-member-role {
@@ -562,6 +618,14 @@
 }
 
 @media (max-width: 980px) {
+  .about-hero-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .about-hero-stat-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .about-team-grid {
     grid-template-columns: 1fr;
   }
@@ -627,16 +691,23 @@
 }
 
 .do-map-country-filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
   margin-left: auto;
   padding: 0;
   position: relative;
   z-index: 1200;
 }
 
-.do-map-country-filter-bar > span {
+.do-map-filter-group {
+  display: grid;
+  gap: 0.32rem;
+  min-width: 0;
+}
+
+.do-map-filter-title {
   color: var(--muted-strong);
   font-weight: 700;
   font-size: 0.82rem;
@@ -645,45 +716,20 @@
 
 .do-map-country-select {
   position: relative;
-  margin-left: auto;
   z-index: 1201;
 }
 
-.do-map-tat-rosset-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.48rem 0.65rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+.do-map-tat-rosset-filter {
+  display: grid;
+  gap: 0.32rem;
   color: var(--text);
   font-size: 0.84rem;
   font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
 }
 
-.do-map-tat-rosset-toggle input {
-  width: 1rem;
-  height: 1rem;
-  margin: 0;
-  accent-color: var(--accent);
-  flex: 0 0 auto;
-}
-
-.do-map-tat-rosset-toggle span {
-  line-height: 1.2;
-}
-
-.do-map-review-scope-wrap {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
-}
-
-.do-map-review-scope-wrap select {
-  min-width: 9.5rem;
+.do-map-tat-rosset-filter select {
+  min-width: 0;
+  width: 100%;
   padding: 0.48rem 0.65rem;
   border-radius: 0.75rem;
   border: 1px solid var(--line-soft);
@@ -3645,22 +3691,18 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   }
 
   .do-map-country-filter-bar {
-    flex-wrap: nowrap;
-    gap: 0.35rem;
+    gap: 0.45rem;
     padding: 0;
     margin-left: 0;
     width: 100%;
     flex: 1 0 100%;
-    justify-content: flex-start;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto auto;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: end;
   }
 
   .do-map-country-select {
     width: 100%;
-    margin-left: 0;
-    flex: 1 1 auto;
     min-width: 0;
     max-width: none;
     order: 1;
@@ -3700,23 +3742,15 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     max-width: none;
   }
 
-  .do-map-tat-rosset-toggle {
-    padding: 0.38rem 0.52rem;
+  .do-map-tat-rosset-filter {
     font-size: 0.72rem;
-    gap: 0.32rem;
+    gap: 0.24rem;
     max-width: none;
-    white-space: nowrap;
-    flex: 0 0 auto;
-    order: 3;
+    order: 2;
   }
 
-  .do-map-review-scope-wrap {
-    order: 4;
-  }
-
-  .do-map-review-scope-wrap select {
+  .do-map-tat-rosset-filter select {
     min-width: 0;
-    max-width: 8.2rem;
     padding: 0.38rem 0.5rem;
     font-size: 0.72rem;
   }

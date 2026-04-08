@@ -19,8 +19,7 @@ type Props = {
   isDoMapFullscreen: boolean
   isDoMapMobile: boolean
   isDoMapMobileDoPickerOpen: boolean
-  isDoMapTatRossetOnly: boolean
-  doMapTatRossetScope: 'with_reviews' | 'all_wines'
+  doMapTatRossetScope: 'all_dos' | 'with_reviews' | 'all_wines'
   isMobileMenuOpen: boolean
   locale: Locale
   localeLabels: Record<Locale, string>
@@ -33,8 +32,7 @@ type Props = {
   setDoMapCountryFilter: Dispatch<SetStateAction<string>>
   setIsDoMapCountryMenuOpen: Dispatch<SetStateAction<boolean>>
   setIsDoMapMobileDoPickerOpen: Dispatch<SetStateAction<boolean>>
-  setIsDoMapTatRossetOnly: Dispatch<SetStateAction<boolean>>
-  setDoMapTatRossetScope: Dispatch<SetStateAction<'with_reviews' | 'all_wines'>>
+  setDoMapTatRossetScope: Dispatch<SetStateAction<'all_dos' | 'with_reviews' | 'all_wines'>>
   setIsMobileMenuOpen: Dispatch<SetStateAction<boolean>>
   setLocale: Dispatch<SetStateAction<Locale>>
   setSelectedMapDoId: Dispatch<SetStateAction<number | null>>
@@ -60,7 +58,6 @@ export default function DoMapPageView({
   isDoMapFullscreen,
   isDoMapMobile,
   isDoMapMobileDoPickerOpen,
-  isDoMapTatRossetOnly,
   doMapTatRossetScope,
   isMobileMenuOpen,
   locale,
@@ -74,7 +71,6 @@ export default function DoMapPageView({
   setDoMapCountryFilter,
   setIsDoMapCountryMenuOpen,
   setIsDoMapMobileDoPickerOpen,
-  setIsDoMapTatRossetOnly,
   setDoMapTatRossetScope,
   setIsMobileMenuOpen,
   setLocale,
@@ -231,28 +227,46 @@ export default function DoMapPageView({
               ) : null}
               <div className="do-map-hero-title-row">
                 <h1 className="section-title-label">{t.doMap.title}</h1>
-                <div className="do-map-country-filter-bar" aria-label={t.doMap.filterCountry}>
-                  {!isDoMapMobile ? (
-                    <span>{t.icons.country} {t.doMap.filterCountry}</span>
-                  ) : null}
-                  <div className="do-map-country-select">
-                    <button
-                      type="button"
-                      className="do-map-country-button"
-                      aria-haspopup="listbox"
-                      aria-expanded={isDoMapCountryMenuOpen}
-                      onClick={() => setIsDoMapCountryMenuOpen((open) => !open)}
-                    >
-                      {isDoMapMobile ? <span className="do-map-control-icon" aria-hidden="true">🌍</span> : null}
-                      {selectedMapCountryFlag ? <img src={selectedMapCountryFlag} alt="" className="do-map-country-flag" aria-hidden="true" /> : null}
-                      <strong>{isDoMapMobile ? selectedMapCountryCompactLabel : selectedMapCountryLabel}</strong>
-                      <span className="do-map-country-caret" aria-hidden="true">▾</span>
-                    </button>
+                <div className="do-map-country-filter-bar">
+                  <div className="do-map-filter-group">
+                    <span className="do-map-filter-title">{t.doMap.filterCountry}</span>
+                    <div className="do-map-country-select">
+                      <button
+                        type="button"
+                        className="do-map-country-button"
+                        aria-haspopup="listbox"
+                        aria-expanded={isDoMapCountryMenuOpen}
+                        onClick={() => setIsDoMapCountryMenuOpen((open) => !open)}
+                      >
+                        {isDoMapMobile ? <span className="do-map-control-icon" aria-hidden="true">🌍</span> : null}
+                        {selectedMapCountryFlag ? <img src={selectedMapCountryFlag} alt="" className="do-map-country-flag" aria-hidden="true" /> : null}
+                        <strong>{isDoMapMobile ? selectedMapCountryCompactLabel : selectedMapCountryLabel}</strong>
+                        <span className="do-map-country-caret" aria-hidden="true">▾</span>
+                      </button>
 
-                    {isDoMapCountryMenuOpen ? (
-                      <div className="do-map-country-menu" role="listbox" aria-label={t.doMap.filterCountry}>
-                        {doMapCountryOptions.map((country) => {
-                          if (country === DO_MAP_ALL_WORLD_VALUE) {
+                      {isDoMapCountryMenuOpen ? (
+                        <div className="do-map-country-menu" role="listbox" aria-label={t.doMap.filterCountry}>
+                          {doMapCountryOptions.map((country) => {
+                            if (country === DO_MAP_ALL_WORLD_VALUE) {
+                              return (
+                                <button
+                                  key={`map-country-option-${country}`}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={doMapCountryFilter === country}
+                                  className={`do-map-country-option${doMapCountryFilter === country ? ' is-selected' : ''}`}
+                                  onClick={() => {
+                                    setDoMapCountryFilter(country)
+                                    setIsDoMapCountryMenuOpen(false)
+                                    setSelectedMapDoId(null)
+                                  }}
+                                >
+                                  <span>{t.doMap.allWorld}</span>
+                                </button>
+                              )
+                            }
+
+                            const flag = countryFlagPath(country)
                             return (
                               <button
                                 key={`map-country-option-${country}`}
@@ -263,59 +277,30 @@ export default function DoMapPageView({
                                 onClick={() => {
                                   setDoMapCountryFilter(country)
                                   setIsDoMapCountryMenuOpen(false)
-                                  setSelectedMapDoId(null)
                                 }}
                               >
-                                <span>{t.doMap.allWorld}</span>
+                                {flag ? <img src={flag} alt="" className="do-map-country-flag" aria-hidden="true" /> : null}
+                                <span>{localizedCountryName(country, locale)}</span>
                               </button>
                             )
-                          }
-
-                          const flag = countryFlagPath(country)
-                          return (
-                            <button
-                              key={`map-country-option-${country}`}
-                              type="button"
-                              role="option"
-                              aria-selected={doMapCountryFilter === country}
-                              className={`do-map-country-option${doMapCountryFilter === country ? ' is-selected' : ''}`}
-                              onClick={() => {
-                                setDoMapCountryFilter(country)
-                                setIsDoMapCountryMenuOpen(false)
-                              }}
-                            >
-                              {flag ? <img src={flag} alt="" className="do-map-country-flag" aria-hidden="true" /> : null}
-                              <span>{localizedCountryName(country, locale)}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    ) : null}
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
 
-                  <label className="do-map-tat-rosset-toggle">
-                    <input
-                      type="checkbox"
-                      checked={isDoMapTatRossetOnly}
-                      onChange={(event) => setIsDoMapTatRossetOnly(event.target.checked)}
+                  <label className="do-map-filter-group do-map-tat-rosset-filter">
+                    <span className="do-map-filter-title">{t.doMap.filterLabel}</span>
+                    <select
+                      value={doMapTatRossetScope}
+                      onChange={(event) => setDoMapTatRossetScope(event.target.value as 'all_dos' | 'with_reviews' | 'all_wines')}
                       aria-label={t.doMap.tatRossetAria}
-                    />
-                    <span>{t.doMap.tatRossetLabel}</span>
+                    >
+                      <option value="all_dos">{t.doMap.filterAllDos}</option>
+                      <option value="with_reviews">{t.doMap.tatRossetWithReview}</option>
+                      <option value="all_wines">{t.doMap.tatRossetWithoutReview}</option>
+                    </select>
                   </label>
-
-                  {isDoMapTatRossetOnly ? (
-                    <label className="do-map-review-scope-wrap">
-                      <span className="sr-only">{t.doMap.reviewScopeLabel}</span>
-                      <select
-                        value={doMapTatRossetScope}
-                        onChange={(event) => setDoMapTatRossetScope(event.target.value as 'with_reviews' | 'all_wines')}
-                        aria-label={t.doMap.reviewScopeAria}
-                      >
-                        <option value="with_reviews">{t.doMap.reviewScopeWithReview}</option>
-                        <option value="all_wines">{t.doMap.reviewScopeAllIntroduced}</option>
-                      </select>
-                    </label>
-                  ) : null}
 
                   {isDoMapMobile ? (
                     <button

@@ -7,12 +7,11 @@ doMap:
   worldMapLabel: Mapa mundi de DO
   openCatalog: ''
   filterCountry: País
-  tatRossetLabel: Tat & Rosset
-  tatRossetAria: Filtra les DO dels usuaris Tat & Rosset
-  reviewScopeLabel: Selector de reviews
-  reviewScopeAria: Selecciona l abast dels vins de Tat i Rosset
-  reviewScopeWithReview: With review
-  reviewScopeAllIntroduced: All introduced
+  filterLabel: Filtre
+  tatRossetAria: Selecciona el filtre de Tat i Rosset
+  filterAllDos: Totes les DO
+  tatRossetWithReview: T&R amb ressenyes
+  tatRossetWithoutReview: Tat&R sense ressenyes
   chooseDo: Seleccionar DO
   chooseCountryFirst: Primer selecciona un país.
   chooseDoPlaceholder: Escull una denominació

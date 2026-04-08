@@ -180,7 +180,7 @@ export default function AboutPageView({
       ) : null}
 
       <section className="hero-panel about-hero-panel" id="about">
-        <div>
+        <div className="about-hero-copy">
           <div className="section-heading-with-icon">
             <img src="/images/icons/wine/wine_couple.png" className="section-heading-icon" alt="" aria-hidden="true" />
             <div className="section-heading-copy">
@@ -190,20 +190,44 @@ export default function AboutPageView({
             </div>
           </div>
         </div>
+        <div className="about-hero-stat-strip" aria-label={t.about.statsAria}>
+          <article className="about-hero-stat">
+            <span>{t.about.stats.totalWines}</span>
+            <strong>{aboutStats.totalWines}</strong>
+          </article>
+          <article className="about-hero-stat">
+            <span>{t.about.stats.totalReviews}</span>
+            <strong>{aboutStats.totalReviews}</strong>
+          </article>
+          <article className="about-hero-stat about-hero-stat-accent">
+            <span>{t.about.stats.syncIndex}</span>
+            <strong>{aboutStats.syncIndex.toFixed(1)}%</strong>
+          </article>
+        </div>
       </section>
 
       <section className="about-team-grid" aria-label={t.about.membersAria}>
         <article className="cards-panel about-member-card">
-          <img src={TEAM_TAT_PHOTO_SRC} alt={t.about.members.tat.photoAlt} className="about-member-photo" loading="lazy" />
-          <h2>{t.about.members.tat.fullName}</h2>
-          <p className="about-member-role">{t.about.members.tat.role}</p>
-          <p>{t.about.members.tat.bio}</p>
+          <div className="about-member-media">
+            <img src={TEAM_TAT_PHOTO_SRC} alt={t.about.members.tat.photoAlt} className="about-member-photo" loading="lazy" />
+          </div>
+          <div className="about-member-body">
+            <p className="about-member-kicker">Tat</p>
+            <h2>{t.about.members.tat.fullName}</h2>
+            <p className="about-member-role">{t.about.members.tat.role}</p>
+            <p>{t.about.members.tat.bio}</p>
+          </div>
         </article>
         <article className="cards-panel about-member-card">
-          <img src={TEAM_ROSSET_PHOTO_SRC} alt={t.about.members.rosset.photoAlt} className="about-member-photo" loading="lazy" />
-          <h2>{t.about.members.rosset.fullName}</h2>
-          <p className="about-member-role">{t.about.members.rosset.role}</p>
-          <p>{t.about.members.rosset.bio}</p>
+          <div className="about-member-media">
+            <img src={TEAM_ROSSET_PHOTO_SRC} alt={t.about.members.rosset.photoAlt} className="about-member-photo" loading="lazy" />
+          </div>
+          <div className="about-member-body">
+            <p className="about-member-kicker">Rosset</p>
+            <h2>{t.about.members.rosset.fullName}</h2>
+            <p className="about-member-role">{t.about.members.rosset.role}</p>
+            <p>{t.about.members.rosset.bio}</p>
+          </div>
         </article>
       </section>
 

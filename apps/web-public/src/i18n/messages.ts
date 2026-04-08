@@ -94,12 +94,11 @@ export type PublicMessages = {
     worldMapLabel: string
     openCatalog: string
     filterCountry: string
-    tatRossetLabel: string
+    filterLabel: string
     tatRossetAria: string
-    reviewScopeLabel: string
-    reviewScopeAria: string
-    reviewScopeWithReview: string
-    reviewScopeAllIntroduced: string
+    filterAllDos: string
+    tatRossetWithReview: string
+    tatRossetWithoutReview: string
     chooseDo: string
     chooseCountryFirst: string
     chooseDoPlaceholder: string
