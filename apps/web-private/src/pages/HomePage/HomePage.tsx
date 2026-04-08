@@ -4776,6 +4776,7 @@ function HomePage() {
               defaultLandingPage={defaultLandingPage}
               showOnlySpainByDefault={showOnlySpainByDefault}
               compactCardsPreference={compactCardsPreference}
+              onOpenIconLibrary={() => setMenu('icons')}
               onSettingsNameChange={setSettingsName}
               onSettingsLastnameChange={setSettingsLastname}
               onSettingsPasswordChange={setSettingsPassword}
@@ -4924,7 +4925,7 @@ function HomePage() {
       ) : null}
 
       <nav className="mobile-bottom-nav" aria-label="App navigation">
-        {menuItems.filter((item) => item.key !== 'admin').map((item) => (
+        {menuItems.filter((item) => item.key !== 'admin' && item.key !== 'icons').map((item) => (
           <button
             key={`mobile-nav-${item.key}`}
             type="button"

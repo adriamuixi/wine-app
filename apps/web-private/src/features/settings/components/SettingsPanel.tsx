@@ -23,6 +23,7 @@ type SettingsPanelProps = {
   defaultLandingPage: 'dashboard' | 'wines' | 'dos' | 'reviews'
   showOnlySpainByDefault: boolean
   compactCardsPreference: boolean
+  onOpenIconLibrary: () => void
   onSettingsNameChange: (value: string) => void
   onSettingsLastnameChange: (value: string) => void
   onSettingsPasswordChange: (value: string) => void
@@ -51,6 +52,7 @@ export function SettingsPanel({
   defaultLandingPage,
   showOnlySpainByDefault,
   compactCardsPreference,
+  onOpenIconLibrary,
   onSettingsNameChange,
   onSettingsLastnameChange,
   onSettingsPasswordChange,
@@ -228,6 +230,16 @@ export function SettingsPanel({
               aria-pressed={compactCardsPreference}
             >
               {compactCardsPreference ? t('ui.active') : t('ui.inactive')}
+            </button>
+          </article>
+
+          <article className="list-card">
+            <div>
+              <h4>{t('ui.icon_library')}</h4>
+              <p>{t('ui.icon_library_description')}</p>
+            </div>
+            <button type="button" className="ghost-button small" onClick={onOpenIconLibrary}>
+              {t('menu.icons')}
             </button>
           </article>
 
