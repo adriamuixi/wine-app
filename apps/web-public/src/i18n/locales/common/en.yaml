@@ -33,8 +33,8 @@ common:
     sectionCatalog: Our wines
     descriptionDoMap: Public map of designations of origin and featured wines.
     descriptionAbout: Meet Tat (Maria) and Rosset (Adrià), the duo behind Our wines.
-    descriptionWineRoute: Mock route of local shops where we buy wines and tasting
-      order by date.
+    descriptionWineRoute: Real chronological route of wine purchases and tastings
+      with mapped locations.
     descriptionCatalog: Public wine catalog with profiles, scores and designations
       of origin.
   doShort: DO

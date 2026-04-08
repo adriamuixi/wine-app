@@ -96,6 +96,10 @@ export type PublicMessages = {
     filterCountry: string
     tatRossetLabel: string
     tatRossetAria: string
+    reviewScopeLabel: string
+    reviewScopeAria: string
+    reviewScopeWithReview: string
+    reviewScopeAllIntroduced: string
     chooseDo: string
     chooseCountryFirst: string
     chooseDoPlaceholder: string
@@ -119,6 +123,9 @@ export type PublicMessages = {
     mockBadge: string
     mockAria: string
     circuitHint: string
+    loading: string
+    empty: string
+    priceLabel: string
   }
   filters: {
     title: string

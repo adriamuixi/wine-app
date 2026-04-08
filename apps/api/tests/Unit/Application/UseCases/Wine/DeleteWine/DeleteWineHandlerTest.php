@@ -111,6 +111,11 @@ final class SpyWineRepository implements WineRepository
     {
         return new ListWinesResult([], $query->page, $query->limit, 0, 0);
     }
+
+    public function listRouteStops(): array
+    {
+        return [];
+    }
 }
 
 final class SpyWinePhotoRepository implements WinePhotoRepository

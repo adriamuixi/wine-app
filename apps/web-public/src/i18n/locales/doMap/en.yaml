@@ -9,6 +9,10 @@ doMap:
   filterCountry: Country
   tatRossetLabel: Tat & Rosset
   tatRossetAria: Filter DOs for Tat & Rosset users
+  reviewScopeLabel: Review scope
+  reviewScopeAria: Select Tat and Rosset wine scope
+  reviewScopeWithReview: With review
+  reviewScopeAllIntroduced: All introduced
   chooseDo: Select DO
   chooseCountryFirst: First select a country.
   chooseDoPlaceholder: Choose a designation

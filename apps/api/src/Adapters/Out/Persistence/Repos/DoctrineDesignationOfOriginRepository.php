@@ -76,6 +76,7 @@ final readonly class DoctrineDesignationOfOriginRepository implements Designatio
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array
     {
         $resolvedSortFields = [] === $sortFields ? ListDesignationsOfOriginSort::DEFAULT_ORDER : $sortFields;
@@ -119,6 +120,11 @@ SQL;
             $params['user_ids'] = $userIds;
             $params['required_user_count'] = count($userIds);
             $types['user_ids'] = ArrayParameterType::INTEGER;
+        }
+        if (true === $hasWines) {
+            $where[] = 'EXISTS (SELECT 1 FROM wine w WHERE w.do_id = d.id)';
+        } elseif (false === $hasWines) {
+            $where[] = 'NOT EXISTS (SELECT 1 FROM wine w WHERE w.do_id = d.id)';
         }
 
         $sql = 'SELECT d.id, d.name, d.region, d.country, d.country_code, d.do_logo, d.region_logo, d.map_data FROM designation_of_origin d';

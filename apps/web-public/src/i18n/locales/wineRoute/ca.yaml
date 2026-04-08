@@ -1,12 +1,15 @@
 wineRoute:
   eyebrow: RUTA DE VINS
   title: Ruta de vins
-  subtitle: Circuit cronologic de compres i tastos amb 10 ubicacions mock.
+  subtitle: Recorregut cronològic real de compres i tastos amb la ubicació de compra al mapa.
   mapAria: Mapa de ruta de compres i tastos
   listAria: Llista cronològica de parades de tast
   listTitle: Parades per data
-  dateLabel: Data de tast
-  winesBoughtLabel: Vins comprats
-  mockBadge: MODE MOCK · 10 PARADES
-  mockAria: Dades de mostra
-  circuitHint: La línia contínua marca l'ordre de tast per data i el tram discontinu tanca el circuit.
+  dateLabel: Data de compra
+  winesBoughtLabel: Vi
+  mockBadge: ''
+  mockAria: ''
+  circuitHint: La línia segueix l'ordre cronològic en què s'han comprat i tastat els vins incorporats.
+  loading: Carregant ruta de vins...
+  empty: Encara no hi ha compres amb coordenades disponibles per mostrar la ruta.
+  priceLabel: Preu

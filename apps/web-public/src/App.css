@@ -676,6 +676,25 @@
   line-height: 1.2;
 }
 
+.do-map-review-scope-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.do-map-review-scope-wrap select {
+  min-width: 9.5rem;
+  padding: 0.48rem 0.65rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .do-map-country-button {
   min-width: 210px;
   border: 1px solid var(--line-soft);
@@ -3634,7 +3653,7 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     flex: 1 0 100%;
     justify-content: flex-start;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
     align-items: center;
   }
 
@@ -3689,6 +3708,17 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     white-space: nowrap;
     flex: 0 0 auto;
     order: 3;
+  }
+
+  .do-map-review-scope-wrap {
+    order: 4;
+  }
+
+  .do-map-review-scope-wrap select {
+    min-width: 0;
+    max-width: 8.2rem;
+    padding: 0.38rem 0.5rem;
+    font-size: 0.72rem;
   }
 
   .do-map-mobile-picker-trigger {

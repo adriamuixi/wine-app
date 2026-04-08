@@ -20,6 +20,8 @@ use App\Application\UseCases\Wine\DeleteWine\DeleteWineHandler;
 use App\Application\UseCases\Wine\GenerateWineDraft\GenerateWineDraftCommand;
 use App\Application\UseCases\Wine\GenerateWineDraft\GenerateWineDraftHandler;
 use App\Application\UseCases\Wine\GetWine\GetWineDetailsHandler;
+use App\Application\UseCases\Wine\ListWineRoute\ListWineRouteHandler;
+use App\Application\UseCases\Wine\ListWineRoute\WineRouteStopView;
 use App\Domain\Model\Wine;
 use App\Domain\Model\DesignationOfOrigin;
 use App\Domain\Model\WineGrape;
@@ -60,6 +62,23 @@ final class WineControllerTest extends TestCase
         $response = $controller->create($request);
 
         self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testRouteReturnsChronologicalPurchaseStops(): void
+    {
+        $controller = $this->controller();
+
+        $response = $controller->route();
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertCount(2, $payload['items']);
+        self::assertSame(501, $payload['items'][0]['purchase_id']);
+        self::assertSame('2026-01-10T18:00:00+00:00', $payload['items'][0]['purchased_at']);
+        self::assertSame('Vila Viniteca', $payload['items'][0]['place']['name']);
+        self::assertSame('Ruta Wine 1', $payload['items'][0]['wine']['name']);
+        self::assertSame(41.3851, $payload['items'][0]['place']['map_data']['lat']);
+        self::assertSame(502, $payload['items'][1]['purchase_id']);
     }
 
     public function testDraftFromAiReturnsBadRequestWhenWineImageIsMissing(): void
@@ -596,6 +615,7 @@ final class WineControllerTest extends TestCase
             ),
             new GetWineDetailsHandler($repo),
             new ListWinesHandler($repo),
+            new ListWineRouteHandler($repo),
         );
     }
 }
@@ -740,6 +760,54 @@ final class SpyWineRepository implements WineRepository
             totalPages: 1,
         );
     }
+
+    public function listRouteStops(): array
+    {
+        return [
+            new WineRouteStopView(
+                purchaseId: 501,
+                purchasedAt: '2026-01-10T18:00:00+00:00',
+                pricePaid: 21.5,
+                wineId: 11,
+                wineName: 'Ruta Wine 1',
+                winery: 'Bodega Ruta',
+                wineType: 'red',
+                country: 'spain',
+                doId: 3,
+                doName: 'Rioja',
+                doLogo: 'rioja_DO.png',
+                regionLogo: 'la_rioja.png',
+                placeId: 201,
+                placeName: 'Vila Viniteca',
+                placeAddress: 'Carrer dels Agullers 7',
+                placeCity: 'Barcelona',
+                placeCountry: 'spain',
+                lat: 41.3851,
+                lng: 2.1812,
+            ),
+            new WineRouteStopView(
+                purchaseId: 502,
+                purchasedAt: '2026-02-02T12:30:00+00:00',
+                pricePaid: 18.9,
+                wineId: 12,
+                wineName: 'Ruta Wine 2',
+                winery: 'Bodega Ruta Dos',
+                wineType: 'white',
+                country: 'spain',
+                doId: null,
+                doName: null,
+                doLogo: null,
+                regionLogo: null,
+                placeId: 202,
+                placeName: 'Celler de Gelida',
+                placeAddress: null,
+                placeCity: 'Barcelona',
+                placeCountry: 'spain',
+                lat: 41.3778,
+                lng: 2.1514,
+            ),
+        ];
+    }
 }
 
 final class NoopWinePhotoRepository implements WinePhotoRepository
@@ -830,6 +898,7 @@ final class InMemoryDesignationOfOriginRepository implements DesignationOfOrigin
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array
     {
         $items = [];

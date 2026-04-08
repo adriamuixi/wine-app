@@ -6,6 +6,7 @@ namespace App\Adapters\Out\Persistence\Repos;
 
 use App\Domain\Repository\WineRepository;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
+use App\Application\UseCases\Wine\ListWineRoute\WineRouteStopView;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\ListWines\ListWinesSort;
 use App\Application\UseCases\Wine\ListWines\WineListItemAwardView;
@@ -796,6 +797,71 @@ SQL,
             totalItems: $totalItems,
             totalPages: $totalPages,
         );
+    }
+
+    public function listRouteStops(): array
+    {
+        $rows = $this->entityManager->getConnection()->fetchAllAssociative(
+            <<<'SQL'
+SELECT
+    wp.id AS purchase_id,
+    wp.purchased_at,
+    wp.price_paid,
+    w.id AS wine_id,
+    w.name AS wine_name,
+    w.winery,
+    w.wine_type,
+    w.country,
+    d.id AS do_id,
+    d.name AS do_name,
+    d.do_logo,
+    d.region_logo,
+    p.id AS place_id,
+    p.name AS place_name,
+    p.address AS place_address,
+    p.city AS place_city,
+    p.country AS place_country,
+    p.map_data AS place_map_data
+FROM wine_purchase wp
+INNER JOIN wine w ON w.id = wp.wine_id
+INNER JOIN place p ON p.id = wp.place_id
+LEFT JOIN designation_of_origin d ON d.id = w.do_id
+WHERE p.map_data IS NOT NULL
+ORDER BY wp.purchased_at ASC, wp.id ASC
+SQL,
+        );
+
+        $items = [];
+        foreach ($rows as $row) {
+            $mapData = $this->decodePlaceMapData($row['place_map_data'] ?? null);
+            if (null === $mapData) {
+                continue;
+            }
+
+            $items[] = new WineRouteStopView(
+                purchaseId: (int) $row['purchase_id'],
+                purchasedAt: $this->toIso8601((string) $row['purchased_at']),
+                pricePaid: (float) $row['price_paid'],
+                wineId: (int) $row['wine_id'],
+                wineName: (string) $row['wine_name'],
+                winery: null === $row['winery'] ? null : (string) $row['winery'],
+                wineType: null === $row['wine_type'] ? null : (string) $row['wine_type'],
+                country: null === $row['country'] ? null : (string) $row['country'],
+                doId: null === $row['do_id'] ? null : (int) $row['do_id'],
+                doName: null === $row['do_name'] ? null : (string) $row['do_name'],
+                doLogo: null === $row['do_logo'] ? null : (string) $row['do_logo'],
+                regionLogo: null === $row['region_logo'] ? null : (string) $row['region_logo'],
+                placeId: (int) $row['place_id'],
+                placeName: (string) $row['place_name'],
+                placeAddress: null === $row['place_address'] ? null : (string) $row['place_address'],
+                placeCity: null === $row['place_city'] ? null : (string) $row['place_city'],
+                placeCountry: (string) $row['place_country'],
+                lat: $mapData['lat'],
+                lng: $mapData['lng'],
+            );
+        }
+
+        return $items;
     }
 
     /**

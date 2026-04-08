@@ -177,6 +177,11 @@ final class SpyWineRepository implements WineRepository
     {
         return new ListWinesResult([], $query->page, $query->limit, 0, 0);
     }
+
+    public function listRouteStops(): array
+    {
+        return [];
+    }
 }
 
 final class InMemoryDesignationOfOriginRepository implements DesignationOfOriginRepository
@@ -222,6 +227,7 @@ final class InMemoryDesignationOfOriginRepository implements DesignationOfOrigin
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array
     {
         return [];

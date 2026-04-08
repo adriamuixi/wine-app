@@ -35,8 +35,8 @@ common:
     descriptionDoMap: Mapa públic de denominacions d’origen i vins destacats.
     descriptionAbout: Coneix Tat (Maria) i Rosset (Adrià), el duet darrere d'Els nostres
       vins.
-    descriptionWineRoute: Recorregut mock de botigues on comprem vi i ordre de tast
-      per data.
+    descriptionWineRoute: Recorregut cronològic real de compres i tastos de vi amb
+      ubicacions al mapa.
     descriptionCatalog: Catàleg públic de vins amb fitxes, puntuacions i denominacions
       d’origen.
   doShort: DO

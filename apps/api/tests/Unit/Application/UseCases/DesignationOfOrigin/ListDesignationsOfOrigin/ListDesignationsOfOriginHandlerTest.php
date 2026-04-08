@@ -74,6 +74,19 @@ final class ListDesignationsOfOriginHandlerTest extends TestCase
 
         self::assertSame([1, 2], $repository->lastUserIdsFilter);
     }
+
+    public function testItPassesHasWinesFilterToRepository(): void
+    {
+        $repository = new InMemoryDesignationOfOriginRepository();
+        $handler = new ListDesignationsOfOriginHandler($repository);
+
+        $handler->handle(new ListDesignationsOfOriginQuery(
+            sortFields: ListDesignationsOfOriginSort::DEFAULT_ORDER,
+            hasWines: true,
+        ));
+
+        self::assertTrue($repository->lastHasWinesFilter);
+    }
 }
 
 final class InMemoryDesignationOfOriginRepository implements DesignationOfOriginRepository
@@ -85,6 +98,7 @@ final class InMemoryDesignationOfOriginRepository implements DesignationOfOrigin
     public ?string $lastRegionFilter = null;
     /** @var list<int> */
     public array $lastUserIdsFilter = [];
+    public ?bool $lastHasWinesFilter = null;
 
     public function create(DesignationOfOrigin $do): int
     {
@@ -107,6 +121,7 @@ final class InMemoryDesignationOfOriginRepository implements DesignationOfOrigin
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array
     {
         $this->lastSortFields = $sortFields;
@@ -114,6 +129,7 @@ final class InMemoryDesignationOfOriginRepository implements DesignationOfOrigin
         $this->lastCountryFilter = $country;
         $this->lastRegionFilter = $region;
         $this->lastUserIdsFilter = $userIds;
+        $this->lastHasWinesFilter = $hasWines;
 
         return [
             new DesignationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES', 'rioja_DO.png', 'la_rioja.png'),

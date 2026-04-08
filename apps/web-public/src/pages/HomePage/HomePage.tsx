@@ -36,6 +36,8 @@ import {
 } from '../../features/do-map/types'
 import DoMapPageView from '../../features/do-map/components/DoMapPageView'
 import WineRoutePageView from '../../features/wine-route/components/WineRoutePageView'
+import { fetchWineRouteStops } from '../../features/wine-route/services/wineRouteApi'
+import type { WineRouteStop } from '../../features/wine-route/types'
 import { fetchDoItems } from '../../features/do-map/services/doApi'
 import { initializeLeafletMap, type DoMapMarkerHandle } from '../../features/do-map/services/leafletMap'
 import { clearCookieValue, getCookieValue, setCookieValue } from '../../shared/lib/cookies'
@@ -101,11 +103,15 @@ export default function App() {
   const [doLogoPreview, setDoLogoPreview] = useState<{ src: string; label: string } | null>(null)
   const [wines, setWines] = useState<WineCard[]>([])
   const [doOptions, setDoOptions] = useState<DoApiItem[]>([])
+  const [wineRouteStops, setWineRouteStops] = useState<WineRouteStop[]>([])
+  const [isWineRouteLoading, setIsWineRouteLoading] = useState(false)
+  const [hasWineRouteError, setHasWineRouteError] = useState(false)
   const [wineDetailsById, setWineDetailsById] = useState<Record<number, WineDetailsApiResponse['wine']>>({})
   const [selectedMapDoId, setSelectedMapDoId] = useState<number | null>(null)
   const [doMapZoomLevel, setDoMapZoomLevel] = useState(3.1)
   const [doMapCountryFilter, setDoMapCountryFilter] = useState<string>(DO_MAP_ALL_WORLD_VALUE)
   const [isDoMapTatRossetOnly, setIsDoMapTatRossetOnly] = useState(false)
+  const [doMapTatRossetScope, setDoMapTatRossetScope] = useState<'with_reviews' | 'all_wines'>('with_reviews')
   const [isDoMapCountryMenuOpen, setIsDoMapCountryMenuOpen] = useState(false)
   const [isDoMapMobileDoPickerOpen, setIsDoMapMobileDoPickerOpen] = useState(false)
   const [isDoMapMobile, setIsDoMapMobile] = useState(false)
@@ -220,6 +226,38 @@ export default function App() {
   }, [isDoMapPage, locale])
 
   useEffect(() => {
+    if (!isWineRoutePage) {
+      return
+    }
+
+    const controller = new AbortController()
+    const base = resolveApiBaseUrl()
+    setIsWineRouteLoading(true)
+    setHasWineRouteError(false)
+    setWineRouteStops([])
+
+    void fetchWineRouteStops(base, controller.signal)
+      .then((items) => {
+        if (controller.signal.aborted) return
+        setWineRouteStops(items)
+        setHasWineRouteError(false)
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return
+        setWineRouteStops([])
+        setHasWineRouteError(true)
+      })
+      .finally(() => {
+        if (controller.signal.aborted) return
+        setIsWineRouteLoading(false)
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [isWineRoutePage])
+
+  useEffect(() => {
     if (isDoMapPage) {
       return
     }
@@ -252,9 +290,13 @@ export default function App() {
   useEffect(() => {
     const controller = new AbortController()
     const base = resolveApiBaseUrl()
-    const userIds = isDoMapPage && isDoMapTatRossetOnly ? [1, 2] : undefined
+    const params = isDoMapPage && isDoMapTatRossetOnly
+      ? doMapTatRossetScope === 'with_reviews'
+        ? { userIds: [1, 2] }
+        : { hasWines: true }
+      : {}
 
-    void fetchDoItems(base, controller.signal, userIds ? { userIds } : {})
+    void fetchDoItems(base, controller.signal, params)
       .then((items) => {
         if (controller.signal.aborted) return
         setDoOptions(items)
@@ -267,7 +309,7 @@ export default function App() {
     return () => {
       controller.abort()
     }
-  }, [isDoMapPage, isDoMapTatRossetOnly])
+  }, [doMapTatRossetScope, isDoMapPage, isDoMapTatRossetOnly])
 
   useEffect(() => {
     const shouldLockScroll = isMobileMenuOpen || isMobileFiltersOpen || isMobileSortOpen
@@ -1161,6 +1203,7 @@ export default function App() {
         isDoMapMobile={isDoMapMobile}
         isDoMapMobileDoPickerOpen={isDoMapMobileDoPickerOpen}
         isDoMapTatRossetOnly={isDoMapTatRossetOnly}
+        doMapTatRossetScope={doMapTatRossetScope}
         isMobileMenuOpen={isMobileMenuOpen}
         locale={locale}
         localeLabels={localeLabels}
@@ -1174,6 +1217,7 @@ export default function App() {
         setIsDoMapCountryMenuOpen={setIsDoMapCountryMenuOpen}
         setIsDoMapMobileDoPickerOpen={setIsDoMapMobileDoPickerOpen}
         setIsDoMapTatRossetOnly={setIsDoMapTatRossetOnly}
+        setDoMapTatRossetScope={setDoMapTatRossetScope}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         setLocale={setLocale}
         setSelectedMapDoId={setSelectedMapDoId}
@@ -1210,11 +1254,14 @@ export default function App() {
       <WineRoutePageView
         adminHref={adminHref}
         desktopNav={desktopNav}
+        hasRouteError={hasWineRouteError}
         isDark={isDark}
+        isLoadingRoute={isWineRouteLoading}
         isMobileMenuOpen={isMobileMenuOpen}
         locale={locale}
         localeLabels={localeLabels}
         logoSrc={logoSrc}
+        routeStops={wineRouteStops}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         setLocale={setLocale}
         setTheme={setTheme}

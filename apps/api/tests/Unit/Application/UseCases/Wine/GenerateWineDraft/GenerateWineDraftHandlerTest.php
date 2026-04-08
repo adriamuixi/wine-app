@@ -264,6 +264,7 @@ final class InMemoryDoRepo implements DesignationOfOriginRepository
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array {
         return [new DesignationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES')];
     }

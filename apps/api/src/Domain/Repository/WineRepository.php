@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Repository;
 
 use App\Application\UseCases\Wine\CreateWine\CreateWineCommand;
+use App\Application\UseCases\Wine\ListWineRoute\WineRouteStopView;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesResult;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
@@ -24,4 +25,9 @@ interface WineRepository
     public function findById(int $id): ?Wine;
 
     public function findPaginated(ListWinesQuery $query): ListWinesResult;
+
+    /**
+     * @return list<WineRouteStopView>
+     */
+    public function listRouteStops(): array;
 }

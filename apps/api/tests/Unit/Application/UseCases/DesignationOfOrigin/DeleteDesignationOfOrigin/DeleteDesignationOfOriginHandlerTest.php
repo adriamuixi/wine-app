@@ -86,6 +86,7 @@ final class SpyDeleteDesignationOfOriginRepository implements DesignationOfOrigi
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array
     {
         return [];

@@ -20,6 +20,7 @@ type Props = {
   isDoMapMobile: boolean
   isDoMapMobileDoPickerOpen: boolean
   isDoMapTatRossetOnly: boolean
+  doMapTatRossetScope: 'with_reviews' | 'all_wines'
   isMobileMenuOpen: boolean
   locale: Locale
   localeLabels: Record<Locale, string>
@@ -33,6 +34,7 @@ type Props = {
   setIsDoMapCountryMenuOpen: Dispatch<SetStateAction<boolean>>
   setIsDoMapMobileDoPickerOpen: Dispatch<SetStateAction<boolean>>
   setIsDoMapTatRossetOnly: Dispatch<SetStateAction<boolean>>
+  setDoMapTatRossetScope: Dispatch<SetStateAction<'with_reviews' | 'all_wines'>>
   setIsMobileMenuOpen: Dispatch<SetStateAction<boolean>>
   setLocale: Dispatch<SetStateAction<Locale>>
   setSelectedMapDoId: Dispatch<SetStateAction<number | null>>
@@ -59,6 +61,7 @@ export default function DoMapPageView({
   isDoMapMobile,
   isDoMapMobileDoPickerOpen,
   isDoMapTatRossetOnly,
+  doMapTatRossetScope,
   isMobileMenuOpen,
   locale,
   localeLabels,
@@ -72,6 +75,7 @@ export default function DoMapPageView({
   setIsDoMapCountryMenuOpen,
   setIsDoMapMobileDoPickerOpen,
   setIsDoMapTatRossetOnly,
+  setDoMapTatRossetScope,
   setIsMobileMenuOpen,
   setLocale,
   setSelectedMapDoId,
@@ -298,6 +302,20 @@ export default function DoMapPageView({
                     />
                     <span>{t.doMap.tatRossetLabel}</span>
                   </label>
+
+                  {isDoMapTatRossetOnly ? (
+                    <label className="do-map-review-scope-wrap">
+                      <span className="sr-only">{t.doMap.reviewScopeLabel}</span>
+                      <select
+                        value={doMapTatRossetScope}
+                        onChange={(event) => setDoMapTatRossetScope(event.target.value as 'with_reviews' | 'all_wines')}
+                        aria-label={t.doMap.reviewScopeAria}
+                      >
+                        <option value="with_reviews">{t.doMap.reviewScopeWithReview}</option>
+                        <option value="all_wines">{t.doMap.reviewScopeAllIntroduced}</option>
+                      </select>
+                    </label>
+                  ) : null}
 
                   {isDoMapMobile ? (
                     <button

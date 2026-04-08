@@ -22,6 +22,7 @@ final readonly class ListDesignationsOfOriginHandler
             country: $query->country,
             region: $query->region,
             userIds: $query->userIds,
+            hasWines: $query->hasWines,
         );
     }
 }

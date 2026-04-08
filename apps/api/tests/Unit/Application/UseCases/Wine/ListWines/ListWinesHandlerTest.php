@@ -142,6 +142,7 @@ final class SpyWineRepository implements WineRepository
                 null,
                 null,
                 null,
+                null,
                 '2026-03-01T10:00:00+00:00',
                 [new WineListItemGrapeView(2, 'Tempranillo', 'red', 90.0)],
                 [new WineListItemAwardView('parker', 95.5, 2025)],
@@ -161,5 +162,10 @@ final class SpyWineRepository implements WineRepository
             totalItems: 1,
             totalPages: 1,
         );
+    }
+
+    public function listRouteStops(): array
+    {
+        return [];
     }
 }

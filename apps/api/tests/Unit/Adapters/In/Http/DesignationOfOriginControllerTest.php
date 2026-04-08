@@ -125,6 +125,41 @@ final class DesignationOfOriginControllerTest extends TestCase
         self::assertSame([1, 2], $repository->lastUserIdsFilter);
     }
 
+    public function testListPassesHasWinesFilterToRepository(): void
+    {
+        $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
+        $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
+            new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
+            new ListDesignationsOfOriginHandler($repository),
+            new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
+            new DeleteDesignationOfOriginHandler($repository, new DesignationOfOriginControllerNullDesignationOfOriginAssetStorage()),
+        );
+
+        $response = $controller->list(Request::create('/api/dos?has_wines=true', 'GET'));
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        self::assertTrue($repository->lastHasWinesFilter);
+    }
+
+    public function testListReturnsBadRequestForInvalidHasWinesFilter(): void
+    {
+        $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
+        $controller = new DesignationOfOriginController(
+            new AllowAllAuthSessionManagerForDoController(),
+            new CreateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
+            new ListDesignationsOfOriginHandler($repository),
+            new UpdateDesignationOfOriginHandler($repository, new PhotoInputGuard()),
+            new DeleteDesignationOfOriginHandler($repository, new DesignationOfOriginControllerNullDesignationOfOriginAssetStorage()),
+        );
+
+        $response = $controller->list(Request::create('/api/dos?has_wines=maybe', 'GET'));
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        self::assertSame('Invalid has_wines value.', $payload['error']);
+    }
+
     public function testListReturnsBadRequestForInvalidUserIdsFilter(): void
     {
         $repository = new DesignationOfOriginControllerInMemoryDesignationOfOriginRepository();
@@ -494,6 +529,7 @@ final class DesignationOfOriginControllerInMemoryDesignationOfOriginRepository i
     public ?string $lastRegionFilter = null;
     /** @var list<int> */
     public array $lastUserIdsFilter = [];
+    public ?bool $lastHasWinesFilter = null;
     public ?DesignationOfOrigin $lastCreatedDo = null;
     public ?DesignationOfOrigin $lastUpdatedDo = null;
     /** @var list<int> */
@@ -551,6 +587,7 @@ final class DesignationOfOriginControllerInMemoryDesignationOfOriginRepository i
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array
     {
         $this->lastSortFields = $sortFields;
@@ -558,6 +595,7 @@ final class DesignationOfOriginControllerInMemoryDesignationOfOriginRepository i
         $this->lastCountryFilter = $country;
         $this->lastRegionFilter = $region;
         $this->lastUserIdsFilter = $userIds;
+        $this->lastHasWinesFilter = $hasWines;
 
         return [
             new DesignationOfOrigin(1, 'Rioja', 'La Rioja', Country::Spain, 'ES', 'rioja_DO.png', 'la_rioja.png', ['lat' => 42.46, 'lng' => -2.44, 'zoom' => 7]),

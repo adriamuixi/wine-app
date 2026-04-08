@@ -27,6 +27,7 @@ interface DesignationOfOriginRepository
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array;
 
     public function update(DesignationOfOrigin $do): bool;

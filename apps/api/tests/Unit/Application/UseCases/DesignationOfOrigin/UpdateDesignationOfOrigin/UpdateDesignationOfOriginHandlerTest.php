@@ -192,6 +192,7 @@ final class SpyDesignationOfOriginRepository implements DesignationOfOriginRepos
         ?Country $country = null,
         ?string $region = null,
         array $userIds = [],
+        ?bool $hasWines = null,
     ): array
     {
         return [];

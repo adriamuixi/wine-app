@@ -600,6 +600,12 @@ paths:
             type: string
             example: '1,2'
         - in: query
+          name: has_wines
+          description: Filter DOs by whether they have at least one wine associated with them.
+          schema:
+            type: boolean
+            example: true
+        - in: query
           name: sort_by_1
           description: Primary sort field. Allowed values are `country`, `region`, `name`.
           schema:
@@ -874,6 +880,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/wines/route:
+    get:
+      summary: List chronological wine route stops
+      operationId: getWinesRoute
+      tags: [Wine]
+      responses:
+        '200':
+          description: Chronological purchase stops for wines with mapped purchase locations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WineRouteResponse'
   /api/wines/draft-from-ai:
     post:
       summary: Generate AI-assisted wine draft
@@ -2341,6 +2359,80 @@ components:
             $ref: '#/components/schemas/WineListItem'
         pagination:
           $ref: '#/components/schemas/PaginationMeta'
+    WineRouteStop:
+      type: object
+      required: [purchase_id, purchased_at, price_paid, wine, place]
+      properties:
+        purchase_id:
+          type: integer
+          format: int64
+        purchased_at:
+          type: string
+          format: date-time
+        price_paid:
+          type: number
+          format: float
+        wine:
+          type: object
+          required: [id, name, winery, wine_type, country, do]
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+            winery:
+              type: string
+              nullable: true
+            wine_type:
+              type: string
+              nullable: true
+            country:
+              type: string
+              nullable: true
+            do:
+              type: object
+              nullable: true
+              required: [id, name, do_logo, region_logo]
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                name:
+                  type: string
+                do_logo:
+                  type: string
+                  nullable: true
+                region_logo:
+                  type: string
+                  nullable: true
+        place:
+          type: object
+          required: [id, name, address, city, country, map_data]
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+            address:
+              type: string
+              nullable: true
+            city:
+              type: string
+              nullable: true
+            country:
+              type: string
+            map_data:
+              $ref: '#/components/schemas/PlaceMapData'
+    WineRouteResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WineRouteStop'
     GrapeListItem:
       type: object
       required: [id, name, color]

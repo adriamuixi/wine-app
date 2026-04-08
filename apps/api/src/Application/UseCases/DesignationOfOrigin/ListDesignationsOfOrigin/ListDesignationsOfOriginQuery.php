@@ -18,6 +18,7 @@ final readonly class ListDesignationsOfOriginQuery
         public ?Country $country = null,
         public ?string $region = null,
         public array $userIds = [],
+        public ?bool $hasWines = null,
     ) {
     }
 }

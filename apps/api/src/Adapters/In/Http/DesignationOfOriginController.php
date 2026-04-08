@@ -69,6 +69,7 @@ final class DesignationOfOriginController
             $countryFilter = $this->parseCountryFilter($request, 'country');
             $regionFilter = $this->parseOptionalStringFilter($request, 'region');
             $userIdsFilter = $this->parseUserIdsFilter($request, 'user_ids');
+            $hasWinesFilter = $this->parseOptionalBooleanFilter($request, 'has_wines');
         } catch (\InvalidArgumentException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
         }
@@ -79,6 +80,7 @@ final class DesignationOfOriginController
             country: $countryFilter,
             region: $regionFilter,
             userIds: $userIdsFilter,
+            hasWines: $hasWinesFilter,
         ));
 
         return new JsonResponse([
@@ -392,6 +394,29 @@ final class DesignationOfOriginController
         $trimmed = trim($value);
 
         return '' === $trimmed ? null : $trimmed;
+    }
+
+    private function parseOptionalBooleanFilter(Request $request, string $field): ?bool
+    {
+        $value = $request->query->get($field);
+        if (null === $value) {
+            return null;
+        }
+
+        if (!is_string($value)) {
+            throw new \InvalidArgumentException(sprintf('%s must be a boolean string.', $field));
+        }
+
+        $normalized = trim(strtolower($value));
+        if ('' === $normalized) {
+            return null;
+        }
+
+        return match ($normalized) {
+            '1', 'true', 'yes' => true,
+            '0', 'false', 'no' => false,
+            default => throw new \InvalidArgumentException(sprintf('Invalid %s value.', $field)),
+        };
     }
 
     private function parseCountryFilter(Request $request, string $field): ?Country

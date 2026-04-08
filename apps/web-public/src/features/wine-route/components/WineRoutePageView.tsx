@@ -1,18 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
 import type { Locale, PublicMessages } from '../../../i18n/messages'
 import { LEAFLET_CSS_LINK_ID, LEAFLET_CSS_URL, LEAFLET_JS_URL, LEAFLET_SCRIPT_ID } from '../../../app/config/constants'
 import type { ThemeMode } from '../../catalog/types'
 import type { LeafletGlobal as BaseLeafletGlobal, LeafletMap } from '../../do-map/types'
-
-type WineRouteStop = {
-  id: number
-  place: string
-  city: string
-  lat: number
-  lng: number
-  tastingDate: string
-  winesBought: number
-}
+import type { WineRouteStop } from '../types'
 
 type LeafletMarker = {
   addTo: (map: unknown) => unknown
@@ -25,22 +16,15 @@ type WineRouteLeafletGlobal = BaseLeafletGlobal & {
   polyline: (latlngs: Array<[number, number]>, options?: Record<string, unknown>) => { addTo: (map: unknown) => unknown }
 }
 
-const MOCK_STOPS: WineRouteStop[] = [
-  { id: 1, place: 'Vila Viniteca', city: 'Barcelona', lat: 41.3892, lng: 2.1675, tastingDate: '2026-01-12', winesBought: 4 },
-  { id: 2, place: 'Celler de Gelida', city: 'Barcelona', lat: 41.3782, lng: 2.1524, tastingDate: '2026-01-19', winesBought: 3 },
-  { id: 3, place: 'Lavinia', city: 'Barcelona', lat: 41.3927, lng: 2.1639, tastingDate: '2026-01-25', winesBought: 2 },
-  { id: 4, place: 'Vins Noe', city: 'Sant Cugat', lat: 41.4738, lng: 2.0837, tastingDate: '2026-02-03', winesBought: 5 },
-  { id: 5, place: 'El Rebost del Vi', city: 'Terrassa', lat: 41.5605, lng: 2.0108, tastingDate: '2026-02-09', winesBought: 2 },
-  { id: 6, place: 'Celler La Vinya', city: 'Sabadell', lat: 41.5463, lng: 2.1086, tastingDate: '2026-02-17', winesBought: 4 },
-  { id: 7, place: 'Wine Palace', city: 'Mataro', lat: 41.5381, lng: 2.4445, tastingDate: '2026-02-24', winesBought: 3 },
-  { id: 8, place: 'La Bota de Oro', city: 'Sitges', lat: 41.2368, lng: 1.8096, tastingDate: '2026-03-04', winesBought: 2 },
-  { id: 9, place: 'Vins i Licors Grau', city: 'Palafrugell', lat: 41.9172, lng: 3.1638, tastingDate: '2026-03-12', winesBought: 4 },
-  { id: 10, place: 'Celler Can Dani', city: 'Girona', lat: 41.9831, lng: 2.825, tastingDate: '2026-03-21', winesBought: 3 },
-]
-
 function formatDate(date: string, locale: Locale): string {
   const localeCode = locale === 'ca' ? 'ca-ES' : locale === 'en' ? 'en-US' : 'es-ES'
-  return new Intl.DateTimeFormat(localeCode, { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(`${date}T00:00:00`))
+  return new Intl.DateTimeFormat(localeCode, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(date))
 }
 
 function ensureLeafletStylesheet(): void {
@@ -93,11 +77,14 @@ function loadLeaflet(): Promise<WineRouteLeafletGlobal> {
 type Props = {
   adminHref: string
   desktopNav: ReactNode
+  hasRouteError: boolean
   isDark: boolean
+  isLoadingRoute: boolean
   isMobileMenuOpen: boolean
   locale: Locale
   localeLabels: Record<Locale, string>
   logoSrc: string
+  routeStops: WineRouteStop[]
   setIsMobileMenuOpen: Dispatch<SetStateAction<boolean>>
   setLocale: Dispatch<SetStateAction<Locale>>
   setTheme: Dispatch<SetStateAction<ThemeMode>>
@@ -108,11 +95,14 @@ type Props = {
 export default function WineRoutePageView({
   adminHref,
   desktopNav,
+  hasRouteError,
   isDark,
+  isLoadingRoute,
   isMobileMenuOpen,
   locale,
   localeLabels,
   logoSrc,
+  routeStops,
   setIsMobileMenuOpen,
   setLocale,
   setTheme,
@@ -133,12 +123,7 @@ export default function WineRoutePageView({
   const [isRouteMapError, setIsRouteMapError] = useState(false)
   const [canRouteMapFullscreen, setCanRouteMapFullscreen] = useState(false)
   const [isRouteMapFullscreen, setIsRouteMapFullscreen] = useState(false)
-
-  const routeStops = useMemo(
-    () => [...MOCK_STOPS].sort((a, b) => new Date(a.tastingDate).getTime() - new Date(b.tastingDate).getTime()),
-    [],
-  )
-  const [selectedStopId, setSelectedStopId] = useState<number>(routeStops[0]?.id ?? 0)
+  const [selectedStopId, setSelectedStopId] = useState<number>(routeStops[0]?.purchaseId ?? 0)
 
   useEffect(() => {
     ensureLeafletStylesheet()
@@ -173,7 +158,13 @@ export default function WineRoutePageView({
 
   useEffect(() => {
     const container = mapContainerRef.current
-    if (!container) {
+    if (!container || routeStops.length === 0) {
+      if (mapRef.current) {
+        mapRef.current.remove()
+        mapRef.current = null
+      }
+      markerRefs.current = {}
+      setIsRouteMapError(false)
       return
     }
 
@@ -223,23 +214,18 @@ export default function WineRoutePageView({
         leaflet.tileLayer(fallbackTileUrl, tileLayerOptions).addTo(map)
       })
 
-      const latLngs = routeStops.map((stop) => [stop.lat, stop.lng] as [number, number])
-      const bounds = leaflet.latLngBounds(latLngs)
-      map.fitBounds(bounds, { padding: [36, 36], maxZoom: 10, animate: false })
-
-      leaflet.polyline(latLngs, {
-        color: '#b21257',
-        weight: 4,
-        opacity: 0.9,
-      }).addTo(map)
-
-      const firstStop = routeStops[0]
-      const lastStop = routeStops[routeStops.length - 1]
-      if (firstStop && lastStop && firstStop.id !== lastStop.id) {
-        leaflet.polyline(
-          [[lastStop.lat, lastStop.lng], [firstStop.lat, firstStop.lng]],
-          { color: '#b21257', weight: 3, opacity: 0.55, dashArray: '7 8' },
-        ).addTo(map)
+      const latLngs = routeStops.map((stop) => [stop.place.map.lat, stop.place.map.lng] as [number, number])
+      if (latLngs.length === 1) {
+        const [lat, lng] = latLngs[0] ?? [41.3851, 2.1734]
+        map.setView([lat, lng], 10)
+      } else {
+        const bounds = leaflet.latLngBounds(latLngs)
+        map.fitBounds(bounds, { padding: [36, 36], maxZoom: 10, animate: false })
+        leaflet.polyline(latLngs, {
+          color: '#b21257',
+          weight: 4,
+          opacity: 0.9,
+        }).addTo(map)
       }
 
       markerRefs.current = {}
@@ -251,11 +237,11 @@ export default function WineRoutePageView({
           html: `<span class="wine-route-marker-bubble">${index + 1}</span>`,
         })
 
-        const marker = leaflet.marker([stop.lat, stop.lng], { icon })
+        const marker = leaflet.marker([stop.place.map.lat, stop.place.map.lng], { icon })
         marker.addTo(map)
-        marker.bindTooltip(`${index + 1}. ${stop.place}`, { direction: 'top', offset: [0, -8] })
-        marker.on('click', () => setSelectedStopId(stop.id))
-        markerRefs.current[stop.id] = marker
+        marker.bindTooltip(`${index + 1}. ${stop.place.name}`, { direction: 'top', offset: [0, -8] })
+        marker.on('click', () => setSelectedStopId(stop.purchaseId))
+        markerRefs.current[stop.purchaseId] = marker
       })
 
       mapRef.current = map
@@ -279,7 +265,18 @@ export default function WineRoutePageView({
   }, [locale, routeStops])
 
   useEffect(() => {
-    const selectedStop = routeStops.find((stop) => stop.id === selectedStopId)
+    if (routeStops.length === 0) {
+      setSelectedStopId(0)
+      return
+    }
+
+    if (!routeStops.some((stop) => stop.purchaseId === selectedStopId)) {
+      setSelectedStopId(routeStops[0]?.purchaseId ?? 0)
+    }
+  }, [routeStops, selectedStopId])
+
+  useEffect(() => {
+    const selectedStop = routeStops.find((stop) => stop.purchaseId === selectedStopId)
     const map = mapRef.current
     if (!selectedStop || !map) {
       return
@@ -294,7 +291,7 @@ export default function WineRoutePageView({
       bubble.classList.toggle('is-selected', Number(id) === selectedStopId)
     })
 
-    map.flyTo([selectedStop.lat, selectedStop.lng], Math.max(map.getZoom(), 8), {
+    map.flyTo([selectedStop.place.map.lat, selectedStop.place.map.lng], Math.max(map.getZoom(), 8), {
       animate: true,
       duration: 0.55,
     })
@@ -450,10 +447,10 @@ export default function WineRoutePageView({
             <div className="section-heading-copy">
               <p className="eyebrow">{t.wineRoute.eyebrow}</p>
               <h1 className="section-title-label">{t.wineRoute.title}</h1>
+              <p className="hero-subtitle">{t.wineRoute.subtitle}</p>
             </div>
           </div>
         </div>
-        <div className="wine-route-hero-badge" aria-label={t.wineRoute.mockAria}>{t.wineRoute.mockBadge}</div>
       </section>
 
       <section className="wine-route-layout">
@@ -471,7 +468,9 @@ export default function WineRoutePageView({
                 {isRouteMapFullscreen ? '✕' : '⛶'}
               </button>
             ) : null}
-            {isRouteMapError ? <p className="do-map-error">{t.doMap.loadError}</p> : null}
+            {isLoadingRoute ? <p className="do-map-error">{t.wineRoute.loading}</p> : null}
+            {!isLoadingRoute && (isRouteMapError || hasRouteError) ? <p className="do-map-error">{t.doMap.loadError}</p> : null}
+            {!isLoadingRoute && !hasRouteError && routeStops.length === 0 ? <p className="do-map-error">{t.wineRoute.empty}</p> : null}
           </div>
           <p className="wine-route-map-note">{t.wineRoute.circuitHint}</p>
         </div>
@@ -479,19 +478,21 @@ export default function WineRoutePageView({
         <aside className="cards-panel wine-route-list-card" aria-label={t.wineRoute.listAria}>
           <h2>{t.wineRoute.listTitle}</h2>
           <div className="wine-route-stop-list">
+            {isLoadingRoute ? <p className="do-map-empty">{t.wineRoute.loading}</p> : null}
+            {!isLoadingRoute && !hasRouteError && routeStops.length === 0 ? <p className="do-map-empty">{t.wineRoute.empty}</p> : null}
             {routeStops.map((stop, index) => (
               <button
-                key={`wine-route-stop-${stop.id}`}
+                key={`wine-route-stop-${stop.purchaseId}`}
                 type="button"
-                className={`wine-route-stop${selectedStopId === stop.id ? ' active' : ''}`}
-                onClick={() => setSelectedStopId(stop.id)}
+                className={`wine-route-stop${selectedStopId === stop.purchaseId ? ' active' : ''}`}
+                onClick={() => setSelectedStopId(stop.purchaseId)}
               >
                 <span className="wine-route-stop-order">{index + 1}</span>
                 <span className="wine-route-stop-content">
-                  <strong>{stop.place}</strong>
-                  <span>{stop.city}</span>
-                  <span>{t.wineRoute.dateLabel}: {formatDate(stop.tastingDate, locale)}</span>
-                  <span>{t.wineRoute.winesBoughtLabel}: {stop.winesBought}</span>
+                  <strong>{stop.wine.name}</strong>
+                  <span>{stop.place.name}{stop.place.city ? ` · ${stop.place.city}` : ''}</span>
+                  <span>{t.wineRoute.dateLabel}: {formatDate(stop.purchasedAt, locale)}</span>
+                  <span>{t.wineRoute.priceLabel}: {stop.pricePaid.toFixed(2)}</span>
                 </span>
               </button>
             ))}

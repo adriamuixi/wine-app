@@ -24,6 +24,7 @@ use App\Application\UseCases\Wine\ListWines\ListWinesHandler;
 use App\Application\UseCases\Wine\ListWines\ListWinesQuery;
 use App\Application\UseCases\Wine\ListWines\ListWinesSort;
 use App\Application\UseCases\Wine\ListWines\ListWinesValidationException;
+use App\Application\UseCases\Wine\ListWineRoute\ListWineRouteHandler;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineCommand;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineHandler;
 use App\Application\UseCases\Wine\UpdateWine\UpdateWineNotFound;
@@ -53,6 +54,7 @@ final class WineController
         private readonly GenerateWineDraftHandler $generateWineDraftHandler,
         private readonly GetWineDetailsHandler $getWineDetailsHandler,
         private readonly ListWinesHandler $listWinesHandler,
+        private readonly ListWineRouteHandler $listWineRouteHandler,
     ) {
     }
 
@@ -212,6 +214,47 @@ final class WineController
                 'has_next' => $result->page < $result->totalPages,
                 'has_prev' => $result->page > 1,
             ],
+        ], Response::HTTP_OK);
+    }
+
+    #[Route('/api/wines/route', name: 'api_wines_route', methods: ['GET'])]
+    public function route(): JsonResponse
+    {
+        $result = $this->listWineRouteHandler->handle();
+
+        return new JsonResponse([
+            'items' => array_map(
+                static fn ($item): array => [
+                    'purchase_id' => $item->purchaseId,
+                    'purchased_at' => $item->purchasedAt,
+                    'price_paid' => $item->pricePaid,
+                    'wine' => [
+                        'id' => $item->wineId,
+                        'name' => $item->wineName,
+                        'winery' => $item->winery,
+                        'wine_type' => $item->wineType,
+                        'country' => $item->country,
+                        'do' => null === $item->doId ? null : [
+                            'id' => $item->doId,
+                            'name' => $item->doName,
+                            'do_logo' => $item->doLogo,
+                            'region_logo' => $item->regionLogo,
+                        ],
+                    ],
+                    'place' => [
+                        'id' => $item->placeId,
+                        'name' => $item->placeName,
+                        'address' => $item->placeAddress,
+                        'city' => $item->placeCity,
+                        'country' => $item->placeCountry,
+                        'map_data' => [
+                            'lat' => $item->lat,
+                            'lng' => $item->lng,
+                        ],
+                    ],
+                ],
+                $result->items,
+            ),
         ], Response::HTTP_OK);
     }
 

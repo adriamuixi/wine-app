@@ -35,8 +35,8 @@ common:
     descriptionDoMap: Mapa público de denominaciones de origen y vinos destacados.
     descriptionAbout: Conoce a Tat (Maria) y Rosset (Adrià), el dúo detrás de Nuestros
       vinos.
-    descriptionWineRoute: Recorrido mock de tiendas donde compramos vino y orden de
-      cata por fecha.
+    descriptionWineRoute: Recorrido cronológico real de compras y catas de vino con
+      ubicaciones en mapa.
     descriptionCatalog: Catálogo público de vinos con fichas, puntuaciones y denominaciones
       de origen.
   doShort: DO
