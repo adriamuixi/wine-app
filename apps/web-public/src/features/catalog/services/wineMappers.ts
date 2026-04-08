@@ -27,8 +27,44 @@ function peninBadgeImagePath(score: number | null | undefined): string | undefin
   return `/images/icons/awards/penin/penin-${rounded}.png`
 }
 
+function decanterBadgeImagePath(value: string | null | undefined): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const normalized = value.trim().toLowerCase()
+  if (normalized === '') {
+    return undefined
+  }
+
+  const map: Record<string, string> = {
+    platinum: '/images/icons/awards/decanter/decanter_platinum.png',
+    gold: '/images/icons/awards/decanter/decanter_gold.png',
+    silver: '/images/icons/awards/decanter/decanter_silver.png',
+    bronze: '/images/icons/awards/decanter/decanter_bronze.png',
+  }
+
+  return map[normalized]
+}
+
+function awardBadgeImagePath(award: Pick<AwardApiValue, 'name' | 'score' | 'value'>): string | undefined {
+  if (award.name === 'penin') {
+    return peninBadgeImagePath(award.score)
+  }
+
+  if (award.name === 'decanter') {
+    return decanterBadgeImagePath(award.value)
+  }
+
+  if (award.name === 'wine_spectator') {
+    return '/images/icons/awards/wine_spectator/logo.png'
+  }
+
+  return undefined
+}
+
 function mapPrimaryAwardToReward(
-  award: Pick<AwardApiValue, 'name' | 'score'> | undefined,
+  award: Pick<AwardApiValue, 'name' | 'score' | 'value'> | undefined,
 ): { reward?: WineCard['reward']; rewardBadgeImage?: string } {
   if (!award) {
     return {}
@@ -44,7 +80,7 @@ function mapPrimaryAwardToReward(
 
   return {
     reward,
-    rewardBadgeImage: award.name === 'penin' ? peninBadgeImagePath(award.score) : undefined,
+    rewardBadgeImage: awardBadgeImagePath(award),
   }
 }
 

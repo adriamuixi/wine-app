@@ -60,6 +60,7 @@ export type AwardApiValue = {
   name: AwardApiName
   score: number | null
   year: number | null
+  value?: string | null
 }
 
 export type WineListApiItem = {
@@ -137,6 +138,7 @@ export type WineDetailsApiResponse = {
       name: AwardApiName
       score: number | null
       year: number | null
+      value?: string | null
     }>
     photos: Array<{
       id: number
