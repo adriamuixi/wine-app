@@ -25,6 +25,11 @@ admin:
       highestScore: Nota más alta
       lowestScore: Nota más baja
 ui:
+  asset_library: Biblioteca visual
+  icon_library: Librería de iconos
+  icon_library_description: Todos los iconos disponibles en /images/icons/wine para reutilizarlos en el backoffice.
+  total_icons_count: "{{count}} iconos"
+  open_icon_in_new_tab: Abrir el icono en una pestaña nueva
   name_and_surname_are_required: Nombre y apellido son obligatorios.
   not_could_update_profile: No se pudo actualizar el perfil.
   settings_backoffice: Configuración del backoffice

@@ -451,7 +451,7 @@ export type WineAiDraftApiResponse = {
   draft: WineAiDraft
 }
 
-export type MenuKey = 'dashboard' | 'wines' | 'dos' | 'varieties' | 'doCreate' | 'wineCreate' | 'wineEdit' | 'wineAiCreate' | 'wineAiPreview' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'settings' | 'wineProfile'
+export type MenuKey = 'dashboard' | 'wines' | 'dos' | 'varieties' | 'doCreate' | 'wineCreate' | 'wineEdit' | 'wineAiCreate' | 'wineAiPreview' | 'reviews' | 'reviewCreate' | 'reviewEdit' | 'admin' | 'apiDocs' | 'icons' | 'settings' | 'wineProfile'
 export type ThemeMode = 'light' | 'dark'
 export type GalleryModalVariant = 'full' | 'compact'
 export type WinePhotoSlotType = 'bottle' | 'front_label' | 'back_label' | 'situation'

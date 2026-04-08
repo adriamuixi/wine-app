@@ -7,7 +7,7 @@ import { DashboardPanel } from '../../features/dashboard'
 import { DoCreatePanel, DoDirectoryPanel, DoEditModal } from '../../features/do'
 import { deleteDoById } from '../../features/do/services/doApi'
 import { ReviewEditorPanel, ReviewsPanel } from '../../features/reviews'
-import { SettingsPanel } from '../../features/settings'
+import { IconLibraryPanel, SettingsPanel } from '../../features/settings'
 import { analyzeWineDraftWithAi, PhotoEditorModal, WineAiCreatePanel, WineAiDraftPreviewPanel, WineFiltersMobileModal, WineFormPanel, WineGalleryModal, WineProfilePanel, WinesListPanel, useWinePhotoActions } from '../../features/wines'
 import { toCountryIsoCode } from '../../features/do/services/countryCode'
 import { usePhotoEditorGestures } from '../../features/wines/hooks/usePhotoEditorGestures'
@@ -858,6 +858,12 @@ function HomePage() {
       iconSrc: '/images/icons/wine/wines_book.png',
     },
     {
+      key: 'icons',
+      label: labels.menu.icons,
+      short: 'IC',
+      iconSrc: '/images/icons/wine/wine_card.png',
+    },
+    {
       key: 'admin',
       label: labels.menu.admin,
       short: 'A',
@@ -1154,6 +1160,7 @@ function HomePage() {
     reviewEdit: labels.topbar.reviewEdit,
     admin: labels.topbar.admin,
     apiDocs: labels.topbar.apiDoc,
+    icons: labels.menu.icons,
     settings: labels.topbar.settings,
     wineProfile: selectedWineSheet ? `${t('wineProfile.pageTitle')} · ${selectedWineSheet.name}` : t('wineProfile.pageTitle'),
   }[menu]
@@ -4860,6 +4867,10 @@ function HomePage() {
             }}
             onCopyApiCodeBlock={handleCopyApiCodeBlock}
           />
+        ) : null}
+
+        {menu === 'icons' ? (
+          <IconLibraryPanel t={t} />
         ) : null}
 
         {menu === 'wineProfile' && selectedWineSheet ? (

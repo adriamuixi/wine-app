@@ -25,6 +25,11 @@ admin:
       highestScore: Highest score
       lowestScore: Lowest score
 ui:
+  asset_library: Asset library
+  icon_library: Icon library
+  icon_library_description: All available icons from /images/icons/wine ready to be reused across the backoffice.
+  total_icons_count: "{{count}} icons"
+  open_icon_in_new_tab: Open icon in a new tab
   name_and_surname_are_required: Name and surname are required
   not_could_update_profile: Could not update profile
   settings_backoffice: Settings backoffice
