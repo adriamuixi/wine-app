@@ -1,6 +1,8 @@
 FROM node:22-alpine AS builder
 
 WORKDIR /app
+ARG VITE_GA_MEASUREMENT_ID
+ENV VITE_GA_MEASUREMENT_ID=${VITE_GA_MEASUREMENT_ID}
 COPY apps/web-public/package*.json ./
 RUN npm ci
 COPY apps/web-public/ ./
