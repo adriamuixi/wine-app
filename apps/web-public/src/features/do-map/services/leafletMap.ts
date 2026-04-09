@@ -55,6 +55,7 @@ type InitializeLeafletMapParams = {
   doMapAllWorldValue: string
   onZoomChange: (zoom: number) => void
   onMarkerClick: (pointId: number) => void
+  onMapClick: () => void
 }
 
 export async function initializeLeafletMap({
@@ -65,6 +66,7 @@ export async function initializeLeafletMap({
   doMapAllWorldValue,
   onZoomChange,
   onMarkerClick,
+  onMapClick,
 }: InitializeLeafletMapParams): Promise<{ map: LeafletMap; markers: DoMapMarkerHandle[]; resizeObserver: ResizeObserver }> {
   const leaflet = await loadLeafletGlobal()
 
@@ -83,6 +85,9 @@ export async function initializeLeafletMap({
   onZoomChange(leafletMap.getZoom())
   leafletMap.on('zoomend', () => {
     onZoomChange(leafletMap.getZoom())
+  })
+  leafletMap.on('click', () => {
+    onMapClick()
   })
 
   const tileLanguage = locale === 'ca' ? 'ca' : locale === 'en' ? 'en' : 'es'

@@ -765,6 +765,7 @@ export default function App() {
         doMapAllWorldValue: DO_MAP_ALL_WORLD_VALUE,
         onZoomChange: (zoom) => setDoMapZoomLevel(zoom),
         onMarkerClick: (pointId) => setSelectedMapDoId(pointId),
+        onMapClick: () => setSelectedMapDoId(null),
       })
       if (isDisposed) {
         initialized.map.remove()
@@ -809,6 +810,13 @@ export default function App() {
         marker.closeTooltip()
       }
     })
+  }, [doMapZoomLevel, isDoMapPage, selectedMapDo])
+
+  useEffect(() => {
+    const map = doMapInstanceRef.current
+    if (!isDoMapPage || !map || selectedMapDo) {
+      return
+    }
 
     if (doMapCountryFilter === DO_MAP_ALL_WORLD_VALUE && !selectedMapDo) {
       map.setView([20, 0], 3.1)
@@ -818,25 +826,17 @@ export default function App() {
     if (doMapCountryFilter !== DO_MAP_ALL_WORLD_VALUE && !selectedMapDo && doMapVisiblePoints.length > 0) {
       const countryBounds = doMapVisiblePoints.map((point) => [point.lat, point.lng] as [number, number])
       map.fitBounds(countryBounds, { padding: [36, 36], maxZoom: 7, animate: true, duration: 0.5 })
-      return
     }
-
-    if (selectedMapDo) {
-      map.flyTo([selectedMapDo.lat, selectedMapDo.lng], selectedMapDo.zoom ?? Math.max(map.getZoom(), 6), { duration: 0.6 })
-    }
-  }, [doMapCountryFilter, doMapVisiblePoints, isDoMapPage, selectedMapDo])
+  }, [doMapCountryFilter, doMapVisiblePoints, isDoMapPage])
 
   useEffect(() => {
     const map = doMapInstanceRef.current
-    if (!isDoMapPage || !map) {
+    if (!isDoMapPage || !map || !selectedMapDo) {
       return
     }
 
-    const zoomBoost = doMapZoomLevel >= 6
-    doMapMarkersRef.current.forEach(({ id, setSelected }) => {
-      setSelected(selectedMapDo?.id === id, zoomBoost)
-    })
-  }, [doMapZoomLevel, isDoMapPage, selectedMapDo])
+    map.flyTo([selectedMapDo.lat, selectedMapDo.lng], selectedMapDo.zoom ?? Math.max(map.getZoom(), 6), { duration: 0.6 })
+  }, [isDoMapPage, selectedMapDo])
 
   useEffect(() => {
     const syncActiveModalImageIndex = () => {

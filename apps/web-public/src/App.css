@@ -909,10 +909,10 @@
 }
 
 .do-map-logo-marker {
-  width: 26px;
-  height: 26px;
+  width: 33px;
+  height: 33px;
   border-radius: 999px;
-  border: 1.5px solid #7a2a55;
+  border: 2px solid #7a2a55;
   background: #fff;
   box-shadow: 0 3px 8px rgba(12, 10, 14, 0.22);
   display: grid;
