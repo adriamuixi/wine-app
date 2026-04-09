@@ -681,7 +681,6 @@ export default function CatalogPageView({
         activeModalImageIndex={activeModalImageIndex}
         autonomousCommunityNameForRegion={autonomousCommunityNameForRegion}
         closeSelectedWineModal={closeSelectedWineModal}
-        countryFlagEmoji={countryFlagEmoji}
         countryFlagPath={countryFlagPath}
         defaultPublicWineImageForTheme={defaultPublicWineImageForTheme}
         doLogoPreview={doLogoPreview}

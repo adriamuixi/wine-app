@@ -23,7 +23,6 @@ type Props = {
   activeModalImageIndex: number
   autonomousCommunityNameForRegion: (region: string) => string | null
   closeSelectedWineModal: () => void
-  countryFlagEmoji: (country: string) => string
   countryFlagPath: (country: string) => string | null
   defaultPublicWineImageForTheme: (isDark: boolean) => string
   doLogoPreview: DoLogoPreview
@@ -46,7 +45,6 @@ export default function CatalogOverlays({
   activeModalImageIndex,
   autonomousCommunityNameForRegion,
   closeSelectedWineModal,
-  countryFlagEmoji,
   countryFlagPath,
   defaultPublicWineImageForTheme,
   doLogoPreview,
