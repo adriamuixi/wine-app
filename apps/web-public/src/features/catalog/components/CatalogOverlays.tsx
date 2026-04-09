@@ -1,4 +1,5 @@
-import type { Dispatch, SetStateAction } from 'react'
+import { useRef } from 'react'
+import type { Dispatch, SetStateAction, TouchEvent } from 'react'
 import type { Locale, PublicMessages } from '../../../i18n/messages'
 import type { WineCard } from '../types'
 
@@ -29,12 +30,14 @@ type Props = {
   euro: Intl.NumberFormat
   galleryPhotoLabels: string[]
   isDark: boolean
+  isWineGalleryLightboxOpen: boolean
   locale: Locale
   localizedCountryName: (country: string, locale: Locale) => string
   resolvePublicWineImageForTheme: (src: string, isDark: boolean) => string
   selectedWine: WineCard | null
   setActiveModalImageIndex: Dispatch<SetStateAction<number>>
   setDoLogoPreview: Dispatch<SetStateAction<DoLogoPreview>>
+  setIsWineGalleryLightboxOpen: Dispatch<SetStateAction<boolean>>
   splitGrapeVarieties: (grapes: string) => string[]
   t: PublicMessages
 }
@@ -50,15 +53,68 @@ export default function CatalogOverlays({
   euro,
   galleryPhotoLabels,
   isDark,
+  isWineGalleryLightboxOpen,
   locale,
   localizedCountryName,
   resolvePublicWineImageForTheme,
   selectedWine,
   setActiveModalImageIndex,
   setDoLogoPreview,
+  setIsWineGalleryLightboxOpen,
   splitGrapeVarieties,
   t,
 }: Props) {
+  const touchStartXRef = useRef<number | null>(null)
+  const touchDeltaXRef = useRef(0)
+
+  const galleryCount = selectedWine?.gallery.length ?? 0
+  const activeGalleryImage = selectedWine?.gallery[activeModalImageIndex] ?? selectedWine?.image ?? ''
+  const activeGalleryLabel = galleryPhotoLabels[activeModalImageIndex] ?? `${t.modal.gallery} ${activeModalImageIndex + 1}`
+
+  const goToPreviousGalleryImage = () => {
+    if (galleryCount <= 1) {
+      return
+    }
+    setActiveModalImageIndex((current) => (current - 1 + galleryCount) % galleryCount)
+  }
+
+  const goToNextGalleryImage = () => {
+    if (galleryCount <= 1) {
+      return
+    }
+    setActiveModalImageIndex((current) => (current + 1) % galleryCount)
+  }
+
+  const handleGalleryTouchStart = (event: TouchEvent<HTMLElement>) => {
+    touchStartXRef.current = event.changedTouches[0]?.clientX ?? null
+    touchDeltaXRef.current = 0
+  }
+
+  const handleGalleryTouchMove = (event: TouchEvent<HTMLElement>) => {
+    if (touchStartXRef.current == null) {
+      return
+    }
+    const currentX = event.changedTouches[0]?.clientX ?? touchStartXRef.current
+    touchDeltaXRef.current = currentX - touchStartXRef.current
+  }
+
+  const handleGalleryTouchEnd = () => {
+    const deltaX = touchDeltaXRef.current
+    touchStartXRef.current = null
+    touchDeltaXRef.current = 0
+
+    if (Math.abs(deltaX) < 48) {
+      return
+    }
+
+    if (deltaX > 0) {
+      goToPreviousGalleryImage()
+      return
+    }
+
+    goToNextGalleryImage()
+  }
+
   return (
     <>
       {selectedWine ? (
@@ -94,16 +150,22 @@ export default function CatalogOverlays({
             </header>
 
             <div className="public-wine-modal-grid">
-              <div className="public-wine-gallery">
-                <div className="public-wine-main-image">
+                <div className="public-wine-gallery">
+                <button
+                  type="button"
+                  className="public-wine-main-image public-wine-main-image-button"
+                  onClick={() => setIsWineGalleryLightboxOpen(true)}
+                  aria-label={`${selectedWine.name} · ${activeGalleryLabel}`}
+                  title={activeGalleryLabel}
+                >
                   <img
-                    src={resolvePublicWineImageForTheme(selectedWine.gallery[activeModalImageIndex] ?? selectedWine.image, isDark)}
+                    src={resolvePublicWineImageForTheme(activeGalleryImage, isDark)}
                     alt={selectedWine.name}
                     onError={(event) => {
                       event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
                     }}
                   />
-                </div>
+                </button>
                 <div className="public-wine-thumbs" aria-label={t.modal.gallery}>
                   {selectedWine.gallery.map((src, index) => {
                     const photoLabel = galleryPhotoLabels[index] ?? `${t.modal.gallery} ${index + 1}`
@@ -112,7 +174,10 @@ export default function CatalogOverlays({
                         key={`${selectedWine.id}-${src}-${index}`}
                         type="button"
                         className={`public-wine-thumb ${activeModalImageIndex === index ? 'active' : ''}`}
-                        onClick={() => setActiveModalImageIndex(index)}
+                        onClick={() => {
+                          setActiveModalImageIndex(index)
+                          setIsWineGalleryLightboxOpen(true)
+                        }}
                         aria-label={photoLabel}
                         title={photoLabel}
                       >
@@ -134,8 +199,10 @@ export default function CatalogOverlays({
               <div className="public-wine-details">
                 {(() => {
                   const selectedCountryFlagImage = countryFlagPath(selectedWine.country)
-                  const selectedCommunityFlagImage = selectedWine.country === 'Spain' ? selectedWine.regionLogoImage ?? null : null
-                  const selectedCommunityName = selectedWine.country === 'Spain' ? autonomousCommunityNameForRegion(selectedWine.region) : null
+                  const selectedRegionLogoImage = selectedWine.regionLogoImage ?? null
+                  const selectedRegionLabel = selectedWine.country === 'Spain'
+                    ? autonomousCommunityNameForRegion(selectedWine.region) ?? selectedWine.region
+                    : selectedWine.region
                   return (
                     <section className="detail-card">
                       <h3>{t.icons.details} {t.modal.details}</h3>
@@ -144,12 +211,14 @@ export default function CatalogOverlays({
                         <div>
                           <dt>{t.icons.origin} {t.common.doLabel}</dt>
                           <dd className="origin-with-do">
-                            <span className="country-flag-badge" aria-label={selectedWine.country} title={selectedWine.country}>
-                              {selectedCountryFlagImage ? <img className="flag-badge-image" src={selectedCountryFlagImage} alt={localizedCountryName(selectedWine.country, locale)} loading="lazy" /> : countryFlagEmoji(selectedWine.country)}
-                            </span>
-                            {selectedCommunityFlagImage && selectedCommunityName ? (
-                              <span className="country-flag-badge" aria-label={`${t.common.autonomousCommunity} ${selectedCommunityName}`} title={selectedCommunityName}>
-                                <img className="flag-badge-image" src={selectedCommunityFlagImage} alt={selectedCommunityName} loading="lazy" />
+                            {selectedCountryFlagImage ? (
+                              <span className="country-flag-badge" aria-label={selectedWine.country} title={selectedWine.country}>
+                                <img className="flag-badge-image" src={selectedCountryFlagImage} alt={localizedCountryName(selectedWine.country, locale)} loading="lazy" />
+                              </span>
+                            ) : null}
+                            {selectedRegionLogoImage ? (
+                              <span className="country-flag-badge" aria-label={selectedRegionLabel} title={selectedRegionLabel}>
+                                <img className="flag-badge-image" src={selectedRegionLogoImage} alt={selectedRegionLabel} loading="lazy" />
                               </span>
                             ) : null}
                             {selectedWine.doLogoImage ? (
@@ -265,6 +334,95 @@ export default function CatalogOverlays({
                 </section>
               </div>
             </div>
+          </section>
+        </div>
+      ) : null}
+
+      {selectedWine && isWineGalleryLightboxOpen ? (
+        <div className="public-modal-backdrop public-gallery-lightbox-backdrop" role="presentation" onClick={() => setIsWineGalleryLightboxOpen(false)}>
+          <section
+            className="public-gallery-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedWine.name} ${t.modal.gallery}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="ghost-close public-gallery-lightbox-close"
+              onClick={() => setIsWineGalleryLightboxOpen(false)}
+            >
+              <span aria-hidden="true">✕</span>
+              <span>{t.modal.close}</span>
+            </button>
+
+            {galleryCount > 1 ? (
+              <button
+                type="button"
+                className="public-gallery-lightbox-nav public-gallery-lightbox-nav-prev"
+                onClick={goToPreviousGalleryImage}
+                aria-label={t.common.previous}
+              >
+                ‹
+              </button>
+            ) : null}
+
+            <div
+              className="public-gallery-lightbox-stage"
+              onTouchStart={handleGalleryTouchStart}
+              onTouchMove={handleGalleryTouchMove}
+              onTouchEnd={handleGalleryTouchEnd}
+            >
+              <img
+                src={resolvePublicWineImageForTheme(activeGalleryImage, isDark)}
+                alt={`${selectedWine.name} · ${activeGalleryLabel}`}
+                onError={(event) => {
+                  event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
+                }}
+              />
+              <div className="public-gallery-lightbox-caption">
+                <strong>{selectedWine.name}</strong>
+                <span>{activeGalleryLabel}</span>
+              </div>
+            </div>
+
+            {galleryCount > 1 ? (
+              <button
+                type="button"
+                className="public-gallery-lightbox-nav public-gallery-lightbox-nav-next"
+                onClick={goToNextGalleryImage}
+                aria-label={t.common.next}
+              >
+                ›
+              </button>
+            ) : null}
+
+            {galleryCount > 1 ? (
+              <div className="public-gallery-lightbox-thumbs" aria-label={t.modal.gallery}>
+                {selectedWine.gallery.map((src, index) => {
+                  const photoLabel = galleryPhotoLabels[index] ?? `${t.modal.gallery} ${index + 1}`
+                  return (
+                    <button
+                      key={`${selectedWine.id}-lightbox-${src}-${index}`}
+                      type="button"
+                      className={`public-gallery-lightbox-thumb${activeModalImageIndex === index ? ' active' : ''}`}
+                      onClick={() => setActiveModalImageIndex(index)}
+                      aria-label={photoLabel}
+                      title={photoLabel}
+                    >
+                      <img
+                        src={resolvePublicWineImageForTheme(src, isDark)}
+                        alt={`${selectedWine.name} · ${photoLabel}`}
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
+                        }}
+                      />
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
           </section>
         </div>
       ) : null}

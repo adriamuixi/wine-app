@@ -28,6 +28,7 @@ type Props = {
   filterControlsCore: ReactNode
   galleryPhotoLabels: string[]
   isDark: boolean
+  isWineGalleryLightboxOpen: boolean
   isMobileFiltersOpen: boolean
   isMobileMenuOpen: boolean
   isMobileSortOpen: boolean
@@ -42,6 +43,7 @@ type Props = {
   setActiveModalImageIndex: Dispatch<SetStateAction<number>>
   setDoLogoPreview: Dispatch<SetStateAction<DoLogoPreview>>
   setGrapeFilter: Dispatch<SetStateAction<string>>
+  setIsWineGalleryLightboxOpen: Dispatch<SetStateAction<boolean>>
   setIsMobileFiltersOpen: Dispatch<SetStateAction<boolean>>
   setIsMobileMenuOpen: Dispatch<SetStateAction<boolean>>
   setIsMobileSortOpen: Dispatch<SetStateAction<boolean>>
@@ -74,6 +76,7 @@ export default function CatalogPageView({
   filterControlsCore,
   galleryPhotoLabels,
   isDark,
+  isWineGalleryLightboxOpen,
   isMobileFiltersOpen,
   isMobileMenuOpen,
   isMobileSortOpen,
@@ -88,6 +91,7 @@ export default function CatalogPageView({
   setActiveModalImageIndex,
   setDoLogoPreview,
   setGrapeFilter,
+  setIsWineGalleryLightboxOpen,
   setIsMobileFiltersOpen,
   setIsMobileMenuOpen,
   setIsMobileSortOpen,
@@ -684,12 +688,14 @@ export default function CatalogPageView({
         euro={euro}
         galleryPhotoLabels={galleryPhotoLabels}
         isDark={isDark}
+        isWineGalleryLightboxOpen={isWineGalleryLightboxOpen}
         locale={locale}
         localizedCountryName={localizedCountryName}
         resolvePublicWineImageForTheme={resolvePublicWineImageForTheme}
         selectedWine={selectedWine}
         setActiveModalImageIndex={setActiveModalImageIndex}
         setDoLogoPreview={setDoLogoPreview}
+        setIsWineGalleryLightboxOpen={setIsWineGalleryLightboxOpen}
         splitGrapeVarieties={splitGrapeVarieties}
         t={t}
       />

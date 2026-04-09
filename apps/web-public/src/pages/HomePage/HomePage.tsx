@@ -94,6 +94,7 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
+  const [isWineGalleryLightboxOpen, setIsWineGalleryLightboxOpen] = useState(false)
   const [mobileViewMode, setMobileViewMode] = useState<'card' | 'list'>(() => {
     const stored = getCookieValue(MOBILE_VIEW_COOKIE_KEY)
     return stored === 'card' ? 'card' : 'list'
@@ -130,6 +131,7 @@ export default function App() {
   } | null>(null)
   const doMapMarkersRef = useRef<DoMapMarkerHandle[]>([])
   const closeSelectedWineModal = useCallback(() => {
+    setIsWineGalleryLightboxOpen(false)
     setDoLogoPreview(null)
     setSelectedWineId(null)
   }, [])
@@ -340,32 +342,6 @@ export default function App() {
   }, [isDoMapPage])
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (isDoDropdownOpen) {
-          setIsDoDropdownOpen(false)
-          return
-        }
-        if (doLogoPreview) {
-          setDoLogoPreview(null)
-          return
-        }
-        if (isMobileFiltersOpen) {
-          setIsMobileFiltersOpen(false)
-          return
-        }
-        if (isMobileSortOpen) {
-          setIsMobileSortOpen(false)
-          return
-        }
-        closeSelectedWineModal()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [closeSelectedWineModal, doLogoPreview, isDoDropdownOpen, isMobileFiltersOpen, isMobileSortOpen])
-
-  useEffect(() => {
     if (!isDoDropdownOpen) {
       return
     }
@@ -552,6 +528,55 @@ export default function App() {
     const details = wineDetailsById[selectedWineId]
     return details ? mergeWineCardWithDetails(baseWine, details, locale) : baseWine
   }, [selectedWineId, wines, wineDetailsById, locale])
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (isWineGalleryLightboxOpen && selectedWine) {
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault()
+          setActiveModalImageIndex((current) => {
+            const total = selectedWine.gallery.length
+            return total > 0 ? (current - 1 + total) % total : current
+          })
+          return
+        }
+        if (event.key === 'ArrowRight') {
+          event.preventDefault()
+          setActiveModalImageIndex((current) => {
+            const total = selectedWine.gallery.length
+            return total > 0 ? (current + 1) % total : current
+          })
+          return
+        }
+      }
+
+      if (event.key === 'Escape') {
+        if (isWineGalleryLightboxOpen) {
+          setIsWineGalleryLightboxOpen(false)
+          return
+        }
+        if (isDoDropdownOpen) {
+          setIsDoDropdownOpen(false)
+          return
+        }
+        if (doLogoPreview) {
+          setDoLogoPreview(null)
+          return
+        }
+        if (isMobileFiltersOpen) {
+          setIsMobileFiltersOpen(false)
+          return
+        }
+        if (isMobileSortOpen) {
+          setIsMobileSortOpen(false)
+          return
+        }
+        closeSelectedWineModal()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [closeSelectedWineModal, doLogoPreview, isDoDropdownOpen, isMobileFiltersOpen, isMobileSortOpen, isWineGalleryLightboxOpen, selectedWine])
   const aboutStats = useMemo(() => {
     const mariaValues = wines.filter((wine) => wine.mariaScore != null).map((wine) => wine.mariaScore as number)
     const rossetValues = wines.filter((wine) => wine.adriaScore != null).map((wine) => wine.adriaScore as number)
@@ -1289,6 +1314,7 @@ export default function App() {
       filterControlsCore={filterControlsCore}
       galleryPhotoLabels={galleryPhotoLabels}
       isDark={isDark}
+      isWineGalleryLightboxOpen={isWineGalleryLightboxOpen}
       isMobileFiltersOpen={isMobileFiltersOpen}
       isMobileMenuOpen={isMobileMenuOpen}
       isMobileSortOpen={isMobileSortOpen}
@@ -1303,6 +1329,7 @@ export default function App() {
       setActiveModalImageIndex={setActiveModalImageIndex}
       setDoLogoPreview={setDoLogoPreview}
       setGrapeFilter={setGrapeFilter}
+      setIsWineGalleryLightboxOpen={setIsWineGalleryLightboxOpen}
       setIsMobileFiltersOpen={setIsMobileFiltersOpen}
       setIsMobileMenuOpen={setIsMobileMenuOpen}
       setIsMobileSortOpen={setIsMobileSortOpen}

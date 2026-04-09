@@ -2491,6 +2491,151 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   z-index: 5400;
 }
 
+.public-gallery-lightbox-backdrop {
+  z-index: 5450;
+  inset: 0;
+  padding: 0.8rem;
+  background: rgba(0, 0, 0, 0.96);
+  backdrop-filter: blur(18px) saturate(0.4);
+}
+
+.public-gallery-lightbox {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--panel) 74%, rgba(10, 8, 10, 0.96));
+  box-shadow: 0 38px 80px -40px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+}
+
+.public-gallery-lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.public-gallery-lightbox-stage {
+  position: relative;
+  grid-column: 2;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 1rem;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(10, 8, 10, 0.82);
+  touch-action: pan-y pinch-zoom;
+}
+
+.public-gallery-lightbox-stage img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.public-gallery-lightbox-caption {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, rgba(11, 8, 11, 0.18), rgba(11, 8, 11, 0.82));
+  color: #fff;
+  pointer-events: none;
+}
+
+.public-gallery-lightbox-caption strong,
+.public-gallery-lightbox-caption span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-gallery-lightbox-nav {
+  width: 3.2rem;
+  height: 3.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(17, 13, 16, 0.72);
+  color: #fff;
+  display: inline-grid;
+  place-items: center;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.public-gallery-lightbox-nav:hover {
+  transform: scale(1.05);
+  background: rgba(34, 25, 31, 0.88);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+.public-gallery-lightbox-nav-prev {
+  grid-column: 1;
+}
+
+.public-gallery-lightbox-nav-next {
+  grid-column: 3;
+}
+
+.public-gallery-lightbox-thumbs {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.7rem;
+  overflow-x: auto;
+  padding: 0.2rem 0.1rem 0.1rem;
+  scrollbar-width: thin;
+}
+
+.public-gallery-lightbox-thumb {
+  flex: 0 0 auto;
+  width: 5.5rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.18rem;
+  cursor: pointer;
+}
+
+.public-gallery-lightbox-thumb.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+.public-gallery-lightbox-thumb img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 0.72rem;
+}
+
 .do-logo-lightbox {
   width: min(90vw, 360px);
   border: 1px solid var(--line);
@@ -2628,6 +2773,11 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   background: var(--surface);
   overflow: hidden;
   aspect-ratio: 4 / 3;
+}
+
+.public-wine-main-image-button {
+  padding: 0;
+  cursor: zoom-in;
 }
 
 .public-wine-main-image img {
@@ -4463,6 +4613,85 @@ background: linear-gradient(12deg,rgba(237, 154, 234, 0.57) 0%, rgba(245, 171, 2
   .public-wine-modal {
     max-height: 95vh;
     border-radius: 1rem;
+  }
+
+  .public-gallery-lightbox-backdrop {
+    inset: 0;
+    padding: 0.35rem;
+  }
+
+  .public-gallery-lightbox {
+    width: 100%;
+    max-width: 100dvw;
+    height: 100dvh;
+    min-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    padding: 0.75rem;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0.7rem;
+  }
+
+  .public-gallery-lightbox-close {
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    min-width: 2.4rem;
+    justify-content: center;
+    border-radius: 999px;
+  }
+
+  .public-gallery-lightbox-close span:last-child {
+    display: none;
+  }
+
+  .public-gallery-lightbox-stage {
+    grid-column: 1;
+    min-height: 0;
+    border-radius: 0.95rem;
+  }
+
+  .public-gallery-lightbox-caption {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    padding: 0.7rem 0.75rem;
+  }
+
+  .public-gallery-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 2.8rem;
+    height: 2.8rem;
+    font-size: 1.8rem;
+  }
+
+  .public-gallery-lightbox-nav:hover {
+    transform: translateY(-50%) scale(1.03);
+  }
+
+  .public-gallery-lightbox-nav-prev {
+    left: 0.7rem;
+  }
+
+  .public-gallery-lightbox-nav-next {
+    right: 0.7rem;
+  }
+
+  .public-gallery-lightbox-thumbs {
+    grid-column: 1;
+    gap: 0.5rem;
+    padding-bottom: 0.2rem;
+    max-width: 100%;
+  }
+
+  .public-gallery-lightbox-thumb {
+    width: 4.2rem;
   }
 
   .public-wine-modal-header {

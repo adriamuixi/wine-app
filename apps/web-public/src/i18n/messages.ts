@@ -84,6 +84,8 @@ export type PublicMessages = {
     mobileListLayoutAria: string
     reviewSummaryAria: string
     brandAlt: string
+    previous: string
+    next: string
   }
   doMap: {
     eyebrow: string
