@@ -386,6 +386,8 @@ final class WineControllerTest extends TestCase
         self::assertSame('Lopez', $payload['items'][0]['reviews'][0]['lastname']);
         self::assertSame('2026-03-01T08:30:00+00:00', $payload['items'][0]['reviews'][0]['created_at']);
         self::assertSame(92, $payload['items'][0]['reviews'][0]['score']);
+        self::assertSame(18.9, $payload['items'][0]['price_paid']);
+        self::assertSame('2026-02-25T18:00:00+00:00', $payload['items'][0]['purchased_at']);
     }
 
     public function testListReturnsBadRequestForInvalidQueryParam(): void
@@ -788,6 +790,8 @@ final class SpyWineRepository implements WineRepository
                     regionLogo: 'la_rioja.png',
                     vintageYear: 2022,
                     avgScore: 91.5,
+                    pricePaid: 18.9,
+                    purchasedAt: '2026-02-25T18:00:00+00:00',
                     updatedAt: '2026-03-01T09:00:00+00:00',
                     grapes: [new WineListItemGrapeView(2, 'Tempranillo', 'red', 90.0)],
                     awards: [new WineListItemAwardView('parker', 93.5, 2025, null)],

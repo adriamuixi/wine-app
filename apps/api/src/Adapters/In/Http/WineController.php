@@ -167,6 +167,8 @@ final class WineController
                         ],
                         'vintage_year' => $item->vintageYear,
                         'avg_score' => $item->avgScore,
+                        'price_paid' => $item->pricePaid,
+                        'purchased_at' => $item->purchasedAt,
                         'updated_at' => $item->updatedAt,
                         'grapes' => array_map(
                             static fn ($grape): array => [

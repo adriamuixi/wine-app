@@ -222,7 +222,7 @@ export default function App() {
     const controller = new AbortController()
 
     const base = resolveApiBaseUrl()
-    void fetchWineListItems(base, controller.signal)
+    void fetchWineListItems(base, controller.signal, sortKey)
       .then((items) => {
         if (controller.signal.aborted) return
         setWines(items.map((item) => mapWineListItemToWineCard(item, locale)))
@@ -235,49 +235,39 @@ export default function App() {
     return () => {
       controller.abort()
     }
-  }, [isDoMapPage, locale])
+  }, [isDoMapPage, locale, sortKey])
 
   useEffect(() => {
-    if (isDoMapPage || isAboutPage) {
+    if (!isWineRoutePage) {
       return
     }
 
     const controller = new AbortController()
     const base = resolveApiBaseUrl()
-    const shouldShowLoadingState = isWineRoutePage
-
-    if (shouldShowLoadingState) {
-      setIsWineRouteLoading(true)
-      setHasWineRouteError(false)
-      setWineRouteStops([])
-    }
+    setIsWineRouteLoading(true)
+    setHasWineRouteError(false)
+    setWineRouteStops([])
 
     void fetchWineRouteStops(base, controller.signal)
       .then((items) => {
         if (controller.signal.aborted) return
         setWineRouteStops(items)
-        if (shouldShowLoadingState) {
-          setHasWineRouteError(false)
-        }
+        setHasWineRouteError(false)
       })
       .catch(() => {
         if (controller.signal.aborted) return
         setWineRouteStops([])
-        if (shouldShowLoadingState) {
-          setHasWineRouteError(true)
-        }
+        setHasWineRouteError(true)
       })
       .finally(() => {
         if (controller.signal.aborted) return
-        if (shouldShowLoadingState) {
-          setIsWineRouteLoading(false)
-        }
+        setIsWineRouteLoading(false)
       })
 
     return () => {
       controller.abort()
     }
-  }, [isAboutPage, isDoMapPage, isWineRoutePage])
+  }, [isWineRoutePage])
 
   useEffect(() => {
     if (isDoMapPage) {
@@ -504,61 +494,40 @@ export default function App() {
   }, [doOptionsByCountry, regionFilter])
 
   const winesWithPurchaseData = useMemo(() => {
-    if (wineRouteStops.length === 0) {
-      return wines
-    }
-
     const dateLocale = localeToIntl(locale)
-    const purchaseDataByWineId = new Map<number, { minPrice: number | null; latestPurchasedAtTs: number | null; latestPurchasedAtIso: string | null }>()
-
-    wineRouteStops.forEach((stop) => {
-      const current = purchaseDataByWineId.get(stop.wine.id) ?? {
-        minPrice: null,
-        latestPurchasedAtTs: null,
-        latestPurchasedAtIso: null,
-      }
-      const nextPrice = Number.isFinite(stop.pricePaid) ? stop.pricePaid : null
-      const nextPurchasedAtTs = Number.isNaN(new Date(stop.purchasedAt).getTime()) ? null : new Date(stop.purchasedAt).getTime()
-
-      purchaseDataByWineId.set(stop.wine.id, {
-        minPrice:
-          current.minPrice == null ? nextPrice
-            : nextPrice == null ? current.minPrice
-              : Math.min(current.minPrice, nextPrice),
-        latestPurchasedAtTs:
-          current.latestPurchasedAtTs == null ? nextPurchasedAtTs
-            : nextPurchasedAtTs == null ? current.latestPurchasedAtTs
-              : Math.max(current.latestPurchasedAtTs, nextPurchasedAtTs),
-        latestPurchasedAtIso:
-          current.latestPurchasedAtTs == null || (nextPurchasedAtTs != null && nextPurchasedAtTs >= current.latestPurchasedAtTs)
-            ? (nextPurchasedAtTs == null ? current.latestPurchasedAtIso : stop.purchasedAt)
-            : current.latestPurchasedAtIso,
-      })
-    })
 
     return wines.map((wine) => {
-      const purchaseData = purchaseDataByWineId.get(wine.id)
-      if (!purchaseData) {
-        return wine
-      }
-
-      const tastingDate = purchaseData.latestPurchasedAtIso ? new Date(purchaseData.latestPurchasedAtIso) : null
+      const detailWine = wineDetailsById[wine.id]
+      const detailPurchase = Array.isArray(detailWine?.purchases) && detailWine.purchases.length > 0
+        ? detailWine.purchases[0]
+        : null
+      const detailPurchasedAtIso = detailPurchase?.purchased_at ?? null
+      const detailPurchasedAtTs = detailPurchasedAtIso && !Number.isNaN(new Date(detailPurchasedAtIso).getTime())
+        ? new Date(detailPurchasedAtIso).getTime()
+        : null
+      const detailPrice = typeof detailPurchase?.price_paid === 'number' && Number.isFinite(detailPurchase.price_paid)
+        ? detailPurchase.price_paid
+        : null
+      const effectivePrice = detailPrice ?? wine.priceFrom
+      const effectivePurchasedAtIso = detailPurchasedAtIso ?? wine.purchaseDateIso
+      const effectivePurchasedAtTs = detailPurchasedAtTs ?? wine.tastingDateSortTs
+      const tastingDate = effectivePurchasedAtIso ? new Date(effectivePurchasedAtIso) : null
       const hasValidTastingDate = tastingDate != null && !Number.isNaN(tastingDate.getTime())
 
       return {
         ...wine,
-        priceFrom: purchaseData.minPrice ?? wine.priceFrom,
+        priceFrom: effectivePrice,
         tastedAt: hasValidTastingDate
           ? new Intl.DateTimeFormat(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(tastingDate)
           : wine.tastedAt,
         month: hasValidTastingDate
           ? new Intl.DateTimeFormat(dateLocale, { month: 'long' }).format(tastingDate)
           : wine.month,
-        purchaseDateIso: purchaseData.latestPurchasedAtIso ?? wine.purchaseDateIso,
-        tastingDateSortTs: purchaseData.latestPurchasedAtTs ?? wine.tastingDateSortTs,
+        purchaseDateIso: effectivePurchasedAtIso,
+        tastingDateSortTs: effectivePurchasedAtTs,
       }
     })
-  }, [locale, wineRouteStops, wines])
+  }, [locale, wineDetailsById, wines])
 
   const filteredWines = useMemo(() => {
     const q = search.trim().toLowerCase()

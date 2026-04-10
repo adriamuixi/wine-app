@@ -14,6 +14,8 @@ final readonly class ListWinesHandler
         ListWinesSort::NAME,
         ListWinesSort::VINTAGE_YEAR,
         ListWinesSort::SCORE,
+        ListWinesSort::PRICE,
+        ListWinesSort::TASTED_AT,
     ];
     private const SORTABLE_DIRECTIONS = [ListWinesSort::ASC, ListWinesSort::DESC];
 

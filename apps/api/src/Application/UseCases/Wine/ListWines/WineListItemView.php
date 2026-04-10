@@ -25,6 +25,8 @@ final readonly class WineListItemView
         public ?string $regionLogo,
         public ?int $vintageYear,
         public ?float $avgScore,
+        public ?float $pricePaid,
+        public ?string $purchasedAt,
         public string $updatedAt,
         public array $grapes = [],
         public array $awards = [],

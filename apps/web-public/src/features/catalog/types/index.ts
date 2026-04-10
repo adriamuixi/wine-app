@@ -78,6 +78,8 @@ export type WineListApiItem = {
   } | null
   vintage_year: number | null
   avg_score: number | null
+  price_paid: number | null
+  purchased_at: string | null
   updated_at: string
   grapes: Array<{
     id: number

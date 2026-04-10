@@ -11,6 +11,8 @@ final class ListWinesSort
     public const NAME = 'name';
     public const VINTAGE_YEAR = 'vintage_year';
     public const SCORE = 'score';
+    public const PRICE = 'price';
+    public const TASTED_AT = 'tasted_at';
 
     public const ASC = 'asc';
     public const DESC = 'desc';

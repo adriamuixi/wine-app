@@ -206,7 +206,9 @@ export function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale)
   const firstReviewCreatedAt = Array.isArray(item.reviews) && item.reviews.length > 0
     ? item.reviews[0]?.created_at
     : undefined
-  const tastingSourceDate = typeof firstReviewCreatedAt === 'string' && firstReviewCreatedAt.trim() !== ''
+  const tastingSourceDate = typeof item.purchased_at === 'string' && item.purchased_at.trim() !== ''
+    ? item.purchased_at
+    : typeof firstReviewCreatedAt === 'string' && firstReviewCreatedAt.trim() !== ''
     ? firstReviewCreatedAt
     : item.updated_at
   const tastingDate = new Date(tastingSourceDate)
@@ -231,7 +233,7 @@ export function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale)
     type,
     vintage: item.vintage_year ?? new Date().getFullYear(),
     avgScore,
-    priceFrom: 0,
+    priceFrom: typeof item.price_paid === 'number' && Number.isFinite(item.price_paid) ? item.price_paid : 0,
     tastedAt,
     month,
     grapes: mapWineGrapesLabel(item.grapes),
@@ -243,7 +245,7 @@ export function mapWineListItemToWineCard(item: WineListApiItem, locale: Locale)
     city: '-',
     purchaseAddress: null,
     purchaseCountry: null,
-    purchaseDateIso: null,
+    purchaseDateIso: typeof item.purchased_at === 'string' && item.purchased_at.trim() !== '' ? item.purchased_at : null,
     purchaseMap: null,
     techSheet: false,
     reward,

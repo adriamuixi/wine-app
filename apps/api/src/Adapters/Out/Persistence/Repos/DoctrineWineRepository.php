@@ -600,9 +600,18 @@ SELECT
     d.region_logo AS do_region_logo,
     w.vintage_year,
     %s AS avg_score,
+    latest_purchase.price_paid AS latest_price_paid,
+    latest_purchase.purchased_at AS latest_purchased_at,
     w.updated_at
 FROM wine w
 LEFT JOIN designation_of_origin d ON d.id = w.do_id
+LEFT JOIN LATERAL (
+    SELECT wp.price_paid, wp.purchased_at
+    FROM wine_purchase wp
+    WHERE wp.wine_id = w.id
+    ORDER BY wp.purchased_at DESC, wp.id DESC
+    LIMIT 1
+) latest_purchase ON TRUE
 %s
 ORDER BY %s %s NULLS LAST, w.id DESC
 LIMIT :limit OFFSET :offset
@@ -784,6 +793,8 @@ SQL,
                 regionLogo: null === $row['do_region_logo'] ? null : (string) $row['do_region_logo'],
                 vintageYear: null === $row['vintage_year'] ? null : (int) $row['vintage_year'],
                 avgScore: null === $row['avg_score'] ? null : (float) $row['avg_score'],
+                pricePaid: null === $row['latest_price_paid'] ? null : (float) $row['latest_price_paid'],
+                purchasedAt: null === $row['latest_purchased_at'] ? null : $this->toIso8601((string) $row['latest_purchased_at']),
                 updatedAt: $this->toIso8601((string) $row['updated_at']),
                 grapes: $grapesByWineId[$wineId] ?? [],
                 awards: $awardsByWineId[$wineId] ?? [],
@@ -991,6 +1002,8 @@ SQL,
             ListWinesSort::VINTAGE_YEAR => 'w.vintage_year',
             ListWinesSort::UPDATED_AT => 'w.updated_at',
             ListWinesSort::SCORE => 'avg_score',
+            ListWinesSort::PRICE => 'latest_price_paid',
+            ListWinesSort::TASTED_AT => 'latest_purchased_at',
             default => 'w.created_at',
         };
     }

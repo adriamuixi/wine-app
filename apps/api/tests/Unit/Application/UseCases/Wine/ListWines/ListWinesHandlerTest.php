@@ -94,6 +94,29 @@ final class ListWinesHandlerTest extends TestCase
             sortDir: ListWinesSort::DESC,
         ));
     }
+
+    public function testItAcceptsPriceSort(): void
+    {
+        $repo = new SpyWineRepository();
+        $handler = new ListWinesHandler($repo);
+
+        $handler->handle(new ListWinesQuery(
+            page: 1,
+            limit: 100,
+            search: null,
+            wineType: null,
+            country: null,
+            doId: null,
+            grapeId: null,
+            scoreMin: null,
+            scoreMax: null,
+            sortBy: ListWinesSort::PRICE,
+            sortDir: ListWinesSort::ASC,
+        ));
+
+        self::assertSame(ListWinesSort::PRICE, $repo->received?->sortBy);
+        self::assertSame(ListWinesSort::ASC, $repo->received?->sortDir);
+    }
 }
 
 final class SpyWineRepository implements WineRepository
@@ -143,6 +166,8 @@ final class SpyWineRepository implements WineRepository
                 null,
                 null,
                 null,
+                12.4,
+                '2026-02-28T10:00:00+00:00',
                 '2026-03-01T10:00:00+00:00',
                 [new WineListItemGrapeView(2, 'Tempranillo', 'red', 90.0)],
                 [new WineListItemAwardView('parker', 95.5, 2025)],

@@ -1,12 +1,33 @@
-import type { WineDetailsApiResponse, WineListApiItem, WineListApiResponse } from '../types'
+import type { SortKey, WineDetailsApiResponse, WineListApiItem, WineListApiResponse } from '../types'
 
-export async function fetchWineListItems(baseUrl: string, signal: AbortSignal): Promise<WineListApiItem[]> {
+function toWineListSortParams(sortKey: SortKey): { sortBy: string; sortDir: 'asc' | 'desc' } {
+  if (sortKey === 'price_asc') {
+    return { sortBy: 'price', sortDir: 'asc' }
+  }
+  if (sortKey === 'price_desc') {
+    return { sortBy: 'price', sortDir: 'desc' }
+  }
+  if (sortKey === 'latest') {
+    return { sortBy: 'vintage_year', sortDir: 'desc' }
+  }
+  if (sortKey === 'tasting_date_desc') {
+    return { sortBy: 'tasted_at', sortDir: 'desc' }
+  }
+  if (sortKey === 'tasting_date_asc') {
+    return { sortBy: 'tasted_at', sortDir: 'asc' }
+  }
+
+  return { sortBy: 'score', sortDir: 'desc' }
+}
+
+export async function fetchWineListItems(baseUrl: string, signal: AbortSignal, sortKey: SortKey): Promise<WineListApiItem[]> {
   const items: WineListApiItem[] = []
   let page = 1
   const limit = 100
+  const { sortBy, sortDir } = toWineListSortParams(sortKey)
 
   while (true) {
-    const response = await fetch(`${baseUrl}/api/wines?page=${page}&limit=${limit}`, {
+    const response = await fetch(`${baseUrl}/api/wines?page=${page}&limit=${limit}&sort_by=${encodeURIComponent(sortBy)}&sort_dir=${sortDir}`, {
       signal,
       headers: { Accept: 'application/json' },
     })

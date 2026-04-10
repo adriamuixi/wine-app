@@ -827,7 +827,7 @@ paths:
           name: sort_by
           schema:
             type: string
-            enum: [created_at, updated_at, name, vintage_year, score]
+            enum: [created_at, updated_at, name, vintage_year, score, price, tasted_at]
             default: created_at
         - in: query
           name: sort_dir
@@ -2317,7 +2317,7 @@ components:
           nullable: true
     WineListItem:
       type: object
-      required: [id, name, winery, wine_type, aging_type, country, do, vintage_year, avg_score, updated_at, grapes, awards, photos, reviews]
+      required: [id, name, winery, wine_type, aging_type, country, do, vintage_year, avg_score, price_paid, purchased_at, updated_at, grapes, awards, photos, reviews]
       properties:
         id:
           type: integer
@@ -2349,6 +2349,14 @@ components:
         avg_score:
           type: number
           format: float
+          nullable: true
+        price_paid:
+          type: number
+          format: float
+          nullable: true
+        purchased_at:
+          type: string
+          format: date-time
           nullable: true
         updated_at:
           type: string
