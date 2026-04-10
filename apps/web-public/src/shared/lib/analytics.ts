@@ -4,45 +4,9 @@ declare global {
   interface Window {
     dataLayer?: unknown[]
     gtag?: Gtag
-    __wineAppGoogleAnalyticsIds?: string[]
     __wineAppGoogleAnalyticsHistoryTrackingInstalled?: boolean
     __wineAppGoogleAnalyticsLastPath?: string
   }
-}
-
-function ensureGtag(): Gtag {
-  window.dataLayer = window.dataLayer ?? []
-  window.gtag = window.gtag ?? function gtag(...args: unknown[]) {
-    window.dataLayer?.push(args)
-  }
-
-  return window.gtag
-}
-
-export function initGoogleAnalytics(measurementId: string): void {
-  if (typeof window === 'undefined' || measurementId.length === 0) {
-    return
-  }
-
-  const initializedIds = window.__wineAppGoogleAnalyticsIds ?? []
-  if (initializedIds.includes(measurementId)) {
-    return
-  }
-
-  const scriptId = `ga4-script-${measurementId}`
-  if (document.getElementById(scriptId) == null) {
-    const script = document.createElement('script')
-    script.id = scriptId
-    script.async = true
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`
-    document.head.appendChild(script)
-  }
-
-  const gtag = ensureGtag()
-  gtag('js', new Date())
-  gtag('config', measurementId, { send_page_view: false })
-
-  window.__wineAppGoogleAnalyticsIds = [...initializedIds, measurementId]
 }
 
 export function trackGoogleAnalyticsPageView(measurementId: string): void {
@@ -64,8 +28,7 @@ export function startGoogleAnalyticsPageTracking(measurementId: string): void {
   if (typeof window === 'undefined' || measurementId.length === 0) {
     return
   }
-
-  trackGoogleAnalyticsPageView(measurementId)
+  window.__wineAppGoogleAnalyticsLastPath = window.location.pathname || '/'
 
   if (window.__wineAppGoogleAnalyticsHistoryTrackingInstalled) {
     return

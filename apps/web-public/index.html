@@ -27,6 +27,23 @@
     <meta name="twitter:description" content="Catálogo público de vinos con fichas, puntuaciones y mapa de denominaciones de origen." />
     <meta name="twitter:image" content="https://tatirosset.cat/android-chrome-512x512.png" />
     <title>Vins Tat & Rosset | Els nostres vins</title>
+    <script>
+      (function installGoogleAnalytics(measurementId) {
+        if (!measurementId) return
+
+        const script = document.createElement('script')
+        script.async = true
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + measurementId
+        document.head.appendChild(script)
+
+        window.dataLayer = window.dataLayer || []
+        function gtag() { window.dataLayer.push(arguments) }
+        window.gtag = window.gtag || gtag
+
+        window.gtag('js', new Date())
+        window.gtag('config', measurementId)
+      })('%VITE_GA_MEASUREMENT_ID%')
+    </script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
