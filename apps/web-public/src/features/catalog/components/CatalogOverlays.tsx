@@ -174,7 +174,6 @@ export default function CatalogOverlays({
                         className={`public-wine-thumb ${activeModalImageIndex === index ? 'active' : ''}`}
                         onClick={() => {
                           setActiveModalImageIndex(index)
-                          setIsWineGalleryLightboxOpen(true)
                         }}
                         aria-label={photoLabel}
                         title={photoLabel}
@@ -373,15 +372,11 @@ export default function CatalogOverlays({
             >
               <img
                 src={resolvePublicWineImageForTheme(activeGalleryImage, isDark)}
-                alt={`${selectedWine.name} · ${activeGalleryLabel}`}
+                alt={selectedWine.name}
                 onError={(event) => {
                   event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
                 }}
               />
-              <div className="public-gallery-lightbox-caption">
-                <strong>{selectedWine.name}</strong>
-                <span>{activeGalleryLabel}</span>
-              </div>
             </div>
 
             {galleryCount > 1 ? (
@@ -393,33 +388,6 @@ export default function CatalogOverlays({
               >
                 ›
               </button>
-            ) : null}
-
-            {galleryCount > 1 ? (
-              <div className="public-gallery-lightbox-thumbs" aria-label={t.modal.gallery}>
-                {selectedWine.gallery.map((src, index) => {
-                  const photoLabel = galleryPhotoLabels[index] ?? `${t.modal.gallery} ${index + 1}`
-                  return (
-                    <button
-                      key={`${selectedWine.id}-lightbox-${src}-${index}`}
-                      type="button"
-                      className={`public-gallery-lightbox-thumb${activeModalImageIndex === index ? ' active' : ''}`}
-                      onClick={() => setActiveModalImageIndex(index)}
-                      aria-label={photoLabel}
-                      title={photoLabel}
-                    >
-                      <img
-                        src={resolvePublicWineImageForTheme(src, isDark)}
-                        alt={`${selectedWine.name} · ${photoLabel}`}
-                        loading="lazy"
-                        onError={(event) => {
-                          event.currentTarget.src = defaultPublicWineImageForTheme(isDark)
-                        }}
-                      />
-                    </button>
-                  )
-                })}
-              </div>
             ) : null}
           </section>
         </div>
