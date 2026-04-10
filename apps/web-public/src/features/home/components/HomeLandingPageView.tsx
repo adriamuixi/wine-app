@@ -1,20 +1,18 @@
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import type { Locale, PublicMessages } from '../../../i18n/messages'
-import { TEAM_ROSSET_PHOTO_SRC, TEAM_TAT_PHOTO_SRC } from '../../../app/config/constants'
 import type { ThemeMode } from '../../catalog/types'
 
-type AboutStats = {
+type HomeStats = {
   totalWines: number
+  totalDos: number
+  totalCountries: number
   totalReviews: number
-  tatAverage: number
-  rossetAverage: number
-  syncIndex: number
 }
 
 type Props = {
-  aboutStats: AboutStats
   adminHref: string
   desktopNav: ReactNode
+  homeStats: HomeStats
   isDark: boolean
   isMobileMenuOpen: boolean
   locale: Locale
@@ -27,10 +25,10 @@ type Props = {
   theme: ThemeMode
 }
 
-export default function AboutPageView({
-  aboutStats,
+export default function HomeLandingPageView({
   adminHref,
   desktopNav,
+  homeStats,
   isDark,
   isMobileMenuOpen,
   locale,
@@ -49,8 +47,113 @@ export default function AboutPageView({
     setLocale(localeCodes[nextIndex] ?? localeCodes[0] ?? 'ca')
   }
 
+  const copy = {
+    ca: {
+      eyebrow: 'BENVINGUTS',
+      title: 'La vostra guia per descobrir vi, territori i records',
+      subtitle: 'Aquesta web és el nostre quadern digital: aquí compartim vins tastats, denominacions d’origen i rutes reals de compra perquè puguis inspirar-te i explorar.',
+      ctaCatalog: 'Explora el catàleg',
+      ctaDo: 'Veure totes les DO',
+      blocksTitle: 'Què hi trobaràs',
+      blocks: [
+        {
+          title: 'Catàleg de vins',
+          text: 'Fitxes visuals amb puntuacions, notes de tast i informació útil de cada vi.',
+          href: '/catalog',
+          image: '/images/icons/wine/wines2_glass.png',
+        },
+        {
+          title: 'Directori de DO',
+          text: 'Totes les denominacions agrupades amb imatge, regió, país i vins ressenyats.',
+          href: '/do',
+          image: '/images/icons/wine/do_only.png',
+        },
+        {
+          title: 'Mapa i ruta',
+          text: 'Visualitza DO al mapa mundial i segueix el recorregut de compres i tastos.',
+          href: '/do-map',
+          image: '/images/icons/wine/wine_maps2.png',
+        },
+      ],
+      stats: {
+        wines: 'Vins publicats',
+        dos: 'DO disponibles',
+        countries: 'Països coberts',
+        reviews: 'Ressenyes totals',
+      },
+    },
+    es: {
+      eyebrow: 'BIENVENIDOS',
+      title: 'Tu guía para descubrir vino, territorio y recuerdos',
+      subtitle: 'Esta web es nuestro cuaderno digital: aquí compartimos vinos catados, denominaciones de origen y rutas reales de compra para inspirarte y ayudarte a explorar.',
+      ctaCatalog: 'Explorar catálogo',
+      ctaDo: 'Ver todas las DO',
+      blocksTitle: 'Qué encontrarás',
+      blocks: [
+        {
+          title: 'Catálogo de vinos',
+          text: 'Fichas visuales con puntuaciones, notas de cata e información útil de cada vino.',
+          href: '/catalog',
+          image: '/images/icons/wine/wines2_glass.png',
+        },
+        {
+          title: 'Directorio de DO',
+          text: 'Todas las denominaciones agrupadas con imagen, región, país y vinos reseñados.',
+          href: '/do',
+          image: '/images/icons/wine/do_only.png',
+        },
+        {
+          title: 'Mapa y ruta',
+          text: 'Visualiza DO en el mapa mundial y sigue el recorrido de compras y catas.',
+          href: '/do-map',
+          image: '/images/icons/wine/wine_maps2.png',
+        },
+      ],
+      stats: {
+        wines: 'Vinos publicados',
+        dos: 'DO disponibles',
+        countries: 'Países cubiertos',
+        reviews: 'Reseñas totales',
+      },
+    },
+    en: {
+      eyebrow: 'WELCOME',
+      title: 'Your guide to discover wine, places, and memories',
+      subtitle: 'This website is our digital notebook: we share tasted wines, designations of origin, and real purchase routes to inspire your next bottle.',
+      ctaCatalog: 'Explore catalog',
+      ctaDo: 'See all DOs',
+      blocksTitle: 'What you will find',
+      blocks: [
+        {
+          title: 'Wine catalog',
+          text: 'Visual wine profiles with scores, tasting notes and practical details.',
+          href: '/catalog',
+          image: '/images/icons/wine/wines2_glass.png',
+        },
+        {
+          title: 'DO directory',
+          text: 'All designations grouped with image, region, country and reviewed wines.',
+          href: '/do',
+          image: '/images/icons/wine/do_only.png',
+        },
+        {
+          title: 'Map and route',
+          text: 'Browse DOs on the world map and follow the real tasting journey.',
+          href: '/do-map',
+          image: '/images/icons/wine/wine_maps2.png',
+        },
+      ],
+      stats: {
+        wines: 'Published wines',
+        dos: 'Available DOs',
+        countries: 'Countries covered',
+        reviews: 'Total reviews',
+      },
+    },
+  }[locale]
+
   return (
-    <main className="public-shell">
+    <main className="public-shell home-landing-shell">
       <div className="public-background" aria-hidden="true" />
 
       <header className={`public-topbar${isMobileMenuOpen ? ' mobile-menu-open' : ''}`}>
@@ -83,22 +186,7 @@ export default function AboutPageView({
               title={isDark ? t.topbar.light : t.topbar.dark}
             >
               <span className="topbar-mobile-icon" aria-hidden="true">
-                {isDark ? (
-                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
-                    <path
-                      d="M14.8 12.8A6.3 6.3 0 0 1 7.2 5.2a6.8 6.8 0 1 0 7.6 7.6Z"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 20 20" fill="none" role="presentation">
-                    <circle cx="10" cy="10" r="3.2" stroke="currentColor" strokeWidth="1.4" />
-                    <path d="M10 2.6v2.1M10 15.3v2.1M2.6 10h2.1M15.3 10h2.1M4.7 4.7l1.5 1.5M13.8 13.8l1.5 1.5M15.3 4.7l-1.5 1.5M6.2 13.8l-1.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                  </svg>
-                )}
+                {isDark ? '☾' : '☀'}
               </span>
             </button>
           </div>
@@ -187,79 +275,49 @@ export default function AboutPageView({
         />
       ) : null}
 
-      <section className="hero-panel about-hero-panel" id="about">
-        <div className="about-hero-copy">
-          <div className="section-heading-with-icon">
-            <img src="/images/icons/wine/wine_couple.png" className="section-heading-icon" alt="" aria-hidden="true" />
-            <div className="section-heading-copy">
-              <p className="eyebrow">{t.about.eyebrow}</p>
-              <h1 className="section-title-label">{t.about.title}</h1>
-              <p className="hero-subtitle about-hero-subtitle">{t.about.intro}</p>
-            </div>
+      <section className="hero-panel home-landing-hero">
+        <div className="home-landing-hero-copy">
+          <p className="eyebrow">{copy.eyebrow}</p>
+          <h1>{copy.title}</h1>
+          <p>{copy.subtitle}</p>
+          <div className="home-landing-actions">
+            <a href="/catalog" className="home-landing-button home-landing-button-primary">{copy.ctaCatalog}</a>
+            <a href="/do" className="home-landing-button">{copy.ctaDo}</a>
           </div>
         </div>
-        <div className="about-hero-stat-strip" aria-label={t.about.statsAria}>
-          <article className="about-hero-stat">
-            <span>{t.about.stats.totalWines}</span>
-            <strong>{aboutStats.totalWines}</strong>
-          </article>
-          <article className="about-hero-stat">
-            <span>{t.about.stats.totalReviews}</span>
-            <strong>{aboutStats.totalReviews}</strong>
-          </article>
-          <article className="about-hero-stat about-hero-stat-accent">
-            <span>{t.about.stats.syncIndex}</span>
-            <strong>{aboutStats.syncIndex.toFixed(1)}%</strong>
-          </article>
+        <div className="home-landing-hero-media">
+          <img src="/images/photos/wine_photo_landscape.png" alt="Wine landscape" loading="eager" />
         </div>
       </section>
 
-      <section className="about-team-grid" aria-label={t.about.membersAria}>
-        <article className="cards-panel about-member-card">
-          <div className="about-member-media">
-            <img src={TEAM_TAT_PHOTO_SRC} alt={t.about.members.tat.photoAlt} className="about-member-photo" loading="lazy" />
-          </div>
-          <div className="about-member-body">
-            <p className="about-member-kicker">Tat</p>
-            <h2>{t.about.members.tat.fullName}</h2>
-            <p className="about-member-role">{t.about.members.tat.role}</p>
-            <p>{t.about.members.tat.bio}</p>
-          </div>
+      <section className="home-landing-stats" aria-label="Website stats">
+        <article className="cards-panel home-landing-stat">
+          <strong>{homeStats.totalWines}</strong>
+          <span>{copy.stats.wines}</span>
         </article>
-        <article className="cards-panel about-member-card">
-          <div className="about-member-media">
-            <img src={TEAM_ROSSET_PHOTO_SRC} alt={t.about.members.rosset.photoAlt} className="about-member-photo" loading="lazy" />
-          </div>
-          <div className="about-member-body">
-            <p className="about-member-kicker">Rosset</p>
-            <h2>{t.about.members.rosset.fullName}</h2>
-            <p className="about-member-role">{t.about.members.rosset.role}</p>
-            <p>{t.about.members.rosset.bio}</p>
-          </div>
+        <article className="cards-panel home-landing-stat">
+          <strong>{homeStats.totalDos}</strong>
+          <span>{copy.stats.dos}</span>
+        </article>
+        <article className="cards-panel home-landing-stat">
+          <strong>{homeStats.totalCountries}</strong>
+          <span>{copy.stats.countries}</span>
+        </article>
+        <article className="cards-panel home-landing-stat">
+          <strong>{homeStats.totalReviews}</strong>
+          <span>{copy.stats.reviews}</span>
         </article>
       </section>
 
-      <section className="about-stats-grid" aria-label={t.about.statsAria}>
-        <article className="cards-panel about-stat-card">
-          <span>{t.about.stats.totalWines}</span>
-          <strong>{aboutStats.totalWines}</strong>
-        </article>
-        <article className="cards-panel about-stat-card">
-          <span>{t.about.stats.totalReviews}</span>
-          <strong>{aboutStats.totalReviews}</strong>
-        </article>
-        <article className="cards-panel about-stat-card">
-          <span>{t.about.stats.tatAverage}</span>
-          <strong>{aboutStats.tatAverage.toFixed(2)}</strong>
-        </article>
-        <article className="cards-panel about-stat-card">
-          <span>{t.about.stats.rossetAverage}</span>
-          <strong>{aboutStats.rossetAverage.toFixed(2)}</strong>
-        </article>
-        <article className="cards-panel about-stat-card about-stat-card-accent">
-          <span>{t.about.stats.syncIndex}</span>
-          <strong>{aboutStats.syncIndex.toFixed(1)}%</strong>
-        </article>
+      <section className="home-landing-blocks" aria-label={copy.blocksTitle}>
+        {copy.blocks.map((block) => (
+          <article key={block.title} className="cards-panel home-landing-block">
+            <img src={block.image} alt="" aria-hidden="true" />
+            <h2>{block.title}</h2>
+            <p>{block.text}</p>
+            <a href={block.href}>{locale === 'ca' ? 'Obrir' : locale === 'es' ? 'Abrir' : 'Open'}</a>
+          </article>
+        ))}
       </section>
     </main>
   )

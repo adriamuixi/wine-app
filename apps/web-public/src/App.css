@@ -1663,7 +1663,7 @@
 }
 
 :root[data-theme='light'] .wine-card.score-tier-silver {
-   background: linear-gradient(90deg, rgb(219, 219, 219) 20%, rgb(209, 209, 209, 0) 48%, rgba(255, 255, 255, 0) 60%, rgb(219, 219, 219) 100%);
+   background: linear-gradient(90deg, rgb(219, 219, 219) 20%, rgba(209, 209, 209, 0) 48%, rgba(255, 255, 255, 0) 60%, rgb(219, 219, 219) 100%);
   box-shadow: 0 0 0 1px rgba(170, 176, 191, 0.14), 0 18px 28px -24px rgba(0, 0, 0, 0.55);
 }
 
@@ -3139,7 +3139,7 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   .brand-wordmark {
     max-width: 100%;
     height: 44px;
-    padding-left: 10px ;
+    padding-left: 10px;
   }
 
   .brand-icon {
@@ -4394,7 +4394,6 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     gap: 0.3rem;
     margin-block-start: 0;
     margin-block-end: 0;
-    }
   }
 
   .wine-card-mobile-title {
@@ -4735,6 +4734,8 @@ background: linear-gradient(12deg,rgba(237, 154, 234, 0.57) 0%, rgba(245, 171, 2
   .do-logo-tooltip .do-logo-tooltip-panel {
     display: none;
   }
+}
+
 @media (max-width: 400px) {
   .do-map-hero {
     padding: 0.6rem 0.62rem;
@@ -4762,5 +4763,275 @@ background: linear-gradient(12deg,rgba(237, 154, 234, 0.57) 0%, rgba(245, 171, 2
 
   .card-link {
     font-size: 0.76rem;
+  }
+}
+
+.home-landing-shell,
+.do-directory-shell {
+  gap: 1.2rem;
+}
+
+.home-landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr);
+  gap: 1.2rem;
+  padding: 1.2rem;
+  overflow: hidden;
+}
+
+.home-landing-hero-copy h1 {
+  margin: 0.2rem 0 0.75rem;
+  font-size: clamp(1.8rem, 3.8vw, 3rem);
+  line-height: 1.08;
+}
+
+.home-landing-hero-copy p {
+  margin: 0;
+  color: var(--muted-strong);
+  max-width: 60ch;
+}
+
+.home-landing-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.home-landing-button {
+  text-decoration: none;
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  border-radius: 999px;
+  padding: 0.56rem 1rem;
+  font-weight: 700;
+}
+
+.home-landing-button-primary {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+}
+
+.home-landing-hero-media {
+  position: relative;
+  border-radius: 1.2rem;
+  overflow: hidden;
+  min-height: 250px;
+}
+
+.home-landing-hero-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(51, 18, 35, 0.1), rgba(41, 18, 32, 0.48));
+}
+
+.home-landing-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.home-landing-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.home-landing-stat {
+  padding: 1rem;
+  text-align: center;
+}
+
+.home-landing-stat strong {
+  display: block;
+  font-size: clamp(1.45rem, 3.3vw, 2.1rem);
+  line-height: 1;
+}
+
+.home-landing-stat span {
+  color: var(--muted-strong);
+  font-size: 0.9rem;
+}
+
+.home-landing-blocks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.home-landing-block {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.home-landing-block img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+}
+
+.home-landing-block h2 {
+  margin: 0;
+  font-size: 1.07rem;
+}
+
+.home-landing-block p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 0.93rem;
+}
+
+.home-landing-block a {
+  margin-top: auto;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.do-directory-hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+}
+
+.do-directory-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 230px);
+  gap: 0.7rem;
+}
+
+.do-directory-filters input,
+.do-directory-filters select {
+  width: 100%;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.58rem 0.72rem;
+}
+
+.do-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.do-directory-card {
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.do-directory-card-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.do-directory-logo-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.do-directory-logo-stack img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 0.8rem;
+  border: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--surface-soft) 74%, transparent);
+}
+
+.do-directory-card h2 {
+  margin: 0;
+  font-size: 1.03rem;
+}
+
+.do-directory-card p {
+  margin: 0.32rem 0 0;
+  color: var(--muted-strong);
+  font-size: 0.92rem;
+}
+
+.do-directory-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.do-directory-meta div {
+  margin: 0;
+}
+
+.do-directory-meta dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.do-directory-meta dd {
+  margin: 0.22rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.do-directory-meta dd img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.do-directory-empty {
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.9rem;
+  color: var(--muted-strong);
+}
+
+@media (max-width: 980px) {
+  .home-landing-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .home-landing-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-landing-blocks,
+  .do-directory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .do-directory-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .do-directory-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .home-landing-hero,
+  .do-directory-hero,
+  .home-landing-block,
+  .do-directory-card {
+    padding: 0.85rem;
   }
 }

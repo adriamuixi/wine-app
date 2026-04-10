@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { localeLabels, messages, type Locale } from '../../i18n/messages'
 import AboutPageView from '../../features/about/components/AboutPageView'
 import CatalogPageView from '../../features/catalog/components/CatalogPageView'
+import HomeLandingPageView from '../../features/home/components/HomeLandingPageView'
 import {
   DEFAULT_PUBLIC_WINE_IMAGE_DARK,
   DEFAULT_PUBLIC_WINE_IMAGE_LIGHT,
@@ -18,6 +19,7 @@ import type {
   ThemeMode,
   WineCard,
   WineDetailsApiResponse,
+  WineListApiItem,
   WineType,
 } from '../../features/catalog/types'
 import { fetchWineDetailsById, fetchWineListItems } from '../../features/catalog/services/wineApi'
@@ -35,6 +37,7 @@ import {
   type DoMapPoint,
 } from '../../features/do-map/types'
 import DoMapPageView from '../../features/do-map/components/DoMapPageView'
+import DoDirectoryPageView from '../../features/do-directory/components/DoDirectoryPageView'
 import WineRoutePageView from '../../features/wine-route/components/WineRoutePageView'
 import { fetchWineRouteStops } from '../../features/wine-route/services/wineRouteApi'
 import type { WineRouteStop } from '../../features/wine-route/types'
@@ -88,6 +91,9 @@ export default function App() {
   const currentPath = typeof window !== 'undefined'
     ? (window.location.pathname.replace(/\/+$/, '') || '/')
     : '/'
+  const isHomeIntroPage = currentPath === '/' || currentPath === '/home'
+  const isCatalogPage = currentPath === '/catalog'
+  const isDoDirectoryPage = currentPath === '/do'
   const isDoMapPage = currentPath === '/do-map'
   const isAboutPage = currentPath === '/about'
   const isWineRoutePage = currentPath === '/ruta-de-vins'
@@ -114,6 +120,7 @@ export default function App() {
   const [doSearchText, setDoSearchText] = useState('')
   const [doLogoPreview, setDoLogoPreview] = useState<{ src: string; label: string } | null>(null)
   const [wines, setWines] = useState<WineCard[]>([])
+  const [wineListItems, setWineListItems] = useState<WineListApiItem[]>([])
   const [doOptions, setDoOptions] = useState<DoApiItem[]>([])
   const [wineRouteStops, setWineRouteStops] = useState<WineRouteStop[]>([])
   const [isWineRouteLoading, setIsWineRouteLoading] = useState(false)
@@ -149,7 +156,6 @@ export default function App() {
 
   const t = messages[locale]
   const isDark = theme === 'dark'
-  const isCatalogPage = !isDoMapPage && !isAboutPage && !isWineRoutePage
   const galleryPhotoLabels = [
     t.common.galleryPhotoLabels.bottle,
     t.common.galleryPhotoLabels.front,
@@ -178,21 +184,47 @@ export default function App() {
 
   useEffect(() => {
     const siteName = t.common.meta.siteName
-    const sectionTitle = isDoMapPage
-      ? t.common.meta.sectionDoMap
-      : isAboutPage
-        ? t.common.meta.sectionAbout
-        : isWineRoutePage
-          ? t.common.meta.sectionWineRoute
-          : t.common.meta.sectionCatalog
-    const description = isDoMapPage
-      ? t.common.meta.descriptionDoMap
-      : isAboutPage
-        ? t.common.meta.descriptionAbout
-        : isWineRoutePage
-          ? t.common.meta.descriptionWineRoute
-          : t.common.meta.descriptionCatalog
-    const relativePath = isDoMapPage ? '/do-map' : isAboutPage ? '/about' : isWineRoutePage ? '/ruta-de-vins' : '/'
+    const sectionTitle = isHomeIntroPage
+      ? (locale === 'ca' ? 'Home' : locale === 'es' ? 'Inicio' : 'Home')
+      : isDoDirectoryPage
+        ? (locale === 'ca' ? 'DO' : locale === 'es' ? 'DO' : 'DO')
+        : isDoMapPage
+          ? t.common.meta.sectionDoMap
+          : isAboutPage
+            ? t.common.meta.sectionAbout
+            : isWineRoutePage
+              ? t.common.meta.sectionWineRoute
+              : t.common.meta.sectionCatalog
+    const description = isHomeIntroPage
+      ? (locale === 'ca'
+        ? 'Pàgina d’aterratge amb una introducció visual de la web, el catàleg de vins i les denominacions d’origen.'
+        : locale === 'es'
+          ? 'Página de aterrizaje con introducción visual de la web, el catálogo de vinos y las denominaciones de origen.'
+          : 'Landing page with a visual introduction to the website, wine catalog, and designations of origin.')
+      : isDoDirectoryPage
+        ? (locale === 'ca'
+          ? 'Directori complet de denominacions d’origen amb imatge, país, regió i nombre de vins ressenyats.'
+          : locale === 'es'
+            ? 'Directorio completo de denominaciones de origen con imagen, país, región y número de vinos reseñados.'
+            : 'Complete DO directory with image, country, region, and reviewed wine count.')
+        : isDoMapPage
+          ? t.common.meta.descriptionDoMap
+          : isAboutPage
+            ? t.common.meta.descriptionAbout
+            : isWineRoutePage
+              ? t.common.meta.descriptionWineRoute
+              : t.common.meta.descriptionCatalog
+    const relativePath = isHomeIntroPage
+      ? '/'
+      : isDoDirectoryPage
+        ? '/do'
+        : isDoMapPage
+          ? '/do-map'
+          : isAboutPage
+            ? '/about'
+            : isWineRoutePage
+              ? '/ruta-de-vins'
+              : '/catalog'
     const canonical = `${window.location.origin}${relativePath}`
 
     document.title = `${siteName} | ${sectionTitle}`
@@ -204,7 +236,7 @@ export default function App() {
     upsertMetaTag('property', 'og:locale', locale === 'ca' ? 'ca_ES' : locale === 'en' ? 'en_US' : 'es_ES')
     upsertMetaTag('name', 'twitter:title', `${siteName} | ${sectionTitle}`)
     upsertMetaTag('name', 'twitter:description', description)
-  }, [isAboutPage, isDoMapPage, isWineRoutePage, locale, t.common.meta])
+  }, [isAboutPage, isDoDirectoryPage, isDoMapPage, isHomeIntroPage, isWineRoutePage, locale, t.common.meta])
 
   useEffect(() => {
     if (mobileViewMode === 'card') {
@@ -225,10 +257,12 @@ export default function App() {
     void fetchWineListItems(base, controller.signal, sortKey)
       .then((items) => {
         if (controller.signal.aborted) return
+        setWineListItems(items)
         setWines(items.map((item) => mapWineListItemToWineCard(item, locale)))
       })
       .catch(() => {
         if (controller.signal.aborted) return
+        setWineListItems([])
         setWines([])
       })
 
@@ -650,6 +684,49 @@ export default function App() {
       syncIndex,
     }
   }, [winesWithPurchaseData])
+  const homeStats = useMemo(() => {
+    const countries = new Set(doOptions.map((item) => countryCodeToLabel(item.country)))
+    const totalReviews = wineListItems.reduce(
+      (sum, item) => sum + (Array.isArray(item.reviews) ? item.reviews.length : 0),
+      0,
+    )
+
+    return {
+      totalWines: winesWithPurchaseData.length,
+      totalDos: doOptions.length,
+      totalCountries: countries.size,
+      totalReviews,
+    }
+  }, [doOptions, wineListItems, winesWithPurchaseData.length])
+  const doDirectoryItems = useMemo(() => {
+    const reviewedCountByDoId = new Map<number, number>()
+    wineListItems.forEach((item) => {
+      const doId = item.do?.id
+      const hasReview = Array.isArray(item.reviews) && item.reviews.length > 0
+      if (typeof doId !== 'number' || !hasReview) {
+        return
+      }
+      reviewedCountByDoId.set(doId, (reviewedCountByDoId.get(doId) ?? 0) + 1)
+    })
+
+    return doOptions
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        region: item.region,
+        country: countryCodeToLabel(item.country),
+        doLogoImage: doLogoPathFromImageName(item.do_logo) ?? null,
+        regionLogoImage: regionLogoPathFromImageName(item.region_logo) ?? null,
+        reviewedWineCount: reviewedCountByDoId.get(item.id) ?? 0,
+      }))
+      .sort((a, b) => {
+        const byCountry = a.country.localeCompare(b.country)
+        if (byCountry !== 0) return byCountry
+        const byRegion = a.region.localeCompare(b.region)
+        if (byRegion !== 0) return byRegion
+        return a.name.localeCompare(b.name)
+      })
+  }, [doOptions, wineListItems])
   const doMapPoints = useMemo<DoMapPoint[]>(
     () => doOptions
       .filter((item) => item.map_data && Number.isFinite(item.map_data.lat) && Number.isFinite(item.map_data.lng))
@@ -921,6 +998,9 @@ export default function App() {
   }, [selectedWine, activeModalImageIndex])
 
   useEffect(() => {
+    if (!isCatalogPage) {
+      return
+    }
     syncCatalogUrlState({
       search,
       typeFilter,
@@ -931,7 +1011,7 @@ export default function App() {
       sortKey,
       selectedWineId,
     })
-  }, [search, typeFilter, countryFilter, regionFilter, grapeFilter, minScoreFilter, sortKey, selectedWineId])
+  }, [countryFilter, grapeFilter, isCatalogPage, minScoreFilter, regionFilter, search, selectedWineId, sortKey, typeFilter])
 
   const euro = useMemo(
     () => new Intl.NumberFormat(localeToIntl(locale), { style: 'currency', currency: 'EUR' }),
@@ -1218,10 +1298,22 @@ export default function App() {
   }
   const desktopNav = (
     <nav className="topbar-nav" aria-label={t.topbar.navigation}>
-      <a className={`topbar-nav-link${isCatalogPage ? ' active' : ''}`} href="/">
+      <a className={`topbar-nav-link${isHomeIntroPage ? ' active' : ''}`} href="/">
+        <span className="topbar-nav-link-inner">
+          <img src="/images/icons/wine/house_grapes.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <span>{t.topbar.home}</span>
+        </span>
+      </a>
+      <a className={`topbar-nav-link${isCatalogPage ? ' active' : ''}`} href="/catalog">
         <span className="topbar-nav-link-inner">
           <img src="/images/icons/wine/wines2_glass.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
           <span>{t.topbar.winesCatalog}</span>
+        </span>
+      </a>
+      <a className={`topbar-nav-link${isDoDirectoryPage ? ' active' : ''}`} href="/do">
+        <span className="topbar-nav-link-inner">
+          <img src="/images/icons/wine/do_only.png" className="topbar-nav-link-icon" alt="" aria-hidden="true" />
+          <span>{t.topbar.doDirectory}</span>
         </span>
       </a>
       <a className={`topbar-nav-link${isDoMapPage ? ' active' : ''}`} href="/do-map">
@@ -1256,6 +1348,48 @@ export default function App() {
       </a>
     </nav>
   )
+
+  if (isHomeIntroPage) {
+    return (
+      <HomeLandingPageView
+        adminHref={adminHref}
+        desktopNav={desktopNav}
+        homeStats={homeStats}
+        isDark={isDark}
+        isMobileMenuOpen={isMobileMenuOpen}
+        locale={locale}
+        localeLabels={localeLabels}
+        logoSrc={logoSrc}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        setLocale={setLocale}
+        setTheme={setTheme}
+        t={t}
+        theme={theme}
+      />
+    )
+  }
+
+  if (isDoDirectoryPage) {
+    return (
+      <DoDirectoryPageView
+        adminHref={adminHref}
+        countryFlagPath={countryFlagPath}
+        desktopNav={desktopNav}
+        doDirectoryItems={doDirectoryItems}
+        isDark={isDark}
+        isMobileMenuOpen={isMobileMenuOpen}
+        locale={locale}
+        localeLabels={localeLabels}
+        localizedCountryName={localizedCountryName}
+        logoSrc={logoSrc}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        setLocale={setLocale}
+        setTheme={setTheme}
+        t={t}
+        theme={theme}
+      />
+    )
+  }
 
   if (isDoMapPage) {
     return (

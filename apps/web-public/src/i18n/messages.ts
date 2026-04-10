@@ -188,7 +188,9 @@ export type PublicMessages = {
     language: string
     menu: string
     navigation: string
+    home: string
     winesCatalog: string
+    doDirectory: string
     doMap: string
     wineRoute: string
     whoWeAre: string

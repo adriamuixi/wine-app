@@ -401,8 +401,16 @@ export default function WineRoutePageView({
             </button>
           </div>
           <a href="/" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/house_grapes.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.home}</span>
+          </a>
+          <a href="/catalog" onClick={() => setIsMobileMenuOpen(false)}>
             <img src="/images/icons/wine/wines2_glass.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
             <span>{t.topbar.winesCatalog}</span>
+          </a>
+          <a href="/do" onClick={() => setIsMobileMenuOpen(false)}>
+            <img src="/images/icons/wine/do_only.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />
+            <span>{t.topbar.doDirectory}</span>
           </a>
           <a href="/do-map" onClick={() => setIsMobileMenuOpen(false)}>
             <img src="/images/icons/wine/grapes_region.png" className="mobile-nav-link-icon" alt="" aria-hidden="true" />

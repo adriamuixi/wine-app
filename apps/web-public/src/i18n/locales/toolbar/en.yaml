@@ -5,7 +5,9 @@ topbar:
   language: Language
   menu: Menu
   navigation: Navigation
-  winesCatalog: Our wines
+  home: Home
+  winesCatalog: Wines
+  doDirectory: DO
   doMap: DO Map
   wineRoute: Ruta de vins
   whoWeAre: Who we are
