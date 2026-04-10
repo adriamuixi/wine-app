@@ -310,6 +310,8 @@ export function mergeWineCardWithDetails(card: WineCard, details: NonNullable<Wi
     regionLogoImage: regionLogoPathFromImageName(details.do?.region_logo) ?? card.regionLogoImage,
     image: byType.bottle,
     gallery,
-    tastingDateSortTs: card.tastingDateSortTs,
+    tastingDateSortTs: tastedDate && !Number.isNaN(tastedDate.getTime())
+      ? tastedDate.getTime()
+      : card.tastingDateSortTs,
   }
 }
