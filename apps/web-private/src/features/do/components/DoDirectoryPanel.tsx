@@ -106,7 +106,7 @@ export function DoDirectoryPanel({
           </div>
         </div>
 
-        <div className="inline-grid triple do-directory-filter-grid">
+        <div className="inline-grid triple do-directory-filter-grid do-directory-filter-grid-desktop">
           <label className="do-directory-filter-field">
             {t('ui.filter_by_name')}
             <input

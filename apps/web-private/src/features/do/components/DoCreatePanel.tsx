@@ -82,7 +82,7 @@ export function DoCreatePanel({
         <form id="do-create-form" className="stack-form wine-create-form" onSubmit={onSubmit}>
           <fieldset className="form-block">
             <legend>{t('ui.data_basic')}</legend>
-            <div className="inline-grid triple">
+            <div className="inline-grid triple do-form-fields-grid">
               <label>
                 {t('ui.name')}
                 <input
@@ -117,8 +117,6 @@ export function DoCreatePanel({
                   ))}
                 </select>
               </label>
-            </div>
-            <div className="inline-grid triple">
               <label>
                 {t('ui.code_country')}
                 <input

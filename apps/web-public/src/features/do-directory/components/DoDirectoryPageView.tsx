@@ -271,11 +271,11 @@ export default function DoDirectoryPageView({
           return (
             <article key={item.id} className="cards-panel do-directory-card">
               <div className="do-directory-card-head">
-                <div className="do-directory-logo-stack">
-                  {item.regionLogoImage ? <img src={item.regionLogoImage} alt={item.region} loading="lazy" /> : null}
-                  {item.doLogoImage ? <img src={item.doLogoImage} alt={`${item.name} ${t.common.doShort}`} loading="lazy" /> : null}
+                <div className="do-directory-branding">
+                  {item.doLogoImage ? <img className="do-directory-logo-primary" src={item.doLogoImage} alt={`${item.name} ${t.common.doShort}`} loading="lazy" /> : null}
+                  {item.regionLogoImage ? <img className="do-directory-logo-region" src={item.regionLogoImage} alt={item.region} loading="lazy" /> : null}
                 </div>
-                <div>
+                <div className="do-directory-card-copy">
                   <h2>{item.name}</h2>
                   <p>{copy.autoText}</p>
                 </div>

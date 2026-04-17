@@ -6,6 +6,7 @@ import { ApiDocPanel } from '../../features/apiDoc'
 import { DashboardPanel } from '../../features/dashboard'
 import { DoCreatePanel, DoDirectoryPanel, DoEditModal } from '../../features/do'
 import { deleteDoById } from '../../features/do/services/doApi'
+import { GrapeDirectoryPanel, GrapeEditModal, createGrape, deleteGrapeById, listGrapes, updateGrape } from '../../features/grapes'
 import { ReviewEditorPanel, ReviewsPanel } from '../../features/reviews'
 import { IconLibraryPanel, SettingsPanel } from '../../features/settings'
 import { analyzeWineDraftWithAi, PhotoEditorModal, WineAiCreatePanel, WineAiDraftPreviewPanel, WineFiltersMobileModal, WineFormPanel, WineGalleryModal, WineProfilePanel, WinesListPanel, useWinePhotoActions } from '../../features/wines'
@@ -49,11 +50,16 @@ import type {
   ValueStatsApiResponse,
 } from '../../features/dashboard'
 import type {
+  GrapeApiItem,
+  GrapeColorFilter,
+  GrapeEditDraft,
+  GrapeSortField,
+  GrapeSortPresetKey,
+} from '../../features/grapes'
+import type {
   AwardRow,
   DoLogoCropRatio,
   GalleryModalVariant,
-  GrapeApiItem,
-  GrapeApiResponse,
   GrapeBlendRow,
   PhotoEditorAssetType,
   ReviewListApiItem,
@@ -133,6 +139,11 @@ const DO_SORT_PRESET_FIELDS: Record<DoSortPresetKey, [DoSortField, DoSortField, 
   country_region_name: ['country', 'region', 'name'],
   name_country_region: ['name', 'country', 'region'],
   region_name_country: ['region', 'name', 'country'],
+}
+
+const GRAPE_SORT_PRESET_FIELDS: Record<GrapeSortPresetKey, [GrapeSortField, GrapeSortField]> = {
+  color_name: ['color', 'name'],
+  name_color: ['name', 'color'],
 }
 
 type WineAiFormState = {
@@ -742,6 +753,21 @@ function HomePage() {
   const [doDeleteTarget, setDoDeleteTarget] = useState<DoApiItem | null>(null)
   const [doDeleteSubmitting, setDoDeleteSubmitting] = useState(false)
   const [doDeleteError, setDoDeleteError] = useState<string | null>(null)
+  const [grapeDirectoryItems, setGrapeDirectoryItems] = useState<GrapeApiItem[]>([])
+  const [grapeSortPreset, setGrapeSortPreset] = useState<GrapeSortPresetKey>('color_name')
+  const [grapeListNameFilter, setGrapeListNameFilter] = useState('')
+  const [grapeListNameFilterDebounced, setGrapeListNameFilterDebounced] = useState('')
+  const [grapeListColorFilter, setGrapeListColorFilter] = useState<GrapeColorFilter>('all')
+  const [grapeListReloadToken, setGrapeListReloadToken] = useState(0)
+  const [grapeSuccessToast, setGrapeSuccessToast] = useState<string | null>(null)
+  const [grapeEditMode, setGrapeEditMode] = useState<'create' | 'edit'>('create')
+  const [grapeEditTarget, setGrapeEditTarget] = useState<GrapeApiItem | null>(null)
+  const [grapeEditDraft, setGrapeEditDraft] = useState<GrapeEditDraft | null>(null)
+  const [grapeEditSubmitting, setGrapeEditSubmitting] = useState(false)
+  const [grapeEditError, setGrapeEditError] = useState<string | null>(null)
+  const [grapeDeleteTarget, setGrapeDeleteTarget] = useState<GrapeApiItem | null>(null)
+  const [grapeDeleteSubmitting, setGrapeDeleteSubmitting] = useState(false)
+  const [grapeDeleteError, setGrapeDeleteError] = useState<string | null>(null)
   const [coverageStats, setCoverageStats] = useState<CoverageStatsApiResponse | null>(null)
   const [coverageStatus, setCoverageStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [coverageError, setCoverageError] = useState<string | null>(null)
@@ -850,12 +876,6 @@ function HomePage() {
       iconSrc: '/images/icons/wine/wine_3bottles.png',
     },
     {
-      key: 'reviews',
-      label: labels.menu.reviews,
-      short: 'R',
-      iconSrc: '/images/icons/wine/glass_hand.png',
-    },
-    {
       key: 'dos',
       label: labels.menu.dos,
       short: 'DO',
@@ -866,6 +886,12 @@ function HomePage() {
       label: labels.menu.varieties,
       short: 'V',
       iconSrc: '/images/icons/wine/grapes_basket.png',
+    },
+    {
+      key: 'reviews',
+      label: labels.menu.reviews,
+      short: 'R',
+      iconSrc: '/images/icons/wine/glass_hand.png',
     },
     {
       key: 'apiDocs',
@@ -976,6 +1002,7 @@ function HomePage() {
     : null
   const primaryEditPurchase = wineEditDetails?.purchases[0] ?? null
   const doSortFields = DO_SORT_PRESET_FIELDS[doSortPreset]
+  const grapeSortFields = GRAPE_SORT_PRESET_FIELDS[grapeSortPreset]
   const doSortPresetOptions = useMemo<Array<{ key: DoSortPresetKey; label: string }>>(
     () => [
       {
@@ -990,6 +1017,13 @@ function HomePage() {
         key: 'region_name_country',
         label: t('ui.region_name_country'),
       },
+    ],
+    [locale],
+  )
+  const grapeSortPresetOptions = useMemo<Array<{ key: GrapeSortPresetKey; label: string }>>(
+    () => [
+      { key: 'color_name', label: t('ui.color_name') },
+      { key: 'name_color', label: t('ui.name_color') },
     ],
     [locale],
   )
@@ -1037,6 +1071,30 @@ function HomePage() {
 
     return regionOptions.sort((left, right) => collator.compare(left, right))
   }, [doOptions, locale])
+  const grapeDirectoryItemsForTable = useMemo(() => {
+    const items = [...grapeDirectoryItems]
+    const collator = new Intl.Collator(localeToIntl(locale), { sensitivity: 'base' })
+
+    return items.sort((left, right) => {
+      for (const field of grapeSortFields) {
+        const comparison = (() => {
+          if (field === 'color') {
+            return collator.compare(
+              left.color === 'red' ? t('ui.reds') : t('ui.whites'),
+              right.color === 'red' ? t('ui.reds') : t('ui.whites'),
+            )
+          }
+          return collator.compare(left.name, right.name)
+        })()
+
+        if (comparison !== 0) {
+          return comparison
+        }
+      }
+
+      return left.id - right.id
+    })
+  }, [grapeDirectoryItems, grapeSortFields, locale])
   const metrics = useMemo(
     () => ({
       totalWines: coverageStats?.total_wines ?? wineItems.length,
@@ -1434,12 +1492,22 @@ function HomePage() {
   }, [doListRegionFilter])
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setGrapeListNameFilterDebounced(grapeListNameFilter.trim())
+    }, 260)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [grapeListNameFilter])
+
+  useEffect(() => {
     setSettingsName(currentUser?.name ?? '')
     setSettingsLastname(currentUser?.lastname ?? '')
   }, [currentUser])
 
   useEffect(() => {
-    if (!['wines', 'wineCreate', 'wineEdit', 'wineAiCreate', 'wineAiPreview', 'dos', 'doCreate'].includes(menu)) {
+    if (!['wines', 'wineCreate', 'wineEdit', 'wineAiCreate', 'wineAiPreview', 'dos', 'doCreate', 'varieties'].includes(menu)) {
       return
     }
 
@@ -1447,25 +1515,20 @@ function HomePage() {
       return
     }
 
-    const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
-    const fallbackBase = window.location.port.startsWith('517') ? 'http://localhost:8080' : window.location.origin
-    const apiBaseUrl = configuredBase && configuredBase.length > 0 ? configuredBase : fallbackBase
     const controller = new AbortController()
+    const apiBaseUrl = resolveApiBaseUrl()
 
-    fetch(`${apiBaseUrl}/api/grapes`, {
-      signal: controller.signal,
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-      },
+    listGrapes({
+      apiBaseUrl,
+      nameFilter: '',
+      colorFilter: 'all',
+      sortPreset: 'color_name',
     })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
+      .then((items) => {
+        if (controller.signal.aborted) {
+          return
         }
-
-        const payload = await response.json() as GrapeApiResponse
-        setGrapeOptions(payload.items)
+        setGrapeOptions(items)
       })
       .catch(() => {
       })
@@ -1473,7 +1536,7 @@ function HomePage() {
     return () => {
       controller.abort()
     }
-  }, [menu, grapeOptions.length])
+  }, [menu, grapeOptions.length, grapeListReloadToken])
 
   useEffect(() => {
     if (!['wines', 'wineCreate', 'wineEdit', 'wineAiCreate', 'wineAiPreview', 'dos'].includes(menu)) {
@@ -1523,6 +1586,33 @@ function HomePage() {
       controller.abort()
     }
   }, [doListCountryFilter, doListNameFilterDebounced, doListRegionFilterDebounced, doListReloadToken, doSortFields, menu])
+
+  useEffect(() => {
+    if (menu !== 'varieties') {
+      return
+    }
+
+    const controller = new AbortController()
+
+    listGrapes({
+      apiBaseUrl: resolveApiBaseUrl(),
+      nameFilter: grapeListNameFilterDebounced,
+      colorFilter: grapeListColorFilter,
+      sortPreset: grapeSortPreset,
+    })
+      .then((items) => {
+        if (controller.signal.aborted) {
+          return
+        }
+        setGrapeDirectoryItems(items)
+      })
+      .catch(() => {
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [grapeListColorFilter, grapeListNameFilterDebounced, grapeListReloadToken, grapeSortPreset, menu])
 
   const openDoCreate = () => {
     if (doCreateLogoPreviewSrc != null) {
@@ -1684,6 +1774,46 @@ function HomePage() {
     setDoDeleteSubmitting(false)
   }
 
+  const openGrapeCreate = useCallback(() => {
+    setGrapeEditMode('create')
+    setGrapeEditTarget(null)
+    setGrapeEditDraft({ name: '', color: 'red' })
+    setGrapeEditError(null)
+    setGrapeEditSubmitting(false)
+  }, [])
+
+  const openGrapeEdit = useCallback((item: GrapeApiItem) => {
+    setGrapeEditMode('edit')
+    setGrapeEditTarget(item)
+    setGrapeEditDraft({ name: item.name, color: item.color })
+    setGrapeEditError(null)
+    setGrapeEditSubmitting(false)
+  }, [])
+
+  const closeGrapeEdit = useCallback(() => {
+    setGrapeEditTarget(null)
+    setGrapeEditDraft(null)
+    setGrapeEditError(null)
+    setGrapeEditSubmitting(false)
+  }, [])
+
+  const openGrapeDeleteConfirm = useCallback((item: GrapeApiItem) => {
+    setGrapeDeleteTarget(item)
+    setGrapeDeleteError(null)
+    setGrapeDeleteSubmitting(false)
+  }, [])
+
+  const closeGrapeDeleteConfirm = useCallback(() => {
+    setGrapeDeleteTarget(null)
+    setGrapeDeleteError(null)
+    setGrapeDeleteSubmitting(false)
+  }, [])
+
+  const refreshGrapeLists = useCallback(() => {
+    setGrapeOptions([])
+    setGrapeListReloadToken((current) => current + 1)
+  }, [])
+
   const doDirectoryRows = useMemo(() => (
     doDirectoryItems.map((item) => {
       const logoPath = doLogoPathFromImageName(item.do_logo)
@@ -1753,6 +1883,31 @@ function HomePage() {
       )
     })
   ), [doDirectoryItems, labels.dashboard.table.region, locale, openDoDeleteConfirm, openDoEdit])
+
+  const grapeDirectoryRows = useMemo(() => (
+    grapeDirectoryItemsForTable.map((item) => (
+      <tr key={item.id}>
+        <td className="grape-directory-name-cell" data-label={t('ui.name')}>
+          <strong>{item.name}</strong>
+        </td>
+        <td className="grape-directory-color-cell" data-label={t('ui.color')}>
+          <span className={`grape-color-chip ${item.color === 'red' ? 'is-red' : 'is-white'}`}>
+            {item.color === 'red' ? t('ui.reds') : t('ui.whites')}
+          </span>
+        </td>
+        <td className="wine-col-actions grape-directory-actions-cell" data-label={t('ui.actions')}>
+          <div className="do-directory-actions">
+            <button type="button" className="ghost-button small" onClick={() => openGrapeEdit(item)}>
+              {t('ui.edit_action')}
+            </button>
+            <button type="button" className="ghost-button small danger-text-button" onClick={() => openGrapeDeleteConfirm(item)}>
+              {t('ui.delete')}
+            </button>
+          </div>
+        </td>
+      </tr>
+    ))
+  ), [grapeDirectoryItemsForTable, openGrapeDeleteConfirm, openGrapeEdit, t])
 
   const handleDoEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -1848,6 +2003,76 @@ function HomePage() {
     } catch (error: unknown) {
       setDoDeleteError(error instanceof Error ? error.message : (t('ui.not_could_delete_do')))
       setDoDeleteSubmitting(false)
+    }
+  }
+
+  const handleGrapeEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (!grapeEditDraft) {
+      return
+    }
+
+    const name = grapeEditDraft.name.trim()
+    if (name === '') {
+      setGrapeEditError(t('ui.name_grape_is_required'))
+      return
+    }
+
+    setGrapeEditSubmitting(true)
+    setGrapeEditError(null)
+
+    try {
+      const apiBaseUrl = resolveApiBaseUrl()
+      if (grapeEditMode === 'create') {
+        await createGrape({
+          apiBaseUrl,
+          draft: grapeEditDraft,
+        })
+        setGrapeSuccessToast(t('ui.grape_created_success', { name }))
+      } else {
+        if (!grapeEditTarget) {
+          throw new Error(t('ui.not_could_identify_grape'))
+        }
+        await updateGrape({
+          apiBaseUrl,
+          grapeId: grapeEditTarget.id,
+          draft: grapeEditDraft,
+        })
+        setGrapeSuccessToast(t('ui.grape_updated_success', { name }))
+      }
+
+      refreshGrapeLists()
+      closeGrapeEdit()
+    } catch (error) {
+      setGrapeEditError(error instanceof Error
+        ? error.message
+        : (grapeEditMode === 'create' ? t('ui.not_could_create_grape') : t('ui.not_could_update_grape')))
+      setGrapeEditSubmitting(false)
+    }
+  }
+
+  const confirmDeleteGrape = async () => {
+    if (!grapeDeleteTarget) {
+      return
+    }
+
+    setGrapeDeleteSubmitting(true)
+    setGrapeDeleteError(null)
+
+    try {
+      await deleteGrapeById({
+        apiBaseUrl: resolveApiBaseUrl(),
+        grapeId: grapeDeleteTarget.id,
+      })
+      setGrapeDirectoryItems((current) => current.filter((item) => item.id !== grapeDeleteTarget.id))
+      setGrapeOptions((current) => current.filter((item) => item.id !== grapeDeleteTarget.id))
+      setGrapeSuccessToast(t('ui.grape_deleted_success', { name: grapeDeleteTarget.name }))
+      refreshGrapeLists()
+      closeGrapeDeleteConfirm()
+    } catch (error) {
+      setGrapeDeleteError(error instanceof Error ? error.message : t('ui.not_could_delete_grape'))
+      setGrapeDeleteSubmitting(false)
     }
   }
 
@@ -3847,6 +4072,20 @@ function HomePage() {
   }, [doSuccessToast])
 
   useEffect(() => {
+    if (grapeSuccessToast == null) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setGrapeSuccessToast(null)
+    }, 2600)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [grapeSuccessToast])
+
+  useEffect(() => {
     return () => {
       if (doCreateLogoPreviewSrc != null) {
         URL.revokeObjectURL(doCreateLogoPreviewSrc)
@@ -4540,20 +4779,21 @@ function HomePage() {
         ) : null}
 
         {menu === 'varieties' ? (
-          <section className="screen-grid">
-            <section className="panel">
-              <div className="panel-header">
-                <div className="panel-header-heading-with-icon">
-                  <img className="panel-header-section-icon" src="/images/icons/wine/grapes_basket.png" alt="" aria-hidden="true" />
-                  <div className="panel-header-heading-copy">
-                    <p className="eyebrow">{labels.menu.varieties}</p>
-                    <h3>{labels.menu.varieties}</h3>
-                  </div>
-                </div>
-              </div>
-              <p className="muted">WIP</p>
-            </section>
-          </section>
+          <GrapeDirectoryPanel
+            t={t}
+            labels={{ grapes: { list: labels.grapes.list } }}
+            grapeDirectoryItemsLength={grapeDirectoryItemsForTable.length}
+            grapeSortPreset={grapeSortPreset}
+            grapeSortPresetOptions={grapeSortPresetOptions}
+            grapeListNameFilter={grapeListNameFilter}
+            grapeListColorFilter={grapeListColorFilter}
+            showCreateButton
+            grapeDirectoryRows={grapeDirectoryRows}
+            onGrapeSortPresetChange={setGrapeSortPreset}
+            onOpenGrapeCreate={openGrapeCreate}
+            onGrapeListNameFilterChange={(event) => setGrapeListNameFilter(event.target.value)}
+            onGrapeListColorFilterChange={setGrapeListColorFilter}
+          />
         ) : null}
 
         {menu === 'doCreate' ? (
@@ -5007,6 +5247,20 @@ function HomePage() {
         onFallbackAsset={fallbackToAdminAsset}
       />
 
+      <GrapeEditModal
+        open={grapeEditDraft != null}
+        mode={grapeEditMode}
+        t={t}
+        title={grapeEditMode === 'create' ? t('ui.new_grape') : (grapeEditTarget?.name ?? t('ui.edit_grape'))}
+        draft={grapeEditDraft}
+        submitting={grapeEditSubmitting}
+        error={grapeEditError}
+        onClose={closeGrapeEdit}
+        onSubmit={(event) => { void handleGrapeEditSubmit(event) }}
+        onNameChange={(value) => setGrapeEditDraft((current) => (current == null ? current : { ...current, name: value }))}
+        onColorChange={(value) => setGrapeEditDraft((current) => (current == null ? current : { ...current, color: value }))}
+      />
+
       <ConfirmDeleteModal
         open={doDeleteTarget != null}
         eyebrow={t('ui.delete_do')}
@@ -5033,6 +5287,20 @@ function HomePage() {
         modalId="delete-wine-title"
         onClose={closeWineDeleteConfirm}
         onConfirm={() => { void confirmDeleteWine() }}
+      />
+
+      <ConfirmDeleteModal
+        open={grapeDeleteTarget != null}
+        eyebrow={t('ui.delete_grape')}
+        title={grapeDeleteTarget?.name ?? ''}
+        description={t('ui.this_action_will_delete_grape_if_not_linked')}
+        error={grapeDeleteError}
+        cancelLabel={t('ui.cancel')}
+        confirmLabel={grapeDeleteSubmitting ? t('ui.deleting') : t('ui.delete_action')}
+        submitting={grapeDeleteSubmitting}
+        modalId="delete-grape-title"
+        onClose={closeGrapeDeleteConfirm}
+        onConfirm={() => { void confirmDeleteGrape() }}
       />
 
       <PhotoEditorModal
@@ -5122,6 +5390,12 @@ function HomePage() {
       {doSuccessToast ? (
         <div className="floating-toast floating-toast-success" role="status" aria-live="polite">
           {doSuccessToast}
+        </div>
+      ) : null}
+
+      {grapeSuccessToast ? (
+        <div className="floating-toast floating-toast-success" role="status" aria-live="polite">
+          {grapeSuccessToast}
         </div>
       ) : null}
     </main>

@@ -1,0 +1,30 @@
+grapes:
+  title: Grape varieties
+  list:
+    eyebrow: Variety catalog
+    title: List of grape varieties
+    results: items
+    createAction: Create variety
+ui:
+  color_name: Color, name
+  name_color: Name, color
+  color: Color
+  filter_by_color: Filter by color
+  all_colors: All colors
+  eg_tempranillo: E.g. Tempranillo
+  no_grapes_available: No varieties available.
+  create_grape: Create variety
+  edit_grape: Edit variety
+  creating_grape: Creating variety...
+  new_grape: New variety
+  delete_grape: DELETE VARIETY
+  this_action_will_delete_grape_if_not_linked: This action will delete the variety if it has no linked wines. Do you want to continue?
+  name_grape_is_required: Variety name is required.
+  not_could_identify_grape: Could not identify the variety.
+  not_could_create_grape: Could not create the variety.
+  not_could_update_grape: Could not update the variety.
+  not_could_delete_grape: Could not delete the variety.
+  grape_created_success: 'The variety "{{name}}" was created successfully.'
+  grape_updated_success: 'The variety "{{name}}" was updated successfully.'
+  grape_deleted_success: 'The variety "{{name}}" was deleted successfully.'
+

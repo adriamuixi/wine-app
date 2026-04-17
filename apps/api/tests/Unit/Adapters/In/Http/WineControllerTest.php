@@ -1004,7 +1004,21 @@ final class InMemoryGrapeRepository implements GrapeRepository
         return array_values(array_intersect($ids, $this->existingIds));
     }
 
-    public function findAll(): array
+    public function create(\App\Domain\Model\Grape $grape): int
+    {
+        return 0;
+    }
+
+    public function findById(int $id): ?\App\Domain\Model\Grape
+    {
+        if (!in_array($id, $this->existingIds, true)) {
+            return null;
+        }
+
+        return new \App\Domain\Model\Grape($id, 5 === $id ? 'Tempranillo' : 'Grape '.$id, \App\Domain\Enum\GrapeColor::Red);
+    }
+
+    public function findAll(array $sortFields = [], ?string $name = null, ?\App\Domain\Enum\GrapeColor $color = null): array
     {
         $items = [];
         foreach ($this->existingIds as $id) {
@@ -1012,6 +1026,21 @@ final class InMemoryGrapeRepository implements GrapeRepository
         }
 
         return $items;
+    }
+
+    public function update(\App\Domain\Model\Grape $grape): bool
+    {
+        return false;
+    }
+
+    public function deleteById(int $id): bool
+    {
+        return false;
+    }
+
+    public function hasAssociatedWines(int $id): bool
+    {
+        return false;
     }
 }
 

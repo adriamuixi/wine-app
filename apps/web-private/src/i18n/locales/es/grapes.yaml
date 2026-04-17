@@ -1,0 +1,30 @@
+grapes:
+  title: Variedades de uva
+  list:
+    eyebrow: Catálogo de variedades
+    title: Listado de variedades de uva
+    results: elementos
+    createAction: Crear variedad
+ui:
+  color_name: Color, nombre
+  name_color: Nombre, color
+  color: Color
+  filter_by_color: Filtrar por color
+  all_colors: Todos los colores
+  eg_tempranillo: Ej. Tempranillo
+  no_grapes_available: No hay variedades disponibles.
+  create_grape: Crear variedad
+  edit_grape: Editar variedad
+  creating_grape: Creando variedad…
+  new_grape: Nueva variedad
+  delete_grape: ELIMINAR VARIEDAD
+  this_action_will_delete_grape_if_not_linked: Esta acción eliminará la variedad si no tiene vinos asociados. ¿Quieres continuar?
+  name_grape_is_required: El nombre de la variedad es obligatorio.
+  not_could_identify_grape: No se pudo identificar la variedad.
+  not_could_create_grape: No se pudo crear la variedad.
+  not_could_update_grape: No se pudo actualizar la variedad.
+  not_could_delete_grape: No se pudo eliminar la variedad.
+  grape_created_success: 'La variedad "{{name}}" se ha creado correctamente.'
+  grape_updated_success: 'La variedad "{{name}}" se ha actualizado correctamente.'
+  grape_deleted_success: 'La variedad "{{name}}" se ha eliminado correctamente.'
+

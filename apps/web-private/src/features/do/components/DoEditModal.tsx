@@ -135,7 +135,7 @@ export function DoEditModal({
             </section>
           </div>
 
-          <div className="inline-grid triple">
+          <div className="inline-grid triple do-form-fields-grid">
             <label>
               {t('ui.name')}
               <input name="name" type="text" value={doEditDraft?.name ?? ''} onChange={(event) => onNameChange(event.target.value)} required />
@@ -156,8 +156,6 @@ export function DoEditModal({
                 ))}
               </select>
             </label>
-          </div>
-          <div className="inline-grid triple do-edit-meta-grid">
             <label>
               {t('ui.code_country')}
               <input

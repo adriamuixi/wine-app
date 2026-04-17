@@ -137,7 +137,7 @@ export function DashboardPanel({
 
   return (
     <section className="screen-grid">
-      <div className="stat-grid">
+      <div className="stat-grid dashboard-stat-grid">
         <article className="stat-card">
           <img className="stat-card-icon" src={dashboardIcons.totalWines} alt="" aria-hidden="true" />
           <p>{labels.dashboard.metrics.totalWines}</p>

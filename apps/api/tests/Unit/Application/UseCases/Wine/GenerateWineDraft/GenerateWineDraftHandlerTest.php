@@ -292,8 +292,33 @@ final class InMemoryGrapeRepo implements GrapeRepository
         return array_values(array_intersect($ids, [5]));
     }
 
-    public function findAll(): array
+    public function create(Grape $grape): int
+    {
+        return 0;
+    }
+
+    public function findById(int $id): ?Grape
+    {
+        return 5 === $id ? new Grape(5, 'Tempranillo', GrapeColor::Red) : null;
+    }
+
+    public function findAll(array $sortFields = [], ?string $name = null, ?GrapeColor $color = null): array
     {
         return [new Grape(5, 'Tempranillo', GrapeColor::Red)];
+    }
+
+    public function update(Grape $grape): bool
+    {
+        return false;
+    }
+
+    public function deleteById(int $id): bool
+    {
+        return false;
+    }
+
+    public function hasAssociatedWines(int $id): bool
+    {
+        return false;
     }
 }

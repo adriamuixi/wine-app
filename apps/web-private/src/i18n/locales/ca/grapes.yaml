@@ -1,0 +1,30 @@
+grapes:
+  title: Varietats de raïm
+  list:
+    eyebrow: Catàleg de varietats
+    title: Llistat de varietats de raïm
+    results: elements
+    createAction: Crear varietat
+ui:
+  color_name: Color, nom
+  name_color: Nom, color
+  color: Color
+  filter_by_color: Filtrar per color
+  all_colors: Tots els colors
+  eg_tempranillo: Ex. Tempranillo
+  no_grapes_available: No hi ha varietats disponibles.
+  create_grape: Crear varietat
+  edit_grape: Editar varietat
+  creating_grape: Creant varietat…
+  new_grape: Nova varietat
+  delete_grape: ELIMINAR VARIETAT
+  this_action_will_delete_grape_if_not_linked: Aquesta acció eliminarà la varietat si no té vins associats. Vols continuar?
+  name_grape_is_required: El nom de la varietat és obligatori.
+  not_could_identify_grape: No s’ha pogut identificar la varietat.
+  not_could_create_grape: No s’ha pogut crear la varietat.
+  not_could_update_grape: No s’ha pogut actualitzar la varietat.
+  not_could_delete_grape: No s’ha pogut eliminar la varietat.
+  grape_created_success: 'La varietat "{{name}}" s''ha creat correctament.'
+  grape_updated_success: 'La varietat "{{name}}" s''ha actualitzat correctament.'
+  grape_deleted_success: 'La varietat "{{name}}" s''ha eliminat correctament.'
+

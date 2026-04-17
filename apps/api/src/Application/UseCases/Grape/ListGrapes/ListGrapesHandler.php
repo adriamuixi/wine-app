@@ -14,8 +14,12 @@ final readonly class ListGrapesHandler
     }
 
     /** @return list<Grape> */
-    public function handle(): array
+    public function handle(ListGrapesQuery $query): array
     {
-        return $this->grapes->findAll();
+        return $this->grapes->findAll(
+            sortFields: $query->sortFields,
+            name: $query->name,
+            color: $query->color,
+        );
     }
 }
