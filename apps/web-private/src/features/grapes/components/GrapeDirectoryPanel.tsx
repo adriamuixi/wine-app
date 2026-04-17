@@ -75,10 +75,23 @@ export function GrapeDirectoryPanel({
               {grapeDirectoryItemsLength} {labels.grapes.list.results}
             </span>
             {isMobileViewport ? (
-              <button type="button" className="secondary-button small wine-mobile-filters-trigger" onClick={onOpenMobileFilters}>
-                {t('ui.filters')}
-                <span className="wine-mobile-filters-trigger-count">{activeFiltersCount}</span>
-              </button>
+              <div className="do-directory-mobile-toolbar-actions">
+                <button type="button" className="secondary-button small wine-mobile-filters-trigger" onClick={onOpenMobileFilters}>
+                  {t('ui.filters')}
+                  <span className="wine-mobile-filters-trigger-count">{activeFiltersCount}</span>
+                </button>
+                {showCreateButton ? (
+                  <button
+                    type="button"
+                    className="primary-button small do-directory-mobile-create-button"
+                    onClick={onOpenGrapeCreate}
+                    aria-label={labels.grapes.list.createAction}
+                    title={labels.grapes.list.createAction}
+                  >
+                    +
+                  </button>
+                ) : null}
+              </div>
             ) : (
               <>
                 <label className="do-sort-select">
@@ -130,8 +143,8 @@ export function GrapeDirectoryPanel({
               onChange={(event) => onGrapeListColorFilterChange(event.target.value as GrapeColorFilter)}
             >
               <option value="all">{t('ui.all_colors')}</option>
-              <option value="red">{t('ui.reds')}</option>
-              <option value="white">{t('ui.whites')}</option>
+              <option value="red">{t('ui.grape_color_red')}</option>
+              <option value="white">{t('ui.grape_color_white')}</option>
             </select>
           </label>
         </div>
@@ -173,8 +186,8 @@ export function GrapeDirectoryPanel({
                   onChange={(event) => onGrapeListColorFilterChange(event.target.value as GrapeColorFilter)}
                 >
                   <option value="all">{t('ui.all_colors')}</option>
-                  <option value="red">{t('ui.reds')}</option>
-                  <option value="white">{t('ui.whites')}</option>
+                  <option value="red">{t('ui.grape_color_red')}</option>
+                  <option value="white">{t('ui.grape_color_white')}</option>
                 </select>
               </label>
             </div>

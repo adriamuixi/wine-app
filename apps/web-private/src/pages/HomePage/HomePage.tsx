@@ -1092,8 +1092,8 @@ function HomePage() {
         const comparison = (() => {
           if (field === 'color') {
             return collator.compare(
-              left.color === 'red' ? t('ui.reds') : t('ui.whites'),
-              right.color === 'red' ? t('ui.reds') : t('ui.whites'),
+              left.color === 'red' ? t('ui.grape_color_red') : t('ui.grape_color_white'),
+              right.color === 'red' ? t('ui.grape_color_red') : t('ui.grape_color_white'),
             )
           }
           return collator.compare(left.name, right.name)
@@ -1904,22 +1904,59 @@ function HomePage() {
         </td>
         <td className="grape-directory-color-cell" data-label={t('ui.color')}>
           <span className={`grape-color-chip ${item.color === 'red' ? 'is-red' : 'is-white'}`}>
-            {item.color === 'red' ? t('ui.reds') : t('ui.whites')}
+            <img
+              src={item.color === 'red' ? '/images/icons/wine/grapes_4.png' : '/images/icons/wine/grapes_white.png'}
+              alt=""
+              className="grape-color-chip-icon"
+              loading="lazy"
+              aria-hidden="true"
+              onError={fallbackToAdminAsset}
+            />
+            <span>{item.color === 'red' ? t('ui.grape_color_red') : t('ui.grape_color_white')}</span>
           </span>
         </td>
         <td className="wine-col-actions grape-directory-actions-cell" data-label={t('ui.actions')}>
           <div className="do-directory-actions">
-            <button type="button" className="ghost-button small" onClick={() => openGrapeEdit(item)}>
-              {t('ui.edit_action')}
-            </button>
-            <button type="button" className="ghost-button small danger-text-button" onClick={() => openGrapeDeleteConfirm(item)}>
-              {t('ui.delete')}
-            </button>
+            {isMobileViewport ? (
+              <>
+                <button
+                  type="button"
+                  className="table-icon-button grape-directory-icon-action"
+                  onClick={() => openGrapeEdit(item)}
+                  title={t('ui.edit_action')}
+                  aria-label={t('ui.edit_action')}
+                >
+                  <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M3 17.25V21h3.75L18.37 9.38l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.62-9.62.92.92-9.62 9.62zM20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.3a1 1 0 0 0-1.41 0l-1.5 1.5 3.75 3.75 1.5-1.5z" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="table-icon-button danger grape-directory-icon-action"
+                  onClick={() => openGrapeDeleteConfirm(item)}
+                  title={t('ui.delete')}
+                  aria-label={t('ui.delete')}
+                >
+                  <svg className="table-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9zm1 12h8a2 2 0 0 0 2-2V8H6v11a2 2 0 0 0 2 2z" fill="currentColor" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="ghost-button small" onClick={() => openGrapeEdit(item)}>
+                  {t('ui.edit_action')}
+                </button>
+                <button type="button" className="ghost-button small danger-text-button" onClick={() => openGrapeDeleteConfirm(item)}>
+                  {t('ui.delete')}
+                </button>
+              </>
+            )}
           </div>
         </td>
       </tr>
     ))
-  ), [grapeDirectoryItemsForTable, openGrapeDeleteConfirm, openGrapeEdit, t])
+  ), [fallbackToAdminAsset, grapeDirectoryItemsForTable, isMobileViewport, openGrapeDeleteConfirm, openGrapeEdit, t])
 
   const handleDoEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

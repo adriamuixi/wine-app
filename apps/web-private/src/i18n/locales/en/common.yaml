@@ -269,6 +269,8 @@ wineType:
 ui:
   reds: Reds
   whites: Whites
+  grape_color_red: Red
+  grape_color_white: White
   locale_code_2: en-US
   value_2_march_2026: March 2, 2026
   name: Name

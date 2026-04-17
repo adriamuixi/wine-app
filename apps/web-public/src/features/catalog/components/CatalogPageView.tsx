@@ -107,6 +107,16 @@ export default function CatalogPageView({
   defaultSort,
 }: Props) {
   const localeCodes = Object.keys(localeLabels) as Locale[]
+  const wineTypeIconSrc = (type: WineCard['type']): string | null => {
+    if (type === 'red') {
+      return '/images/icons/wine/grapes_4.png'
+    }
+    if (type === 'white') {
+      return '/images/icons/wine/grapes_white.png'
+    }
+    return null
+  }
+
   const toggleLocale = () => {
     const currentIndex = localeCodes.indexOf(locale)
     const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % localeCodes.length : 0
@@ -426,6 +436,7 @@ export default function CatalogPageView({
             {filteredWines.map((wine) => {
               const isFeatured = wine.avgScore >= 90
               const scoreTier = wine.avgScore >= 90 ? 'gold' : wine.avgScore >= 80 ? 'silver' : wine.avgScore >= 70 ? 'bronze' : 'base'
+              const wineTypeIcon = wineTypeIconSrc(wine.type)
               const countryFlagImage = countryFlagPath(wine.country)
               const communityFlagImage = wine.country === 'Spain' ? wine.regionLogoImage ?? null : null
               const communityName = wine.country === 'Spain' ? autonomousCommunityNameForRegion(wine.region) : null
@@ -480,9 +491,24 @@ export default function CatalogPageView({
                     <div className="wine-card-head">
                       <div>
                         <h3>{wine.name}</h3>
-                        <span className={`wine-type-pill wine-type-pill-${wine.type}`}>
-                          <span className={`wine-type-pill-dot wine-type-pill-dot-${wine.type}`} aria-hidden="true">🍇</span>
-                          <span>{t.wineType[wine.type]}</span>
+                        <span
+                          className={`wine-type-pill wine-type-pill-${wine.type}`}
+                          aria-label={`${wine.vintage} · ${t.wineType[wine.type]} · ${wine.aging}`}
+                          title={`${wine.vintage} · ${t.wineType[wine.type]} · ${wine.aging}`}
+                        >
+                          <span className="wine-type-pill-vintage">{wine.vintage}</span>
+                          <span className="wine-type-pill-separator" aria-hidden="true">·</span>
+                          <span className={`wine-type-pill-dot wine-type-pill-dot-${wine.type}`} aria-hidden="true">
+                            {wineTypeIcon ? <img className="wine-type-pill-icon" src={wineTypeIcon} alt="" loading="lazy" /> : '🍇'}
+                          </span>
+                          <span className="wine-type-pill-separator" aria-hidden="true">·</span>
+                          {wineTypeIcon ? null : (
+                            <>
+                              <span className="wine-type-pill-type">{t.wineType[wine.type]}</span>
+                              <span className="wine-type-pill-separator" aria-hidden="true">·</span>
+                            </>
+                          )}
+                          <span className="wine-type-pill-aging">{wine.aging}</span>
                         </span>
                       </div>
                       <div className="score-award-stack">
@@ -516,11 +542,6 @@ export default function CatalogPageView({
                             <span>{wine.region}</span>
                           </dd>
                         </div>
-                        <div className="wine-card-meta-box-aging">
-                          <dt>🍷 {t.modal.aging}</dt>
-                          <dd>{wine.aging}</dd>
-                        </div>
-                        <div className="wine-card-meta-box-vintage"><dt>{t.icons.vintage} {t.card.vintage}</dt><dd>{wine.vintage}</dd></div>
                         <div className="wine-card-meta-box-grapes">
                           <dt className="wine-card-grapes-heading"><span aria-hidden="true">{t.icons.grape}</span><span>{t.card.grapeVarieties}</span></dt>
                           <dd className="wine-card-meta-grapes">
@@ -604,7 +625,15 @@ export default function CatalogPageView({
 
                       <div className="wine-card-mobile-list-main">
                         <p className="wine-card-mobile-list-name">{wine.name}</p>
-                        <p className="wine-card-mobile-list-subline">{wine.vintage} • {t.wineType[wine.type]}</p>
+                        <p className="wine-card-mobile-list-subline" aria-label={`${wine.vintage} • ${t.wineType[wine.type]}`}>
+                          <span>{wine.vintage}</span>
+                          <span aria-hidden="true"> • </span>
+                          {wineTypeIcon ? (
+                            <img className="wine-card-mobile-list-type-icon" src={wineTypeIcon} alt="" loading="lazy" aria-hidden="true" />
+                          ) : (
+                            <span>{t.wineType[wine.type]}</span>
+                          )}
+                        </p>
                         <p className="wine-card-mobile-list-do-row">
                           <span className="wine-card-mobile-list-do-title">{t.common.doShort}</span>
                           {wine.doLogoImage ? (

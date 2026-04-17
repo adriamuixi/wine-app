@@ -269,6 +269,8 @@ wineType:
 ui:
   reds: Negres
   whites: Blanques
+  grape_color_red: Negra
+  grape_color_white: Blanca
   locale_code_2: ca-ES
   value_2_march_2026: 2 de març de 2026
   name: Nom

@@ -588,6 +588,23 @@
     padding-top: calc(5.7rem + env(safe-area-inset-top));
   }
 
+  .catalog-title-label {
+    font-size: clamp(2.08rem, 3.7vw, 3.15rem);
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .cards-grid.mobile-layout-list {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .wine-card-head h3 {
+    font-size: 1.4rem;
+    line-height: 1.12;
+  }
+
   .do-map-shell {
     display: grid;
     gap: 0.5rem;
@@ -1992,6 +2009,33 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
   line-height: 1;
 }
 
+.wine-type-pill-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  object-fit: contain;
+  display: block;
+}
+
+.wine-type-pill-vintage {
+  font-size: 0.98rem;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.wine-type-pill-separator {
+  font-size: 0.86rem;
+  line-height: 1;
+  opacity: 0.88;
+}
+
+.wine-type-pill-type,
+.wine-type-pill-aging {
+  font-size: 0.8rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
 .wine-type-pill-red {
   background: rgba(94, 33, 63, 0.16);
   border-color: rgba(142, 59, 95, 0.28);
@@ -2055,7 +2099,7 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 
 .score-badge strong {
   display: block;
-  font-size: 2.05rem;
+  font-size: 2.32rem;
   line-height: 0.96;
   font-weight: 200 !important;
   letter-spacing: -0.03em;
@@ -2068,7 +2112,7 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 .score-badge span {
   display: block;
   color: var(--muted);
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   margin-top: 0.2rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2165,12 +2209,12 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
 .wine-card-meta {
   margin: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 0.45rem 0.7rem;
 }
 
 .wine-card-meta-box-grapes {
-  grid-column: 1 / -1;
+  grid-column: auto;
 }
 
 .wine-card-meta div {
@@ -4199,6 +4243,14 @@ linear-gradient(360deg, rgb(138 10 98 / 18%), #ffffff00 45%)
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .wine-card-mobile-list-type-icon {
+    width: 0.88rem;
+    height: 0.88rem;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: -0.1em;
   }
 
   .wine-card-mobile-list-do-row {
