@@ -117,7 +117,7 @@ export function WinesListPanel({
                 </span>
               </button>
             ) : null}
-            {showCreateButton ? (
+            {showCreateButton && !isMobileViewport ? (
               <>
                 <button type="button" className="secondary-button" onClick={onOpenWineAiCreate}>
                   {t('ui.create_with_ai')}

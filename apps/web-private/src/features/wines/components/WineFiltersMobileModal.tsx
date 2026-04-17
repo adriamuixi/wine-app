@@ -4,10 +4,11 @@ type WineFiltersMobileModalProps = {
   open: boolean
   t: (key: string) => string
   content: ReactNode
+  onClearFilters?: () => void
   onClose: () => void
 }
 
-export function WineFiltersMobileModal({ open, t, content, onClose }: WineFiltersMobileModalProps) {
+export function WineFiltersMobileModal({ open, t, content, onClearFilters, onClose }: WineFiltersMobileModalProps) {
   if (!open) {
     return null
   }
@@ -26,9 +27,16 @@ export function WineFiltersMobileModal({ open, t, content, onClose }: WineFilter
             <p className="eyebrow">{t('ui.filters_section')}</p>
             <h3 id="wine-mobile-filters-title">{t('ui.filter_wines')}</h3>
           </div>
-          <button type="button" className="ghost-button small" onClick={onClose}>
-            {t('ui.close')}
-          </button>
+          <div className="wine-mobile-filters-header-actions">
+            {onClearFilters ? (
+              <button type="button" className="ghost-button small" onClick={onClearFilters}>
+                {t('ui.clear_filters')}
+              </button>
+            ) : null}
+            <button type="button" className="ghost-button small" onClick={onClose}>
+              {t('ui.close')}
+            </button>
+          </div>
         </header>
         <div className="wine-mobile-filters-content">
           {content}

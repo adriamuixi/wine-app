@@ -1483,6 +1483,14 @@ code {
   border-bottom: 1px solid rgba(82, 46, 28, 0.1);
 }
 
+.wine-mobile-filters-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .wine-mobile-filters-header h3 {
   margin: 0.24rem 0 0;
   line-height: 1.1;
@@ -2210,6 +2218,10 @@ code {
   .do-directory-filter-grid.do-directory-filter-grid-grapes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.85rem 0.9rem;
+  }
+
+  .do-directory-mobile-toolbar {
+    display: none;
   }
 }
 
@@ -5327,6 +5339,33 @@ code {
     display: none !important;
   }
 
+  .do-directory-filter-grid {
+    display: none;
+  }
+
+  .do-directory-mobile-toolbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    flex-wrap: nowrap;
+  }
+
+  .do-mobile-filters-sheet {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .do-mobile-filters-sheet .do-directory-filter-field,
+  .do-mobile-filters-sheet .do-sort-select-mobile {
+    width: 100%;
+  }
+
+  .do-mobile-filters-sheet .do-directory-filter-field {
+    display: grid;
+  }
+
   .stat-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -5476,6 +5515,56 @@ code {
   .mobile-floating-action.is-save:hover,
   .mobile-floating-action.is-save:focus-visible {
     background: linear-gradient(135deg, #66263d, #4a3328);
+  }
+
+  .mobile-create-chooser-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    border: 0;
+    background: rgba(10, 8, 10, 0.42);
+    backdrop-filter: blur(4px);
+  }
+
+  .mobile-create-chooser {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(8.8rem + env(safe-area-inset-bottom, 0px));
+    z-index: 17;
+    display: grid;
+    gap: 0.55rem;
+    width: min(82vw, 250px);
+  }
+
+  .mobile-create-chooser-option {
+    border: 1px solid rgba(82, 46, 28, 0.18);
+    border-radius: 1rem;
+    padding: 0.8rem 0.9rem;
+    text-align: left;
+    display: grid;
+    gap: 0.15rem;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.14);
+    cursor: pointer;
+  }
+
+  .mobile-create-chooser-option.primary {
+    background: linear-gradient(135deg, #a31652, #7a1d42);
+    color: #fff;
+  }
+
+  .mobile-create-chooser-option.secondary {
+    background: color-mix(in srgb, var(--theme-surface, #fff) 94%, transparent);
+    color: var(--theme-text, var(--text));
+  }
+
+  .mobile-create-chooser-option-title {
+    font-weight: 800;
+    font-size: 0.95rem;
+  }
+
+  .mobile-create-chooser-option-subtitle {
+    font-size: 0.76rem;
+    opacity: 0.84;
   }
 
   .mobile-floating-action-icon {
@@ -6001,32 +6090,36 @@ code {
   }
 
   .grape-directory-table tr {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.35rem;
-    padding: 0.8rem 0.78rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.25rem 0.55rem;
+    padding: 0.6rem 0.68rem;
     align-items: start;
   }
 
   .grape-directory-name-cell,
   .grape-directory-color-cell,
   .grape-directory-actions-cell {
-    grid-column: 1;
     display: grid;
-    gap: 0.24rem;
+    gap: 0.18rem;
     min-width: 0;
   }
 
   .grape-directory-name-cell {
     grid-row: 1;
+    grid-column: 1;
   }
 
   .grape-directory-color-cell {
-    grid-row: 2;
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: end;
+    align-self: start;
   }
 
   .grape-directory-actions-cell {
-    grid-row: 3;
-    padding-top: 0.28rem;
+    grid-row: 2;
+    grid-column: 1 / -1;
+    padding-top: 0.08rem;
   }
 
   .grape-directory-color-cell::before {
@@ -6044,15 +6137,17 @@ code {
   }
 
   .grape-directory-actions-cell .do-directory-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
+    display: flex;
+    gap: 0.45rem;
+    justify-content: flex-end;
     width: 100%;
   }
 
   .grape-directory-actions-cell .do-directory-actions .ghost-button {
-    width: 100%;
-    min-height: 44px;
+    width: auto;
+    min-height: 34px;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.82rem;
     justify-content: center;
   }
 
@@ -6066,8 +6161,8 @@ code {
   .wine-country-chip,
   .wine-do-chip {
     border-radius: 999px;
-    padding: 0.2rem 0.45rem;
-    font-size: 1.12rem;
+    padding: 0.16rem 0.42rem;
+    font-size: 1rem;
     color: #5b483d;
   }
 

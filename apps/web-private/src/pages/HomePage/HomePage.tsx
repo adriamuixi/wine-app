@@ -718,6 +718,9 @@ function HomePage() {
   const [wineHasNext, setWineHasNext] = useState(false)
   const [wineHasPrev, setWineHasPrev] = useState(false)
   const [isWineFiltersMobileOpen, setIsWineFiltersMobileOpen] = useState(false)
+  const [isWineCreateChooserOpen, setIsWineCreateChooserOpen] = useState(false)
+  const [isDoFiltersMobileOpen, setIsDoFiltersMobileOpen] = useState(false)
+  const [isGrapeFiltersMobileOpen, setIsGrapeFiltersMobileOpen] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(
     () => (typeof window !== 'undefined' ? window.matchMedia('(max-width: 640px)').matches : false),
   )
@@ -1027,6 +1030,15 @@ function HomePage() {
     ],
     [locale],
   )
+  const doActiveFiltersCount = [
+    doListNameFilter.trim() !== '',
+    doListCountryFilter !== 'all',
+    doListRegionFilter !== '',
+  ].filter(Boolean).length
+  const grapeActiveFiltersCount = [
+    grapeListNameFilter.trim() !== '',
+    grapeListColorFilter !== 'all',
+  ].filter(Boolean).length
   const doDirectoryItems = useMemo(() => {
     const items = [...doOptions]
     const collator = new Intl.Collator(localeToIntl(locale), { sensitivity: 'base' })
@@ -3386,6 +3398,7 @@ function HomePage() {
     setWineCreateFormResetKey((current) => current + 1)
     setMenu('wineCreate')
     setShowMobileMenu(false)
+    setIsWineCreateChooserOpen(false)
   }
 
   const openWineAiCreate = () => {
@@ -3398,6 +3411,7 @@ function HomePage() {
     setWineAiDraft(null)
     setMenu('wineAiCreate')
     setShowMobileMenu(false)
+    setIsWineCreateChooserOpen(false)
   }
 
   const applyWineAiDraftToCreateForm = (draft: WineAiDraft) => {
@@ -3573,6 +3587,19 @@ function HomePage() {
     setDoSearchText('')
     setIsDoDropdownOpen(false)
     setWinePage(1)
+  }
+
+  const resetDoFilters = () => {
+    setDoListNameFilter('')
+    setDoListCountryFilter('all')
+    setDoListRegionFilter('')
+    setDoSortPreset('country_region_name')
+  }
+
+  const resetGrapeFilters = () => {
+    setGrapeListNameFilter('')
+    setGrapeListColorFilter('all')
+    setGrapeSortPreset('color_name')
   }
 
   const wineActiveFiltersCount = useMemo(() => {
@@ -4307,7 +4334,7 @@ function HomePage() {
         return {
           kind: 'create' as const,
           label: t('ui.create_new_wine'),
-          onClick: openWineCreate,
+          onClick: () => setIsWineCreateChooserOpen((current) => !current),
           disabled: false,
         }
       case 'dos':
@@ -4768,9 +4795,15 @@ function HomePage() {
             sortedDoRegionFilterOptions={sortedDoRegionFilterOptions}
             countryFilterValues={WINE_COUNTRY_FILTER_VALUES}
             showCreateButton={!isMobileViewport}
+            isMobileViewport={isMobileViewport}
+            isFiltersMobileOpen={isDoFiltersMobileOpen}
+            activeFiltersCount={doActiveFiltersCount}
             doDirectoryRows={doDirectoryRows}
             onDoSortPresetChange={setDoSortPreset}
             onOpenDoCreate={openDoCreate}
+            onOpenMobileFilters={() => setIsDoFiltersMobileOpen(true)}
+            onCloseMobileFilters={() => setIsDoFiltersMobileOpen(false)}
+            onClearMobileFilters={resetDoFilters}
             onDoListNameFilterChange={(event) => setDoListNameFilter(event.target.value)}
             onDoListCountryFilterChange={setDoListCountryFilter}
             onDoListRegionFilterChange={setDoListRegionFilter}
@@ -4788,9 +4821,15 @@ function HomePage() {
             grapeListNameFilter={grapeListNameFilter}
             grapeListColorFilter={grapeListColorFilter}
             showCreateButton
+            isMobileViewport={isMobileViewport}
+            isFiltersMobileOpen={isGrapeFiltersMobileOpen}
+            activeFiltersCount={grapeActiveFiltersCount}
             grapeDirectoryRows={grapeDirectoryRows}
             onGrapeSortPresetChange={setGrapeSortPreset}
             onOpenGrapeCreate={openGrapeCreate}
+            onOpenMobileFilters={() => setIsGrapeFiltersMobileOpen(true)}
+            onCloseMobileFilters={() => setIsGrapeFiltersMobileOpen(false)}
+            onClearMobileFilters={resetGrapeFilters}
             onGrapeListNameFilterChange={(event) => setGrapeListNameFilter(event.target.value)}
             onGrapeListColorFilterChange={setGrapeListColorFilter}
           />
@@ -5187,6 +5226,28 @@ function HomePage() {
             </svg>
           )}
         </button>
+      ) : null}
+
+      {isMobileViewport && menu === 'wines' && isWineCreateChooserOpen ? (
+        <button
+          type="button"
+          className="mobile-create-chooser-backdrop"
+          aria-label={labels.common.menu}
+          onClick={() => setIsWineCreateChooserOpen(false)}
+        />
+      ) : null}
+
+      {isMobileViewport && menu === 'wines' && isWineCreateChooserOpen ? (
+        <section className="mobile-create-chooser" aria-label={t('ui.create_new_wine')}>
+          <button type="button" className="mobile-create-chooser-option primary" onClick={openWineCreate}>
+            <span className="mobile-create-chooser-option-title">{t('ui.create_new_wine')}</span>
+            <span className="mobile-create-chooser-option-subtitle">{labels.wines.add.submit}</span>
+          </button>
+          <button type="button" className="mobile-create-chooser-option secondary" onClick={openWineAiCreate}>
+            <span className="mobile-create-chooser-option-title">{t('ui.create_with_ai')}</span>
+            <span className="mobile-create-chooser-option-subtitle">{t('ui.analyze_with_ai')}</span>
+          </button>
+        </section>
       ) : null}
 
       <nav className="mobile-bottom-nav" aria-label="App navigation">
