@@ -24,6 +24,10 @@ type ReviewEditorPanelProps = {
   reviewTagOptions: readonly string[]
   scoreOptions0To10: number[]
   scoreOptions0To100: number[]
+  wineSearchText: string
+  onWineSearchTextChange: (value: string) => void
+  wineListStatus: 'idle' | 'loading' | 'ready' | 'error'
+  wineListError: string | null
   onBack: () => void
   onSubmit: FormEventHandler<HTMLFormElement>
 }
@@ -43,6 +47,10 @@ export function ReviewEditorPanel({
   reviewTagOptions,
   scoreOptions0To10,
   scoreOptions0To100,
+  wineSearchText,
+  onWineSearchTextChange,
+  wineListStatus,
+  wineListError,
   onBack,
   onSubmit,
 }: ReviewEditorPanelProps) {
@@ -114,6 +122,14 @@ export function ReviewEditorPanel({
         >
           <label>
             {labels.wine}
+            <input
+              type="search"
+              value={wineSearchText}
+              onChange={(event) => onWineSearchTextChange(event.target.value)}
+              placeholder={t('ui.search_by_name_wine')}
+            />
+            {wineListStatus === 'loading' ? <small className="muted">{t('ui.loading')}</small> : null}
+            {wineListStatus === 'error' ? <small className="error-message">{wineListError ?? t('ui.not_could_load_sheet')}</small> : null}
             <select name="wine_id" defaultValue={preset.wineId} disabled={mode === 'create' && creatableWineItems.length === 0}>
               <option value="" disabled>{labels.selectWine}</option>
               {winesForSelect.map((wine) => (
@@ -130,8 +146,10 @@ export function ReviewEditorPanel({
             {mode === 'create' ? (
               <small className="muted">{t('ui.wines_already_reviewed_appear_gray_and_not_can_select')}</small>
             ) : null}
-            {mode === 'create' && creatableWineItems.length === 0 ? (
-              <small className="muted">{t('ui.already_has_reviewed_all_wines_available')}</small>
+            {mode === 'create' && wineListStatus === 'ready' && creatableWineItems.length === 0 ? (
+              <small className="muted">
+                {wineSearchText.trim() !== '' ? t('ui.not_found_wines') : t('ui.already_has_reviewed_all_wines_available')}
+              </small>
             ) : null}
           </label>
 

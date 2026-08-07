@@ -717,6 +717,11 @@ function HomePage() {
   const [wineTotalPages, setWineTotalPages] = useState(0)
   const [wineHasNext, setWineHasNext] = useState(false)
   const [wineHasPrev, setWineHasPrev] = useState(false)
+  const [reviewWineSearchText, setReviewWineSearchText] = useState('')
+  const [debouncedReviewWineSearchText, setDebouncedReviewWineSearchText] = useState('')
+  const [reviewWineItems, setReviewWineItems] = useState<WineItem[]>([])
+  const [reviewWineListStatus, setReviewWineListStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [reviewWineListError, setReviewWineListError] = useState<string | null>(null)
   const [isWineFiltersMobileOpen, setIsWineFiltersMobileOpen] = useState(false)
   const [isWineCreateChooserOpen, setIsWineCreateChooserOpen] = useState(false)
   const [isDoFiltersMobileOpen, setIsDoFiltersMobileOpen] = useState(false)
@@ -1482,6 +1487,16 @@ function HomePage() {
       window.clearTimeout(timeoutId)
     }
   }, [searchText])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedReviewWineSearchText(reviewWineSearchText.trim())
+    }, 260)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [reviewWineSearchText])
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -2730,6 +2745,65 @@ function HomePage() {
   }, [menu, debouncedSearchText, wineCountryFilter, typeFilter, minScoreFilter, grapeFilter, doFilter, winePage, wineLimit, locale, wineListReloadToken])
 
   useEffect(() => {
+    if (menu !== 'reviewCreate' && menu !== 'reviewEdit') {
+      return
+    }
+
+    const params = new URLSearchParams()
+    params.set('page', '1')
+    params.set('limit', '50')
+    params.set('sort_by', 'name')
+    params.set('sort_dir', 'asc')
+    if (debouncedReviewWineSearchText !== '') {
+      params.set('search', debouncedReviewWineSearchText)
+    }
+
+    const controller = new AbortController()
+    setReviewWineListStatus('loading')
+    setReviewWineListError(null)
+
+    fetch(`${resolveApiBaseUrl()}/api/wines?${params.toString()}`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const payload = await response.json() as WineListApiResponse
+        const sourceItems = Array.isArray(payload.items) ? payload.items : []
+        const mappedItems = sourceItems
+          .map((item) => {
+            try {
+              return mapWineListItemToWineItem(item, locale)
+            } catch {
+              return null
+            }
+          })
+          .filter((item): item is WineItem => item !== null)
+
+        setReviewWineItems(mappedItems)
+        setReviewWineListStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        setReviewWineListStatus('error')
+        setReviewWineListError(error instanceof Error ? error.message : 'Unknown error')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [menu, debouncedReviewWineSearchText, locale])
+
+  useEffect(() => {
     if ((menu !== 'reviews' && menu !== 'reviewCreate' && menu !== 'reviewEdit') || currentUserId == null) {
       return
     }
@@ -3332,6 +3406,7 @@ function HomePage() {
 
   const openReviewCreate = () => {
     setSelectedReviewForEdit(null)
+    setReviewWineSearchText('')
     setMenu('reviewCreate')
     setShowMobileMenu(false)
   }
@@ -3351,6 +3426,7 @@ function HomePage() {
       persistence: review.persistence,
       tags: review.bullets.map((bullet) => REVIEW_ENUM_TO_TAG[bullet]).filter((tag): tag is (typeof REVIEW_TAG_OPTIONS)[number] => tag != null),
     })
+    setReviewWineSearchText('')
     setMenu('reviewEdit')
     setShowMobileMenu(false)
   }
@@ -3401,7 +3477,7 @@ function HomePage() {
     [myReviewEntries],
   )
   const creatableWineItems = useMemo(
-    () => wineItems
+    () => reviewWineItems
       .filter((wine) => !reviewedWineIdSet.has(wine.id))
       .sort((left, right) => {
         const byName = left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })
@@ -3411,8 +3487,39 @@ function HomePage() {
 
         return left.winery.localeCompare(right.winery, undefined, { sensitivity: 'base' })
       }),
-    [wineItems, reviewedWineIdSet],
+    [reviewWineItems, reviewedWineIdSet],
   )
+  const editableWineItems = useMemo(() => {
+    if (selectedReviewForEdit == null || reviewWineItems.some((wine) => wine.id === selectedReviewForEdit.wineId)) {
+      return reviewWineItems
+    }
+
+    const currentWine = myReviewEntries.find((entry) => entry.review.id === selectedReviewForEdit.id)?.wine
+      ?? {
+        id: selectedReviewForEdit.wineId,
+        name: selectedReviewForEdit.wineName,
+        winery: '-',
+        type: 'red' as const,
+        country: '-',
+        region: '-',
+        doName: null,
+        doLogo: null,
+        regionLogo: null,
+        thumbnailSrc: getDefaultNoPhotoSrc(),
+        galleryPreview: {
+          bottle: getDefaultNoPhotoSrc(),
+          front: getDefaultNoPhotoSrc(),
+          back: getDefaultNoPhotoSrc(),
+          situation: getDefaultNoPhotoSrc(),
+        },
+        vintageYear: null,
+        agingType: null,
+        pricePaid: 0,
+        averageScore: null,
+      }
+
+    return [currentWine, ...reviewWineItems]
+  }, [reviewWineItems, selectedReviewForEdit, myReviewEntries])
 
   const createReviewPreset = (() => {
     return buildReviewFormPreset(null)
@@ -5067,11 +5174,15 @@ function HomePage() {
             showSubmitButton={!isMobileViewport}
             reviewFormError={reviewFormError}
             creatableWineItems={creatableWineItems}
-            wineItems={wineItems}
+            wineItems={editableWineItems}
             reviewedWineIdSet={reviewedWineIdSet}
             reviewTagOptions={REVIEW_TAG_OPTIONS}
             scoreOptions0To10={SCORE_OPTIONS_0_TO_10}
             scoreOptions0To100={SCORE_OPTIONS_0_TO_100}
+            wineSearchText={reviewWineSearchText}
+            onWineSearchTextChange={setReviewWineSearchText}
+            wineListStatus={reviewWineListStatus}
+            wineListError={reviewWineListError}
             onBack={() => setMenu('reviews')}
             onSubmit={handleReviewFormSubmit('create')}
           />
@@ -5088,11 +5199,15 @@ function HomePage() {
             showSubmitButton={!isMobileViewport}
             reviewFormError={reviewFormError}
             creatableWineItems={creatableWineItems}
-            wineItems={wineItems}
+            wineItems={editableWineItems}
             reviewedWineIdSet={reviewedWineIdSet}
             reviewTagOptions={REVIEW_TAG_OPTIONS}
             scoreOptions0To10={SCORE_OPTIONS_0_TO_10}
             scoreOptions0To100={SCORE_OPTIONS_0_TO_100}
+            wineSearchText={reviewWineSearchText}
+            onWineSearchTextChange={setReviewWineSearchText}
+            wineListStatus={reviewWineListStatus}
+            wineListError={reviewWineListError}
             onBack={() => setMenu('reviews')}
             onSubmit={handleReviewFormSubmit('edit')}
           />
