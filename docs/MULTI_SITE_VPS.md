@@ -70,44 +70,57 @@ sudo rm -f /etc/nginx/sites-enabled/default
 Only the ACME challenge + redirect block for now. The `listen 443 ssl` block is
 added later, in step 6, once certs exist.
 
-### /etc/nginx/sites-available/tatirosset.cat
-```nginx
+`root /opt/certbot-www;` below reuses the ACME webroot that already exists on
+the VPS (wine-app's container currently bind-mounts it at
+`/var/www/certbot` — see `docker-compose.prod.yml`). Host Nginx runs directly
+on the VPS, not in that container, so it must reference the real host path,
+`/opt/certbot-www`, not the container-internal one.
+
+Create the vhost files:
+```bash
+sudo tee /etc/nginx/sites-available/tatirosset.cat > /dev/null <<'EOF'
 server {
     listen 80;
     server_name tatirosset.cat www.tatirosset.cat;
 
     location ^~ /.well-known/acme-challenge/ {
-        root /var/www/certbot;
+        root /opt/certbot-www;
         default_type "text/plain";
         try_files $uri =404;
     }
 
     location / { return 301 https://$host$request_uri; }
 }
-```
+EOF
 
-### /etc/nginx/sites-available/pcfutbolsala.com
-```nginx
+sudo tee /etc/nginx/sites-available/pcfutbolsala.com > /dev/null <<'EOF'
 server {
     listen 80;
     server_name pcfutbolsala.com www.pcfutbolsala.com;
 
     location ^~ /.well-known/acme-challenge/ {
-        root /var/www/certbot;
+        root /opt/certbot-www;
         default_type "text/plain";
         try_files $uri =404;
     }
 
     location / { return 301 https://$host$request_uri; }
 }
+EOF
 ```
 
-Enable both (don't reload yet — port 80 is still held by wine-app's container):
+Enable both and verify the config parses (don't reload yet — port 80 is still
+held by wine-app's container):
 ```bash
 sudo ln -s /etc/nginx/sites-available/tatirosset.cat   /etc/nginx/sites-enabled/
 sudo ln -s /etc/nginx/sites-available/pcfutbolsala.com /etc/nginx/sites-enabled/
 sudo nginx -t
 ```
+
+`nginx -t` should print `syntax is ok` / `test is successful`. If it instead
+complains about port 80 being in use, that's expected at this point — it's
+only testing the config syntax, not trying to bind the port (that only happens
+on `start`/`reload`, which is step 4, after wine-app releases port 80).
 
 ---
 
