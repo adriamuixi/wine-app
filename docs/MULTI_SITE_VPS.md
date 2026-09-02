@@ -20,33 +20,217 @@ Each Docker stack:
 
 ---
 
-## 1. Change wine-app port from 80 → 8080
+## Order of operations (read this first)
 
-By default `docker-compose.prod.yml` binds to `HTTP_PORT=80`. In the multi-site setup, the host Nginx owns port 80, so wine-app's Nginx must move to a non-public port.
+The steps below are numbered in the order they must actually run, for two reasons:
 
-In `.env` on the VPS:
-```dotenv
-HTTP_PORT=8080
-HTTPS_PORT=8443   # not used — host nginx handles SSL
-```
+1. **Cert chicken-and-egg.** A host Nginx `listen 443 ssl` block that references
+   `/etc/letsencrypt/live/<domain>/...` will fail `nginx -t` if those cert files
+   don't exist yet. So the HTTP (port 80) vhost must be live *before* you run
+   certbot, and the HTTPS (port 443) vhost must only be added *after* certbot has
+   issued the cert.
+2. **Minimize the outage.** Right now wine-app's Docker Nginx holds host ports
+   80/443 directly. Nothing else can bind those ports until wine-app is cut over
+   to `127.0.0.1:8080` — but host Nginx also can't start serving 80/443 until
+   wine-app releases them. So: prepare everything you can *before* the cutover,
+   do the cutover, then immediately flip host Nginx on to close the gap as fast
+   as possible.
 
-Also update `infra/nginx/default.prod.conf` to remove the `listen 443 ssl` block — SSL is now terminated by the host Nginx, not the Docker Nginx. Keep only:
-```nginx
-server {
-    listen 80;
-    server_name tatirosset.cat www.tatirosset.cat;
-    # ... existing proxy_pass blocks unchanged ...
-}
-```
+Expect a short outage (roughly the time it takes to run steps 3-4 below) between
+wine-app releasing port 80/443 and host Nginx picking it back up. HTTPS stays
+down a little longer than HTTP, until the cert is issued and the 443 block is
+added (step 6).
 
-Restart the stack:
+pc_futbol_sala (step 7) is independent of this timing — do it whenever, before
+or after the wine-app cutover, since it doesn't touch ports 80/443 until its own
+host Nginx vhost (step 5) is enabled.
+
+---
+
+## 1. Install host Nginx (config only — do not start it serving 80/443 yet)
+
 ```bash
-docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
+sudo apt install nginx certbot python3-certbot-nginx -y
+sudo systemctl enable nginx
+```
+
+`apt install` may try to auto-start Nginx; that's fine even if it fails to bind
+80/443 (still held by wine-app's container at this point) — it'll bind
+successfully once we reload it in step 4.
+
+Remove the default site so it doesn't conflict with our vhosts:
+```bash
+sudo rm -f /etc/nginx/sites-enabled/default
 ```
 
 ---
 
-## 2. Clone and start pc_futbol_sala
+## 2. Host Nginx config — HTTP (port 80) only, for both domains
+
+Only the ACME challenge + redirect block for now. The `listen 443 ssl` block is
+added later, in step 6, once certs exist.
+
+### /etc/nginx/sites-available/tatirosset.cat
+```nginx
+server {
+    listen 80;
+    server_name tatirosset.cat www.tatirosset.cat;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type "text/plain";
+        try_files $uri =404;
+    }
+
+    location / { return 301 https://$host$request_uri; }
+}
+```
+
+### /etc/nginx/sites-available/pcfutbolsala.com
+```nginx
+server {
+    listen 80;
+    server_name pcfutbolsala.com www.pcfutbolsala.com;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type "text/plain";
+        try_files $uri =404;
+    }
+
+    location / { return 301 https://$host$request_uri; }
+}
+```
+
+Enable both (don't reload yet — port 80 is still held by wine-app's container):
+```bash
+sudo ln -s /etc/nginx/sites-available/tatirosset.cat   /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/pcfutbolsala.com /etc/nginx/sites-enabled/
+sudo nginx -t
+```
+
+---
+
+## 3. Cut over wine-app to port 8080 (outage begins here)
+
+In `.env` on the VPS, set (or add — the repo's `docker-compose.prod.yml` now
+defaults to `8080`, but set it explicitly so it can't silently fall back to the
+old `80` from a stale `.env`):
+```dotenv
+HTTP_PORT=8080
+```
+
+Remove any `HTTPS_PORT` line — it's no longer used by `docker-compose.prod.yml`.
+
+Pull and restart:
+```bash
+cd ~/apps/wine-app
+git pull --ff-only
+docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
+```
+
+At this point wine-app's Nginx is on `127.0.0.1:8080` only. Host ports 80/443
+are free but nothing is listening on them yet — tatirosset.cat is down.
+
+---
+
+## 4. Bring host Nginx up on port 80 (closes most of the outage)
+
+```bash
+sudo systemctl reload nginx || sudo systemctl start nginx
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+tatirosset.cat is now reachable again over **HTTP** (redirecting to HTTPS, which
+isn't live yet — see step 6). This redirect will fail for a few more minutes
+until the cert exists; that's expected.
+
+---
+
+## 5. Issue SSL certificates
+
+DNS must already point to the VPS. This uses the HTTP vhost from step 2/4 to
+answer the ACME challenge — it does not need the 443 block yet.
+
+```bash
+sudo certbot certonly --nginx -d tatirosset.cat   -d www.tatirosset.cat
+sudo certbot certonly --nginx -d pcfutbolsala.com -d www.pcfutbolsala.com
+
+sudo systemctl status certbot.timer   # verify auto-renewal
+```
+
+---
+
+## 6. Add the HTTPS (443) block now that certs exist (outage ends here)
+
+Append to `/etc/nginx/sites-available/tatirosset.cat`:
+```nginx
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name tatirosset.cat www.tatirosset.cat;
+
+    ssl_certificate     /etc/letsencrypt/live/tatirosset.cat/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tatirosset.cat/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    client_max_body_size 16M;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/javascript;
+    gzip_vary on;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Append to `/etc/nginx/sites-available/pcfutbolsala.com` (only relevant once
+pc_futbol_sala is deployed — step 7):
+```nginx
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name pcfutbolsala.com www.pcfutbolsala.com;
+
+    ssl_certificate     /etc/letsencrypt/live/pcfutbolsala.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pcfutbolsala.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    client_max_body_size 20M;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/javascript;
+    gzip_vary on;
+
+    location / {
+        proxy_pass         http://127.0.0.1:7080;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+tatirosset.cat is now fully back on HTTPS via host Nginx. Outage is over.
+
+---
+
+## 7. Clone and start pc_futbol_sala (independent of the wine-app timing above)
 
 ```bash
 cd ~/apps
@@ -82,131 +266,12 @@ docker exec -i pc_futbol_sala-db-1 mysql \
   -uroot -p<DB_ROOT_PASSWORD> < backup.sql
 ```
 
----
-
-## 3. Install host Nginx
-
-```bash
-sudo apt install nginx certbot python3-certbot-nginx -y
-sudo systemctl enable nginx
-```
+Then run steps 5 (its `certbot certonly` line) and 6 (its 443 block) above for
+`pcfutbolsala.com` if you haven't already.
 
 ---
 
-## 4. Host Nginx config
-
-### /etc/nginx/sites-available/tatirosset.cat
-```nginx
-server {
-    listen 80;
-    server_name tatirosset.cat www.tatirosset.cat;
-
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-        default_type "text/plain";
-        try_files $uri =404;
-    }
-
-    location / { return 301 https://$host$request_uri; }
-}
-
-server {
-    listen 443 ssl;
-    http2 on;
-    server_name tatirosset.cat www.tatirosset.cat;
-
-    ssl_certificate     /etc/letsencrypt/live/tatirosset.cat/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/tatirosset.cat/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-
-    client_max_body_size 16M;
-
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/javascript;
-    gzip_vary on;
-
-    location / {
-        proxy_pass         http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header   Host              $host;
-        proxy_set_header   X-Real-IP         $remote_addr;
-        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-### /etc/nginx/sites-available/pcfutbolsala.com
-```nginx
-server {
-    listen 80;
-    server_name pcfutbolsala.com www.pcfutbolsala.com;
-
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-        default_type "text/plain";
-        try_files $uri =404;
-    }
-
-    location / { return 301 https://$host$request_uri; }
-}
-
-server {
-    listen 443 ssl;
-    http2 on;
-    server_name pcfutbolsala.com www.pcfutbolsala.com;
-
-    ssl_certificate     /etc/letsencrypt/live/pcfutbolsala.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/pcfutbolsala.com/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-
-    client_max_body_size 20M;
-
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/javascript;
-    gzip_vary on;
-
-    location / {
-        proxy_pass         http://127.0.0.1:7080;
-        proxy_http_version 1.1;
-        proxy_set_header   Host              $host;
-        proxy_set_header   X-Real-IP         $remote_addr;
-        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-Enable both:
-```bash
-sudo ln -s /etc/nginx/sites-available/tatirosset.cat   /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/pcfutbolsala.com /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-```
-
----
-
-## 5. SSL certificates
-
-DNS must point to the VPS before running this.
-
-```bash
-# Temporarily serve HTTP to get the cert
-sudo certbot certonly --nginx -d tatirosset.cat   -d www.tatirosset.cat
-sudo certbot certonly --nginx -d pcfutbolsala.com -d www.pcfutbolsala.com
-
-# Reload with SSL config active
-sudo nginx -t && sudo systemctl reload nginx
-
-# Verify auto-renewal
-sudo systemctl status certbot.timer
-```
-
----
-
-## 6. Network isolation
+## 8. Network isolation
 
 Use different Docker subnets to avoid conflicts:
 
@@ -217,7 +282,7 @@ Use different Docker subnets to avoid conflicts:
 
 ---
 
-## 7. Port map
+## 9. Port map
 
 | Port | Who listens | Traffic |
 |------|-------------|---------|
@@ -232,7 +297,7 @@ All Docker ports bound to `127.0.0.1` — not reachable from outside the VPS.
 
 ---
 
-## 8. Update workflow
+## 10. Update workflow (for routine deploys *after* the cutover above is done)
 
 ```bash
 # wine-app
@@ -246,13 +311,20 @@ git pull origin master
 docker compose up -d --build
 ```
 
+> `scripts/deploy-prod.sh`'s healthcheck currently curls `https://<host>:443`
+> resolved straight at the container, which assumed wine-app terminated TLS
+> itself. After this migration the container only answers on
+> `127.0.0.1:8080` over plain HTTP — that healthcheck needs updating (point it
+> at `http://127.0.0.1:8080` or run it against the public HTTPS URL through
+> host Nginx instead) before you rely on this script again.
+
 ---
 
-## 9. Checklist
+## 11. Checklist
 
 - [ ] DNS `A` records for both domains point to VPS IP
 - [ ] Firewall allows 22, 80, 443 only (`ufw status`)
-- [ ] wine-app `.env` has `HTTP_PORT=8080`
+- [ ] wine-app `.env` has `HTTP_PORT=8080` (and no stale `HTTP_PORT=80` / `HTTPS_PORT` left over)
 - [ ] wine-app Docker Nginx removed SSL blocks (host Nginx handles SSL)
 - [ ] pc_futbol_sala server-service bound to `127.0.0.1:7080`
 - [ ] Different Docker subnets (`NETWORK_IP=172.21.0.0/16` for pcfutbol)
@@ -260,3 +332,4 @@ docker compose up -d --build
 - [ ] SSL certs issued for both domains
 - [ ] Host Nginx test passes (`nginx -t`)
 - [ ] `certbot.timer` active for auto-renewal
+- [ ] `scripts/deploy-prod.sh` healthcheck updated to hit `127.0.0.1:8080`, not the container's port 443
