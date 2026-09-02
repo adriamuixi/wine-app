@@ -45,6 +45,19 @@ pc_futbol_sala (step 7) is independent of this timing — do it whenever, before
 or after the wine-app cutover, since it doesn't touch ports 80/443 until its own
 host Nginx vhost (step 5) is enabled.
 
+3. **Heredoc paste corruption.** Pasting a `sudo tee ... <<'EOF'` block into an
+   interactive zsh session can silently mangle lines containing
+   `https://...;` — zsh's `url-quote-magic` widget (common default on
+   Ubuntu/oh-my-zsh) auto-escapes punctuation right after anything that looks
+   like a URL, inserting a stray `\` before the following `;`. nginx then
+   can't find the statement terminator and fails with something like
+   `unexpected "}"` on an unrelated-looking line. **After every `tee`/`tee -a`
+   command below, run `sudo cat -n <file>` and check for a `\;` before
+   running `nginx -t`.** If you see one:
+   ```bash
+   sudo sed -i 's/\\;/;/g' <file>
+   ```
+
 ---
 
 ## 1. Install host Nginx (config only — do not start it serving 80/443 yet)
@@ -108,6 +121,15 @@ server {
 }
 EOF
 ```
+
+Verify what actually landed on disk (see the paste-corruption warning above)
+before doing anything else:
+```bash
+sudo cat -n /etc/nginx/sites-available/tatirosset.cat
+sudo cat -n /etc/nginx/sites-available/pcfutbolsala.com
+```
+Each `location / { ... }` line should end in a plain `;` — not `\;`. Fix with
+`sudo sed -i 's/\\;/;/g' <file>` if needed.
 
 Enable both and verify the config parses (don't reload yet — port 80 is still
 held by wine-app's container):
@@ -176,8 +198,9 @@ sudo systemctl status certbot.timer   # verify auto-renewal
 
 ## 6. Add the HTTPS (443) block now that certs exist (outage ends here)
 
-Append to `/etc/nginx/sites-available/tatirosset.cat`:
-```nginx
+Append to `tatirosset.cat` (do this one now — wine-app is live):
+```bash
+sudo tee -a /etc/nginx/sites-available/tatirosset.cat > /dev/null <<'EOF'
 server {
     listen 443 ssl;
     http2 on;
@@ -203,11 +226,14 @@ server {
         proxy_set_header   X-Forwarded-Proto $scheme;
     }
 }
+EOF
 ```
 
-Append to `/etc/nginx/sites-available/pcfutbolsala.com` (only relevant once
-pc_futbol_sala is deployed — step 7):
-```nginx
+Append to `pcfutbolsala.com` (only relevant once pc_futbol_sala is deployed —
+step 7; harmless to run early since it just references `127.0.0.1:7080`,
+nothing listens there yet if you haven't done step 7):
+```bash
+sudo tee -a /etc/nginx/sites-available/pcfutbolsala.com > /dev/null <<'EOF'
 server {
     listen 443 ssl;
     http2 on;
@@ -233,8 +259,17 @@ server {
         proxy_set_header   X-Forwarded-Proto $scheme;
     }
 }
+EOF
 ```
 
+Verify before reloading (see the paste-corruption warning above — the
+`proxy_pass http://127.0.0.1:8080;` line is exactly the kind of URL-then-`;`
+pattern that gets mangled):
+```bash
+sudo cat -n /etc/nginx/sites-available/tatirosset.cat
+sudo cat -n /etc/nginx/sites-available/pcfutbolsala.com
+```
+Fix any stray `\;` with `sudo sed -i 's/\\;/;/g' <file>`, then:
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
 ```
