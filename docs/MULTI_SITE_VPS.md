@@ -198,12 +198,17 @@ sudo systemctl status certbot.timer   # verify auto-renewal
 
 ## 6. Add the HTTPS (443) block now that certs exist (outage ends here)
 
+Uses `listen 443 ssl http2;` (HTTP/2 as a `listen` parameter), not the newer
+standalone `http2 on;` directive — this VPS runs Ubuntu's packaged nginx
+1.24.0, and `http2 on;` only exists from nginx 1.25.1 onward. Using it here
+fails `nginx -t` with `unknown directive "http2"`. Check your version with
+`nginx -v` if you're ever unsure which syntax applies.
+
 Append to `tatirosset.cat` (do this one now — wine-app is live):
 ```bash
 sudo tee -a /etc/nginx/sites-available/tatirosset.cat > /dev/null <<'EOF'
 server {
-    listen 443 ssl;
-    http2 on;
+    listen 443 ssl http2;
     server_name tatirosset.cat www.tatirosset.cat;
 
     ssl_certificate     /etc/letsencrypt/live/tatirosset.cat/fullchain.pem;
@@ -235,8 +240,7 @@ nothing listens there yet if you haven't done step 7):
 ```bash
 sudo tee -a /etc/nginx/sites-available/pcfutbolsala.com > /dev/null <<'EOF'
 server {
-    listen 443 ssl;
-    http2 on;
+    listen 443 ssl http2;
     server_name pcfutbolsala.com www.pcfutbolsala.com;
 
     ssl_certificate     /etc/letsencrypt/live/pcfutbolsala.com/fullchain.pem;
