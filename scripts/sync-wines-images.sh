@@ -13,14 +13,17 @@ set -euo pipefail
 #   REMOTE_HOST         default: 85.215.62.63
 #   REMOTE_USER         default: root
 #   REMOTE_PATH         default: /root/apps/wine-app/shared/public/images/wines/
-#   LOCAL_PATH          default: /home/adria/dev/wine-app/shared/public/images/wines/
+#   LOCAL_PATH          default: <repo>/shared/public/images/wines/
 #   SSH_PORT            default: 22
 #   DRY_RUN             default: 0 (set 1 for preview)
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 REMOTE_HOST="${REMOTE_HOST:-85.215.62.63}"
 REMOTE_USER="${REMOTE_USER:-root}"
 REMOTE_PATH="${REMOTE_PATH:-/root/apps/wine-app/shared/public/images/wines/}"
-LOCAL_PATH="${LOCAL_PATH:-/home/adria/dev/wine-app/shared/public/images/wines/}"
+LOCAL_PATH="${LOCAL_PATH:-${PROJECT_ROOT}/shared/public/images/wines/}"
 SSH_PORT="${SSH_PORT:-22}"
 DRY_RUN="${DRY_RUN:-0}"
 

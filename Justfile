@@ -97,11 +97,30 @@ setup:
     just migrate
     just public-install
     just private-install
+    # npm ci above reinstalls node_modules while Vite is already running,
+    # which desyncs its dep-optimizer cache and breaks the dev server. Restart
+    # so Vite boots fresh against the installed node_modules. nginx resolves
+    # web-public/web-private to fixed IPs at startup (no resolver directive),
+    # so it must restart too or it keeps proxying to the pre-restart IPs.
+    {{ compose }} restart web-public web-private
+    {{ compose }} restart nginx
 
 health:
-    @echo "Public:  http://localhost:8080/"
-    @echo "Private: http://localhost:8080/admin/"
-    @echo "API:     http://localhost:8080/api"
+    #!/usr/bin/env bash
+    set -uo pipefail
+    ok=0
+    check() {
+      for _ in 1 2 3 4 5 6; do
+        curl -fsS -o /dev/null --max-time 5 "$2" && { echo "OK    $1  $2"; return 0; }
+        sleep 2
+      done
+      echo "FAIL  $1  $2"
+      ok=1
+    }
+    check "Public " http://localhost:8080/
+    check "Private" http://localhost:8080/admin/
+    check "API    " http://localhost:8080/api
+    exit "$ok"
 
 # =========================
 # Mobile (host commands)

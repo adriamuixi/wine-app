@@ -81,7 +81,7 @@ Notes:
 Cron example (daily 02:30):
 
 ```cron
-30 2 * * * /home/adria/dev/wine-app/scripts/prod-db-backup.sh >> /home/adria/dev/wine-app/scripts/prod-db-backup.log 2>&1
+30 2 * * * /home/adri/dev/wine-app/scripts/prod-db-backup.sh >> /home/adri/dev/wine-app/scripts/prod-db-backup.log 2>&1
 ```
 
 ## `sync-wines-images.sh`
@@ -91,7 +91,7 @@ Purpose:
 - Pull images from server path:
   - `/root/apps/wine-app/shared/public/images/wines/`
 - Into local path:
-  - `/home/adria/dev/wine-app/shared/public/images/wines/`
+  - `/home/adri/dev/wine-app/shared/public/images/wines/`
 
 Uses:
 
@@ -104,7 +104,7 @@ The local machine must be able to connect with SSH to the server.
 Recommended:
 
 ```bash
-ssh-copy-id root@212.227.20.31
+ssh-copy-id root@85.215.62.63
 ```
 
 ### 2. Make the script executable
@@ -136,21 +136,21 @@ crontab -e
 Run every Sunday at 03:00:
 
 ```cron
-0 3 * * 0 /home/adria/dev/wine-app/scripts/sync-wines-images.sh >> /home/adria/dev/wine-app/scripts/sync-wines-images.log 2>&1
+0 3 * * 0 /home/adri/dev/wine-app/scripts/sync-wines-images.sh >> /home/adri/dev/wine-app/scripts/sync-wines-images.log 2>&1
 ```
 
 Optional environment variables:
 
 - `REMOTE_USER` (default: `root`)
 - `REMOTE_PATH` (default: `/root/apps/wine-app/shared/public/images/wines/`)
-- `LOCAL_PATH` (default: `/home/adria/dev/wine-app/shared/public/images/wines/`)
+- `LOCAL_PATH` (default: `<repo>/shared/public/images/wines/`)
 - `SSH_PORT` (default: `22`)
 - `DRY_RUN` (default: `0`)
 
 Custom SSH port example:
 
 ```bash
-REMOTE_HOST=212.227.20.31 SSH_PORT=2222 scripts/sync-wines-images.sh
+REMOTE_HOST=85.215.62.63 SSH_PORT=2222 scripts/sync-wines-images.sh
 ```
 
 ## `sync-db-from-server.sh`
@@ -180,7 +180,7 @@ Notes on FK/order:
 
 Default remote source:
 
-- Host: `212.227.20.31`
+- Host: `85.215.62.63`
 - User: `root`
 - Project dir: `/root/apps/wine-app`
 - Compose file: `docker-compose.prod.yml`
@@ -201,12 +201,12 @@ SSH_PORT=2222 scripts/sync-db-from-server.sh
 Custom remote/local overrides:
 
 ```bash
-REMOTE_HOST=212.227.20.31 REMOTE_USER=root LOCAL_POSTGRES_DB=wine LOCAL_POSTGRES_USER=wine scripts/sync-db-from-server.sh
+REMOTE_HOST=85.215.62.63 REMOTE_USER=root LOCAL_POSTGRES_DB=wine LOCAL_POSTGRES_USER=wine scripts/sync-db-from-server.sh
 ```
 
 Important environment variables:
 
-- `REMOTE_HOST` (default: `212.227.20.31`)
+- `REMOTE_HOST` (default: `85.215.62.63`)
 - `REMOTE_USER` (default: `root`)
 - `SSH_PORT` (default: `22`)
 - `REMOTE_PROJECT_DIR` (default: `/root/apps/wine-app`)

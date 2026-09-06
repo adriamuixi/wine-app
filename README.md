@@ -32,9 +32,24 @@ Wine catalog and review platform.
 
 ## Quick Start
 
+Requires Docker, Docker Compose, and [`just`](https://github.com/casey/just) installed.
+
 ```bash
+cp .env.example .env   # optional for local dev; sane defaults apply without it
 just setup
 just health
+```
+
+`just setup` builds and starts every container, installs backend and frontend
+dependencies, creates the database, runs migrations, and restarts the frontend
+and nginx containers so they pick up the freshly installed dependencies.
+`just health` retries each URL for up to ~12s and reports `FAIL` if a service
+never responds — a non-zero exit means something isn't up yet.
+
+If `just health` still reports `FAIL` after setup, check container logs:
+
+```bash
+just logs <service>   # e.g. just logs web-public
 ```
 
 ## URLs
