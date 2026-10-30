@@ -60,7 +60,7 @@ if [[ "$DO_PULL" == "1" ]]; then
 fi
 
 echo "==> Build containers"
-docker compose -f "$COMPOSE_FILE" build
+docker compose -f "$COMPOSE_FILE" build --pull
 
 echo "==> Start database first"
 docker compose -f "$COMPOSE_FILE" up -d db
