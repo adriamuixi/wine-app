@@ -127,8 +127,16 @@ health:
 # =========================
 
 # Run on the VPS: pulls, builds, migrates and healthchecks via scripts/deploy-prod.sh
+# dotenv-load + export would leak just's own parse of .env into the shell env,
+# which compose prefers over .env; values with $, quotes or # then differ
+# (e.g. POSTGRES_PASSWORD). Unset them so compose reads .env itself.
 deploy:
-    ./scripts/deploy-prod.sh
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then
+      unset $(sed -nE 's/^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)=.*/\2/p' .env)
+    fi
+    exec ./scripts/deploy-prod.sh
 
 # =========================
 # Mobile (host commands)
