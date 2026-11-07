@@ -317,17 +317,17 @@ chmod +x ./scripts/prod-db-backup.sh
 
 The script:
 - loads `.env`
-- writes compressed backups to `/backup` by default
+- writes compressed backups to `/backup/wine-app` by default
 - keeps 30 backups by default
 - removes backups older than 30 days
 - avoids concurrent runs with a lock file
 
-### Daily backup cron (30 days / 30 files in `/backup`)
+### Daily backup cron (30 days / 30 files in `/backup/wine-app`)
 
 Run once on the production server from repo root:
 
 ```bash
-mkdir -p /backup
+mkdir -p /backup/wine-app
 mkdir -p ./logs
 chmod +x ./scripts/prod-db-backup.sh
 ./scripts/prod-db-backup.sh

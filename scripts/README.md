@@ -68,7 +68,7 @@ scripts/prod-db-backup.sh
 
 Important environment variables:
 
-- `BACKUP_DIR` (default: `/backup`)
+- `BACKUP_DIR` (default: `/backup/wine-app`)
 - `RETENTION_DAYS` (default: `30`)
 - `MAX_BACKUPS` (default: `30`)
 - `LOCK_FILE` (default: `/tmp/wine-prod-db-backup.lock`)

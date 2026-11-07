@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.prod.yml"
 
-BACKUP_DIR="${BACKUP_DIR:-/backup}"
+BACKUP_DIR="${BACKUP_DIR:-/backup/wine-app}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
 MAX_BACKUPS="${MAX_BACKUPS:-30}"
 LOCK_FILE="${LOCK_FILE:-/tmp/wine-prod-db-backup.lock}"
