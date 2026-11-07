@@ -126,10 +126,9 @@ health:
 # Production (VPS)
 # =========================
 
-# Push master and run scripts/deploy-prod.sh on the VPS (pulls, builds, migrates, healthchecks)
-deploy host="85.215.62.63" user="root" dir="/root/apps/wine-app":
-    git push origin master
-    ssh {{ user }}@{{ host }} 'cd {{ dir }} && ./scripts/deploy-prod.sh'
+# Run on the VPS: pulls, builds, migrates and healthchecks via scripts/deploy-prod.sh
+deploy:
+    ./scripts/deploy-prod.sh
 
 # =========================
 # Mobile (host commands)
