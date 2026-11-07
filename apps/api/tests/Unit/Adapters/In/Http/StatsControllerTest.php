@@ -88,7 +88,7 @@ final class StatsControllerTest extends TestCase
         self::assertSame(54, $payload['total_reviews']);
         self::assertSame(38.2, $payload['review_coverage_pct']);
         self::assertSame(71.5, $payload['avg_score']);
-        self::assertSame(71.0, $payload['median_score']);
+        self::assertSame(71, $payload['median_score']);
         self::assertSame(27, $payload['my_reviews']);
         self::assertSame(2, $payload['users_with_reviews']);
     }
@@ -102,7 +102,7 @@ final class StatsControllerTest extends TestCase
         self::assertSame(['2025-11', '2025-12', '2026-01'], $payload['months']);
         self::assertSame([3, 0, 5], $payload['review_counts']);
         self::assertSame([90.5, null, 87.3], $payload['avg_scores']);
-        self::assertSame([91.0, null, 88.5], $payload['median_scores']);
+        self::assertSame([91, null, 88.5], $payload['median_scores']);
         self::assertSame(5, $payload['summary']['last_month_reviews']);
         self::assertSame(2.7, $payload['summary']['avg_reviews_per_month']);
         self::assertSame(['month' => '2026-01', 'reviews' => 5], $payload['summary']['best_month']);
@@ -140,12 +140,12 @@ final class StatsControllerTest extends TestCase
         self::assertSame(66.8, $payload['regression_intercept']);
         self::assertSame(10.48, $payload['median_price']);
         self::assertSame(3.89, $payload['min_price']);
-        self::assertSame(48.0, $payload['max_price']);
+        self::assertSame(48, $payload['max_price']);
         self::assertCount(3, $payload['price_bands']);
         self::assertCount(2, $payload['top_value_wines']);
         self::assertSame([
             'count' => 6,
-            'pct' => 30.0,
+            'pct' => 30,
             'threshold' => 80,
         ], $payload['under_10_high_score']);
     }
@@ -161,11 +161,11 @@ final class StatsControllerTest extends TestCase
         self::assertSame(2, $payload['wines_with_awards']);
         self::assertSame(74, $payload['wines_without_awards']);
         self::assertSame(94.7, $payload['photo_coverage_pct']);
-        self::assertSame(100.0, $payload['grape_coverage_pct']);
+        self::assertSame(100, $payload['grape_coverage_pct']);
         self::assertSame(38.2, $payload['review_coverage_pct']);
         self::assertSame(56.4, $payload['do_logo_coverage_pct']);
-        self::assertSame(52.0, $payload['region_logo_coverage_pct']);
-        self::assertSame(100.0, $payload['do_map_coverage_pct']);
+        self::assertSame(52, $payload['region_logo_coverage_pct']);
+        self::assertSame(100, $payload['do_map_coverage_pct']);
         self::assertSame(82.5, $payload['places_with_map_pct']);
     }
 
@@ -177,9 +177,9 @@ final class StatsControllerTest extends TestCase
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
         self::assertSame(25, $payload['pairs_count']);
         self::assertSame(6.6, $payload['avg_diff']);
-        self::assertSame(36.0, $payload['diff_ge_10_pct']);
-        self::assertSame(8.0, $payload['diff_ge_15_pct']);
-        self::assertSame(32.0, $payload['sync_index']);
+        self::assertSame(36, $payload['diff_ge_10_pct']);
+        self::assertSame(8, $payload['diff_ge_15_pct']);
+        self::assertSame(32, $payload['sync_index']);
         self::assertCount(2, $payload['scatter_points']);
         self::assertCount(2, $payload['by_do']);
     }

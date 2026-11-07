@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Application\UseCases\Stats\GetReviewsPerMonth;
 
 use App\Application\UseCases\Stats\GetReviewsPerMonth\GetReviewsPerMonthHandler;
+use App\Domain\Model\GenericStats;
 use App\Domain\Model\ReviewMonthStats;
 use App\Domain\Repository\ReviewStatsRepository;
 use PHPUnit\Framework\TestCase;
@@ -32,5 +33,15 @@ final class InMemoryReviewStatsRepository implements ReviewStatsRepository
             new ReviewMonthStats(new \DateTimeImmutable('2025-12-01T00:00:00+00:00'), 0, null),
             new ReviewMonthStats(new \DateTimeImmutable('2026-01-01T00:00:00+00:00'), 5, 88.5),
         ];
+    }
+
+    public function getGenericStats(int $userId): GenericStats
+    {
+        return new GenericStats(0, 0, 0, 0.0, 0.0);
+    }
+
+    public function getScoringGenericStats(): array
+    {
+        return [];
     }
 }

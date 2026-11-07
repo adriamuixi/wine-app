@@ -7,6 +7,7 @@ namespace App\Tests\Integration\Http;
 use Doctrine\DBAL\Connection;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -30,13 +31,14 @@ final class WinePhotoControllerWebTest extends WebTestCase
         $this->connection = $connection;
         $this->resetTables();
         $this->seedWine();
+        $this->seedAuthUser();
 
         self::ensureKernelShutdown();
     }
 
     public function testUploadCreatesWinePhotoRowAndStoresFile(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $tmp = tempnam(sys_get_temp_dir(), 'wine-upload-');
         self::assertNotFalse($tmp);
@@ -61,7 +63,7 @@ final class WinePhotoControllerWebTest extends WebTestCase
 
     public function testUploadReplacesExistingPhotoOfSameType(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $tmp1 = tempnam(sys_get_temp_dir(), 'wine-upload-');
         self::assertNotFalse($tmp1);
@@ -129,9 +131,33 @@ final class WinePhotoControllerWebTest extends WebTestCase
         self::assertSame(0, $exitCode);
     }
 
+    private function createAuthenticatedClient(): KernelBrowser
+    {
+        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+
+        $client->jsonRequest('POST', '/api/auth/login', [
+            'email' => 'demo@example.com',
+            'password' => 'demo1234',
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        return $client;
+    }
+
+    private function seedAuthUser(): void
+    {
+        $this->connection->insert('users', [
+            'email' => 'demo@example.com',
+            'name' => 'Demo',
+            'lastname' => 'User',
+            'password_hash' => password_hash('demo1234', PASSWORD_DEFAULT),
+            'created_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:sP'),
+        ]);
+    }
+
     private function resetTables(): void
     {
-        $this->connection->executeStatement('TRUNCATE TABLE wine_photo, wine_award, review_bullets, review, wine_grape, wine_purchase, wine, grape, place, designation_of_origin RESTART IDENTITY CASCADE');
+        $this->connection->executeStatement('TRUNCATE TABLE wine_photo, wine_award, review_bullets, review, wine_grape, wine_purchase, wine, grape, place, users, designation_of_origin RESTART IDENTITY CASCADE');
     }
 
     private function seedWine(): void

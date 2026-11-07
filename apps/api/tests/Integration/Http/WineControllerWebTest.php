@@ -7,6 +7,7 @@ namespace App\Tests\Integration\Http;
 use Doctrine\DBAL\Connection;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -32,13 +33,14 @@ final class WineControllerWebTest extends WebTestCase
 
         $this->resetWineTables();
         $this->seedDoAndGrape();
+        $this->seedAuthUser();
 
         self::ensureKernelShutdown();
     }
 
     public function testCreateStoresWineGrapeAndWinePurchaseRows(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $client->jsonRequest('POST', '/api/wines', [
             'name' => 'Integration Wine',
@@ -78,7 +80,7 @@ final class WineControllerWebTest extends WebTestCase
 
     public function testCreateAllowsRestaurantWithNullAddressAndCity(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $client->jsonRequest('POST', '/api/wines', [
             'name' => 'Integration Wine Nullable Place',
@@ -103,7 +105,7 @@ final class WineControllerWebTest extends WebTestCase
 
     public function testDeleteRemovesRelatedRowsByCascade(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $client->jsonRequest('POST', '/api/wines', [
             'name' => 'Delete Cascade Wine',
@@ -158,7 +160,7 @@ final class WineControllerWebTest extends WebTestCase
 
     public function testDeleteRemovesWinePhotosFromDiskAndDirectory(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $client->jsonRequest('POST', '/api/wines', [
             'name' => 'Wine With Photo',
@@ -207,7 +209,7 @@ final class WineControllerWebTest extends WebTestCase
 
     public function testGetByIdReturnsWineWithAwardsPhotosGrapesAndReviews(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $client->jsonRequest('POST', '/api/wines', [
             'name' => 'Detail Wine',
@@ -288,7 +290,7 @@ final class WineControllerWebTest extends WebTestCase
 
     public function testUpdateReplacesAwardsInDatabase(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $client->jsonRequest('POST', '/api/wines', [
             'name' => 'Update Award Wine',
@@ -354,7 +356,7 @@ final class WineControllerWebTest extends WebTestCase
 
     public function testUpdateReplacesPurchasesAndStoresAddressInDatabase(): void
     {
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
 
         $client->jsonRequest('POST', '/api/wines', [
             'name' => 'Update Purchase Wine',
@@ -474,7 +476,7 @@ SQL,
         ]);
         $grapeId2 = (int) $this->connection->lastInsertId();
 
-        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+        $client = $this->createAuthenticatedClient();
         $client->jsonRequest('POST', '/api/wines', [
             'name' => 'Filtered Winner',
             'wine_type' => 'white',
@@ -605,6 +607,30 @@ SQL,
     {
         $exitCode = $application->run(new ArrayInput($input), new BufferedOutput());
         self::assertSame(0, $exitCode);
+    }
+
+    private function createAuthenticatedClient(): KernelBrowser
+    {
+        $client = static::createClient(['environment' => 'test', 'debug' => true]);
+
+        $client->jsonRequest('POST', '/api/auth/login', [
+            'email' => 'demo@example.com',
+            'password' => 'demo1234',
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        return $client;
+    }
+
+    private function seedAuthUser(): void
+    {
+        $this->connection->insert('users', [
+            'email' => 'demo@example.com',
+            'name' => 'Demo',
+            'lastname' => 'User',
+            'password_hash' => password_hash('demo1234', PASSWORD_DEFAULT),
+            'created_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:sP'),
+        ]);
     }
 
     private function resetWineTables(): void

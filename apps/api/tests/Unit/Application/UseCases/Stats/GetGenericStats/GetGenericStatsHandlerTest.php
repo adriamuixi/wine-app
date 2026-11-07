@@ -69,4 +69,9 @@ final class InMemoryStatsRepository implements ReviewStatsRepository
     {
         return new GenericStats(10, 44, 6, 86.4, 84.1);
     }
+
+    public function getScoringGenericStats(): array
+    {
+        return [];
+    }
 }
